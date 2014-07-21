@@ -1,6 +1,6 @@
 {
   "name": "json-api",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "A library for constructing JSON-API compliant responses",
   "homepage": "https://github.com/ethanresnick/json-api",
   "repository": {
@@ -10,7 +10,8 @@
   "author": "Ethan Resnick <ethan.resnick@gmail.com>",
   "main": "index.js",
   "dependencies": {
-    "express": "4.x.x"
+    "express": "4.x.x",
+    "url-template": "^2.0.4"
   },
   "devDependencies": {
     "LiveScript": "^1.2.0",
