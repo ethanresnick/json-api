@@ -1,4 +1,4 @@
-require ['Q', 'mongoose', 'pluralize']
+require! ['Q', 'mongoose']
 
 module.exports =
   /**

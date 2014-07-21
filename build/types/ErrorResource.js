@@ -18,7 +18,7 @@
     };
     return ErrorResource;
   }(Resource));
-  module.exports = APIError;
+  module.exports = ErrorResource;
   function extend$(sub, sup){
     function fun(){} fun.prototype = (sub.superclass = sup).prototype;
     (sub.prototype = new fun).constructor = sub;

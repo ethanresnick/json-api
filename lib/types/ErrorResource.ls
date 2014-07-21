@@ -7,4 +7,4 @@ class ErrorResource extends Resource
   _validateType: (type) ->
     throw new Error("type name must be errors") if type.name != "errors"
 
-module.exports = APIError
+module.exports = ErrorResource

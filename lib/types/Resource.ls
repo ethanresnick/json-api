@@ -2,9 +2,8 @@ require! ['./ResourceType']
 
 class Resource
   (type, id, attrs, @links, @href) ~>
-    # set manually, unlike @links and @href,
-    # to trigger the validation checks and
-    # create the @_type etc props.
+    # set manually, unlike @links and @href, to trigger the 
+    # validation checks and create the @_type etc props.
     [@type, @id, @attrs] = [type, id, attrs];
 
   attrs:~

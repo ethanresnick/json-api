@@ -1,6 +1,5 @@
 require! {
-  template: \url-template, 
-  './ResourceAdapter'
+  template: \url-template
 }
 
 class ResourceType
