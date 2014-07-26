@@ -1,10 +1,11 @@
-require! ['./ResourceType']
-
 class Resource
   (type, id, attrs, @links, @href) ~>
     # set manually, unlike @links and @href, to trigger the 
     # validation checks and create the @_type etc props.
     [@type, @id, @attrs] = [type, id, attrs];
+
+  removeAttr: (attr) ->
+    delete @_attrs[attr]
 
   attrs:~
     -> @_attrs
@@ -28,10 +29,9 @@ class Resource
     (id) -> 
       if id? and /^[A-Za-z0-9\-\_]+$/ != id
         throw new Error("Invalid id") 
-      @_id = String(id).toString!
+      @_id = if id? then String(id).toString! else null
 
   _validateType: (type) ->
-    throw new Error("type is required") if not type?
-    throw new Error("type must be a ResourceType instance") if type not instanceof ResourceType
+    throw new Error("type is required") if not type
 
 module.exports = Resource

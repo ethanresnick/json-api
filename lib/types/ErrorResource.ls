@@ -1,10 +1,11 @@
 require! ['./Resource']
 
 class ErrorResource extends Resource
-  (type, id, attrs, @links, @href) ~>
+  (id, attrs, @links, @href) ~>
+    @type = "errors"
     super(...)
 
   _validateType: (type) ->
-    throw new Error("type name must be errors") if type.name != "errors"
+    throw new Error("type must be errors") if type != "errors"
 
 module.exports = ErrorResource

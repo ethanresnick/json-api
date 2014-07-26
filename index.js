@@ -6,8 +6,7 @@ module.exports = {
     Collection: require('./build/types/Collection'),
     Document: require('./build/types/Document'),
     ErrorResource: require('./build/types/ErrorResource'),
-    Resource: require('./build/types/Resource'),
-    ResourceType: require('./build/types/ResourceType'),
+    Resource: require('./build/types/Resource')
   },
   BaseController: require('./build/BaseController')
 };

@@ -4,16 +4,17 @@
   Resource = require('./Resource');
   ErrorResource = (function(superclass){
     var prototype = extend$((import$(ErrorResource, superclass).displayName = 'ErrorResource', ErrorResource), superclass).prototype, constructor = ErrorResource;
-    function ErrorResource(type, id, attrs, links, href){
+    function ErrorResource(id, attrs, links, href){
       var this$ = this instanceof ctor$ ? this : new ctor$;
       this$.links = links;
       this$.href = href;
+      this$.type = "errors";
       ErrorResource.superclass.apply(this$, arguments);
       return this$;
     } function ctor$(){} ctor$.prototype = prototype;
     prototype._validateType = function(type){
-      if (type.name !== "errors") {
-        throw new Error("type name must be errors");
+      if (type !== "errors") {
+        throw new Error("type must be errors");
       }
     };
     return ErrorResource;

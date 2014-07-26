@@ -1,4 +1,4 @@
-require! ['Q', 'mongoose']
+require! ['Q', 'mongoose', './types/Document', './types/Collection']
 
 module.exports =
   /**
@@ -10,21 +10,60 @@ module.exports =
     Object.create(this, {[k, {value: v, enumerable: true}] for own k, v of newProps});
 
   /**
-   * An object that implements the Adapter interface. 
-   * Should be provided by the child controller.
+   * A function that, when called, returns a new object that implements 
+   * the Adapter interface. Should be provided by the child controller.
+   * Whe need to get a new adapter on each request so the query state is
+   * specific to this request (since the controller objects themselves
+   * persist between requests).
    */
-  adapter: null
+  adapterFn: null
    
-  _buildGETQuery: (req) ->
-    query = adapter.query!
+  _buildQuery: (req) ->
+    query = @adapterFn!
+    switch req.method.toUpperCase!
+    | "GET" => 
+      if(req.params.id)
+        ids = req.params.id.split(",");
+        if ids.length > 1 
+          then query.withIds(ids) 
+          else query.withId(ids[0]) 
+      else
+        query.any!
 
-    if(req.params.id)
-      query.withIds(req.params.id.split(","))
+      if(req.query.sort)
+        query.sort(req.query.sort.split(','))
+
+      # Note: For now, we don't support the
+      # fields[TYPE] syntax (optional per spec).
+      if(req.query.fields)
+        query.onlyFields(req.query.fields.split(','))
+
+    | "POST" => \something
+
 
     query
 
-  list: (req, res, next) ->
-    @_buildGETQuery(req).exec().then(res.json)
+  GET: (req, res, next) ->
+    after = @~afterQuery
+    @_buildQuery(req).promise!
+      .then((result) ->
+        if result instanceof Collection
+          result.resources.map(-> after(it, req, res))
+          result
+        else
+          after(result, req, res)
+      ).then((resources) ->
+        (new Document(resources)).get!
+      ).then(
+        res~json, res~json
+      )
+
+  POST: (req, res, next) ->
+    before = @~beforeSave
+    @_buildQuery(req).promise!
+      .then(->, ->)
+
+#create, update, read, list, delete    
     /*
         this.manyMongooseDocsPromise().then(function(docs) {
       (self.mongooseDocsToJsonApiResponse(docs));
