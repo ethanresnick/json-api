@@ -101,13 +101,15 @@ class MongooseAdapter
   afterQuery: (docs) ->
     makeCollection = docs instanceof Array
     docs = [docs] if !makeCollection
-    docs .= map(~>
-      type = @model.collection.name
-      id   = it.id
-      attrs = it.toObject!
-      delete attrs['_id', '__v']
-      new Resource(type, id, attrs);
-    )
+    docs .= map(~> @@docToResource(it, @model.collection.name))
     if makeCollection then new Collection(docs) else docs[0]
+
+  # The momngoose conversion logic.
+  # Useful to have as a pure function 
+  # for calling it as a utility outside this class.
+  @docToResource = (doc, type) ->
+    attrs = doc.toObject!
+    delete attrs['_id', '__v']
+    new Resource(type, doc.id, attrs);
 
 module.exports = MongooseAdapter
