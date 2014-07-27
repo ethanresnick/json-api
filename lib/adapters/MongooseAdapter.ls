@@ -27,8 +27,11 @@ class MongooseAdapter
       ..findOne({'_id': id})
 
   withIds: (ids) ->
+    # have to do a qb.find below, not qb.in,
+    # as mongoose doesn't intercept `in` to
+    # handle id casting, but it does for `find`
     @queryBuilder
-      ..in('_id', [ids])
+      ..find({'_id': {'$in': ids}})
 
   withProperty: (prop, val) ->
     @queryBuilder
