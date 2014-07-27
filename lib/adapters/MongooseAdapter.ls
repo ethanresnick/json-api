@@ -1,4 +1,4 @@
-require! [\mongoose \../types/Resource \../types/Collection \../util/advice];
+require! [\mongoose \../types/Resource \../types/Collection  \../types/ErrorResource \../util/advice];
 
 class MongooseAdapter
   (@model, @options) ->
@@ -93,12 +93,16 @@ class MongooseAdapter
     @queryBuilder.sort(sorts.join(' '))
 
   promise: ->
-    p = @queryBuilder.exec!#.then(-> console.log(it); it)
+    qb = @queryBuilder
+    p = @queryBuilder.exec!
     p .= then(@~afterQuery) if @queryBuilder.op is /^find/ # do this first.
     p .= then(@~beforeSave) if @queryBuilder.op is /(update|modify|remove)/
     p
 
   afterQuery: (docs) ->
+    if !docs
+      return new ErrorResource(null, {status: 404, title:"No matching resources found"})
+
     makeCollection = docs instanceof Array
     docs = [docs] if !makeCollection
     docs .= map(~> @@docToResource(it, @model.collection.name))
