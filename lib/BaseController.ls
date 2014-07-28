@@ -1,4 +1,4 @@
-require! ['Q', 'mongoose', './types/Document', './types/Collection']
+require! ['Q', 'mongoose', './types/Document', './types/Collection', './types/ErrorResource']
 
 module.exports =
   /**
@@ -21,7 +21,7 @@ module.exports =
   _buildQuery: (req) ->
     query = @adapterFn!
     switch req.method.toUpperCase!
-    | "GET" => 
+    | "GET" => # Handles list/read requests
       if(req.params.id)
         ids = req.params.id.split(",");
         if ids.length > 1 
@@ -38,7 +38,8 @@ module.exports =
       if(req.query.fields)
         query.onlyFields(req.query.fields.split(','))
 
-    | "POST" => \something
+    | "POST" => # Handles create requests
+      
 
 
     query
@@ -53,9 +54,10 @@ module.exports =
         else
           after(result, req, res)
       ).then((resources) ->
-        (new Document(resources)).get!
-      ).then(
-        res~json, res~json
+        @@sendResources(res, resources)
+      ).catch((err) ->
+        er = ErrorResource.fromError(err)
+        @@sendResources(res, er.status, er)
       )
 
   POST: (req, res, next) ->
@@ -63,45 +65,20 @@ module.exports =
     @_buildQuery(req).promise!
       .then(->, ->)
 
+  @sendResources = (res, resources, meta) ->
+    if resources.type === "errors"
+      if resources instanceof Collection
+        status = resources.resources[0].attrs.status
+      else
+        status = resources.attrs.status
+    else
+      status = 200
+
+    res.json(status, (new Document(resources, meta)).get!)
+
+
 #create, update, read, list, delete    
-    /*
-        this.manyMongooseDocsPromise().then(function(docs) {
-      (self.mongooseDocsToJsonApiResponse(docs));
-    }, function(err) { self.sendJsonApiError(err, res); });
-
-   * Returns a promise for the model instances specified by
-   * req.params.id (either a single id or a list of comma-
-   * separated ids), in the collection associated with this.model.
-   * Note that the customResolver is currently only called if you're
-   * looking for a single document.
- 
-  mongooseDocFromIdPromise: function(req, customResolver) {
-    var id = req.params.id
-      , self = this
-      , err
-      , runDefaultResolver = true;
-
-    return Q.promise(function(resolve, reject) {
-      if(typeof customResolver === "function") {
-        runDefaultResolver = customResolver.bind(self)(resolve, reject, req, id);
-      }
-      if(runDefaultResolver === true) {
-        self.model.findById(id, function(err, doc) {
-          if(err) {
-            reject(err); 
-          }
-          else if(!doc) {
-            err = new Error("No document found with id: " + id);
-            err.status = 404
-            reject(err);
-          }
-          else {
-            resolve(doc);
-          }
-        });
-      }
-    });
-  },
+/*
 
 
    * Returns a promise for all model instances in the
