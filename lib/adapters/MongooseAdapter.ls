@@ -95,9 +95,22 @@ class MongooseAdapter
   promise: ->
     qb = @queryBuilder
     p = @queryBuilder.exec!
+    # Add errorHandler here for simplicity, because we don't know which `then`s we're
+    # going to register below. E.g. if we did .then(@~afterQuery, @~errorHandler), it
+    # wouldn't be registered for a create (POST) request. But if we added both
+    # .then(@~afterQuery, @~errorHandler) & .then(@~beforeSave, @~errorHandler), the
+    # errorHandler, which is meant for query errors, would catch @~afterQuery errors 
+    # on findOneAndRemove style queries (which run the bepore and after handlers).
+    p .= then(-> it, @~errorHandler)
     p .= then(@~afterQuery) if @queryBuilder.op is /^find/ # do this first.
     p .= then(@~beforeSave) if @queryBuilder.op is /(update|modify|remove)/
     p
+
+  # Responsible for generating a sendable Error Resource if the query threw an Error
+  errorHandler: (err) ->
+    new ErrorResource(null, {
+      "title": "An error occurred while trying to find, create, or modify the requested resource(s)."
+    })
 
   afterQuery: (docs) ->
     if !docs
