@@ -27,7 +27,11 @@
     "sinon-chai": "2.5.x"
   },
   "scripts": {
-    "test": "mocha $(find test -name \"*.js\")"
     "prepublish": "lsc -co ./build .",
+    "pretest": "lsc -co ./build .",
+    "test": "mocha $(find ./build/test -name \"*.js\")"
+  },
+  "bugs": {
+    "url": "https://github.com/ethanresnick/json-api/issues"
   }
 }
