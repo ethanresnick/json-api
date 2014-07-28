@@ -1,12 +1,12 @@
 module.exports = {
   adapters: {
-    Mongoose: require('./build/adapters/MongooseAdapter')
+    Mongoose: require('./build/lib/adapters/MongooseAdapter')
   },
   types: {
-    Collection: require('./build/types/Collection'),
-    Document: require('./build/types/Document'),
-    ErrorResource: require('./build/types/ErrorResource'),
-    Resource: require('./build/types/Resource')
+    Collection: require('./build/lib/types/Collection'),
+    Document: require('./build/lib/types/Document'),
+    ErrorResource: require('./build/lib/types/ErrorResource'),
+    Resource: require('./build/lib/types/Resource')
   },
-  BaseController: require('./build/BaseController')
+  BaseController: require('./build/lib/BaseController')
 };
