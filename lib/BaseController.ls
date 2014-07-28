@@ -7,7 +7,7 @@ module.exports =
    * controllers that extend this one.
    */
   extend: (newProps) ->
-    Object.create(this, {[k, {value: v, enumerable: true}] for own k, v of newProps});
+    Object.create(@, {[k, {value: v, enumerable: true}] for own k, v of newProps});
 
   /**
    * A function that, when called, returns a new object that implements 
@@ -65,7 +65,7 @@ module.exports =
     @_buildQuery(req).promise!
       .then(->, ->)
 
-  @sendResources = (res, resources, meta) ->
+  sendResources: (res, resources, meta) ->
     if resources.type === "errors"
       if resources instanceof Collection
         status = resources.resources[0].attrs.status
