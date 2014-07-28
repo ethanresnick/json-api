@@ -9,21 +9,17 @@ module.exports =
   extend: (newProps) ->
     Object.create(@, {[k, {value: v, enumerable: true}] for own k, v of newProps});
 
-  # Takes an array of error status codes and returns
-  # the code that best represents the collection.
-  _pickStatus: (errStatuses) ->
-    errStatuses[0];
+  /**
+   * A function run on each resource returned from a query to transform it.
+   * Subclasses should replace this with their own implementation
+   */
+  afterQuery: -> it
 
-  sendResources: (res, resources, meta) ->
-    if resources.type === "errors"
-      if resources instanceof Collection
-        status = @_pickStatus(resources.resources.map(-> Number(it.attrs.status)));
-      else
-        status = resources.attrs.status
-    else
-      status = 200
-
-    res.json(Number(status), (new Document(resources, meta)).get!)
+  /**
+   * A function run on each resource before it's saved.
+   * Subclasses should replace this with their own implementation
+   */
+  beforeSave: -> it
 
   /**
    * A function that, when called, returns a new object that implements 
@@ -33,6 +29,11 @@ module.exports =
    * persist between requests).
    */
   adapterFn: null
+
+  # Takes an array of error status codes and returns
+  # the code that best represents the collection.
+  _pickStatus: (errStatuses) ->
+    errStatuses[0];
 
   _buildQuery: (req) ->
     query = @adapterFn!
@@ -81,6 +82,17 @@ module.exports =
     before = @~beforeSave
     @_buildQuery(req).promise!
       .then(->, ->)
+
+  sendResources: (res, resources, meta) ->
+    if resources.type == "errors"
+      if resources instanceof Collection
+        status = @_pickStatus(resources.resources.map(-> Number(it.attrs.status)));
+      else
+        status = resources.attrs.status
+    else
+      status = 200
+
+    res.json(Number(status), (new Document(resources, meta)).get!)
 
 #todo: create, update, delete    
 /*

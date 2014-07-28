@@ -25,24 +25,20 @@
         }
         return results$;
       }()));
-    },
-    _pickStatus: function(errStatuses){
-      return errStatuses[0];
-    },
-    sendResources: function(res, resources, meta){
-      var status;
-      if (deepEq$(resources.type, "errors", '===')) {
-        if (resources instanceof Collection) {
-          status = this._pickStatus(resources.resources.map(function(it){
-            return Number(it.attrs.status);
-          }));
-        } else {
-          status = resources.attrs.status;
-        }
-      } else {
-        status = 200;
-      }
-      return res.json(Number(status), new Document(resources, meta).get());
+    }
+    /**
+     * A function run on each resource returned from a query to transform it.
+     * Subclasses should replace this with their own implementation
+     */,
+    afterQuery: function(it){
+      return it;
+    }
+    /**
+     * A function run on each resource before it's saved.
+     * Subclasses should replace this with their own implementation
+     */,
+    beforeSave: function(it){
+      return it;
     }
     /**
      * A function that, when called, returns a new object that implements 
@@ -52,6 +48,9 @@
      * persist between requests).
      */,
     adapterFn: null,
+    _pickStatus: function(errStatuses){
+      return errStatuses[0];
+    },
     _buildQuery: function(req){
       var query, ids;
       query = this.adapterFn();
@@ -80,7 +79,7 @@
       return query;
     },
     GET: function(req, res, next){
-      var after;
+      var after, this$ = this;
       after = bind$(this, 'afterQuery');
       return this._buildQuery(req).promise().then(function(result){
         if (result instanceof Collection) {
@@ -92,17 +91,32 @@
           return after(result, req, res);
         }
       }).then(function(resources){
-        return constructor.sendResources(res, resources);
+        return this$.sendResources(res, resources);
       })['catch'](function(err){
         var er;
         er = ErrorResource.fromError(err);
-        return constructor.sendResources(res, er.status, er);
+        return this$.sendResources(res, er);
       });
     },
     POST: function(req, res, next){
       var before;
       before = bind$(this, 'beforeSave');
       return this._buildQuery(req).promise().then(function(){}, function(){});
+    },
+    sendResources: function(res, resources, meta){
+      var status;
+      if (resources.type === "errors") {
+        if (resources instanceof Collection) {
+          status = this._pickStatus(resources.resources.map(function(it){
+            return Number(it.attrs.status);
+          }));
+        } else {
+          status = resources.attrs.status;
+        }
+      } else {
+        status = 200;
+      }
+      return res.json(Number(status), new Document(resources, meta).get());
     }
   };
   /*
@@ -145,22 +159,6 @@
       }
       
       JsonApi.sendError(err, res);
-    },
-  
-    fulfillList: function(res, next) {
-      var self = this;
-  
-    },
-  
-    fulfillRead: function(req, res, next, customModelResolver) {
-      var self = this;
-  
-      this.mongooseDocFromIdsPromise(req, customModelResolver)
-        .then(function(docs) {
-          res.json(self.mongooseDocsToJsonApiResponse(docs));
-        }).catch(function(err) {
-          self.sendJsonApiError(err, res);
-        });
     },
   
     fulfillCreate: function(req, res, next, urlFor, readRouteName) {
@@ -216,90 +214,6 @@
       }).catch(function(err) { self.sendJsonApiError(err, res); });
     } 
   };*/
-  function deepEq$(x, y, type){
-    var toString = {}.toString, hasOwnProperty = {}.hasOwnProperty,
-        has = function (obj, key) { return hasOwnProperty.call(obj, key); };
-    var first = true;
-    return eq(x, y, []);
-    function eq(a, b, stack) {
-      var className, length, size, result, alength, blength, r, key, ref, sizeB;
-      if (a == null || b == null) { return a === b; }
-      if (a.__placeholder__ || b.__placeholder__) { return true; }
-      if (a === b) { return a !== 0 || 1 / a == 1 / b; }
-      className = toString.call(a);
-      if (toString.call(b) != className) { return false; }
-      switch (className) {
-        case '[object String]': return a == String(b);
-        case '[object Number]':
-          return a != +a ? b != +b : (a == 0 ? 1 / a == 1 / b : a == +b);
-        case '[object Date]':
-        case '[object Boolean]':
-          return +a == +b;
-        case '[object RegExp]':
-          return a.source == b.source &&
-                 a.global == b.global &&
-                 a.multiline == b.multiline &&
-                 a.ignoreCase == b.ignoreCase;
-      }
-      if (typeof a != 'object' || typeof b != 'object') { return false; }
-      length = stack.length;
-      while (length--) { if (stack[length] == a) { return true; } }
-      stack.push(a);
-      size = 0;
-      result = true;
-      if (className == '[object Array]') {
-        alength = a.length;
-        blength = b.length;
-        if (first) { 
-          switch (type) {
-          case '===': result = alength === blength; break;
-          case '<==': result = alength <= blength; break;
-          case '<<=': result = alength < blength; break;
-          }
-          size = alength;
-          first = false;
-        } else {
-          result = alength === blength;
-          size = alength;
-        }
-        if (result) {
-          while (size--) {
-            if (!(result = size in a == size in b && eq(a[size], b[size], stack))){ break; }
-          }
-        }
-      } else {
-        if ('constructor' in a != 'constructor' in b || a.constructor != b.constructor) {
-          return false;
-        }
-        for (key in a) {
-          if (has(a, key)) {
-            size++;
-            if (!(result = has(b, key) && eq(a[key], b[key], stack))) { break; }
-          }
-        }
-        if (result) {
-          sizeB = 0;
-          for (key in b) {
-            if (has(b, key)) { ++sizeB; }
-          }
-          if (first) {
-            if (type === '<<=') {
-              result = size < sizeB;
-            } else if (type === '<==') {
-              result = size <= sizeB
-            } else {
-              result = size === sizeB;
-            }
-          } else {
-            first = false;
-            result = size === sizeB;
-          }
-        }
-      }
-      stack.pop();
-      return result;
-    }
-  }
   function bind$(obj, key, target){
     return function(){ return (target || obj)[key].apply(obj, arguments) };
   }

@@ -6,7 +6,7 @@ class MongooseAdapter
     # find the names of all the paths in the
     # schema that refer to other models
     @refPaths = [];
-    @model.schema.eachPath((name, type) -> 
+    @model.schema.eachPath((name, type) ~> 
       @refPaths.push(name) if type.options.ref?
     );
 
@@ -118,7 +118,7 @@ class MongooseAdapter
     })
 
   afterQuery: (docs) ->
-    if !docs
+    if !docs or (docs instanceof Array and docs.length == 0)
       return new ErrorResource(null, {status: 404, title:"No matching resources found"})
 
     makeCollection = docs instanceof Array

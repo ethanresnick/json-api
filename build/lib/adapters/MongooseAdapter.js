@@ -11,12 +11,13 @@
     MongooseAdapter.displayName = 'MongooseAdapter';
     var prototype = MongooseAdapter.prototype, constructor = MongooseAdapter;
     function MongooseAdapter(model, options){
+      var this$ = this;
       this.model = model;
       this.options = options;
       this.refPaths = [];
       this.model.schema.eachPath(function(name, type){
         if (type.options.ref != null) {
-          return this.refPaths.push(name);
+          return this$.refPaths.push(name);
         }
       });
       this.queryBuilder = new mongoose.Query(null, null, this.model, this.model.collection);
@@ -140,7 +141,7 @@
     };
     prototype.afterQuery = function(docs){
       var makeCollection, this$ = this;
-      if (!docs) {
+      if (!docs || (docs instanceof Array && docs.length === 0)) {
         return new ErrorResource(null, {
           status: 404,
           title: "No matching resources found"
