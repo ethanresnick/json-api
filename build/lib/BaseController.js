@@ -25,6 +25,24 @@
         }
         return results$;
       }()));
+    },
+    _pickStatus: function(errStatuses){
+      return errStatuses[0];
+    },
+    sendResources: function(res, resources, meta){
+      var status;
+      if (deepEq$(resources.type, "errors", '===')) {
+        if (resources instanceof Collection) {
+          status = this._pickStatus(resources.resources.map(function(it){
+            return it.attrs.status;
+          }));
+        } else {
+          status = resources.attrs.status;
+        }
+      } else {
+        status = 200;
+      }
+      return res.json(Number(status), new Document(resources, meta).get());
     }
     /**
      * A function that, when called, returns a new object that implements 
@@ -85,62 +103,9 @@
       var before;
       before = bind$(this, 'beforeSave');
       return this._buildQuery(req).promise().then(function(){}, function(){});
-    },
-    sendResources: function(res, resources, meta){
-      var status;
-      if (deepEq$(resources.type, "errors", '===')) {
-        if (resources instanceof Collection) {
-          status = resources.resources[0].attrs.status;
-        } else {
-          status = resources.attrs.status;
-        }
-      } else {
-        status = 200;
-      }
-      return res.json(status, new Document(resources, meta).get());
     }
   };
   /*
-  
-  
-     * Returns a promise for all model instances in the
-     * collection associated with this.model.
-    
-    manyMongooseDocsPromise: function(query, limit) {
-      if(typeof query === 'number') {
-        limit = query;
-      }
-      query = (query instanceof Array && query.length) ? {_id: {$in: query}} : {};
-  
-      return Q(this.model.find(query).limit(limit || 1000).exec());
-    },
-  
-    
-     * Preps a Mongoose model to be returned as a resource
-     * in a JSON-API-compliant response (http://jsonapi.org/).
-    
-    mongooseDocToJsonApiResource: function(doc) {
-      var resource = doc.toObject();
-  
-      this.model.schema.eachPath(function(path, type) {
-        //add all properties from the schema, including sub-docs,
-        //to the resource. Still need to figure out relations.
-        var splitPath = path.split('.')
-          , currLevel = resource;
-  
-        for(var i = 0, len = splitPath.length - 1; i<len; i++) {
-          currLevel[splitPath[i]] = currLevel[splitPath[i]] || {};
-          currLevel = currLevel[splitPath[i]];
-        }
-        currLevel[splitPath[len]] = doc.get(path);
-      });
-  
-      resource.id = doc._id;
-      delete resource._id;
-      delete resource.__v;
-  
-      return resource;
-    },
   
     mongooseDocsToJsonApiResponse: function(mongooseDocs) {
       var collectionName = pluralize.plural(this.model.modelName).toLowerCase()
@@ -251,9 +216,6 @@
       }).catch(function(err) { self.sendJsonApiError(err, res); });
     } 
   };*/
-  function bind$(obj, key, target){
-    return function(){ return (target || obj)[key].apply(obj, arguments) };
-  }
   function deepEq$(x, y, type){
     var toString = {}.toString, hasOwnProperty = {}.hasOwnProperty,
         has = function (obj, key) { return hasOwnProperty.call(obj, key); };
@@ -337,5 +299,8 @@
       stack.pop();
       return result;
     }
+  }
+  function bind$(obj, key, target){
+    return function(){ return (target || obj)[key].apply(obj, arguments) };
   }
 }).call(this);

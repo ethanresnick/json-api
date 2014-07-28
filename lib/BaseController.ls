@@ -9,6 +9,22 @@ module.exports =
   extend: (newProps) ->
     Object.create(@, {[k, {value: v, enumerable: true}] for own k, v of newProps});
 
+  # Takes an array of error status codes and returns
+  # the code that best represents the collection.
+  _pickStatus: (errStatuses) ->
+    errStatuses[0];
+
+  sendResources: (res, resources, meta) ->
+    if resources.type === "errors"
+      if resources instanceof Collection
+        status = @_pickStatus(resources.resources.map(-> Number(it.attrs.status)));
+      else
+        status = resources.attrs.status
+    else
+      status = 200
+
+    res.json(Number(status), (new Document(resources, meta)).get!)
+
   /**
    * A function that, when called, returns a new object that implements 
    * the Adapter interface. Should be provided by the child controller.
@@ -17,7 +33,7 @@ module.exports =
    * persist between requests).
    */
   adapterFn: null
-   
+
   _buildQuery: (req) ->
     query = @adapterFn!
     switch req.method.toUpperCase!
@@ -66,60 +82,8 @@ module.exports =
     @_buildQuery(req).promise!
       .then(->, ->)
 
-  sendResources: (res, resources, meta) ->
-    if resources.type === "errors"
-      if resources instanceof Collection
-        status = resources.resources[0].attrs.status
-      else
-        status = resources.attrs.status
-    else
-      status = 200
-
-    res.json(status, (new Document(resources, meta)).get!)
-
-
 #create, update, read, list, delete    
 /*
-
-
-   * Returns a promise for all model instances in the
-   * collection associated with this.model.
-  
-  manyMongooseDocsPromise: function(query, limit) {
-    if(typeof query === 'number') {
-      limit = query;
-    }
-    query = (query instanceof Array && query.length) ? {_id: {$in: query}} : {};
-
-    return Q(this.model.find(query).limit(limit || 1000).exec());
-  },
-
-  
-   * Preps a Mongoose model to be returned as a resource
-   * in a JSON-API-compliant response (http://jsonapi.org/).
-  
-  mongooseDocToJsonApiResource: function(doc) {
-    var resource = doc.toObject();
-
-    this.model.schema.eachPath(function(path, type) {
-      //add all properties from the schema, including sub-docs,
-      //to the resource. Still need to figure out relations.
-      var splitPath = path.split('.')
-        , currLevel = resource;
-
-      for(var i = 0, len = splitPath.length - 1; i<len; i++) {
-        currLevel[splitPath[i]] = currLevel[splitPath[i]] || {};
-        currLevel = currLevel[splitPath[i]];
-      }
-      currLevel[splitPath[len]] = doc.get(path);
-    });
-
-    resource.id = doc._id;
-    delete resource._id;
-    delete resource.__v;
-
-    return resource;
-  },
 
   mongooseDocsToJsonApiResponse: function(mongooseDocs) {
     var collectionName = pluralize.plural(this.model.modelName).toLowerCase()
