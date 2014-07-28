@@ -1,5 +1,5 @@
 
-require! [\mongoose \../types/Resource \../types/Collection  \../types/ErrorResource \../util/advice];
+require! [\mongoose \../types/Resource \../types/Collection  \../types/ErrorResource \../util/advice \Q];
 
 class MongooseAdapter
   (@model, @options) ->
@@ -99,7 +99,7 @@ class MongooseAdapter
 
   promise: ->
     qb = @queryBuilder
-    p = @queryBuilder.exec!
+    p = Q(@queryBuilder.exec!)
     # Add errorHandler here for simplicity, because we don't know which `then`s we're
     # going to register below. E.g. if we did .then(@~afterQuery, @~errorHandler), it
     # wouldn't be registered for a create (POST) request. But if we added both

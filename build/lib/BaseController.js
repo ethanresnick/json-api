@@ -34,7 +34,7 @@
       if (deepEq$(resources.type, "errors", '===')) {
         if (resources instanceof Collection) {
           status = this._pickStatus(resources.resources.map(function(it){
-            return it.attrs.status;
+            return Number(it.attrs.status);
           }));
         } else {
           status = resources.attrs.status;
