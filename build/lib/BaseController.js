@@ -55,6 +55,7 @@
         if (req.query.fields) {
           query.onlyFields(req.query.fields.split(','));
         }
+        query.limitTo(100);
         break;
       case "POST":
       }

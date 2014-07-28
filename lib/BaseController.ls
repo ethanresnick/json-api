@@ -38,9 +38,10 @@ module.exports =
       if(req.query.fields)
         query.onlyFields(req.query.fields.split(','))
 
-    | "POST" => # Handles create requests
-      
+      # Add a default limit. TODO: support user provding one
+      query.limitTo(100)
 
+    | "POST" => # Handles create requests
 
     query
 

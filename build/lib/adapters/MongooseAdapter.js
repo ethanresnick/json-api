@@ -79,6 +79,12 @@
       }
       return this.queryBuilder;
     };
+    prototype.limitTo = function(limit){
+      var x$;
+      x$ = this.queryBuilder;
+      x$.limit(limit);
+      return x$;
+    };
     prototype.includeLinked = function(paths){
       this.refPaths.forEach(function(it){
         var i$, ref$, len$, i, path, pathExtra, x$, results$ = [];

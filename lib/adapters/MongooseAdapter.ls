@@ -1,3 +1,4 @@
+
 require! [\mongoose \../types/Resource \../types/Collection  \../types/ErrorResource \../util/advice];
 
 class MongooseAdapter
@@ -57,6 +58,10 @@ class MongooseAdapter
         result
 
     @queryBuilder
+
+  limitTo: (limit) ->
+    @queryBuilder
+      ..limit(limit)
   
   includeLinked: (paths) ->
     # a path might point to a property that's not in this
