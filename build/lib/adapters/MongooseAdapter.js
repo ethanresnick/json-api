@@ -141,10 +141,10 @@
     };
     prototype.afterQuery = function(docs){
       var makeCollection, this$ = this;
-      if (!docs || (docs instanceof Array && docs.length === 0)) {
+      if (!docs) {
         return new ErrorResource(null, {
           status: 404,
-          title: "No matching resources found"
+          title: "No matching resource found."
         });
       }
       makeCollection = docs instanceof Array;
@@ -155,7 +155,7 @@
         return constructor.docToResource(it, this$.model.collection.name);
       });
       if (makeCollection) {
-        return new Collection(docs);
+        return new Collection(docs, null, this.model.collection.name);
       } else {
         return docs[0];
       }

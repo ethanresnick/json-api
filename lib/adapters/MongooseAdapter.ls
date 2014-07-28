@@ -118,13 +118,13 @@ class MongooseAdapter
     })
 
   afterQuery: (docs) ->
-    if !docs or (docs instanceof Array and docs.length == 0)
-      return new ErrorResource(null, {status: 404, title:"No matching resources found"})
+    if !docs # if docs is an empty array, we don't 404: https://github.com/json-api/json-api/issues/101
+      return new ErrorResource(null, {status: 404, title:"No matching resource found."})
 
     makeCollection = docs instanceof Array
     docs = [docs] if !makeCollection
     docs .= map(~> @@docToResource(it, @model.collection.name))
-    if makeCollection then new Collection(docs) else docs[0]
+    if makeCollection then new Collection(docs, null, @model.collection.name) else docs[0]
 
   # The momngoose conversion logic.
   # Useful to have as a pure function 
