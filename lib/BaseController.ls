@@ -74,7 +74,7 @@ module.exports =
         @@sendResources(res, resources)
       ).catch((err) ->
         er = ErrorResource.fromError(err)
-        @@sendResources(res, er.status, er)
+        @@sendResources(res, er)
       )
 
   POST: (req, res, next) ->
@@ -123,22 +123,6 @@ module.exports =
     }
     
     JsonApi.sendError(err, res);
-  },
-
-  fulfillList: function(res, next) {
-    var self = this;
-
-  },
-
-  fulfillRead: function(req, res, next, customModelResolver) {
-    var self = this;
-
-    this.mongooseDocFromIdsPromise(req, customModelResolver)
-      .then(function(docs) {
-        res.json(self.mongooseDocsToJsonApiResponse(docs));
-      }).catch(function(err) {
-        self.sendJsonApiError(err, res);
-      });
   },
 
   fulfillCreate: function(req, res, next, urlFor, readRouteName) {
