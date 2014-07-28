@@ -28,5 +28,6 @@
   },
   "scripts": {
     "test": "mocha $(find test -name \"*.js\")"
+    "prepublish": "lsc -co ./build .",
   }
 }
