@@ -70,11 +70,11 @@ module.exports =
           result
         else
           after(result, req, res)
-      ).then((resources) ->
-        @@sendResources(res, resources)
-      ).catch((err) ->
+      ).then((resources) ~>
+        @sendResources(res, resources)
+      ).catch((err) ~>
         er = ErrorResource.fromError(err)
-        @@sendResources(res, er)
+        @sendResources(res, er)
       )
 
   POST: (req, res, next) ->
@@ -82,7 +82,7 @@ module.exports =
     @_buildQuery(req).promise!
       .then(->, ->)
 
-#create, update, read, list, delete    
+#todo: create, update, delete    
 /*
 
   mongooseDocsToJsonApiResponse: function(mongooseDocs) {
