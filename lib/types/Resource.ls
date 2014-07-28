@@ -10,13 +10,8 @@ class Resource
   attrs:~
     -> @_attrs
     (attrs) ->
-      if attrs?
-        throw new Error("attrs must be an object") if typeof! attrs != \Object
-        ["id", "type", "href", "links"].forEach(->
-          # todo validate nested objs in attrs
-          throw new Error(it + " is an ivalid attribute name") if attrs[it]?
-        )
-      @_attrs = attrs
+      @_validateAttrs(attrs)
+      @_attrs = @_coerceAttrs(attrs)
 
   type:~
     -> @_type
@@ -30,6 +25,15 @@ class Resource
       if id? and /^[A-Za-z0-9\-\_]+$/ != id
         throw new Error("Invalid id") 
       @_id = if id? then String(id).toString! else null
+
+  _coerceAttrs: (attrs) -> attrs # No coercion by default; subclasses may override.
+
+  _validateAttrs: (attrs) ->
+    throw new Error("attrs must be an object, even if empty") if typeof! attrs != \Object
+    ["id", "type", "href", "links"].forEach(->
+      # todo validate nested objs in attrs
+      throw new Error(it + " is an ivalid attribute name") if attrs[it]?
+    )
 
   _validateType: (type) ->
     throw new Error("type is required") if not type
