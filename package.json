@@ -1,6 +1,6 @@
 {
   "name": "json-api",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "A library for constructing JSON-API compliant responses",
   "homepage": "https://github.com/ethanresnick/json-api",
   "repository": {
