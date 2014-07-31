@@ -8,10 +8,10 @@ class ErrorResource extends Resource
     throw new Error("type must be errors") if type != "errors"
 
   _coerceAttrs: (attrs) ->
-    ["code" "status"].forEach(->
-      if attrs[it]?
-        attrs[it] = String(attrs[it]).toString!
-    )
+    if attrs?
+      ["code" "status"].forEach(-> 
+        if attrs[it]? then attrs[it] = String(attrs[it]).toString!
+      )
     attrs
 
   /**

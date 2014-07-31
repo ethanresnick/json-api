@@ -5,7 +5,7 @@ class Resource
     [@type, @id, @attrs] = [type, id, attrs];
 
   removeAttr: (attr) ->
-    delete @_attrs[attr]
+    delete @_attrs[attr] if attrs?
 
   attrs:~
     -> @_attrs
@@ -27,11 +27,13 @@ class Resource
   _coerceAttrs: (attrs) -> attrs # No coercion by default; subclasses may override.
 
   _validateAttrs: (attrs) ->
-    throw new Error("attrs must be an object, even if empty") if typeof! attrs != \Object
-    ["id", "type", "href", "links"].forEach(->
-      # todo validate nested objs in attrs
-      throw new Error(it + " is an ivalid attribute name") if attrs[it]?
-    )
+    if attrs? 
+      throw new Error("if present, attrs must be an object") if typeof! attrs != \Object
+
+      ["id", "type", "href", "links"].forEach(->
+        # todo validate nested objs in attrs
+        throw new Error(it + " is an ivalid attribute name") if attrs[it]?
+      )
 
   _validateType: (type) ->
     throw new Error("type is required") if not type

@@ -13,7 +13,9 @@
     } function ctor$(){} ctor$.prototype = prototype;
     prototype.removeAttr = function(attr){
       var ref$, ref1$;
-      return ref1$ = (ref$ = this._attrs)[attr], delete ref$[attr], ref1$;
+      if (typeof attrs != 'undefined' && attrs !== null) {
+        return ref1$ = (ref$ = this._attrs)[attr], delete ref$[attr], ref1$;
+      }
     };
     Object.defineProperty(prototype, 'attrs', {
       get: function(){
@@ -51,14 +53,16 @@
       return attrs;
     };
     prototype._validateAttrs = function(attrs){
-      if (toString$.call(attrs).slice(8, -1) !== 'Object') {
-        throw new Error("attrs must be an object, even if empty");
-      }
-      return ["id", "type", "href", "links"].forEach(function(it){
-        if (attrs[it] != null) {
-          throw new Error(it + " is an ivalid attribute name");
+      if (attrs != null) {
+        if (toString$.call(attrs).slice(8, -1) !== 'Object') {
+          throw new Error("if present, attrs must be an object");
         }
-      });
+        return ["id", "type", "href", "links"].forEach(function(it){
+          if (attrs[it] != null) {
+            throw new Error(it + " is an ivalid attribute name");
+          }
+        });
+      }
     };
     prototype._validateType = function(type){
       if (!type) {

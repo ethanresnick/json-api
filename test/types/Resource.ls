@@ -27,14 +27,13 @@ describe("Resource type", ->
       expect(r.id==="19339").to.be.true
     )
 
-    it2("attrs must be an object", ->
-      valid = new Resource("type", "id", {})
+    it2("attrs must be an object or empty", ->
+      valid  = new Resource("type", "id")
+      valid2 = new Resource("pyt", "id", {})
       expect(-> new Resource("type", "id", ["attrs"])).to.throw(/must.*object/)
       expect(-> new Resource("type", "id", "atts")).to.throw(/must.*object/)
-      expect(-> new Resource("type", "id"); void).to.throw(/must.*object/)
       expect(-> valid.attrs = "").to.throw(Error)
       expect(-> valid.attrs = "ias").to.throw(/must.*object/)
-      expect(-> valid.attrs = void).to.throw(/must.*object/)
     )
   )
 )

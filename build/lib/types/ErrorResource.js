@@ -17,11 +17,13 @@
       }
     };
     prototype._coerceAttrs = function(attrs){
-      ["code", "status"].forEach(function(it){
-        if (attrs[it] != null) {
-          return attrs[it] = String(attrs[it]).toString();
-        }
-      });
+      if (attrs != null) {
+        ["code", "status"].forEach(function(it){
+          if (attrs[it] != null) {
+            return attrs[it] = String(attrs[it]).toString();
+          }
+        });
+      }
       return attrs;
     };
     /**

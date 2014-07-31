@@ -40,9 +40,10 @@
         r = new Resource("type", 19339, {});
         return expect(deepEq$(r.id, "19339", '===')).to.be['true'];
       });
-      return it2("attrs must be an object", function(){
-        var valid;
-        valid = new Resource("type", "id", {});
+      return it2("attrs must be an object or empty", function(){
+        var valid, valid2;
+        valid = new Resource("type", "id");
+        valid2 = new Resource("pyt", "id", {});
         expect(function(){
           return new Resource("type", "id", ["attrs"]);
         }).to['throw'](/must.*object/);
@@ -50,16 +51,10 @@
           return new Resource("type", "id", "atts");
         }).to['throw'](/must.*object/);
         expect(function(){
-          new Resource("type", "id");
-        }).to['throw'](/must.*object/);
-        expect(function(){
           return valid.attrs = "";
         }).to['throw'](Error);
-        expect(function(){
-          return valid.attrs = "ias";
-        }).to['throw'](/must.*object/);
         return expect(function(){
-          return valid.attrs = void 8;
+          return valid.attrs = "ias";
         }).to['throw'](/must.*object/);
       });
     });
