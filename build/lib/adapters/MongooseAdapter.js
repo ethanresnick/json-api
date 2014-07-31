@@ -11,15 +11,9 @@
     MongooseAdapter.displayName = 'MongooseAdapter';
     var prototype = MongooseAdapter.prototype, constructor = MongooseAdapter;
     function MongooseAdapter(model, options){
-      var this$ = this;
       this.model = model;
       this.options = options;
-      this.refPaths = [];
-      this.model.schema.eachPath(function(name, type){
-        if (type.options.ref != null) {
-          return this$.refPaths.push(name);
-        }
-      });
+      this.refPaths = constructor.getReferencePaths(this.model);
       this.queryBuilder = new mongoose.Query(null, null, this.model, this.model.collection);
     }
     prototype.mode = function(){
@@ -152,7 +146,7 @@
         docs = [docs];
       }
       docs = docs.map(function(it){
-        return constructor.docToResource(it, this$.model.collection.name);
+        return constructor.docToResource(it, this$.model.collection.name, this$.refPaths);
       });
       if (makeCollection) {
         return new Collection(docs, null, this.model.collection.name);
@@ -160,11 +154,43 @@
         return docs[0];
       }
     };
-    MongooseAdapter.docToResource = function(doc, type){
-      var attrs;
+    MongooseAdapter.docToResource = function(doc, type, refPaths){
+      var attrs, links;
       attrs = doc.toObject();
       delete attrs['_id'], delete attrs['__v'];
-      return new Resource(type, doc.id, attrs);
+      links = {};
+      refPaths.forEach(function(path){
+        var pathParts, prop, flattenedProp, model;
+        pathParts = path.split('.');
+        prop = pathParts.reduce(function(obj, part){
+          return obj[part];
+        }, doc);
+        flattenedProp = pathParts.reduce(function(obj, part){
+          return obj[part];
+        }, attrs);
+        if (typeof prop instanceof mongoose.Document) {
+          model = prop.constructor;
+          return links[path] = this.docToResource(prop, model.collection.name, this.getReferencePaths(model));
+        } else {
+          return links[path] = prop;
+        }
+      });
+      return new Resource(type, doc.id, attrs, links);
+    };
+    MongooseAdapter.getReferencePaths = function(model){
+      var paths, this$ = this;
+      paths = [];
+      model.schema.eachPath(function(name, type){
+        var toCheck;
+        toCheck = type.options.type;
+        if (toCheck instanceof Array) {
+          toCheck = toCheck[0];
+        }
+        if (typeof toCheck === "object" && toCheck.ref) {
+          return paths.push(name);
+        }
+      });
+      return paths;
     };
     return MongooseAdapter;
   }());

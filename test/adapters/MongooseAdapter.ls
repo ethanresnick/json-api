@@ -14,7 +14,7 @@ describe("Mongoose Adapter", ->
         toObject: sinon.spy(-> {_id: @_id, __v:@__v, prop:'valToObject'})
         # above, toObject doesn't copy over id, which may be "virtual"
   
-      resource = MongooseAdapter.docToResource(doc, type)
+      resource = MongooseAdapter.docToResource(doc, type, [])
 
       expect(MongooseAdapter.docToResource).to.be.a("function")
       expect(doc.toObject.callCount).to.equal(1)

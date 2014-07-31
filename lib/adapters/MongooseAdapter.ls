@@ -5,11 +5,7 @@ class MongooseAdapter
   (@model, @options) ->
     # find the names of all the paths in the
     # schema that refer to other models
-    @refPaths = [];
-    @model.schema.eachPath((name, type) ~> 
-      @refPaths.push(name) if type.options.ref?
-    );
-
+    @refPaths = @@getReferencePaths(@model);
     @queryBuilder = new mongoose.Query(null, null, @model, @model.collection)
 
   # put the qb into the proper mode.
@@ -123,15 +119,48 @@ class MongooseAdapter
 
     makeCollection = docs instanceof Array
     docs = [docs] if !makeCollection
-    docs .= map(~> @@docToResource(it, @model.collection.name))
+    docs .= map(~> @@docToResource(it, @model.collection.name, @refPaths))
     if makeCollection then new Collection(docs, null, @model.collection.name) else docs[0]
 
   # The momngoose conversion logic.
   # Useful to have as a pure function 
   # for calling it as a utility outside this class.
-  @docToResource = (doc, type) ->
+  @docToResource = (doc, type, refPaths) ->
     attrs = doc.toObject!
     delete attrs['_id', '__v']
-    new Resource(type, doc.id, attrs);
+
+    links = {}
+    refPaths.forEach((path) ->
+      # get contents of the path w/ the reference, in the flattened + full docs.
+      pathParts = path.split('.')
+      prop = pathParts.reduce(((obj, part) -> obj[part]), doc)
+      flattenedProp = pathParts.reduce(((obj, part) -> obj[part]), attrs)
+
+      # fill the links object at this path with EITHER a full blown
+      # resource (if the relationship was populated) or just the id(s) stored.
+      if(typeof prop instanceof mongoose.Document)
+        model = prop.constructor
+        links[path] = @docToResource(prop, model.collection.name, @getReferencePaths(model))
+      else
+        links[path] = prop
+    );
+
+    new Resource(type, doc.id, attrs, links);
+
+  @getReferencePaths = (model) ->
+    paths = []
+    model.schema.eachPath((name, type) ~> 
+      #below, if toCheck is a function, we're dealing with a standard
+      # { type: Boolean|String|Number } path. We only care about objects
+      # with a ref key or arrays (if they hold objects with ref). 
+      toCheck = type.options.type
+
+      if(toCheck instanceof Array)
+        toCheck = toCheck[0];
+        
+      if(typeof toCheck == "object" and toCheck.ref)
+        paths.push(name)
+    );
+    paths
 
 module.exports = MongooseAdapter

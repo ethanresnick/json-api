@@ -26,7 +26,7 @@
             };
           })
         };
-        resource = MongooseAdapter.docToResource(doc, type);
+        resource = MongooseAdapter.docToResource(doc, type, []);
         expect(MongooseAdapter.docToResource).to.be.a("function");
         expect(doc.toObject.callCount).to.equal(1);
         expect(resource.attrs.prop).to.equal("valToObject");
