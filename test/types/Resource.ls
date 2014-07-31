@@ -19,20 +19,7 @@ describe("Resource type", ->
     it2("should allow construction with no/valid id", ->
       # valid/no ids should construct w/o error
       noId    = new Resource("type", null, {})
-      validId = new Resource("aoin", \3920nA_-xgGr, {})
-    )
-
-    it2("shold prevent setting id to an invalid value", ->
-      # should validate ids on construction
-      expect(-> new Resource("type", "2,x39", {})).to.throw(/Invalid id/)
-      validId = new Resource("aoin", \3920nA_-xgGr, {})
-
-      # removing or changind id to something valid should be fine
-      validId.id = void;
-      validId.id = "valid";
-
-      # but setting to something invalid is an error
-      expect(-> validId.id = "thingWithComma,rt").to.throw(/Invalid id/)
+      validId = new Resource("aoin", \39.20nA_-xgGr, {})
     )
 
     it2("should coerce ids to strings, as required by the spec", ->

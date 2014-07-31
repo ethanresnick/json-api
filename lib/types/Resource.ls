@@ -21,9 +21,7 @@ class Resource
 
   id:~
     -> @_id
-    (id) -> 
-      if id? and /^[A-Za-z0-9\-\_]+$/ != id
-        throw new Error("Invalid id") 
+    (id) ->
       @_id = if id? then String(id).toString! else null
 
   _coerceAttrs: (attrs) -> attrs # No coercion by default; subclasses may override.

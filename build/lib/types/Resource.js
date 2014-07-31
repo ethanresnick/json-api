@@ -42,9 +42,6 @@
         return this._id;
       },
       set: function(id){
-        if (id != null && !/^[A-Za-z0-9\-\_]+$/.test(id)) {
-          throw new Error("Invalid id");
-        }
         this._id = id != null ? String(id).toString() : null;
       },
       configurable: true,

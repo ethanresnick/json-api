@@ -33,19 +33,7 @@
       it2("should allow construction with no/valid id", function(){
         var noId, validId;
         noId = new Resource("type", null, {});
-        return validId = new Resource("aoin", '3920nA_-xgGr', {});
-      });
-      it2("shold prevent setting id to an invalid value", function(){
-        var validId;
-        expect(function(){
-          return new Resource("type", "2,x39", {});
-        }).to['throw'](/Invalid id/);
-        validId = new Resource("aoin", '3920nA_-xgGr', {});
-        validId.id = void 8;
-        validId.id = "valid";
-        return expect(function(){
-          return validId.id = "thingWithComma,rt";
-        }).to['throw'](/Invalid id/);
+        return validId = new Resource("aoin", '39.20nA_-xgGr', {});
       });
       it2("should coerce ids to strings, as required by the spec", function(){
         var r;
