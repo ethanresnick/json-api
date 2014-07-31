@@ -19,10 +19,15 @@
       return res;
     };
     prototype.get = function(){
-      var ref$;
-      return ref$ = {}, ref$[this.resources.type] = this.resources instanceof Collection
+      var doc;
+      doc = {};
+      doc[this.resources.type] = this.resources instanceof Collection
         ? this.resources.resources.map(bind$(this, 'renderResource'))
-        : this.renderResource(this.resources), ref$;
+        : this.renderResource(this.resources);
+      if (this.meta) {
+        doc.meta = this.meta;
+      }
+      return doc;
     };
     return Document;
   }());

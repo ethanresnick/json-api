@@ -9,10 +9,16 @@ class Document
     res
 
   get: ->
-    (@resources.type): (
+    doc = {}
+    doc[@resources.type] = (
       if @resources instanceof Collection
       then @resources.resources.map(@~renderResource)
       else @renderResource(@resources)
     )
+
+    if @meta then doc.meta = @meta
+    doc
+
+    # todo: support linked and links
 
 module.exports = Document
