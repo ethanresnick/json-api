@@ -1,11 +1,12 @@
 require! [\mocha, \sinon \chai, \../lib/BaseController, \../lib/types/ErrorResource, \../lib/types/Collection]
 expect = chai.expect
 it2 = it # a hack for livescript
-resSpy = {json: sinon.spy((status, body) -> status )}
+resSpy = {json: sinon.spy((status, body) -> status ), set: sinon.spy!}
 
 describe("Base Controller", ->
   beforeEach(->
     resSpy.json.reset!
+    resSpy.set.reset!
   )
 
   describe("extend", ->
@@ -30,6 +31,11 @@ describe("Base Controller", ->
       expect(resSpy.json.firstCall.args[0]).to.equal(411)
       expect(resSpy.json.secondCall.args[0]).to.equal(408)
       expect(resSpy.json.firstCall.args[1]).to.be.an("object")
+    )
+
+    it2("should send the response with the proper mime type", ->
+      BaseController.sendResources(resSpy, new ErrorResource(null, {'status': 408}))
+      expect(resSpy.set.calledWith("Content-Type", "application/vnd.api+json")).to.be.true
     )
 
     it2("calls `pickStatus` to figure out the appopriate response status code if passed a collection of error resources", ->

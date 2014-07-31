@@ -12,11 +12,13 @@
   resSpy = {
     json: sinon.spy(function(status, body){
       return status;
-    })
+    }),
+    set: sinon.spy()
   };
   describe("Base Controller", function(){
     beforeEach(function(){
-      return resSpy.json.reset();
+      resSpy.json.reset();
+      return resSpy.set.reset();
     });
     describe("extend", function(){
       return it2("returns a new object the provided properties and `this` as the prototype", function(){
@@ -53,6 +55,12 @@
         expect(resSpy.json.firstCall.args[0]).to.equal(411);
         expect(resSpy.json.secondCall.args[0]).to.equal(408);
         return expect(resSpy.json.firstCall.args[1]).to.be.an("object");
+      });
+      it2("should send the response with the proper mime type", function(){
+        BaseController.sendResources(resSpy, new ErrorResource(null, {
+          'status': 408
+        }));
+        return expect(resSpy.set.calledWith("Content-Type", "application/vnd.api+json")).to.be['true'];
       });
       return it2("calls `pickStatus` to figure out the appopriate response status code if passed a collection of error resources", function(){
         var coll, pickStatusSpy;

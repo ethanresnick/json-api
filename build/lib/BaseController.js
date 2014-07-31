@@ -116,6 +116,7 @@
       } else {
         status = 200;
       }
+      res.set('Content-Type', 'application/vnd.api+json');
       return res.json(Number(status), new Document(resources, meta).get());
     }
   };

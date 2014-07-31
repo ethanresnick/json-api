@@ -92,6 +92,7 @@ module.exports =
     else
       status = 200
 
+    res.set('Content-Type', 'application/vnd.api+json');
     res.json(Number(status), (new Document(resources, meta)).get!)
 
 #todo: create, update, delete    
