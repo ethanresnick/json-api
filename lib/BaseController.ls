@@ -40,7 +40,7 @@ module.exports =
     switch req.method.toUpperCase!
     | "GET" => # Handles list/read requests
       if(req.params.id)
-        ids = req.params.id.split(",");
+        ids = req.params.id.split(","); #.map(decodeURIComponent)?
         if ids.length > 1 
           then query.withIds(ids) 
           else query.withId(ids[0]) 
@@ -54,6 +54,9 @@ module.exports =
       # fields[TYPE] syntax (optional per spec).
       if(req.query.fields)
         query.onlyFields(req.query.fields.split(','))
+
+      if(req.query.include)
+        query.includeLinked(req.query.include.split(','))
 
       # Add a default limit. TODO: support user provding one
       query.limitTo(100)

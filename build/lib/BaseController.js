@@ -72,6 +72,9 @@
         if (req.query.fields) {
           query.onlyFields(req.query.fields.split(','));
         }
+        if (req.query.include) {
+          query.includeLinked(req.query.include.split(','));
+        }
         query.limitTo(100);
         break;
       case "POST":
