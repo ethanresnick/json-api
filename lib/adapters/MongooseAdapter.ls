@@ -64,7 +64,7 @@ class MongooseAdapter
     # model's schema. E.g. on a BlogPost resource, the
     # path could be comments.author, but the BlogPost
     # will only know about the `comments` part of the path.
-    @refPaths.forEach(-> 
+    @refPaths.forEach(~> 
       for path, i in paths when (path.substr(0, it.length) == it)
         pathExtra = path.substr(it.length + 1) # remove next dot
         @queryBuilder.populate(({}

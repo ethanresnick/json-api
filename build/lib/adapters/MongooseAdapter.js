@@ -83,6 +83,7 @@
       return x$;
     };
     prototype.includeLinked = function(paths){
+      var this$ = this;
       this.refPaths.forEach(function(it){
         var i$, ref$, len$, i, path, pathExtra, x$, results$ = [];
         for (i$ = 0, len$ = (ref$ = paths).length; i$ < len$; ++i$) {
@@ -90,7 +91,7 @@
           path = ref$[i$];
           if (path.substr(0, it.length) === it) {
             pathExtra = path.substr(it.length + 1);
-            this.queryBuilder.populate((x$ = {}, x$.path = it, pathExtra && (x$.select = pathExtra), x$));
+            this$.queryBuilder.populate((x$ = {}, x$.path = it, pathExtra && (x$.select = pathExtra), x$));
             paths.splice(i, 1);
             continue;
           }
