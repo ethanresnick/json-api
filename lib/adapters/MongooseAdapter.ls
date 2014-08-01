@@ -1,5 +1,5 @@
 
-require! [\mongoose \../types/Resource \../types/Collection  \../types/ErrorResource \../util/advice \Q];
+require! [\mongoose \mongoose/lib/utils \../types/Resource \../types/Collection  \../types/ErrorResource \../util/advice \Q];
 
 class MongooseAdapter
   (@model, @options) ->
@@ -123,29 +123,72 @@ class MongooseAdapter
     if makeCollection then new Collection(docs, null, @model.collection.name) else docs[0]
 
   # The momngoose conversion logic.
-  # Useful to have as a pure function 
-  # for calling it as a utility outside this class.
+  # Useful to have as a pure function for calling it as a utility outside this class.
   @docToResource = (doc, type, refPaths) ->
+    # Get and clean up attributes
     attrs = doc.toObject!
     delete attrs['_id', '__v']
 
+    # Build Links
     links = {}
     refPaths.forEach((path) ->
-      # get contents of the path w/ the reference, in the flattened + full docs.
+      # get value at the path w/ the reference, in the json'd + full docs.
       pathParts = path.split('.')
-      prop = pathParts.reduce(((obj, part) -> obj[part]), doc)
-      flattenedProp = pathParts.reduce(((obj, part) -> obj[part]), attrs)
+      valAtPath = pathParts.reduce(((obj, part) -> obj[part]), doc)
+      jsonValAtPath = pathParts.reduce(((obj, part) -> obj[part]), attrs)
 
-      # fill the links object at this path with EITHER a full blown
-      # resource (if the relationship was populated) or just the id(s) stored.
-      if(typeof prop instanceof mongoose.Document)
-        model = prop.constructor
-        links[path] = @docToResource(prop, model.collection.name, @getReferencePaths(model))
-      else
-        links[path] = prop
+      # Now, if valAtPath is a single id or populated doc, we're going 
+      # to replace it with a single (full or stubbed) Resource object
+      # in the `links` key for the resource returned by this function.
+      # Similarly, if valAtPath is an array of ids or populated docs,
+      # we're going to build an array of Resource objects (which we'll
+      # ultimately turn into a Collection). But, to make our lives simpler
+      # (so we don't have separate code for toMany and toOne relationships),
+      # let's coerce valAtPath to always hold an array of ids/docs and just 
+      # keep track of whether to convert back to a single val at the end.
+      isToOneRelationship = false
+      if not (valAtPath instanceof Array)
+        valAtPath = [valAtPath]
+        jsonValAtPath = [jsonValAtPath];
+        isToOneRelationship = true
+
+      # fill the links for this path.
+      resources = []
+      valAtPath.forEach((docOrId, i) ~> 
+        # if the referenced document was populated, build a full resource for it
+        if(docOrId instanceof mongoose.Document)
+          model = docOrId.constructor
+          type  = model.collection.name
+          resources.push(@docToResource(docOrId, type, @getReferencePaths(model)))
+
+        # otherwise, we just have an id, so we make a stub resource (one w/o attrs)
+        else
+          # docOrId might be an OId here, so use jsonValAtPath,
+          # which will have been converted to a string.
+          id = jsonValAtPath[i]
+          type = do ->
+            # finding the type is hell. We have to go back into 
+            # the schema for the parent document, find the current
+            # path, and look at its `ref` field. Then we find the
+            # associated model and inspect its collection name.
+            opts  = doc.constructor.schema.path(path).options.type
+            opts .= [0] if opts instanceof Array
+            utils.toCollectionName(opts.ref)
+          resources.push(new Resource(type, id))
+      );
+
+      # flatten if neccessary; otherwise, formally turn it into a collection.
+      links[path] = if isToOneRelationship then resources[0] else new Collection(resources)
+
+      # delete the attribute
+      lastPathPart = pathParts[*-1]
+      containingPathParts = pathParts.slice(0, pathParts.length-1);
+      containerVal = containingPathParts.reduce(((obj, part) -> obj[part]), attrs)
+      delete containerVal[lastPathPart]
     );
 
-    new Resource(type, doc.id, attrs, links);
+    # Return the resource
+    new Resource(type, doc.id, attrs, links if refPaths.length);
 
   @getReferencePaths = (model) ->
     paths = []

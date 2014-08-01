@@ -15,8 +15,9 @@
   "dependencies": {
     "express": "4.x.x",
     "mongoose": "^3.8.13",
-    "url-template": "^2.0.4",
-    "q": "^1.0.1"
+    "prelude-ls": "^1.1.1",
+    "q": "^1.0.1",
+    "url-template": "^2.0.4"
   },
   "devDependencies": {
     "LiveScript": "^1.2.0",
