@@ -4,10 +4,10 @@
   Collection = (function(){
     Collection.displayName = 'Collection';
     var prototype = Collection.prototype, constructor = Collection;
-    function Collection(resources, _href, type){
+    function Collection(resources, href, type){
       var this$ = this instanceof ctor$ ? this : new ctor$;
       this$.resources = resources;
-      this$._href = _href;
+      this$.href = href;
       this$.type = this$.resources[0] ? this$.resources[0].type : type;
       return this$;
     } function ctor$(){} ctor$.prototype = prototype;
@@ -20,14 +20,9 @@
       configurable: true,
       enumerable: true
     });
-    Object.defineProperty(prototype, 'href', {
+    Object.defineProperty(prototype, 'size', {
       get: function(){
-        return this._href || function(){
-          return 'something dynamic';
-        };
-      },
-      set: function(href){
-        this._href = href;
+        return this.resources.length;
       },
       configurable: true,
       enumerable: true

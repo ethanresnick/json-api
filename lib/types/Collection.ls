@@ -8,6 +8,8 @@ class Collection
   ids:~
     -> @resources.map((.id))
 
+  size:~
+    -> @resources.length
 
 
 module.exports = Collection
