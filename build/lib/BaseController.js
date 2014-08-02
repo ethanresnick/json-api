@@ -47,7 +47,9 @@
      * specific to this request (since the controller objects themselves
      * persist between requests).
      */,
-    adapterFn: null,
+    adapterFn: null
+    /** Another stub for child controllers to override */,
+    urlTemplates: {},
     _pickStatus: function(errStatuses){
       return errStatuses[0];
     },
@@ -120,7 +122,7 @@
         status = 200;
       }
       res.set('Content-Type', 'application/vnd.api+json');
-      return res.json(Number(status), new Document(resources, meta).get());
+      return res.json(Number(status), new Document(resources, meta, this.urlTemplates).get());
     }
   };
   /*

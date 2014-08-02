@@ -1,20 +1,22 @@
-require! {\./Resource, \./Collection, prelude:\prelude-ls}
+require! {\./Resource, \./Collection, prelude:\prelude-ls, templating:\url-template}
 
 class Document
-  (@resources, @meta)->
+  (@resources, @meta, @urlTemplates)->
     @linked = {}
     @links = {}
+    @urlTemplates = {[k, templating.parse(template)] for k, template of @urlTemplates}
 
   addLinkedResource: (resource) ->
     if not @linked[resource.type]?
       @linked[resource.type] = []
 
     if resource.id not in (@linked[resource.type]).map(-> it.id)
-      @linked[resource.type].push(resource);
+      @linked[resource.type].push(@renderResource(resource));
 
   renderResource: (resource) ->
     res = resource.attrs
     res.id = resource.id if resource.id
+    urlTempParams = do -> ({} <<< res)
     if resource.links? then res.links = {}
     for path, referenced of resource.links
       # we're going to use referencedVal to fill res.links[path] with
@@ -32,8 +34,8 @@ class Document
       res.links[path] = {}
         ..[\type] = referenced.type
         ..[idKey] = referenced[idKey]
-        # only add the href if one is specified & we have stubbed resources (not in `linked`)
-        ..[\href] = referenced.href if referenced.href and !referencedResources[0].attrs?
+        # only add the href if we have stubbed resources (not in `linked`)
+        ..[\href] = referenced.href || @urlFor(resource.type, path, referenced[idKey], urlTempParams) if !referencedResources[0].attrs?
 
       referencedResources.forEach(~>
         if it.attrs? then @addLinkedResource(it)
@@ -41,19 +43,37 @@ class Document
 
     res
 
+  urlFor: (type, path, referencedIdOrIds, extraParams) ->
+    if not @urlTemplates[type + '.' + path]
+      throw new Error("Missing url template for " + type + '.' + path);
+
+    params = {[(type + '.' + k), v] for k, v of extraParams}
+    (params[type] || (params[type] = {}))[path] = referencedIdOrIds;
+
+    @urlTemplates[type + '.' + path].expand(params)
+
   get: ->
     doc = {}
       # Add meta key
       ..[\meta] = @meta if @meta
 
       # Add primary resource(s)
-      ..[@resources.type] = (
-        if @resources instanceof Collection
-        then @resources.resources.map(@~renderResource)
-        else @renderResource(@resources)
-      )
+      ..[@resources.type] = do ~>
+        isCollection = @resources instanceof Collection
+        # render each resource
+        renderedResources = if isCollection
+          then @resources.resources.map(@~renderResource)
+          else @renderResource(@resources)
 
-      ..[\linked] = \something if not prelude.Obj.empty(@linked)
+        # compact them as a group
+        if isCollection
+          a = 3
+        else
+          a = 0
+
+        renderedResources
+
+      ..[\linked] = @linked if not prelude.Obj.empty(@linked)
       ..[\links]  = \something if not prelude.Obj.empty(@links)
 
     doc
@@ -105,7 +125,7 @@ class Document
         }
       }
 
-    1 resource | toOne relationship | included.
+    DONE. 1 resource | toOne relationship | included.
       - {
           type: {
             "attrName": "val", 
@@ -123,7 +143,7 @@ class Document
           }
         }
 
-    1 resource | toMany relationship | included
+    DONE. 1 resource | toMany relationship | included
       - {
         type: {
           "attrName": "val", 
@@ -173,9 +193,7 @@ class Document
             {
               "attrName": "val", 
               "links": {
-                "propName": {
-                  ids: ["id2", "id3"]
-                } 
+                "propName": ["id2", "id3"]
               }
             },
             ...

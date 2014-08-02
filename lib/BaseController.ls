@@ -30,6 +30,9 @@ module.exports =
    */
   adapterFn: null
 
+  /** Another stub for child controllers to override */
+  urlTemplates: {}
+
   # Takes an array of error status codes and returns
   # the code that best represents the collection.
   _pickStatus: (errStatuses) ->
@@ -96,7 +99,7 @@ module.exports =
       status = 200
 
     res.set('Content-Type', 'application/vnd.api+json');
-    res.json(Number(status), (new Document(resources, meta)).get!)
+    res.json(Number(status), (new Document(resources, meta, @urlTemplates)).get!)
 
 #todo: create, update, delete    
 /*
