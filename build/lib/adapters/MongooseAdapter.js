@@ -182,7 +182,7 @@
           if (docOrId instanceof mongoose.Document) {
             model = docOrId.constructor;
             type = model.collection.name;
-            return resources.push(this$.docToResource(docOrId, type, this$.getReferencePaths(model)));
+            return resources.push(constructor.docToResource(docOrId, type, constructor.getReferencePaths(model)));
           } else {
             id = jsonValAtPath[i];
             type = function(){

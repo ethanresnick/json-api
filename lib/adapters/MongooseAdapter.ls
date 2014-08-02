@@ -159,7 +159,7 @@ class MongooseAdapter
         if(docOrId instanceof mongoose.Document)
           model = docOrId.constructor
           type  = model.collection.name
-          resources.push(@docToResource(docOrId, type, @getReferencePaths(model)))
+          resources.push(@@docToResource(docOrId, type, @@getReferencePaths(model)))
 
         # otherwise, we just have an id, so we make a stub resource (one w/o attrs)
         else
