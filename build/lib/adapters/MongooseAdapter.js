@@ -162,7 +162,7 @@
       delete attrs['_id'], delete attrs['__v'];
       links = {};
       refPaths.forEach(function(path){
-        var pathParts, valAtPath, jsonValAtPath, isToOneRelationship, resources, lastPathPart, containingPathParts, containerVal, ref$, this$ = this;
+        var pathParts, valAtPath, jsonValAtPath, lastPathPart, containingPathParts, containerVal, isToOneRelationship, resources, this$ = this;
         pathParts = path.split('.');
         valAtPath = pathParts.reduce(function(obj, part){
           return obj[part];
@@ -170,6 +170,15 @@
         jsonValAtPath = pathParts.reduce(function(obj, part){
           return obj[part];
         }, attrs);
+        lastPathPart = pathParts[pathParts.length - 1];
+        containingPathParts = pathParts.slice(0, pathParts.length - 1);
+        containerVal = containingPathParts.reduce(function(obj, part){
+          return obj[part];
+        }, attrs);
+        delete containerVal[lastPathPart];
+        if (!valAtPath || (valAtPath instanceof Array && valAtPath.length === 0)) {
+          return;
+        }
         isToOneRelationship = false;
         if (!(valAtPath instanceof Array)) {
           valAtPath = [valAtPath];
@@ -186,25 +195,17 @@
           } else {
             id = jsonValAtPath[i];
             type = function(){
-              var opts;
-              opts = doc.constructor.schema.path(path).options.type;
-              if (opts instanceof Array) {
-                opts = opts[0];
-              }
-              return utils.toCollectionName(opts.ref);
+              var schemaType, ref, ref$;
+              schemaType = doc.constructor.schema.path(path);
+              ref = (ref$ = (schemaType.caster || schemaType).options) != null ? ref$.ref : void 8;
+              return utils.toCollectionName(ref);
             }();
             return resources.push(new Resource(type, id));
           }
         });
-        links[path] = isToOneRelationship
+        return links[path] = isToOneRelationship
           ? resources[0]
           : new Collection(resources);
-        lastPathPart = pathParts[pathParts.length - 1];
-        containingPathParts = pathParts.slice(0, pathParts.length - 1);
-        containerVal = containingPathParts.reduce(function(obj, part){
-          return obj[part];
-        }, attrs);
-        return ref$ = containerVal[lastPathPart], delete containerVal[lastPathPart], ref$;
       });
       return new Resource(type, doc.id, attrs, refPaths.length ? links : void 8);
     };
@@ -212,12 +213,8 @@
       var paths, this$ = this;
       paths = [];
       model.schema.eachPath(function(name, type){
-        var toCheck;
-        toCheck = type.options.type;
-        if (toCheck instanceof Array) {
-          toCheck = toCheck[0];
-        }
-        if (typeof toCheck === "object" && toCheck.ref) {
+        var ref$;
+        if ((ref$ = (type.caster || type).options) != null && ref$.ref) {
           return paths.push(name);
         }
       });

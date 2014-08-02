@@ -137,6 +137,18 @@ class MongooseAdapter
       valAtPath = pathParts.reduce(((obj, part) -> obj[part]), doc)
       jsonValAtPath = pathParts.reduce(((obj, part) -> obj[part]), attrs)
 
+      # delete the attribute, since we're moving it to links (or, if it
+      # doesn't link to anything, just removing it)
+      lastPathPart = pathParts[*-1]
+      containingPathParts = pathParts.slice(0, pathParts.length-1);
+      containerVal = containingPathParts.reduce(((obj, part) -> obj[part]), attrs)
+      delete containerVal[lastPathPart]
+
+      # if there's a toOne relationship with no value in it, or a toMany
+      # with an empty array, skip building a links key for it
+      if !valAtPath or (valAtPath instanceof Array and valAtPath.length == 0)
+        return
+
       # Now, if valAtPath is a single id or populated doc, we're going 
       # to replace it with a single (full or stubbed) Resource object
       # in the `links` key for the resource returned by this function.
@@ -171,20 +183,14 @@ class MongooseAdapter
             # the schema for the parent document, find the current
             # path, and look at its `ref` field. Then we find the
             # associated model and inspect its collection name.
-            opts  = doc.constructor.schema.path(path).options.type
-            opts .= [0] if opts instanceof Array
-            utils.toCollectionName(opts.ref)
+            schemaType = doc.constructor.schema.path(path)
+            ref = (schemaType.caster || schemaType).options?.ref
+            utils.toCollectionName(ref)
           resources.push(new Resource(type, id))
       );
 
       # flatten if neccessary; otherwise, formally turn it into a collection.
       links[path] = if isToOneRelationship then resources[0] else new Collection(resources)
-
-      # delete the attribute
-      lastPathPart = pathParts[*-1]
-      containingPathParts = pathParts.slice(0, pathParts.length-1);
-      containerVal = containingPathParts.reduce(((obj, part) -> obj[part]), attrs)
-      delete containerVal[lastPathPart]
     );
 
     # Return the resource
@@ -193,16 +199,7 @@ class MongooseAdapter
   @getReferencePaths = (model) ->
     paths = []
     model.schema.eachPath((name, type) ~> 
-      #below, if toCheck is a function, we're dealing with a standard
-      # { type: Boolean|String|Number } path. We only care about objects
-      # with a ref key or arrays (if they hold objects with ref). 
-      toCheck = type.options.type
-
-      if(toCheck instanceof Array)
-        toCheck = toCheck[0];
-        
-      if(typeof toCheck == "object" and toCheck.ref)
-        paths.push(name)
+      paths.push(name) if (type.caster || type).options?.ref
     );
     paths
 
