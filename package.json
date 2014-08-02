@@ -14,6 +14,7 @@
   "main": "index.js",
   "dependencies": {
     "express": "4.x.x",
+    "flat": "^1.2.1",
     "prelude-ls": "^1.1.1",
     "q": "^1.0.1",
     "url-template": "^2.0.4"
