@@ -122,6 +122,14 @@
       before = bind$(this, 'beforeSave');
       return this._buildQuery(req).promise().then(function(){}, function(){});
     },
+    PUT: function(req, res, next){
+      var before;
+      if (!req.is('application/vnd.api+json')) {
+        return next();
+      }
+      before = bind$(this, 'beforeSave');
+      return this._buildQuery(req).promise().then(function(){}, function(){});
+    },
     sendResources: function(res, resources, meta){
       var status;
       if (resources.type === "errors") {
@@ -234,6 +242,11 @@
       }).catch(function(err) { self.sendJsonApiError(err, res); });
     } 
   };*/
+  function import$(obj, src){
+    var own = {}.hasOwnProperty;
+    for (var key in src) if (own.call(src, key)) obj[key] = src[key];
+    return obj;
+  }
   function bind$(obj, key, target){
     return function(){ return (target || obj)[key].apply(obj, arguments) };
   }

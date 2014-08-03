@@ -100,6 +100,12 @@ module.exports =
     @_buildQuery(req).promise!
       .then(->, ->)
 
+  PUT: (req, res, next) ->
+    return next() if !req.is('application/vnd.api+json')
+    before = @~beforeSave
+    @_buildQuery(req).promise!
+      .then(->, ->)
+
   sendResources: (res, resources, meta) ->
     if resources.type == "errors"
       if resources instanceof Collection
