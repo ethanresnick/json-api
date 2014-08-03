@@ -75,6 +75,10 @@ module.exports =
     query
 
   GET: (req, res, next) ->
+    # Even if the accepts header doesn't include the
+    # json api media type, try to respond anyway rather
+    # than send a 406. See note here about HTTP 1.1:
+    # http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
     after = @~afterQuery
     @_buildQuery(req).promise!
       .then((result) ->
@@ -91,6 +95,7 @@ module.exports =
       )
 
   POST: (req, res, next) ->
+    return next() if !req.is('application/vnd.api+json')
     before = @~beforeSave
     @_buildQuery(req).promise!
       .then(->, ->)

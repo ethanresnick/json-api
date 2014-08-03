@@ -116,6 +116,9 @@
     },
     POST: function(req, res, next){
       var before;
+      if (!req.is('application/vnd.api+json')) {
+        return next();
+      }
       before = bind$(this, 'beforeSave');
       return this._buildQuery(req).promise().then(function(){}, function(){});
     },
