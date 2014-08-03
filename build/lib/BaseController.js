@@ -54,7 +54,7 @@
       return errStatuses[0];
     },
     _buildQuery: function(req){
-      var query, ids;
+      var query, ids, filters, attr, val;
       query = this.adapterFn();
       switch (req.method.toUpperCase()) {
       case "GET":
@@ -76,6 +76,17 @@
         }
         if (req.query.include) {
           query.includeLinked(req.query.include.split(','));
+        }
+        filters = import$({}, req.query);
+        delete filters['fields'], delete filters['include'], delete filters['sort'];
+        for (attr in filters) {
+          val = filters[attr];
+          if (/^fields\[.+?\]$/.exec(attr)) {
+            continue;
+          }
+          if (val) {
+            query.withProperty(attr, val);
+          }
         }
         query.limitTo(100);
         break;

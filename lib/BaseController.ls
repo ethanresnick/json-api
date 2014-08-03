@@ -61,6 +61,12 @@ module.exports =
       if(req.query.include)
         query.includeLinked(req.query.include.split(','))
 
+      filters = {} <<< req.query; delete filters[\fields \include \sort];
+      for attr, val of filters
+        #ignore any field[type] params
+        continue if attr is /^fields\[.+?\]$/
+        query.withProperty(attr, val) if val;
+
       # Add a default limit. TODO: support user provding one
       query.limitTo(100)
 

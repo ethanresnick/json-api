@@ -32,7 +32,7 @@ class MongooseAdapter
 
   withProperty: (prop, val) ->
     @queryBuilder
-      ..where({prop: val})
+      ..where({(prop): val})
 
   onlyFields: (fields) ->
     # assumes that, in your shchema, you haven't 

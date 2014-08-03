@@ -48,11 +48,9 @@
       return x$;
     };
     prototype.withProperty = function(prop, val){
-      var x$;
+      var x$, ref$;
       x$ = this.queryBuilder;
-      x$.where({
-        prop: val
-      });
+      x$.where((ref$ = {}, ref$[prop] = val, ref$));
       return x$;
     };
     prototype.onlyFields = function(fields){
