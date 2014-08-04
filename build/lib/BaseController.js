@@ -8,13 +8,31 @@
   ErrorResource = require('./types/ErrorResource');
   module.exports = {
     /**
-     * Returns an object with newProps as properties (all enumerable) 
-     * and values and `this` in the prototype chain. Allows you create
-     * controllers that extend this one.
+     * Keeps a collection of all objects extending this one, indexed by type.
+     * Used to run the beforeSave/afterQuery methods from the controllers of
+     * linked resources. E.g. if a subclass is a User controller w/ beforeSave
+     * and afterQuery methods, it may be that a User also has some Projects,
+     * and we want a request for /users?include=projects to be able to run
+     * the beforeSave and afterQuery methods from the Projects controller before
+     * returning.
      */
-    extend: function(newProps){
-      var k, v;
-      return Object.create(this, (function(){
+    subclasses: {}
+    /**
+     * Returns an object extending this class, and registers the subclass.
+     * By registering, I mean it adds the subclass to {@subclasses} and replaces
+     * its urlTemplates with a reference to the shared urlTemplates object (after
+     * merging in the subclass' additions). By extending this class, I mean
+     * that the subclass will have newProps as properties/values on it (all
+     * enumerable) and BaseController in its prototype chain.
+     */,
+    extend: function(type, newProps){
+      var path, ref$, template, k, v;
+      for (path in ref$ = newProps.urlTemplates) {
+        template = ref$[path];
+        this.urlTemplates[path] = template;
+      }
+      delete newProps.urlTemplates;
+      this.subclasses[type] = Object.create(this, (function(){
         var ref$, own$ = {}.hasOwnProperty, results$ = {};
         for (k in ref$ = newProps) if (own$.call(ref$, k)) {
           v = ref$[k];
@@ -25,6 +43,7 @@
         }
         return results$;
       }()));
+      return this.subclasses[type];
     }
     /**
      * A function run on each resource returned from a query to transform it.
@@ -43,70 +62,86 @@
     /**
      * A function that, when called, returns a new object that implements 
      * the Adapter interface. Should be provided by the child controller.
-     * Whe need to get a new adapter on each request so the query state is
+     * We need to get a new adapter on each request so the query state is
      * specific to this request (since the controller objects themselves
      * persist between requests).
      */,
     adapterFn: null
-    /** Another stub for child controllers to override */,
+    /**
+     * A urlTemplates object shared by all controllers.
+     * If subclasses are created through {@extend}, their urlTemplates
+     * will be merged into this rather than shading it, so a controller 
+     * that extends BaseController will have access to the urlTemplates 
+     * registered by another controller that extends it.
+     */,
     urlTemplates: {},
     _pickStatus: function(errStatuses){
       return errStatuses[0];
+    }
+    /**
+     * Takes a Resource or Collection being returned and applies the
+     * appropriate afterQuery method to it and (recursively)
+     * to all of its linked resources.
+     */,
+    _afterQueryRecursive: function(queryResult){
+      var after;
+      after = bind$(this, 'afterQuery');
+      if (queryResult instanceof Collection) {
+        queryResult.resources.map(function(it){
+          return after(it, req, res);
+        });
+        return queryResult;
+      } else {
+        return after(queryResult, req, res);
+      }
     },
     _buildQuery: function(req){
-      var query, ids, filters, attr, val;
+      var query;
       query = this.adapterFn();
       switch (req.method.toUpperCase()) {
-      case "GET":
-        if (req.params.id) {
-          ids = req.params.id.split(",");
-          if (ids.length > 1) {
-            query.withIds(ids);
-          } else {
-            query.withId(ids[0]);
-          }
-        } else {
-          query.any();
-        }
-        if (req.query.sort) {
-          query.sort(req.query.sort.split(','));
-        }
-        if (req.query.fields) {
-          query.onlyFields(req.query.fields.split(','));
-        }
-        if (req.query.include) {
-          query.includeLinked(req.query.include.split(','));
-        }
-        filters = import$({}, req.query);
-        delete filters['fields'], delete filters['include'], delete filters['sort'];
-        for (attr in filters) {
-          val = filters[attr];
-          if (/^fields\[.+?\]$/.exec(attr)) {
-            continue;
-          }
-          if (val) {
-            query.withProperty(attr, val);
-          }
-        }
-        query.limitTo(100);
-        break;
       case "POST":
       }
       return query;
     },
-    GET: function(req, res, next){
-      var after, this$ = this;
-      after = bind$(this, 'afterQuery');
-      return this._buildQuery(req).promise().then(function(result){
-        if (result instanceof Collection) {
-          result.resources.map(function(it){
-            return after(it, req, res);
-          });
-          return result;
+    _buildGETQuery: function(req){
+      var query, ids, filters, attr, val;
+      query = this.adapterFn();
+      if (req.params.id) {
+        ids = req.params.id.split(",");
+        if (ids.length > 1) {
+          query.withIds(ids);
         } else {
-          return after(result, req, res);
+          query.withId(ids[0]);
         }
-      }).then(function(resources){
+      } else {
+        query.any();
+      }
+      if (req.query.sort != null) {
+        query.sort(req.query.sort.split(','));
+      }
+      if (req.query.fields != null) {
+        query.onlyFields(req.query.fields.split(','));
+      }
+      if (req.query.include != null) {
+        query.includeLinked(req.query.include.split(','));
+      }
+      filters = import$({}, req.query);
+      delete filters['fields'], delete filters['include'], delete filters['sort'];
+      for (attr in filters) {
+        val = filters[attr];
+        if (/^fields\[.+?\]$/.exec(attr)) {
+          continue;
+        }
+        if (val) {
+          query.withProperty(attr, val);
+        }
+      }
+      query.limitTo(100);
+      return query;
+    },
+    GET: function(req, res, next){
+      var this$ = this;
+      return this._buildGETQuery(req).promise().then(bind$(this, '_afterQueryRecursive')).then(function(resources){
         return this$.sendResources(res, resources);
       })['catch'](function(err){
         var er;
@@ -115,12 +150,23 @@
       });
     },
     POST: function(req, res, next){
-      var before;
+      var err, before;
       if (!req.is('application/vnd.api+json')) {
         return next();
       }
-      before = bind$(this, 'beforeSave');
-      return this._buildQuery(req).promise().then(function(){}, function(){});
+      if (typeof req.body !== "object") {
+        try {
+          req.body = JSON.parse(req.body);
+        } catch (e$) {
+          err = e$;
+          return this.sendResources(res, ErrorResource.fromError({
+            title: "Request contains invalid JSON.",
+            details: err.message,
+            status: 400
+          }));
+        }
+      }
+      return before = bind$(this, 'beforeSave');
     },
     PUT: function(req, res, next){
       var before;
@@ -148,16 +194,6 @@
     }
   };
   /*
-  
-    mongooseDocsToJsonApiResponse: function(mongooseDocs) {
-      var collectionName = pluralize.plural(this.model.modelName).toLowerCase()
-        , resources      = (mongooseDocs instanceof Array) ? 
-            mongooseDocs.map(this.mongooseDocToJsonApiResource.bind(this)) : 
-            this.mongooseDocToJsonApiResource(mongooseDocs);
-  
-      return JsonApi.attachResources(collectionName, resources);
-    },
-  
     sendJsonApiError: function(err, res) {
       var errors, thisError, generatedError;
   
@@ -242,12 +278,12 @@
       }).catch(function(err) { self.sendJsonApiError(err, res); });
     } 
   };*/
+  function bind$(obj, key, target){
+    return function(){ return (target || obj)[key].apply(obj, arguments) };
+  }
   function import$(obj, src){
     var own = {}.hasOwnProperty;
     for (var key in src) if (own.call(src, key)) obj[key] = src[key];
     return obj;
-  }
-  function bind$(obj, key, target){
-    return function(){ return (target || obj)[key].apply(obj, arguments) };
   }
 }).call(this);
