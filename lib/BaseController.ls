@@ -82,7 +82,7 @@ module.exports =
     query = @adapterFn!
 
     if(req.params.id)
-      ids = req.params.id.split(","); #.map(decodeURIComponent)?
+      ids = req.params.id.split(",").map(decodeURIComponent)
       if ids.length > 1 
         then query.withIds(ids) 
         else query.withId(ids[0]) 
