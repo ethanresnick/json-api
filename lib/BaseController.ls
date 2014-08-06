@@ -30,18 +30,6 @@ module.exports =
     @subclasses[type]
 
   /**
-   * A function run on each resource returned from a query to transform it.
-   * Subclasses should replace this with their own implementation
-   */
-  afterQuery: -> it
-
-  /**
-   * A function run on each resource before it's saved.
-   * Subclasses should replace this with their own implementation
-   */
-  beforeSave: -> it
-
-  /**
    * A function that, when called, returns a new object that implements 
    * the Adapter interface. Should be provided by the child controller.
    * We need to get a new adapter on each request so the query state is
@@ -77,12 +65,7 @@ module.exports =
     else
       after(queryResult, req, res)
 
-  _buildQuery: (req) ->
-    query = @adapterFn!
-    switch req.method.toUpperCase!
-    | "POST" => # Handles create requests
 
-    query
 
   _buildGETQuery: (req) ->
     query = @adapterFn!
@@ -148,9 +131,9 @@ module.exports =
 
   PUT: (req, res, next) ->
     return next() if !req.is('application/vnd.api+json')
-    before = @~beforeSave
-    @_buildQuery(req).promise!
-      .then(->, ->)
+    #before = @~beforeSave
+    #@_buildQuery(req).promise!
+    #  .then(->, ->)
 
   sendResources: (res, resources, meta) ->
     if resources.type == "errors"
