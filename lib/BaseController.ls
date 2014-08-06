@@ -14,16 +14,18 @@ module.exports =
 
   /**
    * Returns an object extending this class, and registers the subclass.
-   * By registering, I mean it adds the subclass to {@subclasses} and replaces
-   * its urlTemplates with a reference to the shared urlTemplates object (after
-   * merging in the subclass' additions). By extending this class, I mean
-   * that the subclass will have newProps as properties/values on it (all
-   * enumerable) and BaseController in its prototype chain.
+   * By registering, I mean it adds the subclass to {@subclasses}, replaces its
+   * urlTemplates with a reference to the shared urlTemplates object (after
+   * merging in the subclass' additions), and sets type as a property on the 
+   * new instance. By extending this class, I mean that the subclass will have
+   * newProps as properties/values on it (all enumerable) and BaseController in
+   * its prototype chain.
    */
   extend: (type, newProps) ->
     for path, template of newProps.urlTemplates
       @urlTemplates[path] = template;
     delete newProps.urlTemplates
+    newProps.type = type
     @subclasses[type] = Object.create(@, 
       {[k, {value: v, enumerable: true}] for own k, v of newProps}
     );
