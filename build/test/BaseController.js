@@ -21,19 +21,20 @@
       return resSpy.set.reset();
     });
     describe("extend", function(){
-      return it2("returns a new object the provided properties and `this` as the prototype", function(){
+      return it2("returns a new object with the provided properties and `this` as the prototype", function(){
         var orig, new1, new2;
         orig = {
           'base': function(it){
             return it;
-          }
+          },
+          'subclasses': {}
         };
-        new1 = BaseController.extend.call(orig, {
+        new1 = BaseController.extend.call(orig, "type", {
           'my2': function(it){
             return it;
           }
         });
-        new2 = BaseController.extend({
+        new2 = BaseController.extend("type", {
           'my3': true
         });
         expect(new1.__proto__ === orig).to.be['true'];

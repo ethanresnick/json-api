@@ -10,10 +10,12 @@ describe("Base Controller", ->
   )
 
   describe("extend", ->
-    it2("returns a new object the provided properties and `this` as the prototype", ->
-      orig = {'base': -> it}
-      new1 = BaseController.extend.call(orig, {'my2': -> it})
-      new2 = BaseController.extend({'my3': true})
+    # todo: test 1) urlTemplates merging and removing it as an instance property
+    # 2) adding to BaseController.subclasses, and 3) adding a type prop.
+    it2("returns a new object with the provided properties and `this` as the prototype", ->
+      orig = {'base': -> it, 'subclasses': {}}
+      new1 = BaseController.extend.call(orig, "type", {'my2': -> it})
+      new2 = BaseController.extend("type", {'my3': true})
 
       expect(new1.__proto__ == orig).to.be.true
       expect(new1.my2).to.be.a('function')
