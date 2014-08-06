@@ -13,7 +13,7 @@
     } function ctor$(){} ctor$.prototype = prototype;
     prototype.removeAttr = function(attr){
       var ref$, ref1$;
-      if (typeof attrs != 'undefined' && attrs !== null) {
+      if (this.attrs != null) {
         return ref1$ = (ref$ = this._attrs)[attr], delete ref$[attr], ref1$;
       }
     };

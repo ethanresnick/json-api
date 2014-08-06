@@ -5,7 +5,7 @@ class Resource
     [@type, @id, @attrs] = [type, id, attrs];
 
   removeAttr: (attr) ->
-    delete @_attrs[attr] if attrs?
+    delete @_attrs[attr] if @attrs?
 
   attrs:~
     -> @_attrs
