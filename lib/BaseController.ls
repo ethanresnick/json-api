@@ -57,15 +57,24 @@ module.exports =
    * appropriate afterQuery method to it and (recursively)
    * to all of its linked resources.
    */
-  _afterQueryRecursive: (queryResult) ->
-    after = @~afterQuery
-    if queryResult instanceof Collection
-      queryResult.resources.map(-> after(it, req, res))
-      queryResult
+  _afterQueryRecursive: (resourceOrCollection, req, res) ->
+    if resourceOrCollection instanceof Collection
+      resourceOrCollection.resources.map(~> @_after(it, req, res))
+      resourceOrCollection
     else
-      after(queryResult, req, res)
+      @_after(resourceOrCollection, req, res)
 
-
+  /** 
+   * A helper function for {@_afterQueryRecursive}.
+   *
+   * @api private
+   */
+  _after: (resource, req, res) ->
+    if typeof @subclasses[resource.type].afterQuery == 'function'
+      resource = @subclasses[resource.type]~afterQuery(resource, req, res)
+    for path, linked of resource.links
+      resource.links[path] = @_afterQueryRecursive(resource.links[path], req, res)
+    resource
 
   _buildGETQuery: (req) ->
     query = @adapterFn!
@@ -105,7 +114,7 @@ module.exports =
     # than send a 406. See note here about HTTP 1.1:
     # http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
     @_buildGETQuery(req).promise!
-      .then(@~_afterQueryRecursive)
+      .then(~> @_afterQueryRecursive(it, req, res))
       .then((resources) ~>
         @sendResources(res, resources)
       ).catch((err) ~>
