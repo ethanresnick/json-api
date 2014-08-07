@@ -16,6 +16,7 @@
       this.options = options;
       this.refPaths = constructor.getReferencePaths(this.model);
       this.queryBuilder = new mongoose.Query(null, null, this.model, this.model.collection);
+      this.toCreate = [];
     }
     prototype.mode = function(){
       var x$;
@@ -105,6 +106,9 @@
       }
       return this.queryBuilder;
     };
+    prototype.create = function(doc){
+      return this.create = this.create.concat(doc);
+    };
     /**
      * @param sorts array An array of field names to sort on.
      * Ascending is the default sort; prefix the field name with
@@ -114,8 +118,10 @@
       return this.queryBuilder.sort(sorts.join(' '));
     };
     prototype.promise = function(){
-      var qb, p;
-      qb = this.queryBuilder;
+      var p;
+      if (this.toCreate.length > 0) {
+        return this.model.create(this.beforeSave(this.toCreate));
+      }
       p = Q(this.queryBuilder.exec());
       p = p.then(function(it){
         return it;
@@ -153,6 +159,9 @@
       } else {
         return docs[0];
       }
+    };
+    prototype.beforeSave = function(docs){
+      return docs;
     };
     MongooseAdapter.docToResource = function(doc, type, refPaths){
       var attrs, links;

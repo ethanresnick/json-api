@@ -8,6 +8,9 @@ class MongooseAdapter
     @refPaths = @@getReferencePaths(@model);
     @queryBuilder = new mongoose.Query(null, null, @model, @model.collection)
 
+    # queryBuilder doesn't handle creation, so we have to handle this separately.
+    @toCreate = []
+
   # put the qb into the proper mode.
   # valid options are: find, findOne, update,
   # remove, findOneAndModify, findOneAndRemove.
@@ -84,6 +87,9 @@ class MongooseAdapter
 
     @queryBuilder
 
+  # Create one or more docs.
+  create: (doc) ->
+    @create .= concat(doc)
 
   /**
    * @param sorts array An array of field names to sort on.
@@ -94,7 +100,12 @@ class MongooseAdapter
     @queryBuilder.sort(sorts.join(' '))
 
   promise: ->
-    qb = @queryBuilder
+    # the special creation case.
+    if @toCreate.length > 0
+      # to do: do beforeSave recursively.
+      # make an option about whether to accept client ids
+      return @model.create(@beforeSave(@toCreate))
+
     p = Q(@queryBuilder.exec!)
     # Add errorHandler here for simplicity, because we don't know which `then`s we're
     # going to register below. E.g. if we did .then(@~afterQuery, @~errorHandler), it
@@ -121,6 +132,12 @@ class MongooseAdapter
     docs = [docs] if !makeCollection
     docs .= map(~> @@docToResource(it, @model.collection.name, @refPaths))
     if makeCollection then new Collection(docs, null, @model.collection.name) else docs[0]
+
+  beforeSave: (docs) ->
+    # strip client provided id if we're not accepting those; 
+    # otherwise, make sure it conforms to a UUID. Might need to do this 
+    # recusively for nested resources, idk.
+    docs
 
   # The momngoose conversion logic.
   # Useful to have as a pure function for calling it as a utility outside this class.
