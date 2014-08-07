@@ -55,5 +55,14 @@ describe("Base Controller", ->
     )
   )
 
+  describe("JSON body parsing", ->
+    it2.skip("sends a 415 error for invalid character encodings", ->)
+    it2.skip("sends a 400 error that says resource is required for an empty json body", ->)
+
+    # the below should explicitly check that syntax errors which lead the body parser to
+    # throw an error (because the json fails the strict mode test) are treated the same
+    # as errors thrown directly from JSON.parse.
+    it2.skip("sends a 400 invalid json error for any other json syntax errors", ->)
+  )
   describe("", ->)
 )

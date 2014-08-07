@@ -1,4 +1,4 @@
-require! ['Q', 'mongoose', './types/Document', './types/Collection', './types/ErrorResource']
+require! ['Q', 'mongoose', './types/Document', './types/Collection', './types/ErrorResource', 'body-parser']
 
 module.exports =
   /**
@@ -11,6 +11,8 @@ module.exports =
    * returning.
    */
   subclasses: {}
+
+  jsonBodyParser: bodyParser.json({type: ['json', 'application/vnd.api+json']})
 
   /**
    * Returns an object extending this class, and registers the subclass.
@@ -54,31 +56,13 @@ module.exports =
   _pickStatus: (errStatuses) ->
     errStatuses[0]
 
-  /**
-   * Takes a Resource or Collection being returned and applies the
-   * appropriate afterQuery method to it and (recursively)
-   * to all of its linked resources.
-   */
-  _afterQueryRecursive: (resourceOrCollection, req, res) ->
-    if resourceOrCollection instanceof Collection
-      resourceOrCollection.resources.map(~> @_after(it, req, res))
-      resourceOrCollection
-    else
-      @_after(resourceOrCollection, req, res)
+  GET: (req, res, next) ->
+    # Even if the accepts header doesn't include the
+    # json api media type, try to respond anyway rather
+    # than send a 406. See note here about HTTP 1.1:
+    # http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
 
-  /** 
-   * A helper function for {@_afterQueryRecursive}.
-   *
-   * @api private
-   */
-  _after: (resource, req, res) ->
-    if typeof @subclasses[resource.type].afterQuery == 'function'
-      resource = @subclasses[resource.type]~afterQuery(resource, req, res)
-    for path, linked of resource.links
-      resource.links[path] = @_afterQueryRecursive(resource.links[path], req, res)
-    resource
-
-  _buildGETQuery: (req) ->
+    # BUILD QUERY
     query = @adapterFn!
 
     if(req.params.id)
@@ -108,14 +92,8 @@ module.exports =
     # Add a default limit. TODO: support user provding one
     query.limitTo(100)
 
-    query
-
-  GET: (req, res, next) ->
-    # Even if the accepts header doesn't include the
-    # json api media type, try to respond anyway rather
-    # than send a 406. See note here about HTTP 1.1:
-    # http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
-    @_buildGETQuery(req).promise!
+    # PROCESS QUERY RESULTS AND RESPOND.
+    query.promise!
       .then(~> @_afterQueryRecursive(it, req, res))
       .then((resources) ~>
         @sendResources(res, resources)
@@ -124,19 +102,100 @@ module.exports =
         @sendResources(res, er)
       )
 
-  POST: (req, res, next) ->
-    return next() if !req.is('application/vnd.api+json')
-    if typeof req.body is not "object"
-      try 
-        req.body = JSON.parse(req.body);
-      catch err
-        return @sendResources(res, ErrorResource.fromError({
-          title: "Request contains invalid JSON.",
-          details: err.message,
-          status: 400
-        }))
+  /**
+   * Takes a Resource or Collection being returned and applies the
+   * appropriate afterQuery method to it and (recursively)
+   * to all of its linked resources.
+   */
+  _afterQueryRecursive: (resourceOrCollection, req, res) ->
+    if resourceOrCollection instanceof Collection
+      resourceOrCollection.resources.map(~> @_after(it, req, res))
+      resourceOrCollection
+    else
+      @_after(resourceOrCollection, req, res)
 
-    before = @~beforeSave
+  /** 
+   * A helper function for {@_afterQueryRecursive}.
+   *
+   * @api private
+   */
+  _after: (resource, req, res) ->
+    if typeof @subclasses[resource.type].afterQuery == 'function'
+      resource = @subclasses[resource.type]~afterQuery(resource, req, res)
+    for path, linked of resource.links
+      resource.links[path] = @_afterQueryRecursive(resource.links[path], req, res)
+    resource
+
+  # Returns a promise that is fulfilled with the value of the request body, 
+  # parsed as JSON. (If the body isn't parsed when this is called, it will
+  # be parsed first and saved on req.body). If the promise is rejected, it
+  # is with an ErrorResource desrcribing the error that occurred while parsing.
+  _getBodyPromise: (req, res) ->
+    if typeof req.body is not "object"
+      # don't ever register the middleware, just call it as a function.
+      Q.nfapply(@jsonBodyParser, [req, res]).then((-> req.body), (err) ->
+        switch err.message
+        | /encoding unsupported/i =>
+            # here, we're not using ErrorResource.fromError only to keep the
+            # message from getting assigned to the error resource's detail
+            # property, as the message given is generic and better for a title.
+            throw new ErrorResource(null {
+              title: err.message,
+              status: err.status  
+            })
+        # This must come before the invalid json case, 
+        # as its message also matches that
+        | /empty body/i => 
+            req.body = null
+            req.body
+        | /invalid json/i => 
+            throw new ErrorResource(null, {
+              title: "Request contains invalid JSON.", 
+              status: 400
+            })
+        | otherwise => 
+          # an error thrown from JSON.parse
+          if err instanceof SyntaxError
+            err.title = "Request contains invalid JSON."
+          throw ErrorResource.fromError(err)  
+      );
+    else
+      Q.fcall(-> req.body)
+
+  POST: (req, res, next) ->
+    # below, explicitly checking for false to differentiate from null,
+    # which means the content-type may match, but the body's empty.
+    return next() if req.is('application/vnd.api+json') == false
+
+    # here, we get body, which is the value of parsing the json
+    # (including possibly null for an empty body).
+    @_getBodyPromise(req, res).then((body) ~>
+      resources = body && (body[@type] || body.data)
+      if !resources or (resources instanceof Array and not resources.length)
+        throw new ErrorResource(null, {
+          title: "Request must contain a resource or an array of resources to create.",
+          detail: "This resource or array of resources should be stored at the top-level 
+                   document's `" + @type + "` or `data` key.",
+          status: 400
+        })
+      
+      # do the creation
+      query = @adapterFn!.create(body).promise!.then(
+        (created)->
+          res.send(201);
+          # should actually, along with mongoose adapter,
+          # run these back through before/after.
+        , 
+        (err) ->
+      )
+    ).then(
+      (created) -> 
+        @sendResources(res, created)
+      , 
+      (errorResource) ~>
+        @sendResources(res, errorResource)
+    );
+    #before = @~beforeSave
     #@_buildQuery(req).promise!
     #  .then(->, ->)
 

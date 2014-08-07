@@ -81,6 +81,11 @@
         return BaseController._pickStatus.restore();
       });
     });
+    describe("JSON body parsing", function(){
+      it2.skip("sends a 415 error for invalid character encodings", function(){});
+      it2.skip("sends a 400 error that says resource is required for an empty json body", function(){});
+      return it2.skip("sends a 400 invalid json error for any other json syntax errors", function(){});
+    });
     return describe("", function(){});
   });
 }).call(this);
