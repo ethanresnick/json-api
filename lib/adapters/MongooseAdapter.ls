@@ -1,5 +1,9 @@
 
-require! [\mongoose \mongoose/lib/utils \../types/Resource \../types/Collection  \../types/ErrorResource \../util/advice \Q];
+require! {
+  \Q, \mongoose, mongooseUtils: \mongoose/lib/utils,
+  \../types/Resource, \../types/Collection, \../types/ErrorResource,
+  \../util/advice, \../util/utils
+}
 
 class MongooseAdapter
   (@model, @options) ->
@@ -139,7 +143,7 @@ class MongooseAdapter
     # recusively for nested resources, idk.
     docs
 
-  # The momngoose conversion logic.
+  # The mongoose conversion logic.
   # Useful to have as a pure function for calling it as a utility outside this class.
   @docToResource = (doc, type, refPaths) ->
     # Get and clean up attributes
@@ -156,10 +160,7 @@ class MongooseAdapter
 
       # delete the attribute, since we're moving it to links (or, if it
       # doesn't link to anything, just removing it)
-      lastPathPart = pathParts[*-1]
-      containingPathParts = pathParts.slice(0, pathParts.length-1);
-      containerVal = containingPathParts.reduce(((obj, part) -> obj[part]), attrs)
-      delete containerVal[lastPathPart]
+      utils.deleteNested(path, attrs)
 
       # if there's a toOne relationship with no value in it, or a toMany
       # with an empty array, skip building a links key for it
@@ -202,7 +203,7 @@ class MongooseAdapter
             # associated model and inspect its collection name.
             schemaType = doc.constructor.schema.path(path)
             ref = (schemaType.caster || schemaType).options?.ref
-            utils.toCollectionName(ref)
+            mongooseUtils.toCollectionName(ref)
           resources.push(new Resource(type, id))
       );
 
