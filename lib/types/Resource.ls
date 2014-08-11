@@ -1,11 +1,13 @@
+require! [\../util/utils]
+
 class Resource
   (type, id, attrs, @links, @href) ~>
     # set manually, unlike @links and @href, to trigger the 
     # validation checks and create the @_type etc props.
     [@type, @id, @attrs] = [type, id, attrs];
 
-  removeAttr: (attr) ->
-    delete @_attrs[attr] if @attrs?
+  removeAttr: (attrPath) ->
+    utils.deleteNested(attrPath, @_attrs) if @attrs?
 
   attrs:~
     -> @_attrs
