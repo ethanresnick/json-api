@@ -10,7 +10,7 @@ require! ['Q', 'mongoose', './types/Document']
  * relationships on the Project resources, to return those templates with the
  * included Projects. Etc. So we handle this by introducing a ResourceTypeRegistry 
  * that the BaseController can have access to. Each resource type is registered
- * by its name (the JSON api type value) and has four properties: model, 
+ * by its name (the JSON api type value) and has four properties: adapter, 
  * urlTemplates, and the beforeSave and afterQuery methods.
  */
 class ResourceTypeRegistry
@@ -30,17 +30,17 @@ class ResourceTypeRegistry
     if description
       # the valid properties to register.
       @_resourceTypes[type] = {}
-      ["model", "beforeSave", "afterQuery", "urlTemplates"].forEach(~>
+      ["adapter", "beforeSave", "afterQuery", "urlTemplates"].forEach(~>
         @[it](type, description[it]) if description[it]?
       )
     else
       {} <<< @_resourceTypes[type] if @_resourceTypes[type]? 
 
-  model: (type, model) ->
-    if model
-      @_resourceTypes.{}[type]['model'] = model
+  adapter: (type, adapter) ->
+    if adapter
+      @_resourceTypes.{}[type]['adapter'] = adapter
     else
-      @_resourceTypes.{}[type]['model']
+      @_resourceTypes.{}[type]['adapter']
 
   beforeSave: (type, beforeFn) ->
     if beforeFn

@@ -26,7 +26,7 @@
     describe("type", function(){
       var description;
       description = {
-        model: {},
+        adapter: {},
         beforeSave: function(){},
         afterQuery: function(){},
         urlTemplates: {
@@ -35,10 +35,10 @@
       };
       return it2("should be a getter/setter for a type", makeGetterSetterTest(description, "mytypes", "type", true));
     });
-    describe("model", function(){
-      return it2("should be a getter/setter for a type's model", makeGetterSetterTest({
+    describe("adapter", function(){
+      return it2("should be a getter/setter for a type's adapter", makeGetterSetterTest({
         'a': 'new model'
-      }, "mytypes", "model"));
+      }, "mytypes", "adapter"));
     });
     describe("beforeSave", function(){
       return it2("should be a getter/setter for a type for a type's beforeSave", makeGetterSetterTest(function(){}, "mytypes", "beforeSave"));

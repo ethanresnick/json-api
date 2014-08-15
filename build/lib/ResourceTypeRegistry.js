@@ -14,7 +14,7 @@
    * relationships on the Project resources, to return those templates with the
    * included Projects. Etc. So we handle this by introducing a ResourceTypeRegistry 
    * that the BaseController can have access to. Each resource type is registered
-   * by its name (the JSON api type value) and has four properties: model, 
+   * by its name (the JSON api type value) and has four properties: adapter, 
    * urlTemplates, and the beforeSave and afterQuery methods.
    */
   ResourceTypeRegistry = (function(){
@@ -27,7 +27,7 @@
       var this$ = this;
       if (description) {
         this._resourceTypes[type] = {};
-        return ["model", "beforeSave", "afterQuery", "urlTemplates"].forEach(function(it){
+        return ["adapter", "beforeSave", "afterQuery", "urlTemplates"].forEach(function(it){
           if (description[it] != null) {
             return this$[it](type, description[it]);
           }
@@ -38,12 +38,12 @@
         }
       }
     };
-    prototype.model = function(type, model){
+    prototype.adapter = function(type, adapter){
       var ref$;
-      if (model) {
-        return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['model'] = model;
+      if (adapter) {
+        return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['adapter'] = adapter;
       } else {
-        return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['model'];
+        return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['adapter'];
       }
     };
     prototype.beforeSave = function(type, beforeFn){
