@@ -63,8 +63,9 @@
       }
     };
     prototype.urlTemplates = function(type, templates){
-      var path, template, ref$;
-      if (templates) {
+      var type, path, template, ref$, resource;
+      switch (arguments.length) {
+      case 2:
         for (path in templates) {
           template = templates[path];
           if (!deepEq$(path.split('.')[0], type, '===')) {
@@ -72,8 +73,15 @@
           }
         }
         return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['urlTemplates'] = templates;
-      } else {
+      case 1:
         return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['urlTemplates'];
+      default:
+        templates = {};
+        for (type in ref$ = this._resourceTypes) {
+          resource = ref$[type];
+          import$(templates, resource.urlTemplates || {});
+        }
+        return templates;
       }
     };
     prototype.urlTemplate = function(path){

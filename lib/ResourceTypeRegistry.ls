@@ -55,12 +55,19 @@ class ResourceTypeRegistry
       @_resourceTypes.{}[type]['afterQuery']
 
   urlTemplates: (type, templates) ->
-    if templates
+    switch arguments.length
+    | 2 =>
       for path, template of templates
         throw new Error("Template paths must be scoped to this type") if path.split('.')[0] !== type
       @_resourceTypes.{}[type]['urlTemplates'] = templates
-    else
+    | 1 =>
       @_resourceTypes.{}[type]['urlTemplates']
+    | otherwise =>
+      templates = {}
+      for type, resource of @_resourceTypes
+        templates <<< (resource.urlTemplates || {})
+      templates
+
 
   urlTemplate: (path) ->
     @_resourceTypes[path.split('.').0]['urlTemplates'][path]
