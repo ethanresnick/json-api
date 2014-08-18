@@ -155,9 +155,11 @@
         extraResourcesPromise = Q(undefined);
       }
       primaryResourcesPromise = primaryDocumentsPromise.then(function(it){
-        return this$.docsToResourceOrCollection(it, model);
+        return constructor.docsToResourceOrCollection(it, model, this$.inflector.plural);
       });
-      return Q.all([primaryResourcesPromise, extraResourcesPromise])['catch'](bind$(this, 'errorHandler'));
+      return Q.all([primaryResourcesPromise, extraResourcesPromise])['catch'](function(it){
+        return [constructor.errorHandler(it), undefined];
+      });
       function fn$(resourcePromises, part){
         return resourcePromises.then(function(resources){
           if (resources) {
@@ -196,9 +198,10 @@
       model = this.models[constructor.getModelName(resourceOrCollection.type)];
       docs = utils.mapResources(resourceOrCollection, constructor.resourceToPlainObject);
       return Q.ninvoke(model, "create", docs).then(function(it){
-        return this$.docsToResourceOrCollection(it, model);
-      }, bind$(this, 'errorHandler'));
+        return constructor.docsToResourceOrCollection(it, model, this$.inflector.plural);
+      }, constructor.errorHandler);
     };
+    prototype.update = function(huh){};
     prototype['delete'] = function(type, idOrIds){
       var model, idQuery, mode;
       model = this.models[constructor.getModelName(type)];
@@ -217,17 +220,9 @@
       }
       return Q(model[mode]({
         '_id': idQuery
-      }).exec())['catch'](bind$(this, 'errorHandler'));
+      }).exec())['catch'](constructor.errorHandler);
     };
-    prototype.promise = function(){
-      var p;
-      p = /^find/.exec(this.queryBuilder.op) ? bind$(this, 'docsToResourceOrCollection') : void 8;
-      if (/(update|modify|remove)/.exec(this.queryBuilder.op)) {
-        p = p.then(bind$(this, 'beforeSave'));
-      }
-      return p;
-    };
-    prototype.errorHandler = function(err){
+    MongooseAdapter.errorHandler = function(err){
       var errors, key, ref$, thisError, x$, generatedError;
       if (err.errors != null) {
         errors = [];
@@ -250,7 +245,7 @@
         });
       }
     };
-    prototype.docsToResourceOrCollection = function(docs, model){
+    MongooseAdapter.docsToResourceOrCollection = function(docs, model, pluralize){
       var makeCollection, type, refPaths, this$ = this;
       if (!docs) {
         return new ErrorResource(null, {
@@ -262,7 +257,7 @@
       if (!makeCollection) {
         docs = [docs];
       }
-      type = constructor.getType(model.modelName, this.inflector.plural);
+      type = constructor.getType(model.modelName, pluralize);
       refPaths = constructor.getReferencePaths(model);
       docs = docs.map(function(it){
         return constructor.docToResource(it, type, refPaths);
@@ -368,9 +363,6 @@
     var i = -1, l = xs.length >>> 0;
     while (++i < l) if (x === xs[i]) return true;
     return false;
-  }
-  function bind$(obj, key, target){
-    return function(){ return (target || obj)[key].apply(obj, arguments) };
   }
   function import$(obj, src){
     var own = {}.hasOwnProperty;

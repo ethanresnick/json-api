@@ -198,9 +198,9 @@ class MongooseAdapter
 
     # convert primary docs to resources/collections, which isn't needed for
     # extraResources--they're already resources and aren't supposed to be collections.
-    primaryResourcesPromise = primaryDocumentsPromise.then(~> @docsToResourceOrCollection(it, model))
+    primaryResourcesPromise = primaryDocumentsPromise.then(~> @@docsToResourceOrCollection(it, model, @inflector.plural))
 
-    Q.all([primaryResourcesPromise, extraResourcesPromise]).catch(@~errorHandler)
+    Q.all([primaryResourcesPromise, extraResourcesPromise]).catch(-> [@@errorHandler(it), undefined])
 
   # Create one or more docs.
   create: (resourceOrCollection) ->
@@ -212,7 +212,11 @@ class MongooseAdapter
 
     # turn the resource or collection into (an array of) plain objects
     docs = utils.mapResources(resourceOrCollection, @@resourceToPlainObject)
-    Q.ninvoke(model, "create", docs).then((~> @docsToResourceOrCollection(it, model)), @~errorHandler)
+    Q.ninvoke(model, "create", docs).then((~> @@docsToResourceOrCollection(it, model, @inflector.plural)), @@errorHandler)
+
+  update: (huh) ->
+    # we've got docsToResourceOrCollection as our afterQuery
+    # and resourceToPlainObject as our beforeSave, more or less.
 
   delete: (type, idOrIds) ->
     model = @models[@@getModelName(type)]
@@ -226,22 +230,10 @@ class MongooseAdapter
         idQuery = {'$in': idOrIds}
         mode = "remove"
 
-    Q(model[mode]({'_id': idQuery}).exec()).catch(@~errorHandler)
-
-  promise: ->
-    # Add errorHandler here for simplicity, because we don't know which `then`s we're
-    # going to register below. E.g. if we did .then(@~docsToResourceOrCollection, @~errorHandler), it
-    # wouldn't be registered for a create (POST) request. But if we added both
-    # .then(@~docsToResourceOrCollection, @~errorHandler) & .then(@~beforeSave, @~errorHandler), the
-    # errorHandler, which is meant for query errors, would catch @~docsToResourceOrCollection errors 
-    # on findOneAndRemove style queries (which run the bepore and after handlers).
-    #p = then(-> it, @~errorHandler)
-    p = then(@~docsToResourceOrCollection) if @queryBuilder.op is /^find/ # do this first.
-    p .= then(@~beforeSave) if @queryBuilder.op is /(update|modify|remove)/
-    p
+    Q(model[mode]({'_id': idQuery}).exec()).catch(@@errorHandler)
 
   # Responsible for generating a sendable Error Resource if the query threw an Error
-  errorHandler: (err) ->
+  @errorHandler = (err) ->
     # Convert a validation errors collection to something reasonalbe
     if err.errors?
       errors = [];
@@ -261,14 +253,14 @@ class MongooseAdapter
         "title": "An error occurred while trying to find, create, or modify the requested resource(s)."
       })
 
-  docsToResourceOrCollection: (docs, model) ->
+  @docsToResourceOrCollection = (docs, model, pluralize) ->
     if !docs # if docs is an empty array, we don't 404: https://github.com/json-api/json-api/issues/101
       return new ErrorResource(null, {status: 404, title:"No matching resource found."})
 
     makeCollection = docs instanceof Array
     docs = [docs] if !makeCollection
 
-    type = @@getType(model.modelName, @inflector.plural)
+    type = @@getType(model.modelName, pluralize)
     refPaths = @@getReferencePaths(model)
 
     docs .= map(~> @@docToResource(it, type, refPaths))
