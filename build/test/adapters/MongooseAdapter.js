@@ -9,19 +9,21 @@
   expect = chai.expect;
   it2 = it;
   describe("Mongoose Adapter", function(){
-    return describe("docToResource", function(){
-      return it2("should remove _id,  __v; use id as the id; and call toObject", function(){
+    describe("docToResource", function(){
+      return it2("should remove _id, __v, __t; use id as the id; and call toObject", function(){
         var type, doc, resource;
         type = "myType";
         doc = {
           id: 'blah2',
           prop: 'val',
           _id: 'blah',
+          __t: 'blah4',
           __v: 'blah3',
           toObject: sinon.spy(function(){
             return {
               _id: this._id,
               __v: this.__v,
+              __t: this.__t,
               prop: 'valToObject'
             };
           })
@@ -32,7 +34,46 @@
         expect(resource.attrs.prop).to.equal("valToObject");
         expect(resource.attrs._id).to.be.undefined;
         expect(resource.attrs.__v).to.be.undefined;
+        expect(resource.attrs.__t).to.be.undefined;
         return expect(resource.id).to.equal('blah2');
+      });
+    });
+    return describe("getType and getModelName", function(){
+      var typesToModelNames;
+      typesToModelNames = {
+        teams: 'Team',
+        jobs: 'Job',
+        events: 'Event',
+        venues: 'Venue',
+        'related-clubs': 'RelatedClub',
+        'team-memberships': 'TeamMembership'
+      };
+      describe("getType", function(){
+        it2("should lowercase & pluralize the model name, and use dashes in camelCased names", function(){
+          var type, ref$, modelName, results$ = [];
+          for (type in ref$ = typesToModelNames) {
+            modelName = ref$[type];
+            results$.push(expect(MongooseAdapter.getType(modelName)).to.equal(type));
+          }
+          return results$;
+        });
+        return it2("should use a custom pluralize if provided", function(){
+          var plural;
+          plural = function(){
+            return 'mycustomresult';
+          };
+          return expect(MongooseAdapter.getType('TestModel', plural)).to.equal('mycustomresult');
+        });
+      });
+      return describe("getModelName", function(){
+        return it2("should reverse getType", function(){
+          var type, ref$, modelName, results$ = [];
+          for (type in ref$ = typesToModelNames) {
+            modelName = ref$[type];
+            results$.push(expect(MongooseAdapter.getModelName(type)).to.equal(modelName));
+          }
+          return results$;
+        });
       });
     });
   });
