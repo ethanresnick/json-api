@@ -30,7 +30,7 @@ class ResourceTypeRegistry
     if description
       # the valid properties to register.
       @_resourceTypes[type] = {}
-      ["adapter", "beforeSave", "afterQuery", "urlTemplates"].forEach(~>
+      ["adapter", "beforeSave", "afterQuery", "urlTemplates", "defaultIncludes"].forEach(~>
         @[it](type, description[it]) if description[it]?
       )
     else
@@ -68,6 +68,11 @@ class ResourceTypeRegistry
         templates <<< (resource.urlTemplates || {})
       templates
 
+  defaultIncludes: (type, defaults) ->
+    if defaults
+      @_resourceTypes.{}[type]['defaultIncludes'] = defaults
+    else
+      @_resourceTypes.{}[type]['defaultIncludes']
 
   urlTemplate: (path) ->
     @_resourceTypes[path.split('.').0]['urlTemplates'][path]

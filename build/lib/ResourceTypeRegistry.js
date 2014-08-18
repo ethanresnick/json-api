@@ -27,7 +27,7 @@
       var this$ = this;
       if (description) {
         this._resourceTypes[type] = {};
-        return ["adapter", "beforeSave", "afterQuery", "urlTemplates"].forEach(function(it){
+        return ["adapter", "beforeSave", "afterQuery", "urlTemplates", "defaultIncludes"].forEach(function(it){
           if (description[it] != null) {
             return this$[it](type, description[it]);
           }
@@ -82,6 +82,14 @@
           import$(templates, resource.urlTemplates || {});
         }
         return templates;
+      }
+    };
+    prototype.defaultIncludes = function(type, defaults){
+      var ref$;
+      if (defaults) {
+        return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['defaultIncludes'] = defaults;
+      } else {
+        return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['defaultIncludes'];
       }
     };
     prototype.urlTemplate = function(path){
