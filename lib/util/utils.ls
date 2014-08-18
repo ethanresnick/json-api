@@ -1,3 +1,4 @@
+require! [\../types/Collection]
 module.exports =
   # takes an arbitrary path string e.g. "user.contact.phone" 
   # and locates the corresponding property on an object (obj)
@@ -13,3 +14,24 @@ module.exports =
     catch error
       console.log(error)
       console.log("deleteNested failed with path: " + path + ", on oject: " + JSON.stringify(object))
+
+  # it's a REALLY common pattern that we want to apply some 
+  # function either to a resource or all the resources in a
+  # collection. This function abstracts that.
+  mapResources: (resourceOrCollection, mapFn) ->
+    if resourceOrCollection instanceof Collection
+      resourceOrCollection.resources.map(mapFn)
+    else 
+      mapFn(resourceOrCollection)
+
+  mapArrayOrVal: (arrayOrVal, mapFn) ->
+    if arrayOrVal instanceof Array
+      arrayOrVal.map(mapFn)
+    else
+      mapFn(arrayOrVal)
+
+  forEachArrayOrVal: (arrayOrVal, eachFn) ->
+    if arrayOrVal instanceof Array
+      arrayOrVal.forEach(eachFn)
+    else
+      eachFn(arrayOrVal)
