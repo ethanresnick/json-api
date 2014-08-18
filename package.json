@@ -13,9 +13,10 @@
   },
   "main": "index.js",
   "dependencies": {
-    "express": "4.x.x",
     "body-parser": "^1.6.x",
+    "express": "4.x.x",
     "flat": "^1.2.1",
+    "pluralize": "0.0.11",
     "prelude-ls": "^1.1.1",
     "q": "^1.0.1",
     "url-template": "^2.0.4"
@@ -25,6 +26,7 @@
     "chai": "~1.9.0",
     "gulp": "^3.8.6",
     "mocha": "~1.20.0",
+    "supertest": "^0.13.0",
     "sinon": "1.10.2",
     "sinon-chai": "2.5.x"
   },
