@@ -1,154 +1,294 @@
-
 require! {
-  \Q, \mongoose, mongooseUtils: \mongoose/lib/utils,
+  \Q, \mongoose, prelude:\prelude-ls, defaultInflector: 'pluralize',
   \../types/Resource, \../types/Collection, \../types/ErrorResource,
   \../util/advice, \../util/utils
 }
 
 class MongooseAdapter
-  (@model, @options) ->
-    # find the names of all the paths in the
-    # schema that refer to other models
-    @refPaths = @@getReferencePaths(@model);
-    @queryBuilder = new mongoose.Query(null, null, @model, @model.collection)
-
-    # queryBuilder doesn't handle creation, so we have to handle this separately.
-    @toCreate = []
-
-  # put the qb into the proper mode.
-  # valid options are: find, findOne, update,
-  # remove, findOneAndModify, findOneAndRemove.
-  mode: ->
-    @queryBuilder
-      ..[mode]!
-
-  any: ->
-    @queryBuilder
-      ..find!
-
-  withId: (id) ->
-    @queryBuilder
-      ..findOne({'_id': id})
-
-  withIds: (ids) ->
-    # have to do a qb.find below, not qb.in,
-    # as mongoose doesn't intercept `in` to
-    # handle id casting, but it does for `find`
-    @queryBuilder
-      ..find({'_id': {'$in': ids}})
-
-  withProperty: (prop, val) ->
-    @queryBuilder
-      ..where({(prop): val})
-
-  onlyFields: (fields) ->
-    # assumes that, in your shchema, you haven't 
-    # forced any fields to appear. reasonable.
-    @queryBuilder
-      ..select(fields.join(' '))
-
-    # if we're fitering and haven't explicitly 
-    # included id, we need to explicitly remove
-    # it, since mongoose often includes it anyway
-    if 'id' not in fields
-      origAfter = @afterQuery
-      @afterQuery = (docs) ->
-        result = origAfter(...)
-        if result instanceof Collection
-          result.resources.map((resource) -> resource.id = void)
-        else
-          result.id = void
-        result
-
-    @queryBuilder
-
-  limitTo: (limit) ->
-    @queryBuilder
-      ..limit(limit)
-  
-  includeLinked: (paths) ->
-    # a path might point to a property that's not in this
-    # model's schema. E.g. on a BlogPost resource, the
-    # path could be comments.author, but the BlogPost
-    # will only know about the `comments` part of the path.
-    @refPaths.forEach(~> 
-      for path, i in paths when (path.substr(0, it.length) == it)
-        pathExtra = path.substr(it.length + 1) # remove next dot
-        @queryBuilder.populate(({}
-          ..path = it
-          ..select = pathExtra if pathExtra
-        ))
-        # removed matched path so we don't check it next time.
-        paths.splice(i, 1);
-        continue
-    )
-
-    # if there were errors, in the form of unmatcheable paths...
-    # try to populate those paths anyway, so mongoose will throw
-    # an error when the query is actually executed
-    if(paths.length)
-      paths.forEach(-> @queryBuilder.populate(path: it))
-
-    @queryBuilder
-
-  # Create one or more docs.
-  create: (doc) ->
-    @create .= concat(doc)
+  (models, inflector) ->
+    @models = models || mongoose.models
+    @inflector = inflector || defaultInflector
 
   /**
-   * @param sorts array An array of field names to sort on.
-   * Ascending is the default sort; prefix the field name with
-   * a - to sort descending.
+   * Returns a Promise for an array or resources. The first item in the 
+   * promised array is the primary Resource or Collection being looked up.
+   * The second item is an array of "extra resources". See the comments within
+   * this method for a description of those.
    */
-  sort: (sorts) ->
-    @queryBuilder.sort(sorts.join(' '))
+  find: (type, idOrIds, filters, fields, sorts, includePaths) ->
+    model = @models[@@getModelName(type)]
+    refPaths = @@getReferencePaths(model)
+    queryBuilder = new mongoose.Query(null, null, model, model.collection)
+
+    # findById(s) or find all
+    if idOrIds
+      switch typeof idOrIds
+      | "string" =>
+        idQuery = idOrIds
+        mode = "findOne"
+      | otherwise =>
+        idQuery = {'$in':idOrIds}
+        mode = "find"
+      queryBuilder[mode]({'_id': idQuery})
+    else
+      queryBuilder.find!
+
+    # add where clauses
+    queryBuilder.where(filters) if typeof! filters is "Object"
+
+    # limit returned fields
+    # note that with this sparse fieldset handling, id may be included
+    # in the returned documend anyway, even if the user doesn't ask for
+    # it specifically, as that's the mongoose default. But that's fine. 
+    # See: https://github.com/json-api/json-api/issues/260
+    queryBuilder.select(
+      fields.map(-> if it.charAt(0) in ['+', '-'] then it.substr(1) else it).join(' ')
+    ) if fields instanceof Array
+
+    # setup sorting
+    queryBuilder.sort(sorts.join(' ')) if sorts instanceof Array
+
+    # handle includes
+    if includePaths
+      extraResources = {}
+      extraFieldsToModelInfo = {}
+      extraDocumentsPromises = []
+      duplicateQuery = queryBuilder.toConstructor!
+      includePaths .= map(-> it.split('.'))
+
+      for pathParts in includePaths
+        continue if pathParts[0] not in @@getReferencePaths(model)
+
+        # We have some include paths that point to properties that we're 
+        # returning on resources we're returning. Handling these is easy: 
+        # you just populate the path, and then the @@docToResource code
+        # can turn it into a Resource object that's linked to the Resource
+        # representing the primary document.
+        if pathParts.length == 1
+          queryBuilder.populate(pathParts[0])
+
+          # But then we have a case where the path points to a property on
+          # the resource we're returning, but it's a field that's been excluded
+          # For example, a request for /people?fields=name&include=address 
+          # should include a bunch of Address resources in the response's 
+          # top-level "linked" key--but there shouldn't be a "links" key 
+          # pointing to the address ids in the primary people resources 
+          # returned. (Yes, this doesn't seem very useful, but there are cases
+          # for it.) So, the Resource object we ultimately create for each 
+          # person shouldn't have a link to the address either. Hence, we need
+          # to find these Addresses and return them as "extra resources"--ones
+          # returned with the response but not directly connected to any of the
+          # primary returned resources. We handle this by populating the fields 
+          # anyway (above), but then tracking that we'll need to remove the
+          # populated documents + convert them to extra resources, and doing so 
+          # before we return.
+          if (fields and pathParts[0] not in fields)
+            # include the field (previously excluded) so the population happens.
+            queryBuilder.select(pathParts[0])
+
+            # find some info about the referenced model at the populated path
+            refModel = @models[@@getReferencedModelName(model, pathParts[0])]
+            refType = @@getType(refModel.modelName, @inflector.plural)
+            refRefPaths = @@getReferencePaths(refModel)
+
+            # initialize extraResources to know that we're going to at least
+            # have an empty collection of extraResources of this type. E.g.
+            # a request like /users?include=projects&fields=name should 
+            # generate a "linked" key with a "projects" key, even if its value
+            # is an empty array (i.e. if no users end up having projects).
+            extraResources[refType] = [] if not extraResources[refType]
+
+            # and finally store the info to remove & convert later.
+            extraFieldsToModelInfo[pathParts[0]] =
+              model: refModel, refPaths: refRefPaths, type: refType
+
+        # Finally, we have another case of include paths in which the resources
+        # included won't, in our final API response, be directly linked to any
+        # of the primary Resources we're returning. This is when we have includes 
+        # that point to paths that aren't directly on this object (e.g. a post 
+        # including comments.author). We handle this (really inefficiently) below.
+        else
+            lastModelName = model.modelName
+            extraDocumentsPromises.push(pathParts.reduce(
+              (resourcePromises, part) ~>
+                resourcePromises.then((resources) ~>
+                  if resources
+                    # update model
+                    lastModelName := @@getReferencedModelName(@models[lastModelName], part)
+
+                    # populate this nested path
+                    Q.npost(@models[lastModelName], "populate", [resources, {path: part}]);
+                ).then(-> 
+                  # if this population was empty, just stop
+                  return it if !it or (it instanceof Array and !it.length)
+
+                  # for the next population, we need to have a single doc or an array
+                  # of docs. And we need to filter what we're getting in based on the
+                  # currend path part (that's the reduce). So if the input (it) isn't 
+                  # an array (i.e it's a single doc), we just return it[part], which 
+                  # will, as needed, be a single doc (if it's a to-one relationship) 
+                  # or an array (if it's a to-many).
+                  if it not instanceof Array 
+                    it[part]
+                  # but, if `it` is an array, then it[part] could also be an array
+                  # (from a to-many relationship), so just returning it.map(-> it[part])
+                  # could leave a nested array, which is unacceptable for the next 
+                  # population. So, in that case, we also flatten (with reduce).
+                  else
+                    flatten = it[0][part] instanceof Array
+                    mapped = it.map(-> it[part])
+                    if flatten then mapped.reduce((a,b)-> a.concat(b)) else mapped
+                )
+              , Q(duplicateQuery().exec!)
+            ))
+
+      primaryDocumentsPromise = Q(queryBuilder.exec!)
+        # ues extraFieldsToModelInfo to put extra, populated fields into 
+        # extraResources (as resources) & remove them from the primary documents
+        .then((docs) ~>
+          utils.forEachArrayOrVal(docs, (doc) ->
+            for field, modelInfo of extraFieldsToModelInfo
+              # if it's a to-one relationship, doc[field] will be a doc or undefined;
+              # if it's a toMany relationship, we have an array (or undefined). Either
+              # way, we want to convert any docs in docs[field] to resources and store,
+              # them, so we always coerce it to an array.
+              refDocsArray = if doc[field] instanceof Array then doc[field] else [doc[field]]
+              refDocsArray.forEach((referencedDoc) ->
+                # don't add empty references or duplicate docs.
+                if referencedDoc && !extraResources[modelInfo.type].some(-> it.id == referencedDoc.id)   
+                  extraResources[modelInfo.type].push(
+                    @@docToResource(referencedDoc, modelInfo.type, modelInfo.refPaths)
+                  ) 
+              )
+              doc[field] = undefined
+            void
+          )
+          docs
+        )
+
+      extraResourcesPromise = Q.all(extraDocumentsPromises)
+        .then((docSets) ~>
+          # add docs from these extra queries to extraResources
+          for docSet in docSets
+            # if the query was getting a to-one relationship, 
+            # this docSet is a single doc; make an array for simplicity
+            docSet = [docSet] if docSet not instanceof Array
+
+            ## remove the empty results, and continue if we have nothing left
+            docSet .= filter(-> it)
+            continue if !docSet.length
+
+            model = docSet[0].constructor
+            type = @@getType(model.modelName, @inflector.plural)
+            refPaths = @@getReferencePaths(model)
+            extraResources[type] = [] if !extraResources[type]
+            docSet.forEach((doc) ->
+              if !extraResources[type].some(-> it.id == doc.id) # don't add duplicates
+                extraResources[type].push(@@docToResource(doc, type, refPaths))
+            )
+
+          # and then, when the primaryDocuments promise has put its
+          # resources into extraResources too, return them as promised
+          primaryDocumentsPromise.then(-> extraResources)
+        )
+
+    else
+      primaryDocumentsPromise = Q(queryBuilder.exec!)
+      extraResourcesPromise = Q(undefined)
+
+    # convert primary docs to resources/collections, which isn't needed for
+    # extraResources--they're already resources and aren't supposed to be collections.
+    primaryResourcesPromise = primaryDocumentsPromise.then(~> @docsToResourceOrCollection(it, model))
+
+    Q.all([primaryResourcesPromise, extraResourcesPromise]).catch(@~errorHandler)
+
+  # Create one or more docs.
+  create: (resourceOrCollection) ->
+    # since we're not allowing sideposting/comment ids,
+    # (the spec is still too tentative on how to do that)
+    # we know that we just have to iterate over the passed
+    # in resources and go through their links non-recursively.
+    model = @models[@@getModelName(resourceOrCollection.type)]
+
+    # turn the resource or collection into (an array of) plain objects
+    docs = utils.mapResources(resourceOrCollection, @@resourceToPlainObject)
+    Q.ninvoke(model, "create", docs).then((~> @docsToResourceOrCollection(it, model)), @~errorHandler)
+
+  delete: (type, idOrIds) ->
+    model = @models[@@getModelName(type)]
+
+    if idOrIds
+      switch typeof idOrIds
+      | "string" =>
+        idQuery = idOrIds
+        mode = "findOneAndRemove"
+      | otherwise =>
+        idQuery = {'$in': idOrIds}
+        mode = "remove"
+
+    Q(model[mode]({'_id': idQuery}).exec()).catch(@~errorHandler)
 
   promise: ->
-    # the special creation case.
-    if @toCreate.length > 0
-      # to do: do beforeSave recursively.
-      # make an option about whether to accept client ids
-      return @model.create(@beforeSave(@toCreate))
-
-    p = Q(@queryBuilder.exec!)
     # Add errorHandler here for simplicity, because we don't know which `then`s we're
-    # going to register below. E.g. if we did .then(@~afterQuery, @~errorHandler), it
+    # going to register below. E.g. if we did .then(@~docsToResourceOrCollection, @~errorHandler), it
     # wouldn't be registered for a create (POST) request. But if we added both
-    # .then(@~afterQuery, @~errorHandler) & .then(@~beforeSave, @~errorHandler), the
-    # errorHandler, which is meant for query errors, would catch @~afterQuery errors 
+    # .then(@~docsToResourceOrCollection, @~errorHandler) & .then(@~beforeSave, @~errorHandler), the
+    # errorHandler, which is meant for query errors, would catch @~docsToResourceOrCollection errors 
     # on findOneAndRemove style queries (which run the bepore and after handlers).
-    p .= then(-> it, @~errorHandler)
-    p .= then(@~afterQuery) if @queryBuilder.op is /^find/ # do this first.
+    #p = then(-> it, @~errorHandler)
+    p = then(@~docsToResourceOrCollection) if @queryBuilder.op is /^find/ # do this first.
     p .= then(@~beforeSave) if @queryBuilder.op is /(update|modify|remove)/
     p
 
   # Responsible for generating a sendable Error Resource if the query threw an Error
   errorHandler: (err) ->
-    new ErrorResource(null, {
-      "title": "An error occurred while trying to find, create, or modify the requested resource(s)."
-    })
+    # Convert a validation errors collection to something reasonalbe
+    if err.errors?
+      errors = [];
+      for key, thisError of err.errors
+        generatedError = {}
+          ..[\status] = if err.name is "ValidationError" then 400 else (thisError.status || 500)
+          ..[\title] = thisError.message
+          ..[\path] = thisError.path if thisError.path?
 
-  afterQuery: (docs) ->
+        errors.push(new ErrorResource(null, generatedError))
+
+      new Collection(errors, null, "errors")
+
+    # for other errors, issue something generic
+    else
+      new ErrorResource(null, {
+        "title": "An error occurred while trying to find, create, or modify the requested resource(s)."
+      })
+
+  docsToResourceOrCollection: (docs, model) ->
     if !docs # if docs is an empty array, we don't 404: https://github.com/json-api/json-api/issues/101
       return new ErrorResource(null, {status: 404, title:"No matching resource found."})
 
     makeCollection = docs instanceof Array
     docs = [docs] if !makeCollection
-    docs .= map(~> @@docToResource(it, @model.collection.name, @refPaths))
-    if makeCollection then new Collection(docs, null, @model.collection.name) else docs[0]
 
-  beforeSave: (docs) ->
-    # strip client provided id if we're not accepting those; 
-    # otherwise, make sure it conforms to a UUID. Might need to do this 
-    # recusively for nested resources, idk.
-    docs
+    type = @@getType(model.modelName, @inflector.plural)
+    refPaths = @@getReferencePaths(model)
+
+    docs .= map(~> @@docToResource(it, type, refPaths))
+    if makeCollection then new Collection(docs, null, type) else docs[0]
+
+  @resourceToPlainObject = (resource) ->
+    # just get attrs, as we're not paying attention to client-
+    # provided ids or hrefs, and we already have the type
+    res = {} <<< resource.attrs
+    if resource.links?
+      for key, value of resource.links
+        res[key] = value.ids || value.id
+    res
 
   # The mongoose conversion logic.
   # Useful to have as a pure function for calling it as a utility outside this class.
-  @docToResource = (doc, type, refPaths) ->
+  @docToResource = (doc, type, refPaths, pluralize) ->
     # Get and clean up attributes
     attrs = doc.toObject!
-    delete attrs['_id', '__v']
+    delete attrs['_id', '__v', '__t'] #for auto ids, versioning, and discriminators
 
     # Build Links
     links = {}
@@ -163,7 +303,8 @@ class MongooseAdapter
       utils.deleteNested(path, attrs)
 
       # if there's a toOne relationship with no value in it, or a toMany
-      # with an empty array, skip building a links key for it
+      # with an empty array, skip building a links key for it. Could also
+      # be a refPath whose field is excluded from the document all together.
       if !valAtPath or (valAtPath instanceof Array and valAtPath.length == 0)
         return
 
@@ -188,7 +329,7 @@ class MongooseAdapter
         # if the referenced document was populated, build a full resource for it
         if(docOrId instanceof mongoose.Document)
           model = docOrId.constructor
-          type  = model.collection.name
+          type  = @@getType(model.modelName, pluralize)
           resources.push(@@docToResource(docOrId, type, @@getReferencePaths(model)))
 
         # otherwise, we just have an id, so we make a stub resource (one w/o attrs)
@@ -196,14 +337,7 @@ class MongooseAdapter
           # docOrId might be an OId here, so use jsonValAtPath,
           # which will have been converted to a string.
           id = jsonValAtPath[i]
-          type = do ->
-            # finding the type is hell. We have to go back into 
-            # the schema for the parent document, find the current
-            # path, and look at its `ref` field. Then we find the
-            # associated model and inspect its collection name.
-            schemaType = doc.constructor.schema.path(path)
-            ref = (schemaType.caster || schemaType).options?.ref
-            mongooseUtils.toCollectionName(ref)
+          type = @@getType(@@getReferencedModelName(doc.constructor, path), pluralize)
           resources.push(new Resource(type, id))
       );
 
@@ -212,7 +346,11 @@ class MongooseAdapter
     );
 
     # Return the resource
-    new Resource(type, doc.id, attrs, links if refPaths.length);
+    resource = new Resource(type, doc.id, attrs, links if not prelude.Obj.empty(links))
+    @@handleSubDocs(doc, resource)
+
+  @handleSubDocs = (doc, resource) ->
+    resource
 
   @getReferencePaths = (model) ->
     paths = []
@@ -220,5 +358,25 @@ class MongooseAdapter
       paths.push(name) if (type.caster || type).options?.ref
     );
     paths
+
+  @getReferencedModelName = (model, path) ->
+    schemaType = model.schema.path(path)
+    (schemaType.caster || schemaType).options?.ref
+
+  # Get the json api type for a model.
+  @getType = (modelName, pluralize) ->
+    pluralize = pluralize || defaultInflector.plural
+    pluralize(modelName.replace(/([A-Z])/g, '\-$1').slice(1).toLowerCase())
+
+  @getModelName = (type, singularize) ->
+    singularize = singularize || defaultInflector.singular
+    words = type.split('-')
+    # do singularization before adding back camel casing,
+    # because the default inflector lowercases words to 
+    # singularize them, and then can't add the camel casing back.
+    words[*-1] = singularize(words[*-1])
+    words.map(-> it.charAt(0).toUpperCase! + it.slice(1)).join('')
+
+  @getNestedSchemaPaths = (model) ->
 
 module.exports = MongooseAdapter
