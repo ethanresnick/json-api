@@ -5,7 +5,7 @@
   sinon = require('sinon');
   chai = require('chai');
   bodyParser = require('body-parser');
-  Q = require('Q');
+  Q = require('q');
   supertest = require('supertest');
   express = require('express');
   BaseController = require('../lib/BaseController');

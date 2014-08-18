@@ -1,5 +1,5 @@
 require! {
-  \mocha, \sinon \chai, 'body-parser', \Q, \supertest, \express,
+  \mocha, \sinon \chai, 'body-parser', Q:\q, \supertest, \express,
   \../lib/BaseController, \../lib/types/ErrorResource, \../lib/types/Collection, \../lib/ResourceTypeRegistry
 }
 

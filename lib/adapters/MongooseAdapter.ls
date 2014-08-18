@@ -1,5 +1,5 @@
 require! {
-  \Q, \mongoose, prelude:\prelude-ls, defaultInflector: 'pluralize',
+  Q:\q, \mongoose, prelude:\prelude-ls, defaultInflector: 'pluralize',
   \../types/Resource, \../types/Collection, \../types/ErrorResource,
   \../util/advice, \../util/utils
 }

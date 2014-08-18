@@ -1,4 +1,4 @@
-require! {'Q' 'mongoose' 'body-parser' templating:\url-template './types/Document' './types/Collection' './types/ErrorResource' \./util/utils}
+require! {Q:\q 'mongoose' 'body-parser' templating:\url-template './types/Document' './types/Collection' './types/ErrorResource' \./util/utils}
 class BaseController
   (@registry, @idHashSecret) ->
     @jsonBodyParser = bodyParser.json({type: ['json', 'application/vnd.api+json']})

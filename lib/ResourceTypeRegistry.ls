@@ -1,4 +1,4 @@
-require! ['Q', 'mongoose', './types/Document']
+require! {Q:\q 'mongoose', './types/Document'}
 
 /**
  * To fulfill a JSON API request, you often need to know about all the 
