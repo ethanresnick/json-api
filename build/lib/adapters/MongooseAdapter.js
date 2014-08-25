@@ -25,7 +25,7 @@
      */
     prototype.find = function(type, idOrIds, filters, fields, sorts, includePaths){
       var model, refPaths, queryBuilder, idQuery, mode, extraResources, extraFieldsToModelInfo, extraDocumentsPromises, duplicateQuery, i$, len$, pathParts, refModel, refType, refRefPaths, lastModelName, primaryDocumentsPromise, extraResourcesPromise, primaryResourcesPromise, this$ = this;
-      model = this.models[constructor.getModelName(type)];
+      model = this.getModel(constructor.getModelName(type));
       refPaths = constructor.getReferencePaths(model);
       queryBuilder = new mongoose.Query(null, null, model, model.collection);
       if (idOrIds) {
@@ -79,7 +79,7 @@
             queryBuilder.populate(pathParts[0]);
             if (fields && !in$(pathParts[0], fields)) {
               queryBuilder.select(pathParts[0]);
-              refModel = this.models[constructor.getReferencedModelName(model, pathParts[0])];
+              refModel = this.getModel(constructor.getReferencedModelName(model, pathParts[0]));
               refType = constructor.getType(refModel.modelName, this.inflector.plural);
               refRefPaths = constructor.getReferencePaths(refModel);
               if (!extraResources[refType]) {
@@ -163,8 +163,8 @@
       function fn$(resourcePromises, part){
         return resourcePromises.then(function(resources){
           if (resources) {
-            lastModelName = constructor.getReferencedModelName(this$.models[lastModelName], part);
-            return Q.npost(this$.models[lastModelName], "populate", [
+            lastModelName = constructor.getReferencedModelName(this$.getModel(lastModelName), part);
+            return Q.npost(this$.getModel(lastModelName), "populate", [
               resources, {
                 path: part
               }
@@ -195,7 +195,7 @@
     };
     prototype.create = function(resourceOrCollection){
       var model, docs, this$ = this;
-      model = this.models[constructor.getModelName(resourceOrCollection.type)];
+      model = this.getModel(constructor.getModelName(resourceOrCollection.type));
       docs = utils.mapResources(resourceOrCollection, constructor.resourceToPlainObject);
       return Q.ninvoke(model, "create", docs).then(function(it){
         return constructor.docsToResourceOrCollection(it, model, this$.inflector.plural);
@@ -204,7 +204,7 @@
     prototype.update = function(huh){};
     prototype['delete'] = function(type, idOrIds){
       var model, idQuery, mode;
-      model = this.models[constructor.getModelName(type)];
+      model = this.getModel(constructor.getModelName(type));
       if (idOrIds) {
         switch (typeof idOrIds) {
         case "string":
@@ -221,6 +221,9 @@
       return Q(model[mode]({
         '_id': idQuery
       }).exec())['catch'](constructor.errorHandler);
+    };
+    prototype.getModel = function(modelName){
+      return this.models[modelName];
     };
     MongooseAdapter.errorHandler = function(err){
       var errors, key, ref$, thisError, x$, generatedError;

@@ -16,7 +16,7 @@ class MongooseAdapter
    * this method for a description of those.
    */
   find: (type, idOrIds, filters, fields, sorts, includePaths) ->
-    model = @models[@@getModelName(type)]
+    model = @getModel(@@getModelName(type))
     refPaths = @@getReferencePaths(model)
     queryBuilder = new mongoose.Query(null, null, model, model.collection)
 
@@ -87,7 +87,7 @@ class MongooseAdapter
             queryBuilder.select(pathParts[0])
 
             # find some info about the referenced model at the populated path
-            refModel = @models[@@getReferencedModelName(model, pathParts[0])]
+            refModel = @getModel(@@getReferencedModelName(model, pathParts[0]))
             refType = @@getType(refModel.modelName, @inflector.plural)
             refRefPaths = @@getReferencePaths(refModel)
 
@@ -114,10 +114,10 @@ class MongooseAdapter
                 resourcePromises.then((resources) ~>
                   if resources
                     # update model
-                    lastModelName := @@getReferencedModelName(@models[lastModelName], part)
+                    lastModelName := @@getReferencedModelName(@getModel(lastModelName), part)
 
                     # populate this nested path
-                    Q.npost(@models[lastModelName], "populate", [resources, {path: part}]);
+                    Q.npost(@getModel(lastModelName), "populate", [resources, {path: part}]);
                 ).then(-> 
                   # if this population was empty, just stop
                   return it if !it or (it instanceof Array and !it.length)
@@ -208,7 +208,7 @@ class MongooseAdapter
     # (the spec is still too tentative on how to do that)
     # we know that we just have to iterate over the passed
     # in resources and go through their links non-recursively.
-    model = @models[@@getModelName(resourceOrCollection.type)]
+    model = @getModel(@@getModelName(resourceOrCollection.type))
 
     # turn the resource or collection into (an array of) plain objects
     docs = utils.mapResources(resourceOrCollection, @@resourceToPlainObject)
@@ -219,7 +219,7 @@ class MongooseAdapter
     # and resourceToPlainObject as our beforeSave, more or less.
 
   delete: (type, idOrIds) ->
-    model = @models[@@getModelName(type)]
+    model = @getModel(@@getModelName(type))
 
     if idOrIds
       switch typeof idOrIds
@@ -231,6 +231,9 @@ class MongooseAdapter
         mode = "remove"
 
     Q(model[mode]({'_id': idQuery}).exec()).catch(@@errorHandler)
+
+  getModel: (modelName) ->
+    @models[modelName]
 
   # Responsible for generating a sendable Error Resource if the query threw an Error
   @errorHandler = (err) ->
