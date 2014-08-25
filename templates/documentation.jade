@@ -1,0 +1,45 @@
+doctype html
+html(lang='en')
+  head
+    block title
+      title= name + ' Documentation'
+
+    block styles
+
+  body
+    #docs
+      #intro
+        block intro
+          h1= name + ' Documentation'
+
+      section#overview
+        block overview
+          h2 Usage Overview
+          p.
+            This API is compliant with the <a href="http://jsonapi.org/">JSON API</a> specification, which
+            defines conventions for listing, reading, creating, updating, and deleting resources. When fetching
+            a resource or resources, the spec also offers conventions for: <a href="http://jsonapi.org/format/#fetching-sorting">
+            sorting the returned resources</a>, <a href="http://jsonapi.org/format/#fetching-sparse-fieldsets">
+            limiting the fields returned in each resource</a>, <a href="http://jsonapi.org/format/#fetching-includes">
+            including linked resources</a> to form <a href="http://jsonapi.org/format/#document-structure-compound-documents">
+            compound documents</a>, etc. Accordingly, these features of the #{name} aren&rsquo;t redocumented here; 
+            simply see the JSON API <a href="http://jsonapi.org/format">spec</a> to learn how to use them.
+
+      section#resources
+        h2 Resource Types
+        each modelInfo, type in resourcesMap
+          section(id="resources-"+type)
+            h3= modelInfo.name
+
+      section#footer
+        block footer
+
+    nav
+      ul
+        li: a(href="#intro") Introduction
+        li: a(href="#overview") Usage Overview
+        li
+          h3.h4 Resource Types
+          ul
+            each modelInfo, type in resourcesMap
+              li: a(href=("#resource-" + type))= modelInfo.name

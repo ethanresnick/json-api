@@ -77,4 +77,8 @@ class ResourceTypeRegistry
   urlTemplate: (path) ->
     @_resourceTypes[path.split('.').0]['urlTemplates'][path]
 
+  # returns a list of registered types.
+  types: ->
+    Object.keys(@_resourceTypes)
+
 module.exports = ResourceTypeRegistry

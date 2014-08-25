@@ -16,6 +16,7 @@
     "body-parser": "^1.6.x",
     "express": "4.x.x",
     "flat": "^1.2.1",
+    "jade": "1.5.x",
     "pluralize": "0.0.11",
     "prelude-ls": "^1.1.1",
     "q": "^1.0.1",

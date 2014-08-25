@@ -95,6 +95,9 @@
     prototype.urlTemplate = function(path){
       return this._resourceTypes[path.split('.')[0]]['urlTemplates'][path];
     };
+    prototype.types = function(){
+      return Object.keys(this._resourceTypes);
+    };
     return ResourceTypeRegistry;
   }());
   module.exports = ResourceTypeRegistry;
