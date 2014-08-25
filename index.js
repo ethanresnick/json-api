@@ -8,6 +8,9 @@ module.exports = {
     ErrorResource: require('./build/lib/types/ErrorResource'),
     Resource: require('./build/lib/types/Resource')
   },
-  BaseController: require('./build/lib/BaseController'),
+  controllers: {
+    Base: require('./build/lib/controllers/Base'),
+    Documentation: require('./build/lib/controllers/Documentation')
+  },
   ResourceTypeRegistry: require('./build/lib/ResourceTypeRegistry')
 };
