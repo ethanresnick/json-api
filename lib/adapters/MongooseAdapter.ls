@@ -350,9 +350,44 @@ class MongooseAdapter
   @getReferencePaths = (model) ->
     paths = []
     model.schema.eachPath((name, type) ~> 
-      paths.push(name) if (type.caster || type).options?.ref
+      paths.push(name) if @@isReferencePath(type)
     );
     paths
+
+  @getStandardizedSchema = (model) ->
+    schema = model.schema
+    standardSchema = {}
+
+    # valid types are String, Array[String], Number, Array[Number], Boolean, Array[Boolean],
+    # Date, Array[Date], Id (for a local id), ModelNameId and Array[ModelNameId].
+    _getStandardType = (path, schemaType) ->
+      return 'Id' if path is '_id'
+
+      isArray = schemaType.options.type instanceof Array
+      rawType = if isArray then schemaType.options.type.0.type.name else schemaType.options.type.name
+      refModel = @@getReferencedModelName(model, path)
+
+      res = if isArray then 'Array[' else ''
+      res += if refModel then (refModel + 'Id') else rawType
+      res += if isArray then ']' else ''
+      res
+
+    model.schema.eachPath((name, type) ~> 
+      return if name in [\__v, \__t]
+
+      standardType = _getStandardType(name, type)
+      defaultVal = type.options.default if (type.options.default? and typeof type.options.default != 'function')
+      name = 'id' if name is '_id'
+      defaultVal = '(auto generated)' if name is 'id'
+
+      standardSchema[name] = 
+        type: standardType
+        default: defaultVal
+    )
+    standardSchema
+
+  @isReferencePath = (schemaType) ->
+    (schemaType.caster || schemaType).options?.ref?
 
   @getReferencedModelName = (model, path) ->
     schemaType = model.schema.path(path)

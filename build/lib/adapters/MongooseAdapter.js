@@ -333,12 +333,56 @@
       var paths, this$ = this;
       paths = [];
       model.schema.eachPath(function(name, type){
-        var ref$;
-        if ((ref$ = (type.caster || type).options) != null && ref$.ref) {
+        if (constructor.isReferencePath(type)) {
           return paths.push(name);
         }
       });
       return paths;
+    };
+    MongooseAdapter.getStandardizedSchema = function(model){
+      var schema, standardSchema, _getStandardType, this$ = this;
+      schema = model.schema;
+      standardSchema = {};
+      _getStandardType = function(path, schemaType){
+        var isArray, rawType, refModel, res;
+        if (path === '_id') {
+          return 'Id';
+        }
+        isArray = schemaType.options.type instanceof Array;
+        rawType = isArray
+          ? schemaType.options.type[0].type.name
+          : schemaType.options.type.name;
+        refModel = constructor.getReferencedModelName(model, path);
+        res = isArray ? 'Array[' : '';
+        res += refModel ? refModel + 'Id' : rawType;
+        res += isArray ? ']' : '';
+        return res;
+      };
+      model.schema.eachPath(function(name, type){
+        var standardType, defaultVal;
+        if (name === '__v' || name === '__t') {
+          return;
+        }
+        standardType = _getStandardType(name, type);
+        if (type.options['default'] != null && typeof type.options['default'] !== 'function') {
+          defaultVal = type.options['default'];
+        }
+        if (name === '_id') {
+          name = 'id';
+        }
+        if (name === 'id') {
+          defaultVal = '(auto generated)';
+        }
+        return standardSchema[name] = {
+          type: standardType,
+          'default': defaultVal
+        };
+      });
+      return standardSchema;
+    };
+    MongooseAdapter.isReferencePath = function(schemaType){
+      var ref$;
+      return ((ref$ = (schemaType.caster || schemaType).options) != null ? ref$.ref : void 8) != null;
     };
     MongooseAdapter.getReferencedModelName = function(model, path){
       var schemaType, ref$;
