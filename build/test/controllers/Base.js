@@ -8,10 +8,10 @@
   Q = require('q');
   supertest = require('supertest');
   express = require('express');
-  BaseController = require('../lib/BaseController');
-  ErrorResource = require('../lib/types/ErrorResource');
-  Collection = require('../lib/types/Collection');
-  ResourceTypeRegistry = require('../lib/ResourceTypeRegistry');
+  BaseController = require('../../lib/controllers/Base');
+  ErrorResource = require('../../lib/types/ErrorResource');
+  Collection = require('../../lib/types/Collection');
+  ResourceTypeRegistry = require('../../lib/ResourceTypeRegistry');
   expect = chai.expect;
   it2 = it;
   app = express();
@@ -36,7 +36,9 @@
         return it;
       };
     }),
-    defaultIncludes: sinon.stub().returns(undefined)
+    info: sinon.spy(function(type){
+      return {};
+    })
   };
   Base = new BaseController(registry);
   getSpy = sinon.spy(bind$(Base, 'GET'));

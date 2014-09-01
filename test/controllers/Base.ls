@@ -1,6 +1,6 @@
 require! {
   \mocha, \sinon \chai, 'body-parser', Q:\q, \supertest, \express,
-  \../lib/BaseController, \../lib/types/ErrorResource, \../lib/types/Collection, \../lib/ResourceTypeRegistry
+  BaseController:\../../lib/controllers/Base, \../../lib/types/ErrorResource, \../../lib/types/Collection, \../../lib/ResourceTypeRegistry
 }
 
 expect = chai.expect
@@ -18,7 +18,7 @@ registry =
   })
   afterQuery: sinon.spy(-> -> it)
   beforeSave: sinon.spy(-> -> it)
-  defaultIncludes: sinon.stub().returns(undefined)
+  info: sinon.spy((type) -> {})
 
 Base = new BaseController(registry)
 

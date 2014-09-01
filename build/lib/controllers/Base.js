@@ -20,7 +20,7 @@
       });
     }
     prototype.GET = function(req, res, next){
-      var type, adapter, sorts, fields, includes, filters, idOrIds, this$ = this;
+      var type, adapter, sorts, fields, includes, ref$, filters, idOrIds, this$ = this;
       type = req.params.type;
       adapter = this.registry.adapter(type);
       if (req.query.sort != null) {
@@ -32,7 +32,7 @@
       if (req.query.include != null) {
         includes = req.query.include.split(',').map(decodeURIComponent);
       } else {
-        includes = this.registry.defaultIncludes(type);
+        includes = (ref$ = this.registry.info(type)) != null ? ref$.defaultIncludes : void 8;
       }
       filters = function(){
         var params, attr, ref$, val;
@@ -81,7 +81,7 @@
           err = ErrorResource.fromError(err);
         }
         return this$.sendResources(req, res, err);
-      });
+      }).done();
     };
     prototype.PUT = function(req, res, next){
       if (req.is('application/vnd.api+json') === false) {
@@ -100,7 +100,7 @@
         var er;
         er = ErrorResource.fromError(err);
         return this$.sendResources(req, res, er);
-      });
+      }).done();
     };
     prototype.sendResources = function(req, res, primaryResources, extraResources, meta){
       var status, this$ = this;

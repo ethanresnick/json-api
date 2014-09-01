@@ -17,7 +17,7 @@ class BaseController
     if req.query.include?
       includes = req.query.include.split(',').map(decodeURIComponent)
     else
-      includes = @registry.defaultIncludes(type)
+      includes = @registry.info(type)?.defaultIncludes
 
     filters = do ->
       params = {} <<< req.query; 
@@ -63,7 +63,7 @@ class BaseController
       if err not instanceof [ErrorResource, Collection]
         err = ErrorResource.fromError(err)
       @sendResources(req, res, err)
-    )
+    ).done();
 
   PUT: (req, res, next) ->
     return next() if req.is('application/vnd.api+json') == false
@@ -83,7 +83,7 @@ class BaseController
       ).catch((err) ~>
         er = ErrorResource.fromError(err)
         @sendResources(req, res, er)
-      )
+      ).done()
 
   sendResources: (req, res, primaryResources, extraResources, meta) ->
     if primaryResources.type == "errors"
