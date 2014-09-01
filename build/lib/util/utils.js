@@ -39,6 +39,9 @@
       } else {
         return eachFn(arrayOrVal);
       }
+    },
+    arrayValuesMatch: function(array1, array2){
+      return array1.length === array2.length && array1.sort().join() === array2.sort().join();
     }
   };
 }).call(this);

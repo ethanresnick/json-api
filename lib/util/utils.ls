@@ -35,3 +35,6 @@ module.exports =
       arrayOrVal.forEach(eachFn)
     else
       eachFn(arrayOrVal)
+
+  arrayValuesMatch: (array1, array2) ->
+    array1.length == array2.length && array1.sort!.join! == array2.sort!.join!
