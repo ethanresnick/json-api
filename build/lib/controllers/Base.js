@@ -84,9 +84,57 @@
       }).done();
     };
     prototype.PUT = function(req, res, next){
+      var type, adapter, idOrIds, this$ = this;
       if (req.is('application/vnd.api+json') === false) {
         return next();
       }
+      type = req.params.type;
+      adapter = this.registry.adapter(type);
+      idOrIds = this._readIds(req);
+      return constructor.getBodyResources(req, this.jsonBodyParser).then(function(resourceOrCollection){
+        var changeSets, resourceToChangeSet, providedBodyIds, providedUrlIds;
+        changeSets = {};
+        resourceToChangeSet = function(it){
+          var id, k, v;
+          id = typeof idOrIds === 'string'
+            ? idOrIds
+            : it.id;
+          if (!id) {
+            throw new Error("An id for the resource to be updated is required.");
+          }
+          return changeSets[id] = import$(import$({}, it.attrs), (function(){
+            var ref$, results$ = {};
+            for (k in ref$ = it.links) {
+              v = ref$[k];
+              results$[k] = v.id || v.ids;
+            }
+            return results$;
+          }()));
+        };
+        providedBodyIds = resourceOrCollection.ids || [resourceOrCollection.id];
+        providedUrlIds = idOrIds instanceof Array
+          ? idOrIds
+          : [idOrIds];
+        if (!utils.arrayValuesMatch(providedBodyIds, providedUrlIds)) {
+          throw new Error("The id(s) to update that were provided in the url do not match the ids of the resource objects provided in the request body.");
+        }
+        if (resourceOrCollection instanceof Collection) {
+          resourceOrCollection.resources.forEach(resourceToChangeSet);
+        } else {
+          resourceToChangeSet(resourceOrCollection);
+        }
+        return changeSets;
+      }).then(function(changeSets){
+        console.log(changeSets);
+        return adapter.update(type, idOrIds, changeSets);
+      }).then(function(changed){
+        return this$.sendResources(req, res, changed);
+      })['catch'](function(err){
+        var er;
+        er = ErrorResource.fromError(err);
+        console.log(err, err.stack);
+        return this$.sendResources(req, res, er);
+      }).done();
     };
     prototype.DELETE = function(req, res, next){
       var type, adapter, idOrIds, this$ = this;

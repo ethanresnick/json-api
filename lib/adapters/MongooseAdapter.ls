@@ -214,9 +214,26 @@ class MongooseAdapter
     docs = utils.mapResources(resourceOrCollection, @@resourceToPlainObject)
     Q.ninvoke(model, "create", docs).then((~> @@docsToResourceOrCollection(it, model, @inflector.plural)), @@errorHandler)
 
-  update: (huh) ->
-    # we've got docsToResourceOrCollection as our afterQuery
-    # and resourceToPlainObject as our beforeSave, more or less.
+  update: (type, idOrIds, changeSets) ->
+    # It'd be faster to bypass Mongoose Document creation & just have mongoose
+    # send a findAndUpdate command directly to mongo, but we want Mongoose's
+    # standard validation stuff, and so we have to find first, then update.
+    model = @getModel(@@getModelName(type))
+    switch typeof idOrIds
+      | "string" =>
+        idQuery = idOrIds
+        mode = "findOne"
+      | otherwise =>
+        idQuery = {'$in':idOrIds}
+        mode = "find"
+
+    Q(model[mode]({'_id': idQuery}).exec!).then((docs) ~>
+      utils.forEachArrayOrVal(docs, ->
+        it.set(changeSets[it.id])
+        it.save!
+      );
+      @@docsToResourceOrCollection(docs, model, @inflector.plural)
+    ).catch(@@errorHandler);
 
   delete: (type, idOrIds) ->
     model = @getModel(@@getModelName(type))

@@ -67,9 +67,42 @@ class BaseController
 
   PUT: (req, res, next) ->
     return next() if req.is('application/vnd.api+json') == false
-    #before = @~beforeSave
-    #@_buildQuery(req).promise!
-    #  .then(->, ->)
+
+    type = req.params.type
+    adapter = @registry.adapter(type)
+    idOrIds = @_readIds(req)
+
+    @@getBodyResources(req, @jsonBodyParser).then((resourceOrCollection) ->
+      changeSets = {}
+      resourceToChangeSet = -> 
+        id = if typeof idOrIds == 'string' then idOrIds else it.id
+        throw new Error("An id for the resource to be updated is required.") if not id;
+        changeSets[id] = {} <<< it.attrs <<< {[k, v.id || v.ids] for k, v of it.links};
+
+      providedBodyIds = resourceOrCollection.ids || [resourceOrCollection.id];
+      providedUrlIds = if idOrIds instanceof Array then idOrIds else [idOrIds];
+
+      if not utils.arrayValuesMatch(providedBodyIds, providedUrlIds)
+        throw new Error("The id(s) to update that were provided in the url do 
+        not match the ids of the resource objects provided in the request body.");
+
+      # Build changesets. 
+      # Note that this is a little loose, because we're looping over the 
+      if resourceOrCollection instanceof Collection 
+      then resourceOrCollection.resources.forEach(resourceToChangeSet)
+      else resourceToChangeSet(resourceOrCollection)
+
+      changeSets
+    ).then((changeSets) ->
+      console.log(changeSets);
+      adapter.update(type, idOrIds, changeSets)
+    ).then((changed) ~>
+      @sendResources(req, res, changed)
+    ).catch((err) ~>
+      er = ErrorResource.fromError(err)
+      console.log(err, err.stack)
+      @sendResources(req, res, er)
+    ).done()
 
   DELETE: (req, res, next) ->
     type = req.params.type

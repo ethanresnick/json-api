@@ -201,7 +201,30 @@
         return constructor.docsToResourceOrCollection(it, model, this$.inflector.plural);
       }, constructor.errorHandler);
     };
-    prototype.update = function(huh){};
+    prototype.update = function(type, idOrIds, changeSets){
+      var model, idQuery, mode, this$ = this;
+      model = this.getModel(constructor.getModelName(type));
+      switch (typeof idOrIds) {
+      case "string":
+        idQuery = idOrIds;
+        mode = "findOne";
+        break;
+      default:
+        idQuery = {
+          '$in': idOrIds
+        };
+        mode = "find";
+      }
+      return Q(model[mode]({
+        '_id': idQuery
+      }).exec()).then(function(docs){
+        utils.forEachArrayOrVal(docs, function(it){
+          it.set(changeSets[it.id]);
+          return it.save();
+        });
+        return constructor.docsToResourceOrCollection(docs, model, this$.inflector.plural);
+      })['catch'](constructor.errorHandler);
+    };
     prototype['delete'] = function(type, idOrIds){
       var model, idQuery, mode;
       model = this.getModel(constructor.getModelName(type));
