@@ -359,23 +359,24 @@
         return res;
       };
       model.schema.eachPath(function(name, type){
-        var standardType, defaultVal;
+        var standardType, required, enumValues, ref$, defaultVal;
         if (name === '__v' || name === '__t') {
           return;
         }
         standardType = _getStandardType(name, type);
-        if (type.options['default'] != null && typeof type.options['default'] !== 'function') {
-          defaultVal = type.options['default'];
-        }
         if (name === '_id') {
           name = 'id';
         }
-        if (name === 'id') {
-          defaultVal = '(auto generated)';
-        }
+        required = type.options.required;
+        enumValues = (ref$ = type.options['enum']) != null ? ref$.values : void 8;
+        defaultVal = name === 'id' || (standardType === 'Date' && (name === 'created' || name === 'modified') && typeof type.options['default'] === 'function')
+          ? '(auto generated)'
+          : type.options['default'] != null && typeof type.options['default'] !== 'function' ? type.options['default'] : void 8;
         return standardSchema[name] = {
           type: standardType,
-          'default': defaultVal
+          'default': defaultVal,
+          enumValues: enumValues,
+          required: required
         };
       });
       return standardSchema;

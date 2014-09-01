@@ -376,13 +376,19 @@ class MongooseAdapter
       return if name in [\__v, \__t]
 
       standardType = _getStandardType(name, type)
-      defaultVal = type.options.default if (type.options.default? and typeof type.options.default != 'function')
       name = 'id' if name is '_id'
-      defaultVal = '(auto generated)' if name is 'id'
+      required = type.options.required
+      enumValues = type.options.enum?.values
+      defaultVal =
+        if name is 'id' or (standardType is 'Date' && name in ['created', 'modified'] && typeof type.options.default=='function')
+        then '(auto generated)'
+        else (type.options.default if (type.options.default? and typeof type.options.default != 'function'))
 
       standardSchema[name] = 
         type: standardType
         default: defaultVal
+        enumValues: enumValues
+        required: required
     )
     standardSchema
 
