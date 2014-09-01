@@ -130,7 +130,7 @@ class Document
         # 4 (alt). [{id: "x", type: ""}, ...]
         # And for any resource/collection object, the type + href
         # keys should be populated by merging with the top-level links.
-        linkedType = val.type || val.0?.type || topLinks[type + '.' + key]?.type
+        linkedType = val.type || val.0?.type || topLinks?[type + '.' + key]?.type
         linkedIdOrIds = (
           if typeof val is "string"
             val
@@ -142,7 +142,7 @@ class Document
             val.ids
         )
         # convert to stub resources and save in links
-        links[key] = utils.mapArrayOrVal(linkedIdOrIds, (id) -> 
+        linkedResourceOrResources = utils.mapArrayOrVal(linkedIdOrIds, (id) -> 
           # Below, I commented out searching for the full doc in the top-level
           # linked key, because the only way we could get a doc with a linked
           # key, because that would allow sideposting with client ids, which
@@ -154,6 +154,7 @@ class Document
           # else
           new Resource(linkedType, id)
         )
+        links[key] = if linkedResourceOrResources instanceof Array then new Collection(linkedResourceOrResources) else linkedResourceOrResources
 
       new Resource(type, id, attrs, links, href)
 

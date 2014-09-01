@@ -140,7 +140,7 @@
       var links, meta, linked, buildResource, key, primaryResources, makeCollection, type;
       links = doc.links, meta = doc.meta, linked = doc.linked;
       buildResource = function(json, type, linked, topLinks){
-        var id, href, links, attrs, key, val, linkedType, ref$, linkedIdOrIds;
+        var id, href, links, attrs, key, val, linkedType, ref$, linkedIdOrIds, linkedResourceOrResources;
         id = json.id;
         delete json.id;
         href = json.href;
@@ -152,7 +152,7 @@
         attrs = json;
         for (key in links) {
           val = links[key];
-          linkedType = val.type || ((ref$ = val[0]) != null ? ref$.type : void 8) || ((ref$ = topLinks[type + '.' + key]) != null ? ref$.type : void 8);
+          linkedType = val.type || ((ref$ = val[0]) != null ? ref$.type : void 8) || (topLinks != null ? (ref$ = topLinks[type + '.' + key]) != null ? ref$.type : void 8 : void 8);
           linkedIdOrIds = typeof val === "string"
             ? val
             : val.id
@@ -160,7 +160,8 @@
               : val instanceof Array
                 ? val.map(fn$)
                 : val.ids;
-          links[key] = utils.mapArrayOrVal(linkedIdOrIds, fn1$);
+          linkedResourceOrResources = utils.mapArrayOrVal(linkedIdOrIds, fn1$);
+          links[key] = linkedResourceOrResources instanceof Array ? new Collection(linkedResourceOrResources) : linkedResourceOrResources;
         }
         return new Resource(type, id, attrs, links, href);
         function fn$(it){
