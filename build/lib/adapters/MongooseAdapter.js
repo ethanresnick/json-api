@@ -389,6 +389,14 @@
       schemaType = model.schema.path(path);
       return (ref$ = (schemaType.caster || schemaType).options) != null ? ref$.ref : void 8;
     };
+    MongooseAdapter.getChildTypes = function(model, pluralize){
+      var this$ = this;
+      if (model.discriminators) {
+        return Object.keys(model.discriminators).map(function(it){
+          return constructor.getType(it, pluralize);
+        });
+      }
+    };
     MongooseAdapter.getType = function(modelName, pluralize){
       pluralize = pluralize || defaultInflector.plural;
       return pluralize(modelName.replace(/([A-Z])/g, '-$1').slice(1).toLowerCase());

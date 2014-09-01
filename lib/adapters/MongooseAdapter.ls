@@ -393,6 +393,9 @@ class MongooseAdapter
     schemaType = model.schema.path(path)
     (schemaType.caster || schemaType).options?.ref
 
+  @getChildTypes = (model, pluralize) ->
+    Object.keys(model.discriminators).map(~> @@getType(it, pluralize)) if model.discriminators
+
   # Get the json api type for a model.
   @getType = (modelName, pluralize) ->
     pluralize = pluralize || defaultInflector.plural
