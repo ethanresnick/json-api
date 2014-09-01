@@ -29,6 +29,7 @@
         adapter: {},
         beforeSave: function(){},
         afterQuery: function(){},
+        info: {},
         urlTemplates: {
           'mytypes.path': 'test template'
         }
@@ -45,6 +46,9 @@
     });
     describe("afterQuery", function(){
       return it2("should be a getter/setter for a type's afterQuery", makeGetterSetterTest(function(){}, "mytypes", "afterQuery"));
+    });
+    describe("info", function(){
+      return it2("should be a getter/setter for a type's info", makeGetterSetterTest({}, "mytypes", "info"));
     });
     return describe("urlTemplates", function(){
       it2("should be a getter/setter for a type's urlTemplates", makeGetterSetterTest({

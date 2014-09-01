@@ -27,7 +27,7 @@
       var this$ = this;
       if (description) {
         this._resourceTypes[type] = {};
-        return ["adapter", "beforeSave", "afterQuery", "urlTemplates", "defaultIncludes"].forEach(function(it){
+        return ["adapter", "beforeSave", "afterQuery", "urlTemplates", "defaultIncludes", "info"].forEach(function(it){
           if (description[it] != null) {
             return this$[it](type, description[it]);
           }
@@ -60,6 +60,14 @@
         return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['afterQuery'] = afterFn;
       } else {
         return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['afterQuery'];
+      }
+    };
+    prototype.info = function(type, info){
+      var ref$;
+      if (info) {
+        return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['info'] = info;
+      } else {
+        return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['info'];
       }
     };
     prototype.urlTemplates = function(type, templates){

@@ -22,9 +22,10 @@ describe("ResourceTypeRegistry", ->
 
   describe("type", ->
     description = 
-      adapter: {}, 
-      beforeSave: ->, 
-      afterQuery: ->, 
+      adapter: {}
+      beforeSave: ->
+      afterQuery: -> 
+      info: {}
       urlTemplates: {'mytypes.path': 'test template'}
 
     it2("should be a getter/setter for a type",
@@ -47,6 +48,12 @@ describe("ResourceTypeRegistry", ->
   describe("afterQuery" ->
     it2("should be a getter/setter for a type's afterQuery", 
       makeGetterSetterTest(->, "mytypes", "afterQuery")
+    )
+  )
+
+  describe("info" ->
+    it2("should be a getter/setter for a type's info", 
+      makeGetterSetterTest({}, "mytypes", "info")
     )
   )
 

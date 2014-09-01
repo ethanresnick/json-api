@@ -30,7 +30,7 @@ class ResourceTypeRegistry
     if description
       # the valid properties to register.
       @_resourceTypes[type] = {}
-      ["adapter", "beforeSave", "afterQuery", "urlTemplates", "defaultIncludes"].forEach(~>
+      ["adapter", "beforeSave", "afterQuery", "urlTemplates", "defaultIncludes", "info"].forEach(~>
         @[it](type, description[it]) if description[it]?
       )
     else
@@ -53,6 +53,12 @@ class ResourceTypeRegistry
       @_resourceTypes.{}[type]['afterQuery'] = afterFn
     else
       @_resourceTypes.{}[type]['afterQuery']
+
+  info: (type, info) ->
+    if info
+      @_resourceTypes.{}[type]['info'] = info
+    else
+      @_resourceTypes.{}[type]['info']
 
   urlTemplates: (type, templates) ->
     switch arguments.length
