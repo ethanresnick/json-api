@@ -6,6 +6,11 @@ html(lang='en')
 
     block styles
 
+    block scripts
+      script(src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js")
+      script
+        include ConditionalSection.js
+
   body
     #docs
       #intro
@@ -14,7 +19,7 @@ html(lang='en')
 
       section#overview
         block overview
-          h2 Usage Overview
+          h2.with-p Usage Overview
           p.
             This API is compliant with the <a href="http://jsonapi.org/">JSON API</a> specification, which
             defines conventions for listing, reading, creating, updating, and deleting resources. When fetching
@@ -25,11 +30,75 @@ html(lang='en')
             compound documents</a>, etc. Accordingly, these features of the #{name} aren&rsquo;t redocumented here; 
             simply see the JSON API <a href="http://jsonapi.org/format">spec</a> to learn how to use them.
 
+          section
+            h3.with-p Unsupported JSON API features
+            p.
+              This implementation of JSON API does not allow clients to set a resource&rsquo;s id; any attempt to
+              do so will be  silently ignored, with the server-generated id being used instead. This implementation
+              also does not yet support: updating resources with <code class="http-method">PUT</code>, 
+              <code class="http-method">PATCH</code> operations of any kind, and 
+              <a href="http://jsonapi.org/format/#urls-relationships">relationship endpoints</a>.  
+
       section#resources
         h2 Resource Types
         each modelInfo, type in resourcesMap
           section(id="resources-"+type)
-            h3= modelInfo.name
+            h3(class=(modelInfo.description ? "with-p" : ""))= modelInfo.name
+            if modelInfo.description
+              p= modelInfo.description
+            if modelInfo.parentType
+              p.
+                <code>#{modelInfo.name}</code> resources extend <a href="#resources-#{modelInfo.parentType}"><code>#{resourcesMap[modelInfo.parentType].name}</code></a>
+                resources, meaning they have all the same fields and requirements. The fields shown below are only the <em>additional</em> fields
+                that <code>#{modelInfo.name}</code> resources have but <code>#{resourcesMap[modelInfo.parentType].name}</code> resources don&rsquo;t.
+
+            if modelInfo.example
+              .conditional-section
+                .toggle Show example representation
+                .contents
+                  code
+                    pre= modelInfo.example
+
+            //allow subtemplates to stick in sections before the fields.
+            block fieldsPrepend
+
+            if modelInfo.schema
+              h4 Fields
+              table
+                thead: tr 
+                    th Field Name
+                    th Type
+                    th Description
+
+                //move id to the top for display
+                - var orderedFields = Object.keys(modelInfo.schema)
+                - var idIndex = orderedFields.indexOf('id');
+                - orderedFields.splice(idIndex, 1)
+                - orderedFields = ['id'].concat(orderedFields)
+
+                each path in orderedFields
+                  - var field = modelInfo.schema[path]
+                  if !modelInfo.parentType || !resourcesMap[modelInfo.parentType].schema[path] 
+                    tr
+                      td
+                        if field.required
+                          b= path
+                        else
+                          span= path
+                      td= field.type
+                      td
+                        != field.description
+                        if (field.default != null && path != 'id') || field.enumValues != null
+                          dl
+                            if field.enumValues != null
+                              dt Allowed Values
+                              dd= field.enumValues.join(', ')
+                            if field.default != null && path != 'id'
+                              dt Default Value
+                              dd= field.default
+
+              //allow subtemplates to add content after the fields
+              block fieldsAppend
 
       section#footer
         block footer
@@ -42,4 +111,4 @@ html(lang='en')
           h3.h4 Resource Types
           ul
             each modelInfo, type in resourcesMap
-              li: a(href=("#resource-" + type))= modelInfo.name
+              li: a(href=("#resources-" + type))= modelInfo.name
