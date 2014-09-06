@@ -94,13 +94,11 @@ class BaseController
 
       changeSets
     ).then((changeSets) ->
-      console.log(changeSets);
       adapter.update(type, idOrIds, changeSets)
     ).then((changed) ~>
       @sendResources(req, res, changed)
     ).catch((err) ~>
       er = ErrorResource.fromError(err)
-      console.log(err, err.stack)
       @sendResources(req, res, er)
     ).done()
 
@@ -224,41 +222,6 @@ class BaseController
       Q(_makeResources(req.body))
 
 #todo: 
-# update
-# have a GET for multiple resources 404 if some not found
+# have a GET for multiple resources 404 if some not found?
 # perhaps delete associations on delete (how? should be in user code)
-
-/*
-  fulfillUpdate: function(req, res, next, customUpdateFunction, customModelResolver) {
-    var self = this
-      , updateFunction;    
-    if(typeof customUpdateFunction === "function") {
-      updateFunction = customUpdateFunction;
-    } 
-    else {
-      updateFunction = function(doc) {
-        for(var key in req.body) {
-          doc[key] = req.body[key];
-        }
-        return doc;
-      };
-    }
-    //200 status code + resource, rather than a 204,
-    //is ok (actually, required) because we're updating
-    //the modified date field on each PUT.
-    this.mongooseDocFromIdsPromise(req, customModelResolver)
-      .then(
-        updateFunction
-      ).then(function(doc) {
-        return Q.nfcall(doc.save);
-      })
-      .spread(
-        this.mongooseDocToJsonApiResource
-      ).then(
-        res.json.bind(res)
-      ).catch(function(err) { 
-        self.sendJsonApiError(err, res);
-      });
-  },
-};*/
 module.exports = BaseController
