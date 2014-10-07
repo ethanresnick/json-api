@@ -77,13 +77,14 @@ html(lang='en')
 
                 each path in orderedFields
                   - var field = modelInfo.schema[path]
+                  - var fieldId = "resources-"+type+'-'+path
                   if !modelInfo.parentType || !resourcesMap[modelInfo.parentType].schema[path] 
                     tr
                       td
                         if field.required
-                          b= path
+                          b(id=fieldId)= path
                         else
-                          span= path
+                          span(id=fieldId)= path
                       td= field.type
                       td
                         != field.description
