@@ -125,14 +125,12 @@
         }
         return changeSets;
       }).then(function(changeSets){
-        console.log(changeSets);
         return adapter.update(type, idOrIds, changeSets);
       }).then(function(changed){
         return this$.sendResources(req, res, changed);
       })['catch'](function(err){
         var er;
         er = ErrorResource.fromError(err);
-        console.log(err, err.stack);
         return this$.sendResources(req, res, er);
       }).done();
     };
@@ -272,39 +270,6 @@
     };
     return BaseController;
   }());
-  /*
-    fulfillUpdate: function(req, res, next, customUpdateFunction, customModelResolver) {
-      var self = this
-        , updateFunction;    
-      if(typeof customUpdateFunction === "function") {
-        updateFunction = customUpdateFunction;
-      } 
-      else {
-        updateFunction = function(doc) {
-          for(var key in req.body) {
-            doc[key] = req.body[key];
-          }
-          return doc;
-        };
-      }
-      //200 status code + resource, rather than a 204,
-      //is ok (actually, required) because we're updating
-      //the modified date field on each PUT.
-      this.mongooseDocFromIdsPromise(req, customModelResolver)
-        .then(
-          updateFunction
-        ).then(function(doc) {
-          return Q.nfcall(doc.save);
-        })
-        .spread(
-          this.mongooseDocToJsonApiResource
-        ).then(
-          res.json.bind(res)
-        ).catch(function(err) { 
-          self.sendJsonApiError(err, res);
-        });
-    },
-  };*/
   module.exports = BaseController;
   function import$(obj, src){
     var own = {}.hasOwnProperty;
