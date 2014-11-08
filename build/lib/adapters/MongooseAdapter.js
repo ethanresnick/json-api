@@ -13,9 +13,10 @@
   MongooseAdapter = (function(){
     MongooseAdapter.displayName = 'MongooseAdapter';
     var prototype = MongooseAdapter.prototype, constructor = MongooseAdapter;
-    function MongooseAdapter(models, inflector){
+    function MongooseAdapter(models, inflector, idGenerator){
       this.models = models || mongoose.models;
       this.inflector = inflector || defaultInflector;
+      this.idGenerator = idGenerator;
     }
     /**
      * Returns a Promise for an array or resources. The first item in the 
@@ -194,9 +195,15 @@
       }
     };
     prototype.create = function(resourceOrCollection){
-      var model, docs, this$ = this;
+      var model, docs, generator, this$ = this;
       model = this.getModel(constructor.getModelName(resourceOrCollection.type));
       docs = utils.mapResources(resourceOrCollection, constructor.resourceToPlainObject);
+      generator = this.idGenerator;
+      if (typeof generator === "function") {
+        utils.forEachArrayOrVal(docs, function(doc){
+          doc._id = generator(doc);
+        });
+      }
       return Q.ninvoke(model, "create", docs).then(function(it){
         return constructor.docsToResourceOrCollection(it, model, this$.inflector.plural);
       }, constructor.errorHandler);
