@@ -426,6 +426,8 @@
         return Object.keys(model.discriminators).map(function(it){
           return constructor.getType(it, pluralize);
         });
+      } else {
+        return [];
       }
     };
     MongooseAdapter.getType = function(modelName, pluralize){
