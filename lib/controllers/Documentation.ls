@@ -7,6 +7,7 @@ class DocumentationController
     data = @apiInfo
     data.resourcesMap = {}
     childTypesToParentTypesMap = {}
+
     for type in @registry.types!
       adapter   = @registry.adapter(type)
       inflector = adapter.inflector
@@ -14,14 +15,20 @@ class DocumentationController
       model     = adapter.getModel(modelName)
       children  = adapter@@getChildTypes(model, inflector.plural)
 
+      # Store in the resourcesMap the info object about each model,
+      # as returned by @getModelInfo.
       data.resourcesMap[type] = @getModelInfo(type, adapter, modelName, model)
 
-      # store model relationships as we come across them.
-      if children
-        for childType in children
-          childTypesToParentTypesMap[childType] = type
+      # Augment the info object with a childTypes property. There's no risk
+      # of this conflicting with a named property on the model, because the 
+      # model's schema lives under a .schema property (see @getModelInfo).
+      data.resourcesMap[type]['childTypes'] = children
 
-    # attach parent models to data
+      # save model relationships as we come across them.
+      for childType in children
+        childTypesToParentTypesMap[childType] = type
+
+    # Likewise, attach parentType to data
     for type, info of data.resourcesMap
       info.parentType = childTypesToParentTypesMap[type]
 

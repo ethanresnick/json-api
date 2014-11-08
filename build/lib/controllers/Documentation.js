@@ -24,11 +24,10 @@
         model = adapter.getModel(modelName);
         children = adapter.constructor.getChildTypes(model, inflector.plural);
         data.resourcesMap[type] = this.getModelInfo(type, adapter, modelName, model);
-        if (children) {
-          for (j$ = 0, len1$ = children.length; j$ < len1$; ++j$) {
-            childType = children[j$];
-            childTypesToParentTypesMap[childType] = type;
-          }
+        data.resourcesMap[type]['childTypes'] = children;
+        for (j$ = 0, len1$ = children.length; j$ < len1$; ++j$) {
+          childType = children[j$];
+          childTypesToParentTypesMap[childType] = type;
         }
       }
       for (type in ref$ = data.resourcesMap) {
