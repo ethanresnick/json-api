@@ -17,6 +17,67 @@ html(lang='en')
         block intro
           h1= name + ' Documentation'
 
+
+      mixin resource-doc(modelInfo, type)
+        section(id="resources-"+type)
+          h3(class=(modelInfo.description ? "with-p" : ""))= modelInfo.name
+          if modelInfo.description
+            p= modelInfo.description
+          if modelInfo.parentType
+            p.
+              <code>#{modelInfo.name}</code> resources extend <a href="#resources-#{modelInfo.parentType}"><code>#{resourcesMap[modelInfo.parentType].name}</code></a>
+              resources, meaning they have all the same fields and requirements. The fields shown below are only the <em>additional</em> fields
+              that <code>#{modelInfo.name}</code> resources have but <code>#{resourcesMap[modelInfo.parentType].name}</code> resources don&rsquo;t.
+
+          if modelInfo.example
+            .conditional-section
+              .toggle Show example representation
+              .contents
+                code
+                  pre= modelInfo.example
+
+          //allow subtemplates to stick in sections before the fields.
+          block fieldsPrepend
+
+          if modelInfo.schema
+            h4 Fields
+            table
+              thead: tr 
+                  th Field Name
+                  th Type
+                  th Description
+
+              //move id to the top for display
+              - var orderedFields = Object.keys(modelInfo.schema)
+              - var idIndex = orderedFields.indexOf('id');
+              - orderedFields.splice(idIndex, 1)
+              - orderedFields = ['id'].concat(orderedFields)
+
+              each path in orderedFields
+                - var field = modelInfo.schema[path]
+                - var fieldId = "resources-"+type+'-'+path
+                if !modelInfo.parentType || !resourcesMap[modelInfo.parentType].schema[path] 
+                  tr
+                    td
+                      if field.required
+                        b(id=fieldId)= path
+                      else
+                        span(id=fieldId)= path
+                    td= field.type
+                    td
+                      != field.description
+                      if (field.default != null && path != 'id') || field.enumValues != null
+                        dl
+                          if field.enumValues != null
+                            dt Allowed Values
+                            dd= field.enumValues.join(', ')
+                          if field.default != null && path != 'id'
+                            dt Default Value
+                            dd= field.default
+
+            //allow subtemplates to add content after the fields
+            block fieldsAppend
+
       section#overview
         block overview
           h2.with-p Usage Overview
@@ -41,64 +102,11 @@ html(lang='en')
       section#resources
         h2 Resource Types
         each modelInfo, type in resourcesMap
-          section(id="resources-"+type)
-            h3(class=(modelInfo.description ? "with-p" : ""))= modelInfo.name
-            if modelInfo.description
-              p= modelInfo.description
-            if modelInfo.parentType
-              p.
-                <code>#{modelInfo.name}</code> resources extend <a href="#resources-#{modelInfo.parentType}"><code>#{resourcesMap[modelInfo.parentType].name}</code></a>
-                resources, meaning they have all the same fields and requirements. The fields shown below are only the <em>additional</em> fields
-                that <code>#{modelInfo.name}</code> resources have but <code>#{resourcesMap[modelInfo.parentType].name}</code> resources don&rsquo;t.
-
-            if modelInfo.example
-              .conditional-section
-                .toggle Show example representation
-                .contents
-                  code
-                    pre= modelInfo.example
-
-            //allow subtemplates to stick in sections before the fields.
-            block fieldsPrepend
-
-            if modelInfo.schema
-              h4 Fields
-              table
-                thead: tr 
-                    th Field Name
-                    th Type
-                    th Description
-
-                //move id to the top for display
-                - var orderedFields = Object.keys(modelInfo.schema)
-                - var idIndex = orderedFields.indexOf('id');
-                - orderedFields.splice(idIndex, 1)
-                - orderedFields = ['id'].concat(orderedFields)
-
-                each path in orderedFields
-                  - var field = modelInfo.schema[path]
-                  - var fieldId = "resources-"+type+'-'+path
-                  if !modelInfo.parentType || !resourcesMap[modelInfo.parentType].schema[path] 
-                    tr
-                      td
-                        if field.required
-                          b(id=fieldId)= path
-                        else
-                          span(id=fieldId)= path
-                      td= field.type
-                      td
-                        != field.description
-                        if (field.default != null && path != 'id') || field.enumValues != null
-                          dl
-                            if field.enumValues != null
-                              dt Allowed Values
-                              dd= field.enumValues.join(', ')
-                            if field.default != null && path != 'id'
-                              dt Default Value
-                              dd= field.default
-
-              //allow subtemplates to add content after the fields
-              block fieldsAppend
+          //find the root nodes
+          if !modelInfo.parentType
+            +resource-doc(modelInfo, type)
+            each subType in modelInfo.childTypes
+              +resource-doc(resourcesMap[subType], subType)
 
       section#footer
         block footer
@@ -111,4 +119,10 @@ html(lang='en')
           h3.h4 Resource Types
           ul
             each modelInfo, type in resourcesMap
-              li: a(href=("#resources-" + type))= modelInfo.name
+              if !modelInfo.parentType
+                li
+                  a(href=("#resources-" + type))= modelInfo.name
+                  if modelInfo.childTypes.length > 0
+                    ul
+                      each subType in modelInfo.childTypes
+                        li: a(href=("#resources-" + subType))= resourcesMap[subType].name
