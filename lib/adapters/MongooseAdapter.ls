@@ -5,9 +5,10 @@ require! {
 }
 
 class MongooseAdapter
-  (models, inflector) ->
+  (models, inflector, idGenerator) ->
     @models = models || mongoose.models
     @inflector = inflector || defaultInflector
+    @idGenerator = idGenerator
 
   /**
    * Returns a Promise for an array or resources. The first item in the 
@@ -212,6 +213,14 @@ class MongooseAdapter
 
     # turn the resource or collection into (an array of) plain objects
     docs = utils.mapResources(resourceOrCollection, @@resourceToPlainObject)
+
+    # use id generator to set id, if a custom generator was provided
+    generator = @idGenerator
+    if typeof generator is "function"
+      utils.forEachArrayOrVal(docs, (doc) -> 
+        doc._id = generator(doc); void
+      )
+
     Q.ninvoke(model, "create", docs).then((~> @@docsToResourceOrCollection(it, model, @inflector.plural)), @@errorHandler)
 
   update: (type, idOrIds, changeSets) ->
