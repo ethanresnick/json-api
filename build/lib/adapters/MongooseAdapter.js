@@ -274,6 +274,7 @@
         return new Collection(errors, null, "errors");
       } else {
         return new ErrorResource(null, {
+          "status": 400,
           "title": "An error occurred while trying to find, create, or modify the requested resource(s)."
         });
       }
