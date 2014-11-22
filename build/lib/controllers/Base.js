@@ -204,7 +204,7 @@
      */
     prototype._transform = function(resource, req, res, transformMode){
       var transformFn, path, ref$, linked;
-      transformFn = this.registry[transformMode](resource.type);
+      transformFn = this.registry[transformMode](resource.processAsType);
       if (transformFn) {
         resource = transformFn(resource, req, res);
       }

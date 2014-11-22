@@ -321,9 +321,6 @@
       var attrs, schemaOptions, links, resource;
       attrs = doc.toObject();
       schemaOptions = doc.constructor.schema.options;
-      if (attrs[schemaOptions.discriminatorKey]) {
-        attrs['subType'] = constructor.getType(doc.constructor.modelName, pluralize);
-      }
       delete attrs['_id'], delete attrs[schemaOptions.versionKey], delete attrs[schemaOptions.discriminatorKey];
       links = {};
       refPaths.forEach(function(path){
@@ -363,6 +360,9 @@
           : new Collection(resources);
       });
       resource = new Resource(type, doc.id, attrs, !prelude.Obj.empty(links) ? links : void 8);
+      if (doc[schemaOptions.discriminatorKey]) {
+        resource.processAsType = constructor.getType(doc.constructor.modelName, pluralize);
+      }
       return constructor.handleSubDocs(doc, resource);
     };
     MongooseAdapter.handleSubDocs = function(doc, resource){
