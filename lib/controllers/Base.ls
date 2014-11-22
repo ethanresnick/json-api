@@ -160,7 +160,8 @@ class BaseController
    * @api private
    */
   _transform: (resource, req, res, transformMode) ->
-    transformFn = @registry[transformMode](resource.type)
+    # find the transform function for the subType, if it's defined.
+    transformFn = @registry[transformMode](resource.processAsType)
     resource = transformFn(resource, req, res) if transformFn
     for path, linked of resource.links
       resource.links[path] = @_transformRecursive(resource.links[path], req, res, transformMode)
