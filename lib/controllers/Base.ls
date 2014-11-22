@@ -1,4 +1,5 @@
 require! {Q:\q 'mongoose' 'body-parser' templating:\url-template '../types/Document' '../types/Collection' '../types/ErrorResource' '../util/utils'}
+
 class BaseController
   (@registry, @idHashSecret) ->
     @jsonBodyParser = bodyParser.json({type: ['json', 'application/vnd.api+json']})
@@ -10,6 +11,7 @@ class BaseController
     # http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
     type = req.params.type
     adapter = @registry.adapter(type)
+    model = adapter.getModel(adapter@@getModelName(type))
 
     sorts  = req.query.sort.split(',').map(decodeURIComponent) if req.query.sort?
     fields = req.query.fields.split(',').map(decodeURIComponent) if req.query.fields?
@@ -26,16 +28,16 @@ class BaseController
         delete params[attr] if attr is /^(fields|sort)\[.+?\]$/
       params
 
-    idOrIds = @_readIds(req)
-
-    # PROCESS QUERY RESULTS AND RESPOND.
-    adapter.find(type, idOrIds, filters, fields, sorts, includes)
-      .then((resources) ~>
-        @sendResources(req, res, resources[0], resources[1])
-      ).catch((err) ~>
-        er = ErrorResource.fromError(err)
-        @sendResources(req, res, er)
-      ).done()
+    @_readIds(req, @registry.labelToIdOrIds(type), model).then((idOrIds) ~>
+      # PROCESS QUERY RESULTS AND RESPOND.
+      adapter.find(type, idOrIds, filters, fields, sorts, includes)
+        .then((resources) ~>
+          @sendResources(req, res, resources[0], resources[1])
+        ).catch((err) ~>
+          er = ErrorResource.fromError(err)
+          @sendResources(req, res, er)
+        )
+    ).done();
 
   POST: (req, res, next) ->
     # below, explicitly checking for false to differentiate from null,
@@ -69,10 +71,13 @@ class BaseController
     return next() if req.is('application/vnd.api+json') == false
 
     type = req.params.type
-    adapter = @registry.adapter(type)
-    idOrIds = @_readIds(req)
+    adapter = @registry.adapter(type)    
+    model = adapter.getModel(adapter@@getModelName(type))
 
-    @@getBodyResources(req, @jsonBodyParser).then((resourceOrCollection) ->
+    Q.all([
+      @_readIds(req, @registry.labelToIdOrIds(type), model), 
+      @@getBodyResources(req, @jsonBodyParser)]
+    ).spread((idOrIds, resourceOrCollection) ->
       changeSets = {}
       resourceToChangeSet = -> 
         id = if typeof idOrIds == 'string' then idOrIds else it.id
@@ -92,8 +97,8 @@ class BaseController
       then resourceOrCollection.resources.forEach(resourceToChangeSet)
       else resourceToChangeSet(resourceOrCollection)
 
-      changeSets
-    ).then((changeSets) ->
+      [idOrIds, changeSets]
+    ).spread((idOrIds, changeSets) ->
       adapter.update(type, idOrIds, changeSets)
     ).then((changed) ~>
       @sendResources(req, res, changed)
@@ -105,16 +110,18 @@ class BaseController
   DELETE: (req, res, next) ->
     type = req.params.type
     adapter = @registry.adapter(type)
-    idOrIds = @_readIds(req)
-
-    adapter.delete(type, idOrIds)      
-      .then((resources) ~>
-        res.status(204)
-        res.send!
-      ).catch((err) ~>
-        er = ErrorResource.fromError(err)
-        @sendResources(req, res, er)
-      ).done()
+    model = adapter.getModel(adapter@@getModelName(type))
+    
+    @_readIds(req, @registry.labelToIdOrIds(type), model).then((idOrIds) ~>
+      adapter.delete(type, idOrIds)      
+        .then((resources) ~>
+          res.status(204)
+          res.send!
+        ).catch((err) ~>
+          er = ErrorResource.fromError(err)
+          @sendResources(req, res, er)
+        )
+    ).done()
 
   sendResources: (req, res, primaryResources, extraResources, meta) ->
     if primaryResources.type == "errors"
@@ -159,12 +166,28 @@ class BaseController
       resource.links[path] = @_transformRecursive(resource.links[path], req, res, transformMode)
     resource
 
-  _readIds: (req) ->
-    if req.params.id?
-      idOrIds = req.params.id.split(",").map(decodeURIComponent)
-      if idOrIds.length == 1 then idOrIds[0] else idOrIds
-    else
-      void
+  _readIds: (req, mapper, model) ->
+    Q.Promise((resolve, reject) ->
+      if req.params.id?
+        idOrIdsRaw = req.params.id.split(",").map(decodeURIComponent)
+        idOrIdsPromise = if typeof mapper is "function"
+          then Q.all(idOrIdsRaw.map(mapper(_, model, req)).map(Q)) 
+          else Q(idOrIdsRaw)
+
+        # partially apply mapper; will take id as first arg, get model as second.
+        idOrIdsPromise.then((idOrIds) ->
+          # flatten idOrIds array, since each label can produce an array.
+          # also, strip undefined, which allows the mapper to say that  
+          # "no ids match this label" by retturning undefined.
+          idOrIds .= reduce(((a, b) -> 
+            if typeof b is "undefined" then a else a.concat(b)
+          ), [])
+          resolve(if idOrIds.length == 1 then idOrIds[0] else idOrIds)
+        ).catch((err) -> reject(err))
+
+      else
+        resolve(void)
+    )
 
   # Takes an array of error status codes and returns
   # the code that best represents the collection.

@@ -23,6 +23,10 @@
      * promised array is the primary Resource or Collection being looked up.
      * The second item is an array of "extra resources". See the comments within
      * this method for a description of those.
+     * 
+     * Note: The correct behavior if idOrIds is an empty array is to return no
+     * documents, as happens below. If it's undefined, though, we're not filtering
+     * by id and should return all documents.
      */
     prototype.find = function(type, idOrIds, filters, fields, sorts, includePaths){
       var model, refPaths, queryBuilder, idQuery, mode, extraResources, extraFieldsToModelInfo, extraDocumentsPromises, duplicateQuery, i$, len$, pathParts, refModel, refType, refRefPaths, lastModelName, primaryDocumentsPromise, extraResourcesPromise, primaryResourcesPromise, this$ = this;
