@@ -311,6 +311,7 @@ class MongooseAdapter
     # Get and clean up attributes
     attrs = doc.toObject!
     schemaOptions = doc.constructor.schema.options
+    attrs['subType'] = @@getType(doc.constructor.modelName, pluralize) if attrs[schemaOptions.discriminatorKey]
     delete attrs['_id', schemaOptions.versionKey, schemaOptions.discriminatorKey]
 
     # Build Links
