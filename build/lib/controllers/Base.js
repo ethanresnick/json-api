@@ -203,10 +203,11 @@
      * @api private
      */
     prototype._transform = function(resource, req, res, transformMode){
-      var transformFn, path, ref$, linked;
+      var transformFn, altTransformFn, path, ref$, linked;
       transformFn = this.registry[transformMode](resource.processAsType);
+      altTransformFn = this.registry[transformMode](resource.type);
       if (transformFn) {
-        resource = transformFn(resource, req, res);
+        resource = transformFn(resource, req, res, altTransformFn);
       }
       for (path in ref$ = resource.links) {
         linked = ref$[path];
