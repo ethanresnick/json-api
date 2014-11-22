@@ -317,6 +317,9 @@
       var attrs, schemaOptions, links, resource;
       attrs = doc.toObject();
       schemaOptions = doc.constructor.schema.options;
+      if (attrs[schemaOptions.discriminatorKey]) {
+        attrs['subType'] = constructor.getType(doc.constructor.modelName, pluralize);
+      }
       delete attrs['_id'], delete attrs[schemaOptions.versionKey], delete attrs[schemaOptions.discriminatorKey];
       links = {};
       refPaths.forEach(function(path){
