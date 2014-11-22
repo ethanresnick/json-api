@@ -6,6 +6,14 @@ class Resource
     # validation checks and create the @_type etc props.
     [@type, @id, @attrs] = [type, id, attrs];
 
+    # A resource can be of more than one type (e.g. a Horse resource is also
+    # an Animal resource). So we use this class's `type` property to store the
+    # type we'll present the resource to the user as (e.g. we'll present it as
+    # an animal if they request all animals), while using `processAsType` to 
+    # track which resource type's pre-render proccessing should be invoked.
+    # By default, `processAsType` === `type`.
+    @processAsType = type
+
   removeAttr: (attrPath) ->
     utils.deleteNested(attrPath, @_attrs) if @attrs?
 
@@ -39,5 +47,7 @@ class Resource
 
   _validateType: (type) ->
     throw new Error("type is required") if not type
+
+
 
 module.exports = Resource

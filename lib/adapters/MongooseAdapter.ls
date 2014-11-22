@@ -373,8 +373,14 @@ class MongooseAdapter
       links[path] = if isToOneRelationship then resources[0] else new Collection(resources)
     );
 
-    # Return the resource
+    # finally, create the resource.
     resource = new Resource(type, doc.id, attrs, links if not prelude.Obj.empty(links))
+
+    # if the resource is an instance of a child type, record that.
+    if doc[schemaOptions.discriminatorKey]
+      resource.processAsType = @@getType(doc.constructor.modelName, pluralize)
+    
+    # Return the resource, handling sub docs.
     @@handleSubDocs(doc, resource)
 
   @handleSubDocs = (doc, resource) ->
