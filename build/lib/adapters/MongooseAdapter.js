@@ -314,9 +314,10 @@
       return res;
     };
     MongooseAdapter.docToResource = function(doc, type, refPaths, pluralize){
-      var attrs, links, resource;
+      var attrs, schemaOptions, links, resource;
       attrs = doc.toObject();
-      delete attrs['_id'], delete attrs['__v'], delete attrs['__t'];
+      schemaOptions = doc.constructor.schema.options;
+      delete attrs['_id'], delete attrs[schemaOptions.versionKey], delete attrs[schemaOptions.discriminatorKey];
       links = {};
       refPaths.forEach(function(path){
         var pathParts, valAtPath, jsonValAtPath, isToOneRelationship, resources, this$ = this;
@@ -371,8 +372,9 @@
       return paths;
     };
     MongooseAdapter.getStandardizedSchema = function(model){
-      var schema, standardSchema, _getStandardType, this$ = this;
+      var schema, schemaOptions, standardSchema, _getStandardType, this$ = this;
       schema = model.schema;
+      schemaOptions = model.schema.options;
       standardSchema = {};
       _getStandardType = function(path, schemaType){
         var isArray, rawType, refModel, res;
@@ -391,7 +393,7 @@
       };
       model.schema.eachPath(function(name, type){
         var standardType, required, enumValues, ref$, defaultVal;
-        if (name === '__v' || name === '__t') {
+        if (name === schemaOptions.versionKey || name === schemaOptions.discriminatorKey) {
           return;
         }
         standardType = _getStandardType(name, type);

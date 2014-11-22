@@ -310,7 +310,8 @@ class MongooseAdapter
   @docToResource = (doc, type, refPaths, pluralize) ->
     # Get and clean up attributes
     attrs = doc.toObject!
-    delete attrs['_id', '__v', '__t'] #for auto ids, versioning, and discriminators
+    schemaOptions = doc.constructor.schema.options
+    delete attrs['_id', schemaOptions.versionKey, schemaOptions.discriminatorKey]
 
     # Build Links
     links = {}
@@ -383,6 +384,7 @@ class MongooseAdapter
 
   @getStandardizedSchema = (model) ->
     schema = model.schema
+    schemaOptions = model.schema.options
     standardSchema = {}
 
     # valid types are String, Array[String], Number, Array[Number], Boolean, Array[Boolean],
@@ -400,7 +402,7 @@ class MongooseAdapter
       res
 
     model.schema.eachPath((name, type) ~> 
-      return if name in [\__v, \__t]
+      return if name in [schemaOptions.versionKey, schemaOptions.discriminatorKey]
 
       standardType = _getStandardType(name, type)
       name = 'id' if name is '_id'
