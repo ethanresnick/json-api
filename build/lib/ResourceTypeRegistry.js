@@ -27,7 +27,7 @@
       var this$ = this;
       if (description) {
         this._resourceTypes[type] = {};
-        return ["adapter", "beforeSave", "afterQuery", "urlTemplates", "defaultIncludes", "info"].forEach(function(it){
+        return ["adapter", "beforeSave", "afterQuery", "labelToIdOrIds", "urlTemplates", "defaultIncludes", "info"].forEach(function(it){
           if (description[it] != null) {
             return this$[it](type, description[it]);
           }
@@ -36,6 +36,14 @@
         if (this._resourceTypes[type] != null) {
           return import$({}, this._resourceTypes[type]);
         }
+      }
+    };
+    prototype.labelToIdOrIds = function(type, labelToIdFn){
+      var ref$;
+      if (labelToIdFn) {
+        return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['labelToIdOrIds'] = labelToIdFn;
+      } else {
+        return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['labelToIdOrIds'];
       }
     };
     prototype.adapter = function(type, adapter){
