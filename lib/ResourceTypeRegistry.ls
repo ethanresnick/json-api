@@ -24,7 +24,9 @@ class ResourceTypeRegistry
     # resource's POV (as specifying the type in paths is redundant), it would
     # require us to write logic converting the paths in template variables to
     # global paths, and that could be tricky.
-    @_resourceTypes = {}
+
+    # Initialize the registry with the errors type, which the spec defines.
+    @_resourceTypes = {"errors": {}}
 
   type: (type, description) ->
     if description
@@ -37,55 +39,29 @@ class ResourceTypeRegistry
     else
       {} <<< @_resourceTypes[type] if @_resourceTypes[type]? 
 
-  labelToIdOrIds: (type, labelToIdFn) ->
-    if labelToIdFn
-      @_resourceTypes.{}[type]['labelToIdOrIds'] = labelToIdFn
-    else
-      @_resourceTypes.{}[type]['labelToIdOrIds']
-
-  adapter: (type, adapter) ->
-    if adapter
-      @_resourceTypes.{}[type]['adapter'] = adapter
-    else
-      @_resourceTypes.{}[type]['adapter']
-
-  beforeSave: (type, beforeFn) ->
-    if beforeFn
-      @_resourceTypes.{}[type]['beforeSave'] = beforeFn
-    else
-      @_resourceTypes.{}[type]['beforeSave']
-
-  afterQuery: (type, afterFn) ->
-    if afterFn
-      @_resourceTypes.{}[type]['afterQuery'] = afterFn
-    else
-      @_resourceTypes.{}[type]['afterQuery']
-
-  info: (type, info) ->
-    if info
-      @_resourceTypes.{}[type]['info'] = info
-    else
-      @_resourceTypes.{}[type]['info']
+  adapter: makeGetterSetter('adapter')
+  beforeSave: makeGetterSetter('beforeSave')
+  afterQuery: makeGetterSetter('afterQuery')
+  labelToIdOrIds: makeGetterSetter('labelToIdOrIds')
+  defaultIncludes: makeGetterSetter('defaultIncludes')
+  info: makeGetterSetter('info')
 
   urlTemplates: (type, templates) ->
     switch arguments.length
-    | 2 =>
-      for path, template of templates
-        throw new Error("Template paths must be scoped to this type") if path.split('.')[0] !== type
-      @_resourceTypes.{}[type]['urlTemplates'] = templates
     | 1 =>
       @_resourceTypes.{}[type]['urlTemplates']
-    | otherwise =>
+
+    | 0 =>
       templates = {}
       for type, resource of @_resourceTypes
         templates <<< (resource.urlTemplates || {})
       templates
 
-  defaultIncludes: (type, defaults) ->
-    if defaults
-      @_resourceTypes.{}[type]['defaultIncludes'] = defaults
-    else
-      @_resourceTypes.{}[type]['defaultIncludes']
+    | otherwise =>
+      for path, template of templates
+        if path.split('.')[0] !== type
+          throw new Error("Template paths must be scoped to this type")
+      @_resourceTypes.{}[type]['urlTemplates'] = templates
 
   urlTemplate: (path) ->
     @_resourceTypes[path.split('.').0]['urlTemplates'][path]
@@ -95,3 +71,14 @@ class ResourceTypeRegistry
     Object.keys(@_resourceTypes)
 
 module.exports = ResourceTypeRegistry
+
+function makeGetterSetter(attrName)
+  (type, optValue) ->
+    if typeof @_resourceTypes[type] !== "object"
+      throw new Error("Type " + type + ' has not been registered.')
+
+    if optValue
+      @_resourceTypes[type][attrName] = optValue
+
+    else
+      @_resourceTypes[type][attrName]
