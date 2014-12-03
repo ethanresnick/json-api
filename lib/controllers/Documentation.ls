@@ -47,11 +47,12 @@ class DocumentationController
 
     for path, fieldInfo of fieldsInfo
       fieldInfo.description = info.fields[path] if info?.fields?[path]?
+    defaultIncludes = @registry.defaultIncludes(type)
 
     {}
       ..\name = modelName
+      ..\defaultIncludes = defaultIncludes if defaultIncludes?
       ..\example = info.example if info?.example?
-      ..\defaultIncludes = info.defaultIncludes if info?.defaultIncludes?
       ..\description = info.description if info?.description?
       ..\schema = fieldsInfo
 

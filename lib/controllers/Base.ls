@@ -19,7 +19,7 @@ class BaseController
     if req.query.include?
       includes = req.query.include.split(',').map(decodeURIComponent)
     else
-      includes = @registry.info(type)?.defaultIncludes
+      includes = @registry.defaultIncludes(type)
 
     filters = do ->
       params = {} <<< req.query; 
