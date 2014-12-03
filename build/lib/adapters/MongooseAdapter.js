@@ -29,7 +29,7 @@
      * by id and should return all documents.
      */
     prototype.find = function(type, idOrIds, filters, fields, sorts, includePaths){
-      var model, refPaths, queryBuilder, pluralize, idQuery, mode, extraResources, extraFieldsToRefTypes, extraDocumentsPromises, duplicateQuery, i$, len$, pathParts, primaryDocumentsPromise, extraResourcesPromise, primaryResourcesPromise, this$ = this;
+      var model, refPaths, queryBuilder, pluralize, idQuery, mode, extraResources, extraFieldsToRefTypes, extraDocumentsPromises, duplicateQuery, i$, len$, pathParts, addDocAsExternalResource, primaryDocumentsPromise, extraResourcesPromise, primaryResourcesPromise, this$ = this;
       model = this.getModel(constructor.getModelName(type));
       refPaths = constructor.getReferencePaths(model);
       queryBuilder = new mongoose.Query(null, null, model, model.collection);
@@ -91,6 +91,13 @@
             fn$();
           }
         }
+        addDocAsExternalResource = function(doc, collectionType){
+          if (doc && !extraResources[collectionType].some(function(it){
+            return it.id === doc.id;
+          })) {
+            return extraResources[collectionType].push(constructor.docToResource(doc, pluralize));
+          }
+        };
         primaryDocumentsPromise = Q(queryBuilder.exec()).then(function(docs){
           utils.forEachArrayOrVal(docs, function(doc){
             var field, ref$, refType, refDocs;
@@ -105,45 +112,29 @@
               refDocs.forEach(fn$);
               doc[field] = undefined;
             }
-            function fn$(referencedDoc){
-              if (referencedDoc && !extraResources[refType].some(function(it){
-                return it.id === referencedDoc.id;
-              })) {
-                return extraResources[refType].push(constructor.docToResource(referencedDoc, pluralize));
-              }
+            function fn$(it){
+              return addDocAsExternalResource(it, refType);
             }
           });
           return docs;
         });
         extraResourcesPromise = Q.all(extraDocumentsPromises).then(function(docSets){
-          var i$, len$, ref$, type, docSet, pluralize;
+          var i$, len$, ref$, type, docSet;
           for (i$ = 0, len$ = docSets.length; i$ < len$; ++i$) {
             ref$ = docSets[i$], type = ref$.type, docSet = ref$.docSet;
-            if (!(docSet instanceof Array)) {
-              docSet = [docSet];
-            }
-            docSet = docSet.filter(fn$);
-            if (!docSet.length) {
-              continue;
-            }
-            pluralize = this$.inflector.plural;
             if (!extraResources[type]) {
               extraResources[type] = [];
             }
-            docSet.forEach(fn1$);
+            if (!(docSet instanceof Array)) {
+              docSet = [docSet];
+            }
+            docSet.forEach(fn$);
           }
           return primaryDocumentsPromise.then(function(){
             return extraResources;
           });
           function fn$(it){
-            return it;
-          }
-          function fn1$(doc){
-            if (!extraResources[type].some(function(it){
-              return it.id === doc.id;
-            })) {
-              return extraResources[type].push(constructor.docToResource(doc, pluralize));
-            }
+            return addDocAsExternalResource(it, type);
           }
         });
       } else {

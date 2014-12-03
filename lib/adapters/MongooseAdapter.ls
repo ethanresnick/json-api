@@ -148,6 +148,12 @@ class MongooseAdapter
               )
             );
       
+      # A little helper for the below
+      addDocAsExternalResource = (doc, collectionType) ~>
+        # don't add empty references or duplicate docs.
+        if doc && !extraResources[collectionType].some(-> it.id == doc.id)   
+          extraResources[collectionType].push(@@docToResource(doc, pluralize)) 
+
       # use extraFieldsToRefTypes to put extra, populated fields into 
       # extraResources (as resources) & remove them from the primary documents
       primaryDocumentsPromise = Q(queryBuilder.exec!)
@@ -161,14 +167,7 @@ class MongooseAdapter
               # way, we want to convert any docs in docs[field] to resources and store,
               # them, so we always coerce it to an array.
               refDocs = if doc[field] instanceof Array then doc[field] else [doc[field]]
-              refDocs.forEach((referencedDoc) ->
-                # don't add empty references or duplicate docs.
-                if referencedDoc && !extraResources[refType].some(-> it.id == referencedDoc.id)   
-                  extraResources[refType].push(
-                    @@docToResource(referencedDoc, pluralize)
-                  ) 
-              )
-
+              refDocs.forEach(-> addDocAsExternalResource(it, refType))
               doc[field] = undefined
             void
           )
@@ -179,20 +178,11 @@ class MongooseAdapter
         .then((docSets) ~>
           # add docs from these extra queries to extraResources
           for {type, docSet} in docSets
-            # if the query was getting a to-one relationship, 
-            # this docSet is a single doc; make an array for simplicity
-            docSet = [docSet] if docSet not instanceof Array
-
-            ## remove the empty results, and continue if we have nothing left
-            docSet .= filter(-> it)
-            continue if !docSet.length
-
-            pluralize = @inflector.plural
             extraResources[type] = [] if !extraResources[type]
-            docSet.forEach((doc) ->
-              if !extraResources[type].some(-> it.id == doc.id) # don't add duplicates
-                extraResources[type].push(@@docToResource(doc, pluralize))
-            )
+
+            # Add the docs.
+            docSet = [docSet] if docSet not instanceof Array
+            docSet.forEach(-> addDocAsExternalResource(it, type))
 
           # and then, when the primaryDocuments promise has put its
           # resources into extraResources too, return them as promised
