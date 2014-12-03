@@ -6,31 +6,11 @@ class DocumentationController
     # compute template data (never changes, so better to do it on construction than per request)
     data = @apiInfo
     data.resourcesMap = {}
-    childTypesToParentTypesMap = {}
 
-    for type in @registry.types!
-      adapter   = @registry.adapter(type)
-      inflector = adapter.inflector
-      modelName = adapter@@getModelName(type, inflector.singular)
-      model     = adapter.getModel(modelName)
-      children  = adapter@@getChildTypes(model, inflector.plural)
-
-      # Store in the resourcesMap the info object about each model,
-      # as returned by @getModelInfo.
-      data.resourcesMap[type] = @getModelInfo(type, adapter, modelName, model)
-
-      # Augment the info object with a childTypes property. There's no risk
-      # of this conflicting with a named property on the model, because the 
-      # model's schema lives under a .schema property (see @getModelInfo).
-      data.resourcesMap[type]['childTypes'] = children
-
-      # save model relationships as we come across them.
-      for childType in children
-        childTypesToParentTypesMap[childType] = type
-
-    # Likewise, attach parentType to data
-    for type, info of data.resourcesMap
-      info.parentType = childTypesToParentTypesMap[type]
+    # Store in the resourcesMap the info object about each type,
+    # as returned by @getTypeInfo.
+    for type in @registry.types! when type != "errors"
+      data.resourcesMap[type] = @getTypeInfo(type)
 
     @templateData = data
 
@@ -41,19 +21,31 @@ class DocumentationController
 
   # Clients can extend this if, say, the adapter can't infer
   # as much info about the models' structure as they would like.
-  getModelInfo: (type, adapter, modelName, model) ->
-    info      = @registry.info(type)
-    fieldsInfo = adapter@@getStandardizedSchema(model)
+  getTypeInfo: (type) ->
+    adapter   = @registry.adapter(type)
+    modelName = adapter@@getModelName(type, adapter.inflector.singular)
+    model     = adapter.getModel(modelName)
 
-    for path, fieldInfo of fieldsInfo
-      fieldInfo.description = info.fields[path] if info?.fields?[path]?
+    # Combine the docs in the Resource description with the 
+    # standardized schema returned by the adapter in order to build 
+    # the final schema for the template.
+    info = @registry.info(type)
+    schema = adapter@@getStandardizedSchema(model)
+    for path, fieldInfo of schema
+      schema.description = info.fields[path] if info?.fields?[path]?
+
+    # Other info
+    parentType = @registry.parentType(type)
+    childTypes = adapter@@getChildTypes(model, adapter.inflector.plural)
     defaultIncludes = @registry.defaultIncludes(type)
 
     {}
       ..\name = modelName
+      ..\schema = schema
       ..\defaultIncludes = defaultIncludes if defaultIncludes?
       ..\example = info.example if info?.example?
       ..\description = info.description if info?.description?
-      ..\schema = fieldsInfo
+      ..\childTypes = childTypes
+      ..\parentType = parentType
 
 module.exports = DocumentationController
