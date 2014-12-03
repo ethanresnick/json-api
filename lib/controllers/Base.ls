@@ -73,7 +73,6 @@ class BaseController
     type = req.params.type
     adapter = @registry.adapter(type)    
     model = adapter.getModel(adapter@@getModelName(type))
-
     Q.all([
       @_readIds(req, @registry.labelToIdOrIds(type), model), 
       @@getBodyResources(req, @jsonBodyParser)]
@@ -160,12 +159,30 @@ class BaseController
    * @api private
    */
   _transform: (resource, req, res, transformMode) ->
-    # find the transform function for the subType, if it's defined.
-    transformFn = @registry[transformMode](resource.processAsType)
-    altTransformFn = @registry[transformMode](resource.type)
-    resource = transformFn(resource, req, res, altTransformFn) if transformFn
+    # if the resource is just an id reference (no attributes),
+    # don't bother running the transform.
+    return resource if !resource.attrs
+    
+    transformFn = @registry[transformMode](resource.type)
+
+    # SuperFn is a function that the first transformer can invoke.
+    # It'll return the resource passed in (i.e. do nothing) if there
+    # is no parentType or the parentType doesn't define an appropriate
+    # transformer. Otherwise, it'll return the result of calling
+    # the parentType's transformer with the provided arguments.
+    superFn = (resource, req, res) ~> 
+      parentType = @registry.parentType(resource.type)
+
+      if !parentType || !@registry[transformMode](parentType)
+        resource
+      else 
+        @registry[transformMode](parentType)(resource, req, res, superFn)
+
+    resource = transformFn(resource, req, res, superFn) if transformFn
+
     for path, linked of resource.links
       resource.links[path] = @_transformRecursive(resource.links[path], req, res, transformMode)
+
     resource
 
   _readIds: (req, mapper, model) ->

@@ -32,8 +32,8 @@ class ResourceTypeRegistry
     if description
       # the valid properties to register.
       @_resourceTypes[type] = {}
-      ["adapter", "beforeSave", "afterQuery", "labelToIdOrIds", "urlTemplates", 
-       "defaultIncludes", "info"].forEach(~>
+      ["adapter", "beforeSave", "afterQuery", "labelToIdOrIds", 
+       "urlTemplates", "defaultIncludes", "info", "parentType"].forEach(~>
         @[it](type, description[it]) if description[it]?
       )
     else
@@ -45,6 +45,7 @@ class ResourceTypeRegistry
   labelToIdOrIds: makeGetterSetter('labelToIdOrIds')
   defaultIncludes: makeGetterSetter('defaultIncludes')
   info: makeGetterSetter('info')
+  parentType: makeGetterSetter('parentType')
 
   urlTemplates: (type, templates) ->
     switch arguments.length
