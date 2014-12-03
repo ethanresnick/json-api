@@ -29,10 +29,11 @@
      * by id and should return all documents.
      */
     prototype.find = function(type, idOrIds, filters, fields, sorts, includePaths){
-      var model, refPaths, queryBuilder, idQuery, mode, extraResources, extraFieldsToModelInfo, extraDocumentsPromises, duplicateQuery, i$, len$, pathParts, refModel, refType, refRefPaths, lastModelName, primaryDocumentsPromise, extraResourcesPromise, primaryResourcesPromise, this$ = this;
+      var model, refPaths, queryBuilder, pluralize, idQuery, mode, extraResources, extraFieldsToRefTypes, extraDocumentsPromises, duplicateQuery, i$, len$, pathParts, primaryDocumentsPromise, extraResourcesPromise, primaryResourcesPromise, this$ = this;
       model = this.getModel(constructor.getModelName(type));
       refPaths = constructor.getReferencePaths(model);
       queryBuilder = new mongoose.Query(null, null, model, model.collection);
+      pluralize = this.inflector.plural;
       if (idOrIds) {
         switch (typeof idOrIds) {
         case "string":
@@ -69,7 +70,7 @@
       }
       if (includePaths) {
         extraResources = {};
-        extraFieldsToModelInfo = {};
+        extraFieldsToRefTypes = {};
         extraDocumentsPromises = [];
         duplicateQuery = queryBuilder.toConstructor();
         includePaths = includePaths.map(function(it){
@@ -81,51 +82,43 @@
             continue;
           }
           if (pathParts.length === 1) {
-            queryBuilder.populate(pathParts[0]);
             if (fields && !in$(pathParts[0], fields)) {
               queryBuilder.select(pathParts[0]);
-              refModel = this.getModel(constructor.getReferencedModelName(model, pathParts[0]));
-              refType = constructor.getType(refModel.modelName, this.inflector.plural);
-              refRefPaths = constructor.getReferencePaths(refModel);
-              if (!extraResources[refType]) {
-                extraResources[refType] = [];
-              }
-              extraFieldsToModelInfo[pathParts[0]] = {
-                model: refModel,
-                refPaths: refRefPaths,
-                type: refType
-              };
+              extraFieldsToRefTypes[pathParts[0]] = constructor.getType(constructor.getReferencedModelName(model, pathParts[0]), pluralize);
             }
+            queryBuilder.populate(pathParts[0]);
           } else {
-            lastModelName = model.modelName;
-            extraDocumentsPromises.push(pathParts.reduce(fn$, Q(duplicateQuery().exec())));
+            fn$();
           }
         }
         primaryDocumentsPromise = Q(queryBuilder.exec()).then(function(docs){
           utils.forEachArrayOrVal(docs, function(doc){
-            var field, ref$, modelInfo, refDocsArray;
-            for (field in ref$ = extraFieldsToModelInfo) {
-              modelInfo = ref$[field];
-              refDocsArray = doc[field] instanceof Array
+            var field, ref$, refType, refDocs;
+            for (field in ref$ = extraFieldsToRefTypes) {
+              refType = ref$[field];
+              if (!extraResources[refType]) {
+                extraResources[refType] = [];
+              }
+              refDocs = doc[field] instanceof Array
                 ? doc[field]
                 : [doc[field]];
-              refDocsArray.forEach(fn$);
+              refDocs.forEach(fn$);
               doc[field] = undefined;
             }
             function fn$(referencedDoc){
-              if (referencedDoc && !extraResources[modelInfo.type].some(function(it){
+              if (referencedDoc && !extraResources[refType].some(function(it){
                 return it.id === referencedDoc.id;
               })) {
-                return extraResources[modelInfo.type].push(constructor.docToResource(referencedDoc, modelInfo.type, modelInfo.refPaths));
+                return extraResources[refType].push(constructor.docToResource(referencedDoc, pluralize));
               }
             }
           });
           return docs;
         });
         extraResourcesPromise = Q.all(extraDocumentsPromises).then(function(docSets){
-          var i$, len$, docSet, model, type, refPaths;
+          var i$, len$, ref$, type, docSet, pluralize;
           for (i$ = 0, len$ = docSets.length; i$ < len$; ++i$) {
-            docSet = docSets[i$];
+            ref$ = docSets[i$], type = ref$.type, docSet = ref$.docSet;
             if (!(docSet instanceof Array)) {
               docSet = [docSet];
             }
@@ -133,9 +126,7 @@
             if (!docSet.length) {
               continue;
             }
-            model = docSet[0].constructor;
-            type = constructor.getType(model.modelName, this$.inflector.plural);
-            refPaths = constructor.getReferencePaths(model);
+            pluralize = this$.inflector.plural;
             if (!extraResources[type]) {
               extraResources[type] = [];
             }
@@ -151,7 +142,7 @@
             if (!extraResources[type].some(function(it){
               return it.id === doc.id;
             })) {
-              return extraResources[type].push(constructor.docToResource(doc, type, refPaths));
+              return extraResources[type].push(constructor.docToResource(doc, pluralize));
             }
           }
         });
@@ -160,42 +151,54 @@
         extraResourcesPromise = Q(undefined);
       }
       primaryResourcesPromise = primaryDocumentsPromise.then(function(it){
-        return constructor.docsToResourceOrCollection(it, model, this$.inflector.plural);
+        return constructor.docsToResourceOrCollection(it, type, pluralize);
       });
       return Q.all([primaryResourcesPromise, extraResourcesPromise])['catch'](function(it){
         return [constructor.errorHandler(it), undefined];
       });
-      function fn$(resourcePromises, part){
-        return resourcePromises.then(function(resources){
-          if (resources) {
-            lastModelName = constructor.getReferencedModelName(this$.getModel(lastModelName), part);
-            return Q.npost(this$.getModel(lastModelName), "populate", [
-              resources, {
-                path: part
-              }
-            ]);
-          }
-        }).then(function(it){
-          var flatten, mapped;
-          if (!it || (it instanceof Array && !it.length)) {
-            return it;
-          }
-          if (!(it instanceof Array)) {
-            return it[part];
-          } else {
-            flatten = it[0][part] instanceof Array;
-            mapped = it.map(function(it){
-              return it[part];
-            });
-            if (flatten) {
-              return mapped.reduce(function(a, b){
-                return a.concat(b);
-              });
-            } else {
-              return mapped;
+      function fn$(){
+        var lastModelName;
+        lastModelName = model.modelName;
+        return extraDocumentsPromises.push(pathParts.reduce(function(resourcePromises, part){
+          return resourcePromises.then(function(resources){
+            if (resources) {
+              lastModelName = constructor.getReferencedModelName(this$.getModel(lastModelName), part);
+              return Q.npost(this$.getModel(lastModelName), "populate", [
+                resources, {
+                  path: part
+                }
+              ]);
             }
+          }).then(function(it){
+            var flatten, mapped;
+            if (!it || (it instanceof Array && !it.length)) {
+              return it;
+            }
+            if (!(it instanceof Array)) {
+              return it[part];
+            } else {
+              flatten = it[0][part] instanceof Array;
+              mapped = it.map(function(it){
+                return it[part];
+              });
+              if (flatten) {
+                return mapped.reduce(function(a, b){
+                  return a.concat(b);
+                });
+              } else {
+                return mapped;
+              }
+            }
+          });
+        }, Q(duplicateQuery().select(pathParts[0]).exec())).then(function(resources){
+          if (!resources) {
+            return {};
           }
-        });
+          return {
+            "type": constructor.getType(lastModelName, pluralize),
+            "docSet": resources
+          };
+        }));
       }
     };
     prototype.create = function(resourceOrCollection){
@@ -209,7 +212,7 @@
         });
       }
       return Q.ninvoke(model, "create", docs).then(function(it){
-        return constructor.docsToResourceOrCollection(it, model, this$.inflector.plural);
+        return constructor.docsToResourceOrCollection(it, resourceOrCollection.type, this$.inflector.plural);
       }, constructor.errorHandler);
     };
     prototype.update = function(type, idOrIds, changeSets){
@@ -233,7 +236,7 @@
           it.set(changeSets[it.id]);
           return it.save();
         });
-        return constructor.docsToResourceOrCollection(docs, model, this$.inflector.plural);
+        return constructor.docsToResourceOrCollection(docs, type, this$.inflector.plural);
       })['catch'](constructor.errorHandler);
     };
     prototype['delete'] = function(type, idOrIds){
@@ -283,8 +286,13 @@
         });
       }
     };
-    MongooseAdapter.docsToResourceOrCollection = function(docs, model, pluralize){
-      var makeCollection, type, refPaths, this$ = this;
+    /**
+     * @param docs The docs to turn into a resource or collection
+     * @param type The type to use for the Collection, if one's being made. 
+     * @param pluralize An inflector function for setting the Resource's type
+     */
+    MongooseAdapter.docsToResourceOrCollection = function(docs, type, pluralize){
+      var makeCollection, this$ = this;
       if (!docs) {
         return new ErrorResource(null, {
           status: 404,
@@ -295,10 +303,8 @@
       if (!makeCollection) {
         docs = [docs];
       }
-      type = constructor.getType(model.modelName, pluralize);
-      refPaths = constructor.getReferencePaths(model);
       docs = docs.map(function(it){
-        return constructor.docToResource(it, type, refPaths);
+        return constructor.docToResource(it, pluralize);
       });
       if (makeCollection) {
         return new Collection(docs, null, type);
@@ -317,8 +323,10 @@
       }
       return res;
     };
-    MongooseAdapter.docToResource = function(doc, type, refPaths, pluralize){
-      var attrs, schemaOptions, links, resource;
+    MongooseAdapter.docToResource = function(doc, pluralize){
+      var type, refPaths, attrs, schemaOptions, links, resource;
+      type = constructor.getType(doc.constructor.modelName, pluralize);
+      refPaths = constructor.getReferencePaths(doc.constructor);
       attrs = doc.toObject();
       schemaOptions = doc.constructor.schema.options;
       delete attrs['_id'], delete attrs[schemaOptions.versionKey], delete attrs[schemaOptions.discriminatorKey];
@@ -344,11 +352,9 @@
         }
         resources = [];
         valAtPath.forEach(function(docOrId, i){
-          var model, type, id;
+          var id, type;
           if (docOrId instanceof mongoose.Document) {
-            model = docOrId.constructor;
-            type = constructor.getType(model.modelName, pluralize);
-            return resources.push(constructor.docToResource(docOrId, type, constructor.getReferencePaths(model)));
+            return resources.push(constructor.docToResource(docOrId, pluralize));
           } else {
             id = jsonValAtPath[i];
             type = constructor.getType(constructor.getReferencedModelName(doc.constructor, path), pluralize);
@@ -360,9 +366,6 @@
           : new Collection(resources);
       });
       resource = new Resource(type, doc.id, attrs, !prelude.Obj.empty(links) ? links : void 8);
-      if (doc[schemaOptions.discriminatorKey]) {
-        resource.processAsType = constructor.getType(doc.constructor.modelName, pluralize);
-      }
       return constructor.handleSubDocs(doc, resource);
     };
     MongooseAdapter.handleSubDocs = function(doc, resource){

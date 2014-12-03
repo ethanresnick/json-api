@@ -21,13 +21,15 @@
     ResourceTypeRegistry.displayName = 'ResourceTypeRegistry';
     var prototype = ResourceTypeRegistry.prototype, constructor = ResourceTypeRegistry;
     function ResourceTypeRegistry(){
-      this._resourceTypes = {};
+      this._resourceTypes = {
+        "errors": {}
+      };
     }
     prototype.type = function(type, description){
       var this$ = this;
       if (description) {
         this._resourceTypes[type] = {};
-        return ["adapter", "beforeSave", "afterQuery", "labelToIdOrIds", "urlTemplates", "defaultIncludes", "info"].forEach(function(it){
+        return ["adapter", "beforeSave", "afterQuery", "labelToIdOrIds", "urlTemplates", "defaultIncludes", "info", "parentType"].forEach(function(it){
           if (description[it] != null) {
             return this$[it](type, description[it]);
           }
@@ -38,50 +40,26 @@
         }
       }
     };
-    prototype.labelToIdOrIds = function(type, labelToIdFn){
-      var ref$;
-      if (labelToIdFn) {
-        return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['labelToIdOrIds'] = labelToIdFn;
-      } else {
-        return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['labelToIdOrIds'];
-      }
-    };
-    prototype.adapter = function(type, adapter){
-      var ref$;
-      if (adapter) {
-        return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['adapter'] = adapter;
-      } else {
-        return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['adapter'];
-      }
-    };
-    prototype.beforeSave = function(type, beforeFn){
-      var ref$;
-      if (beforeFn) {
-        return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['beforeSave'] = beforeFn;
-      } else {
-        return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['beforeSave'];
-      }
-    };
-    prototype.afterQuery = function(type, afterFn){
-      var ref$;
-      if (afterFn) {
-        return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['afterQuery'] = afterFn;
-      } else {
-        return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['afterQuery'];
-      }
-    };
-    prototype.info = function(type, info){
-      var ref$;
-      if (info) {
-        return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['info'] = info;
-      } else {
-        return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['info'];
-      }
-    };
+    prototype.adapter = makeGetterSetter('adapter');
+    prototype.beforeSave = makeGetterSetter('beforeSave');
+    prototype.afterQuery = makeGetterSetter('afterQuery');
+    prototype.labelToIdOrIds = makeGetterSetter('labelToIdOrIds');
+    prototype.defaultIncludes = makeGetterSetter('defaultIncludes');
+    prototype.info = makeGetterSetter('info');
+    prototype.parentType = makeGetterSetter('parentType');
     prototype.urlTemplates = function(type, templates){
-      var type, path, template, ref$, resource;
+      var type, ref$, resource, path, template;
       switch (arguments.length) {
-      case 2:
+      case 1:
+        return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['urlTemplates'];
+      case 0:
+        templates = {};
+        for (type in ref$ = this._resourceTypes) {
+          resource = ref$[type];
+          import$(templates, resource.urlTemplates || {});
+        }
+        return templates;
+      default:
         for (path in templates) {
           template = templates[path];
           if (!deepEq$(path.split('.')[0], type, '===')) {
@@ -89,23 +67,6 @@
           }
         }
         return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['urlTemplates'] = templates;
-      case 1:
-        return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['urlTemplates'];
-      default:
-        templates = {};
-        for (type in ref$ = this._resourceTypes) {
-          resource = ref$[type];
-          import$(templates, resource.urlTemplates || {});
-        }
-        return templates;
-      }
-    };
-    prototype.defaultIncludes = function(type, defaults){
-      var ref$;
-      if (defaults) {
-        return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['defaultIncludes'] = defaults;
-      } else {
-        return ((ref$ = this._resourceTypes)[type] || (ref$[type] = {}))['defaultIncludes'];
       }
     };
     prototype.urlTemplate = function(path){
@@ -117,6 +78,18 @@
     return ResourceTypeRegistry;
   }());
   module.exports = ResourceTypeRegistry;
+  function makeGetterSetter(attrName){
+    return function(type, optValue){
+      if (!deepEq$(typeof this._resourceTypes[type], "object", '===')) {
+        throw new Error("Type " + type + ' has not been registered.');
+      }
+      if (optValue) {
+        return this._resourceTypes[type][attrName] = optValue;
+      } else {
+        return this._resourceTypes[type][attrName];
+      }
+    };
+  }
   function import$(obj, src){
     var own = {}.hasOwnProperty;
     for (var key in src) if (own.call(src, key)) obj[key] = src[key];

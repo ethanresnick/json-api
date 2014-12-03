@@ -20,7 +20,7 @@
       });
     }
     prototype.GET = function(req, res, next){
-      var type, adapter, model, sorts, fields, includes, ref$, filters, this$ = this;
+      var type, adapter, model, sorts, fields, includes, filters, this$ = this;
       type = req.params.type;
       adapter = this.registry.adapter(type);
       model = adapter.getModel(adapter.constructor.getModelName(type));
@@ -33,7 +33,7 @@
       if (req.query.include != null) {
         includes = req.query.include.split(',').map(decodeURIComponent);
       } else {
-        includes = (ref$ = this.registry.info(type)) != null ? ref$.defaultIncludes : void 8;
+        includes = this.registry.defaultIncludes(type);
       }
       filters = function(){
         var params, attr, ref$, val;
@@ -203,11 +203,22 @@
      * @api private
      */
     prototype._transform = function(resource, req, res, transformMode){
-      var transformFn, altTransformFn, path, ref$, linked;
-      transformFn = this.registry[transformMode](resource.processAsType);
-      altTransformFn = this.registry[transformMode](resource.type);
+      var transformFn, superFn, path, ref$, linked, this$ = this;
+      if (!resource.attrs) {
+        return resource;
+      }
+      transformFn = this.registry[transformMode](resource.type);
+      superFn = function(resource, req, res){
+        var parentType;
+        parentType = this$.registry.parentType(resource.type);
+        if (!parentType || !this$.registry[transformMode](parentType)) {
+          return resource;
+        } else {
+          return this$.registry[transformMode](parentType)(resource, req, res, superFn);
+        }
+      };
       if (transformFn) {
-        resource = transformFn(resource, req, res, altTransformFn);
+        resource = transformFn(resource, req, res, superFn);
       }
       for (path in ref$ = resource.links) {
         linked = ref$[path];

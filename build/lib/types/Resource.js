@@ -10,7 +10,6 @@
       this$.links = links;
       this$.href = href;
       ref$ = [type, id, attrs], this$.type = ref$[0], this$.id = ref$[1], this$.attrs = ref$[2];
-      this$.processAsType = type;
       return this$;
     } function ctor$(){} ctor$.prototype = prototype;
     prototype.removeAttr = function(attrPath){
