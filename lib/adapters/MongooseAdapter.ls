@@ -267,7 +267,7 @@ class MongooseAdapter
 
   # Responsible for generating a sendable Error Resource if the query threw an Error
   @errorHandler = (err) ->
-    # Convert a validation errors collection to something reasonalbe
+    # Convert a validation errors collection to something reasonable
     if err.errors?
       errors = [];
       for key, thisError of err.errors

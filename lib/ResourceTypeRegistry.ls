@@ -21,7 +21,7 @@ class ResourceTypeRegistry
     # "users.profile": "http://example.com/api/profiles/{users.profile}".
     # It does NOT do: "profile": "http://example.com/api/profiles/{profile}".
     # This is because, even though the latter makes more sense from the
-    # resources POV (as specifying the type in paths is redundant), it would
+    # resource's POV (as specifying the type in paths is redundant), it would
     # require us to write logic converting the paths in template variables to
     # global paths, and that could be tricky.
     @_resourceTypes = {}
