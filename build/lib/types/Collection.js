@@ -5,10 +5,10 @@
     Collection.displayName = 'Collection';
     var prototype = Collection.prototype, constructor = Collection;
     function Collection(resources, href, type){
-      var this$ = this instanceof ctor$ ? this : new ctor$;
+      var ref$, ref1$, this$ = this instanceof ctor$ ? this : new ctor$;
       this$.resources = resources;
       this$.href = href;
-      this$.type = this$.resources[0] ? this$.resources[0].type : type;
+      this$.type = type || ((ref$ = this$.resources) != null ? (ref1$ = ref$[0]) != null ? ref1$.type : void 8 : void 8);
       return this$;
     } function ctor$(){} ctor$.prototype = prototype;
     Object.defineProperty(prototype, 'ids', {
