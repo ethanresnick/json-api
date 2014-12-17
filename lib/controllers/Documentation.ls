@@ -31,8 +31,9 @@ class DocumentationController
     # the final schema for the template.
     info = @registry.info(type)
     schema = adapter@@getStandardizedSchema(model)
-    for path, fieldInfo of schema
-      schema.description = info.fields[path] if info?.fields?[path]?
+    if info?.fields
+      for path, fieldInfo of schema
+        fieldInfo.description = info.fields[path] if info.fields[path]
 
     # Other info
     parentType = @registry.parentType(type)
