@@ -27,16 +27,18 @@
       return res.send(jade.renderFile(this.template, this.templateData));
     };
     prototype.getTypeInfo = function(type){
-      var adapter, modelName, model, info, schema, path, fieldInfo, ref$, parentType, childTypes, defaultIncludes, x$;
+      var adapter, modelName, model, info, schema, path, fieldInfo, parentType, childTypes, defaultIncludes, x$;
       adapter = this.registry.adapter(type);
       modelName = adapter.constructor.getModelName(type, adapter.inflector.singular);
       model = adapter.getModel(modelName);
       info = this.registry.info(type);
       schema = adapter.constructor.getStandardizedSchema(model);
-      for (path in schema) {
-        fieldInfo = schema[path];
-        if ((info != null ? (ref$ = info.fields) != null ? ref$[path] : void 8 : void 8) != null) {
-          schema.description = info.fields[path];
+      if (info != null && info.fields) {
+        for (path in schema) {
+          fieldInfo = schema[path];
+          if (info.fields[path]) {
+            fieldInfo.description = info.fields[path];
+          }
         }
       }
       parentType = this.registry.parentType(type);
