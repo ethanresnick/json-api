@@ -16,28 +16,28 @@ This library creates a [JSON API](http://jsonapi.org/)-compliant REST API from y
     "Place": require('./models/place')
   };
  
-  var Registry = new API.ResourceTypeRegistry();
-  var Controller = new API.controllers.Base(Registry);
-  var Adapter = new API.adapters.Mongoose(models);
+  var registry = new API.ResourceTypeRegistry();
+  var controller = new API.controllers.Base(Registry);
+  var adapter = new API.adapters.Mongoose(models);
   
-  Registry.type("people", {
-    adapter: Adapter,
+  registry.type("people", {
+    adapter: adapter,
     urlTemplates: {
       "people": "/people/{people.id}",
       "people.favoritePlace": "/places/{people.favoritePlace}"
     }
   });
   
-  Registry.type("places", {
-    adapter: Adapter,
+  registry.type("places", {
+    adapter: adapter,
     urlTemplates: {"places": "/places/{places.id}"}
   });
   
-  app.get("/:type(people,places)", Controller.GET);
-  app.get("/:type(people,places)/:id", Controller.GET);
-  app.post("/:type(people,places)", Controller.POST);
-  app.put("/:type(people,places)/:id", Controller.PUT);
-  app.delete("/:type(people,places)/:id", Controller.DELETE);
+  app.get("/:type(people,places)", controller.GET);
+  app.get("/:type(people,places)/:id", controller.GET);
+  app.post("/:type(people,places)", controller.POST);
+  app.put("/:type(people,places)/:id", controller.PUT);
+  app.delete("/:type(people,places)/:id", controller.DELETE);
   
   app.listen(3000);
   ```
@@ -46,10 +46,10 @@ This library creates a [JSON API](http://jsonapi.org/)-compliant REST API from y
 ## Resource Type Descriptions
 The JSON-API spec is built around the idea of typed resource collections. For example, you can have a `"people"` collection and a `"companies"` collection. (By convention, type names are plural and lowercase.)
 
-To use this library, describe how resources of each type should be handled, and then register that description with a central `ResourceTypeRegistry`; those are the `Registry.type()` calls in the example above. A resource type description is simply an object with the following properties:
+To use this library, describe how resources of each type should be handled, and then register that description with a central `ResourceTypeRegistry`; those are the `registry.type()` calls in the example above. A resource type description is simply an object with the following properties:
 
 - `urlTemplates`: an object containing the url templates for all properties on resources of this type that link to other resources. The keys (paths) and values (templates) on this object take the same format as those used in [the JSON-API spec](http://jsonapi.org/format/#document-structure-url-templates).
-- `adapter`: the [adapter](#adapters) used to find these resources. By specifying this for each resource type, different resource types can live in different kinds of databases.
+- `adapter`: the [adapter](#adapters) used to find and update these resources. By specifying this for each resource type, different resource types can live in different kinds of databases.
 - `afterQuery` (optional): a function called on each resource after it's found by the adapter but before it's sent to the client. This lets you do things like hide fields that some users aren't authorized to see.
 - `beforeSave` (optional): a function called on each resource provided by the client (i.e. in a `POST` or `PUT` request) before it's sent to the adapter for saving. You can transform the data here to make it valid.
 - `labelToIdOrIds` (optional): If defined, this function will be called to transform the `id` request parameter into a database id or array of ids. This allows you to create resources (in the REST sense of the term) that map to different database items over time. For example, you could have a `/events/upcoming` resource or a `/users/me` resource; this function would be responsible for converting the "upcoming" and "me" labels to the proper database id(s). The function can return a Promise if needed.
