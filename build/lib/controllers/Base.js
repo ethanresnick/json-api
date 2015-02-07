@@ -12,9 +12,8 @@
   BaseController = (function(){
     BaseController.displayName = 'BaseController';
     var prototype = BaseController.prototype, constructor = BaseController;
-    function BaseController(registry, idHashSecret){
+    function BaseController(registry){
       this.registry = registry;
-      this.idHashSecret = idHashSecret;
       this.jsonBodyParser = bodyParser.json({
         type: ['json', 'application/vnd.api+json']
       });
@@ -63,10 +62,14 @@
         return next();
       }
       return constructor.getBodyResources(req, this.jsonBodyParser).then(function(resources){
-        var type, adapter;
+        var type, adapter, preCreateFn;
         resources = this$._transformRecursive(resources, req, res, 'beforeSave');
         type = resources.type;
         adapter = this$.registry.adapter(type);
+        preCreateFn = this$.registry.preCreate(type);
+        if (!preCreateFn(resources, req, res)) {
+          return;
+        }
         return adapter.create(resources).then(function(created){
           var template, ref$;
           if (created.type !== "errors") {
@@ -86,12 +89,13 @@
       }).done();
     };
     prototype.PUT = function(req, res, next){
-      var type, adapter, model, this$ = this;
+      var type, adapter, preUpdateFn, model, this$ = this;
       if (req.is('application/vnd.api+json') === false) {
         return next();
       }
       type = req.params.type;
       adapter = this.registry.adapter(type);
+      preUpdateFn = this.registry.preUpdate(type);
       model = adapter.getModel(adapter.constructor.getModelName(type));
       return Q.all([this._readIds(req, this.registry.labelToIdOrIds(type), model), constructor.getBodyResources(req, this.jsonBodyParser)]).spread(function(idOrIds, resourceOrCollection){
         var changeSets, resourceToChangeSet, providedBodyIds, providedUrlIds;
@@ -127,6 +131,9 @@
         }
         return [idOrIds, changeSets];
       }).spread(function(idOrIds, changeSets){
+        if (!preUpdateFn(changeSets, req, res)) {
+          return;
+        }
         return adapter.update(type, idOrIds, changeSets);
       }).then(function(changed){
         return this$.sendResources(req, res, changed);

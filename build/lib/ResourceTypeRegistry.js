@@ -29,7 +29,7 @@
       var this$ = this;
       if (description) {
         this._resourceTypes[type] = {};
-        return ["adapter", "beforeSave", "afterQuery", "labelToIdOrIds", "urlTemplates", "defaultIncludes", "info", "parentType"].forEach(function(it){
+        return ["adapter", "beforeSave", "afterQuery", "labelToIdOrIds", "urlTemplates", "defaultIncludes", "info", "parentType", "preCreate", "preUpdate"].forEach(function(it){
           if (description[it] != null) {
             return this$[it](type, description[it]);
           }
@@ -47,6 +47,8 @@
     prototype.defaultIncludes = makeGetterSetter('defaultIncludes');
     prototype.info = makeGetterSetter('info');
     prototype.parentType = makeGetterSetter('parentType');
+    prototype.preCreate = makeGetterSetter('preCreate');
+    prototype.preUpdate = makeGetterSetter('preUpdate');
     prototype.urlTemplates = function(type, templates){
       var type, ref$, resource, path, template;
       switch (arguments.length) {

@@ -1,7 +1,7 @@
 require! {Q:\q 'mongoose' 'body-parser' templating:\url-template '../types/Document' '../types/Collection' '../types/ErrorResource' '../util/utils'}
 
 class BaseController
-  (@registry, @idHashSecret) ->
+  (@registry) ->
     @jsonBodyParser = bodyParser.json({type: ['json', 'application/vnd.api+json']})
 
   GET: (req, res, next) ->
@@ -51,6 +51,9 @@ class BaseController
       type = resources.type
 
       adapter = @registry.adapter(type)
+      preCreateFn = @registry.preCreate(type)
+      return if not preCreateFn(resources, req, res)
+
       adapter.create(resources).then((created) ~>
         if created.type != "errors"
           res.status(201)
@@ -71,7 +74,8 @@ class BaseController
     return next() if req.is('application/vnd.api+json') == false
 
     type = req.params.type
-    adapter = @registry.adapter(type)    
+    adapter = @registry.adapter(type)  
+    preUpdateFn = @registry.preUpdate(type);  
     model = adapter.getModel(adapter@@getModelName(type))
     Q.all([
       @_readIds(req, @registry.labelToIdOrIds(type), model), 
@@ -98,6 +102,7 @@ class BaseController
 
       [idOrIds, changeSets]
     ).spread((idOrIds, changeSets) ->
+      return if not preUpdateFn(changeSets, req, res);
       adapter.update(type, idOrIds, changeSets)
     ).then((changed) ~>
       @sendResources(req, res, changed)
