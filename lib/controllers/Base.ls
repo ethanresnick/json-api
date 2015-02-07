@@ -52,7 +52,8 @@ class BaseController
 
       adapter = @registry.adapter(type)
       preCreateFn = @registry.preCreate(type)
-      return if not preCreateFn(resources, req, res)
+      if typeof preCreateFn is "function"
+        return if preCreateFn(resources, req, res) is false
 
       adapter.create(resources).then((created) ~>
         if created.type != "errors"
@@ -102,7 +103,8 @@ class BaseController
 
       [idOrIds, changeSets]
     ).spread((idOrIds, changeSets) ->
-      return if not preUpdateFn(changeSets, req, res);
+      if typeof preUpdateFn is "function"
+        return if preUpdateFn(changeSets, idOrIds, req, res) is false
       adapter.update(type, idOrIds, changeSets)
     ).then((changed) ~>
       @sendResources(req, res, changed)
