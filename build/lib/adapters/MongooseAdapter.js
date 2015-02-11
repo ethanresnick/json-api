@@ -231,24 +231,27 @@
       })['catch'](constructor.errorHandler);
     };
     prototype['delete'] = function(type, idOrIds){
-      var model, idQuery, mode;
+      var model, idQuery, mode, this$ = this;
       model = this.getModel(constructor.getModelName(type));
-      if (idOrIds) {
-        switch (typeof idOrIds) {
-        case "string":
-          idQuery = idOrIds;
-          mode = "findOneAndRemove";
-          break;
-        default:
-          idQuery = {
-            '$in': idOrIds
-          };
-          mode = "remove";
-        }
+      switch (typeof idOrIds) {
+      case "string":
+        idQuery = idOrIds;
+        mode = "findOne";
+        break;
+      default:
+        idQuery = {
+          '$in': idOrIds
+        };
+        mode = "find";
       }
       return Q(model[mode]({
         '_id': idQuery
-      }).exec())['catch'](constructor.errorHandler);
+      }).exec()).then(function(docs){
+        utils.forEachArrayOrVal(docs, function(it){
+          return it.remove();
+        });
+        return docs;
+      })['catch'](constructor.errorHandler);
     };
     prototype.getModel = function(modelName){
       return this.models[modelName];

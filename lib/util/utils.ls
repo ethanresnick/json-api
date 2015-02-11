@@ -12,7 +12,6 @@ module.exports =
       container = containingParts.reduce(((obj, part) -> obj[part]), object)
       delete container[lastPart]
     catch error
-      console.log(error)
       console.log("deleteNested failed with path: " + path + ", on oject: " + JSON.stringify(object))
 
   # it's a REALLY common pattern that we want to apply some 

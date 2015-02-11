@@ -15,7 +15,6 @@
         return ref$ = container[lastPart], delete container[lastPart], ref$;
       } catch (e$) {
         error = e$;
-        console.log(error);
         return console.log("deleteNested failed with path: " + path + ", on oject: " + JSON.stringify(object));
       }
     },
