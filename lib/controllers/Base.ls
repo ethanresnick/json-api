@@ -83,6 +83,7 @@ class BaseController
         changeSets[id] = {} <<< it.attrs <<< {[k, v.id || v.ids] for k, v of it.links};
       @@getBodyResources(req, @jsonBodyParser)
     ]).spread((idOrIds, resourceOrCollection) ~>
+      resourceOrCollection = @_transformRecursive(resourceOrCollection, req, res, 'beforeSave')
 
       providedBodyIds = resourceOrCollection.ids || [resourceOrCollection.id];
       providedUrlIds = if idOrIds instanceof Array then idOrIds else [idOrIds];
