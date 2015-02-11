@@ -49,11 +49,7 @@ class BaseController
     @@getBodyResources(req, @jsonBodyParser).then((resources) ~>
       resources = @_transformRecursive(resources, req, res, 'beforeSave')
       type = resources.type
-
       adapter = @registry.adapter(type)
-      preCreateFn = @registry.preCreate(type)
-      if typeof preCreateFn is "function"
-        return if preCreateFn(resources, req, res) is false
 
       adapter.create(resources).then((created) ~>
         if created.type != "errors"
@@ -75,9 +71,9 @@ class BaseController
     return next() if req.is('application/vnd.api+json') == false
 
     type = req.params.type
-    adapter = @registry.adapter(type)  
-    preUpdateFn = @registry.preUpdate(type);  
+    adapter = @registry.adapter(type)
     model = adapter.getModel(adapter@@getModelName(type))
+
     Q.all([
       @_readIds(req, @registry.labelToIdOrIds(type), model), 
       changeSets = {}
@@ -103,8 +99,6 @@ class BaseController
 
       [idOrIds, changeSets]
     ).spread((idOrIds, changeSets) ->
-      if typeof preUpdateFn is "function"
-        return if preUpdateFn(changeSets, idOrIds, req, res) is false
       adapter.update(type, idOrIds, changeSets)
     ).then((changed) ~>
       @sendResources(req, res, changed)
