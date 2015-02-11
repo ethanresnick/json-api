@@ -49,11 +49,11 @@
       return this._readIds(req, this.registry.labelToIdOrIds(type), model).then(function(idOrIds){
         return adapter.find(type, idOrIds, filters, fields, sorts, includes).then(function(resources){
           return this$.sendResources(req, res, resources[0], resources[1]);
-        })['catch'](function(err){
-          var er;
-          er = ErrorResource.fromError(err);
-          return this$.sendResources(req, res, er);
         });
+      })['catch'](function(err){
+        var er;
+        er = ErrorResource.fromError(err);
+        return this$.sendResources(req, res, er);
       }).done();
     };
     prototype.POST = function(req, res, next){
@@ -62,16 +62,10 @@
         return next();
       }
       return constructor.getBodyResources(req, this.jsonBodyParser).then(function(resources){
-        var type, adapter, preCreateFn;
+        var type, adapter;
         resources = this$._transformRecursive(resources, req, res, 'beforeSave');
         type = resources.type;
         adapter = this$.registry.adapter(type);
-        preCreateFn = this$.registry.preCreate(type);
-        if (typeof preCreateFn === "function") {
-          if (preCreateFn(resources, req, res) === false) {
-            return;
-          }
-        }
         return adapter.create(resources).then(function(created){
           var template, ref$;
           if (created.type !== "errors") {
@@ -91,16 +85,23 @@
       }).done();
     };
     prototype.PUT = function(req, res, next){
-      var type, adapter, preUpdateFn, model, this$ = this;
+      var type, adapter, model, this$ = this;
       if (req.is('application/vnd.api+json') === false) {
         return next();
       }
       type = req.params.type;
       adapter = this.registry.adapter(type);
-      preUpdateFn = this.registry.preUpdate(type);
       model = adapter.getModel(adapter.constructor.getModelName(type));
       return Q.all([this._readIds(req, this.registry.labelToIdOrIds(type), model), constructor.getBodyResources(req, this.jsonBodyParser)]).spread(function(idOrIds, resourceOrCollection){
-        var changeSets, resourceToChangeSet, providedBodyIds, providedUrlIds;
+        var providedBodyIds, providedUrlIds, changeSets, resourceToChangeSet;
+        resourceOrCollection = this$._transformRecursive(resourceOrCollection, req, res, 'beforeSave');
+        providedBodyIds = resourceOrCollection.ids || [resourceOrCollection.id];
+        providedUrlIds = idOrIds instanceof Array
+          ? idOrIds
+          : [idOrIds];
+        if (!utils.arrayValuesMatch(providedBodyIds, providedUrlIds)) {
+          throw new Error("The id(s) to update that were provided in the url do not match the ids of the resource objects provided in the request body.");
+        }
         changeSets = {};
         resourceToChangeSet = function(it){
           var id, k, v;
@@ -119,28 +120,14 @@
             return results$;
           }()));
         };
-        providedBodyIds = resourceOrCollection.ids || [resourceOrCollection.id];
-        providedUrlIds = idOrIds instanceof Array
-          ? idOrIds
-          : [idOrIds];
-        if (!utils.arrayValuesMatch(providedBodyIds, providedUrlIds)) {
-          throw new Error("The id(s) to update that were provided in the url do not match the ids of the resource objects provided in the request body.");
-        }
         if (resourceOrCollection instanceof Collection) {
           resourceOrCollection.resources.forEach(resourceToChangeSet);
         } else {
           resourceToChangeSet(resourceOrCollection);
         }
-        return [idOrIds, changeSets];
-      }).spread(function(idOrIds, changeSets){
-        if (typeof preUpdateFn === "function") {
-          if (preUpdateFn(changeSets, idOrIds, req, res) === false) {
-            return;
-          }
-        }
-        return adapter.update(type, idOrIds, changeSets);
-      }).then(function(changed){
-        return this$.sendResources(req, res, changed);
+        return adapter.update(type, idOrIds, changeSets).then(function(changed){
+          return this$.sendResources(req, res, changed);
+        });
       })['catch'](function(err){
         var er;
         er = ErrorResource.fromError(err);
@@ -156,11 +143,11 @@
         return adapter['delete'](type, idOrIds).then(function(resources){
           res.status(204);
           return res.send();
-        })['catch'](function(err){
-          var er;
-          er = ErrorResource.fromError(err);
-          return this$.sendResources(req, res, er);
         });
+      })['catch'](function(err){
+        var er;
+        er = ErrorResource.fromError(err);
+        return this$.sendResources(req, res, er);
       }).done();
     };
     prototype.sendResources = function(req, res, primaryResources, extraResources, meta){
@@ -181,12 +168,9 @@
         var type, ref$, resources;
         for (type in ref$ = extraResources) {
           resources = ref$[type];
-          resources = resources.map(fn$);
+          extraResources[type] = bind$(this$, '_transformRecursive')(resources, req, res, 'afterQuery');
         }
         return extraResources;
-        function fn$(it){
-          return bind$(this$, '_transformRecursive')(it, req, res, 'afterQuery');
-        }
       }());
       return Q.all([primaryResources, extraResources]).spread(function(primary, extra){
         res.set('Content-Type', 'application/vnd.api+json');
@@ -194,9 +178,8 @@
       }).done();
     };
     /**
-     * Takes a Resource or Collection being returned and applies the
-     * appropriate afterQuery method to it and (recursively)
-     * to all of its linked resources.
+     * Takes a Resource or Collection being returned and applies the appropriate
+     * transform method to it and (recursively) to all of its linked resources.
      */
     prototype._transformRecursive = function(resourceOrCollection, req, res, transformMode){
       var this$ = this;
