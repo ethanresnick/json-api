@@ -250,15 +250,22 @@ class MongooseAdapter
   delete: (type, idOrIds) ->
     model = @getModel(@@getModelName(type))
 
+    # As with update, we're going to do the extra step of finding the docs,
+    # loading them into Mongoose, and then removing them. Way slower than 
+    # removing from mongo directly, but it allows any .pre('remove') listeners
+    # to execute.
     switch typeof idOrIds
-    | "string" =>
-      idQuery = idOrIds
-      mode = "findOneAndRemove"
-    | otherwise =>
-      idQuery = {'$in': idOrIds}
-      mode = "remove"
+      | "string" =>
+        idQuery = idOrIds
+        mode = "findOne"
+      | otherwise =>
+        idQuery = {'$in':idOrIds}
+        mode = "find"
 
-    Q(model[mode]({'_id': idQuery}).exec()).catch(@@errorHandler)
+    Q(model[mode]({'_id': idQuery}).exec!).then((docs) ~>
+      utils.forEachArrayOrVal(docs, -> it.remove!);
+      docs
+    ).catch(@@errorHandler);
 
   getModel: (modelName) ->
     @models[modelName]
