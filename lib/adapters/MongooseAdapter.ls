@@ -228,7 +228,8 @@ class MongooseAdapter
   update: (type, idOrIds, changeSets) ->
     # It'd be faster to bypass Mongoose Document creation & just have mongoose
     # send a findAndUpdate command directly to mongo, but we want Mongoose's
-    # standard validation stuff, and so we have to find first, then update.
+    # standard validation and lifecycle hooks, and so we have to find first, 
+    # then update.
     model = @getModel(@@getModelName(type))
     switch typeof idOrIds
       | "string" =>
@@ -249,14 +250,13 @@ class MongooseAdapter
   delete: (type, idOrIds) ->
     model = @getModel(@@getModelName(type))
 
-    if idOrIds
-      switch typeof idOrIds
-      | "string" =>
-        idQuery = idOrIds
-        mode = "findOneAndRemove"
-      | otherwise =>
-        idQuery = {'$in': idOrIds}
-        mode = "remove"
+    switch typeof idOrIds
+    | "string" =>
+      idQuery = idOrIds
+      mode = "findOneAndRemove"
+    | otherwise =>
+      idQuery = {'$in': idOrIds}
+      mode = "remove"
 
     Q(model[mode]({'_id': idQuery}).exec()).catch(@@errorHandler)
 
