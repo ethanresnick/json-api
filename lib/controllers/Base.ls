@@ -33,10 +33,10 @@ class BaseController
       adapter.find(type, idOrIds, filters, fields, sorts, includes)
         .then((resources) ~>
           @sendResources(req, res, resources[0], resources[1])
-        ).catch((err) ~>
-          er = ErrorResource.fromError(err)
-          @sendResources(req, res, er)
         )
+    ).catch((err) ~>
+      er = ErrorResource.fromError(err)
+      @sendResources(req, res, er)
     ).done();
 
   POST: (req, res, next) ->
@@ -47,7 +47,7 @@ class BaseController
     # here, we get body, which is the value of parsing the json
     # (including possibly null for an empty body).
     @@getBodyResources(req, @jsonBodyParser).then((resources) ~>
-      resources = @_transformRecursive(resources, req, res, 'beforeSave');
+      resources = @_transformRecursive(resources, req, res, 'beforeSave')
       type = resources.type
 
       adapter = @registry.adapter(type)
@@ -80,13 +80,13 @@ class BaseController
     model = adapter.getModel(adapter@@getModelName(type))
     Q.all([
       @_readIds(req, @registry.labelToIdOrIds(type), model), 
-      @@getBodyResources(req, @jsonBodyParser)]
-    ).spread((idOrIds, resourceOrCollection) ->
       changeSets = {}
       resourceToChangeSet = -> 
         id = if typeof idOrIds == 'string' then idOrIds else it.id
         throw new Error("An id for the resource to be updated is required.") if not id;
         changeSets[id] = {} <<< it.attrs <<< {[k, v.id || v.ids] for k, v of it.links};
+      @@getBodyResources(req, @jsonBodyParser)
+    ]).spread((idOrIds, resourceOrCollection) ~>
 
       providedBodyIds = resourceOrCollection.ids || [resourceOrCollection.id];
       providedUrlIds = if idOrIds instanceof Array then idOrIds else [idOrIds];
@@ -119,14 +119,14 @@ class BaseController
     model = adapter.getModel(adapter@@getModelName(type))
     
     @_readIds(req, @registry.labelToIdOrIds(type), model).then((idOrIds) ~>
-      adapter.delete(type, idOrIds)      
+      adapter.delete(type, idOrIds) 
         .then((resources) ~>
           res.status(204)
           res.send!
-        ).catch((err) ~>
-          er = ErrorResource.fromError(err)
-          @sendResources(req, res, er)
         )
+    ).catch((err) ~>
+      er = ErrorResource.fromError(err)
+      @sendResources(req, res, er)
     ).done()
 
   sendResources: (req, res, primaryResources, extraResources, meta) ->
@@ -141,7 +141,7 @@ class BaseController
     primaryResources = Q(@~_transformRecursive(primaryResources, req, res, 'afterQuery'))
     extraResources = Q(do ~>
       for type, resources of extraResources
-        resources .= map(~> @~_transformRecursive(it, req, res, 'afterQuery'))
+        extraResources[type] = @~_transformRecursive(resources, req, res, 'afterQuery')
       extraResources
     )
     Q.all([primaryResources, extraResources]).spread((primary, extra) ~>
@@ -150,9 +150,8 @@ class BaseController
     ).done()
 
   /**
-   * Takes a Resource or Collection being returned and applies the
-   * appropriate afterQuery method to it and (recursively)
-   * to all of its linked resources.
+   * Takes a Resource or Collection being returned and applies the appropriate
+   * transform method to it and (recursively) to all of its linked resources.
    */
   _transformRecursive: (resourceOrCollection, req, res, transformMode) ->
     if resourceOrCollection instanceof Collection
