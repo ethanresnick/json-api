@@ -76,11 +76,6 @@ class BaseController
 
     Q.all([
       @_readIds(req, @registry.labelToIdOrIds(type), model), 
-      changeSets = {}
-      resourceToChangeSet = -> 
-        id = if typeof idOrIds == 'string' then idOrIds else it.id
-        throw new Error("An id for the resource to be updated is required.") if not id;
-        changeSets[id] = {} <<< it.attrs <<< {[k, v.id || v.ids] for k, v of it.links};
       @@getBodyResources(req, @jsonBodyParser)
     ]).spread((idOrIds, resourceOrCollection) ~>
       resourceOrCollection = @_transformRecursive(resourceOrCollection, req, res, 'beforeSave')
@@ -92,17 +87,23 @@ class BaseController
         throw new Error("The id(s) to update that were provided in the url do 
         not match the ids of the resource objects provided in the request body.");
 
-      # Build changesets. 
-      # Note that this is a little loose, because we're looping over the 
+
+      # Build changesets.
+      changeSets = {}
+      resourceToChangeSet = -> 
+        id = if typeof idOrIds == 'string' then idOrIds else it.id
+        throw new Error("An id for the resource to be updated is required.") if not id;
+        changeSets[id] = {} <<< it.attrs <<< {[k, v.id || v.ids] for k, v of it.links};
+
       if resourceOrCollection instanceof Collection 
       then resourceOrCollection.resources.forEach(resourceToChangeSet)
       else resourceToChangeSet(resourceOrCollection)
 
-      [idOrIds, changeSets]
-    ).spread((idOrIds, changeSets) ->
+      # update.
       adapter.update(type, idOrIds, changeSets)
-    ).then((changed) ~>
-      @sendResources(req, res, changed)
+        .then((changed) ~>
+          @sendResources(req, res, changed)
+        )
     ).catch((err) ~>
       er = ErrorResource.fromError(err)
       @sendResources(req, res, er)
