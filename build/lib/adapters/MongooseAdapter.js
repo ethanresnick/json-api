@@ -284,6 +284,11 @@
           errors.push(new ErrorResource(null, generatedError));
         }
         return new Collection(errors, null, "errors");
+      } else if (err.isJSONAPIDisplayReady) {
+        return new ErrorResource(null, {
+          title: err.message,
+          status: err.status || 500
+        });
       } else {
         return new ErrorResource(null, {
           "status": 400,
