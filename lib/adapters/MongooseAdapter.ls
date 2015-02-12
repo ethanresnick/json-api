@@ -296,7 +296,11 @@ class MongooseAdapter
 
       new Collection(errors, null, "errors")
 
-    # for other errors, issue something generic
+    # allow the user to signal that their specific error message should be used.
+    else if err.isJSONAPIDisplayReady
+      new ErrorResource(null, {title: err.message, status: err.status || 500})
+    
+    # while still allowing us to issue something generic for most mongoose errors.
     else
       new ErrorResource(null, {
         "status": 400,
