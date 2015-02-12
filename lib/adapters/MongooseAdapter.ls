@@ -240,10 +240,21 @@ class MongooseAdapter
         mode = "find"
 
     Q(model[mode]({'_id': idQuery}).exec!).then((docs) ~>
+      successfulSavesPromises = [];
+
       utils.forEachArrayOrVal(docs, ->
         it.set(changeSets[it.id])
-        it.save!
+        successfulSavesPromises.push(
+          Q.Promise((resolve, reject) ->
+            it.save((err, doc) ->
+              reject(err) if err 
+              resolve(doc)
+            )
+          )
+        )
       );
+      Q.all(successfulSavesPromises)
+    ).then((docs) ~>
       @@docsToResourceOrCollection(docs, type, @inflector.plural)
     ).catch(@@errorHandler);
 
