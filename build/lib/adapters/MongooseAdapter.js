@@ -223,10 +223,21 @@
       return Q(model[mode]({
         '_id': idQuery
       }).exec()).then(function(docs){
+        var successfulSavesPromises;
+        successfulSavesPromises = [];
         utils.forEachArrayOrVal(docs, function(it){
           it.set(changeSets[it.id]);
-          return it.save();
+          return successfulSavesPromises.push(Q.Promise(function(resolve, reject){
+            return it.save(function(err, doc){
+              if (err) {
+                reject(err);
+              }
+              return resolve(doc);
+            });
+          }));
         });
+        return Q.all(successfulSavesPromises);
+      }).then(function(docs){
         return constructor.docsToResourceOrCollection(docs, type, this$.inflector.plural);
       })['catch'](constructor.errorHandler);
     };
