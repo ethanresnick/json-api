@@ -23,6 +23,7 @@ class Document
   renderResource: (resource) ->
     res = resource.attrs
     res.id = resource.id if resource.id
+    res.type = resource.type
     urlTempParams = do -> ({} <<< res)
     if resource.links? then res.links = {}
     for path, referenced of resource.links
@@ -70,7 +71,7 @@ class Document
       ..[\meta] = @meta if @meta
 
       # Add primary resource(s)
-      ..[@primaryResources.type] = do ~>
+      ..[\data] = do ~>
         isCollection = @primaryResources instanceof Collection
         # render each resource
         renderedResources = utils.mapResources(@primaryResources, @~renderResource)
