@@ -15,7 +15,7 @@ class Document
     for type, resources of @linked
       @linked[type] = resources.map(@~renderResource)
 
-  addLinkedResource: (resource) ->
+  addIncludedResource: (resource) ->
     if not @linked[resource.type]?
       @linked[resource.type] = []
 
@@ -54,7 +54,7 @@ class Document
           ..[\href] = referenced.href || @urlFor(resource.type, path, referenced[idKey], urlTempParams)
 
       referencedResources.forEach(~>
-        if it.attrs? then @addLinkedResource(it)
+        if it.attrs? then @addIncludedResource(it)
       )
 
     res
