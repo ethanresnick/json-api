@@ -9,10 +9,10 @@ class BaseController
     @jsonBodyParser = bodyParser.json({type: ['json', config.specMediaType]})
 
   GET: (req, res, next) ->
-    # Even if the accepts header doesn't include the
-    # json api media type, try to respond anyway rather
-    # than send a 406. See note here about HTTP 1.1:
-    # http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+    if not req.accepts([config.specMediaType, 'application/json'])
+      res.status(406)
+      return res.send()
+
     type = req.params.type
     adapter = @registry.adapter(type)
     model = adapter.getModel(adapter@@getModelName(type))
