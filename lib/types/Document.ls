@@ -80,34 +80,6 @@ class Document
         # render each resource
         renderedResources = utils.mapResources(@primaryResources, @~renderResource)
 
-        # remove reduncies in each resource object
-        # (possible because our response contains [1,n] resources)
-        if isCollection
-          renderedResources.forEach(~>
-            if it.links?
-              for let path, link of it.links
-                # it may seem redundant to check this on every
-                # iteration of map, but necessary because some
-                # resources may not have some paths in their 
-                # `links` key (because not every resource has
-                # a value for every relationship).
-                templateKey = @primaryResources.type + '.' + path
-                if not @links[templateKey]
-                  @links[templateKey] = {}
-                    ..[\type] = link.type
-                    # only include the link template if the resources aren't 
-                    # included directy. (type is always necessary, though, to
-                    # connect the resource-level links to the top-level linked)
-                    ..[\href] = @urlTemplates[templateKey] if it.links[path].href
-                # in each resource's links key, replace the 
-                # {href:"", "type":"", "id/ids":"string or []"}
-                # object with just the val of the id or ids key,
-                # as type and href are no longer necessary (they
-                # are covered by the top-level links) and just an
-                # id or ids doesn't need to be in an object.
-                it.links[path] = (it.links[path].ids || it.links[path].id)
-          )
-
         renderedResources
 
       ..[config.includedObjectsTopLevelKey] = @linked if not prelude.Obj.empty(@linked)
