@@ -19,18 +19,12 @@ class BaseController
 
     sorts  = req.query.sort.split(',').map(decodeURIComponent) if req.query.sort?
     fields = req.query.fields.split(',').map(decodeURIComponent) if req.query.fields?
+    filters = req.query.filter if req.query.filter?
 
     if req.query.include?
       includes = req.query.include.split(',').map(decodeURIComponent)
     else
       includes = @registry.defaultIncludes(type)
-
-    filters = do ->
-      params = {} <<< req.query; 
-      delete params[\fields \include \sort];
-      for attr, val of filters
-        delete params[attr] if attr is /^(fields|sort)\[.+?\]$/
-      params
 
     @_readIds(req, @registry.labelToIdOrIds(type), model).then((idOrIds) ~>
       # PROCESS QUERY RESULTS AND RESPOND.
