@@ -1,4 +1,7 @@
-require! {\./Resource, \./Collection, prelude:\prelude-ls, templating:\url-template, \flat, \../util/utils}
+require! {
+  prelude:\prelude-ls, templating:\url-template, \flat, \../config,
+  \../util/utils, \./Resource, \./Collection,  
+}
 
 class Document
   (@primaryResources, extraResources, @meta, @urlTemplates)->
@@ -36,7 +39,7 @@ class Document
       # resources found in referencedVal to @linked, so they can be 
       # preserved in the the final response.
       isCollection = referenced instanceof Collection
-      idKey = if isCollection then 'ids' else 'id'
+      idKey = if isCollection then config.homogeneousToManyIdsKey else config.toOneIdKey
       referencedResources = if isCollection then referenced.resources else [referenced]
 
       # a toOne relationship that's unfilled (null) or a toMany collection that's empty
@@ -106,7 +109,7 @@ class Document
 
         renderedResources
 
-      ..[\linked] = @linked if not prelude.Obj.empty(@linked)
+      ..[config.includedObjectsTopLevelKey] = @linked if not prelude.Obj.empty(@linked)
       ..[\links]  = @links if not prelude.Obj.empty(@links)
 
     doc
