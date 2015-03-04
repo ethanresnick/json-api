@@ -27,18 +27,17 @@ class Document
     res = resource.attrs
     res.id = resource.id if resource.id
     res.type = resource.type
+
     urlTempParams = do -> ({} <<< res)
     res.links = {}    
     res.links[config.resourceUrlKey] = @urlFor(res.type, config.resourceUrlKey, res.id, urlTempParams)
+
     for path, referenced of resource.links
-      # we're going to use referencedVal to fill res.links[path] with
-      # an object with keys: type, id (or ids), and, optionally, href.
-      # That may be putting more info in each resource than we want
-      # to return in the final response (e.g. because it would state
-      # the type redundantly in responses that have multiple resources),
-      # but we'll filter it later. We're also going to add any non-stub
-      # resources found in referencedVal to @linked, so they can be 
-      # preserved in the the final response.
+      # we're going to use referencedVal to fill res.links[path] with a full
+      # link object. That may be putting more info in each resource than we 
+      # want to return in the final response, but we'll filter it later. 
+      # We're also going to add any non-stub resources found in referencedVal 
+      # to @linked, so they can be preserved in the the final response.
       isCollection = referenced instanceof Collection
       idKey = if isCollection then config.homogeneousToManyIdsKey else config.toOneIdKey
       referencedResources = if isCollection then referenced.resources else [referenced]
