@@ -1,6 +1,15 @@
 module.exports = {}
- ..\specMediaType = 'application/vnd.api+json'# Link Objects
- ..\homogeneousToManyIdsKey = 'id'
- ..\toOneIdKey = 'id'
- # Compound Documents
- ..\includedObjectsTopLevelKey = 'linked'
+  # General
+  ..\specMediaType = 'application/vnd.api+json'
+
+  # Resource Objects
+  ..\resourceUrlKey = 'self'
+
+  # Link Objects
+  ..\homogeneousToManyIdsKey = 'id'
+  ..\toOneIdKey = 'id'
+  ..\urlOfLinkedEntityKey = false
+  ..\urlOfLinkedResourceKey = 'resource'
+
+  # Compound Documents
+  ..\includedObjectsTopLevelKey = 'linked'
