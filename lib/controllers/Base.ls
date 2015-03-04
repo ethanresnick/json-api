@@ -1,8 +1,12 @@
-require! {Q:\q 'mongoose' 'body-parser' templating:\url-template '../types/Document' '../types/Collection' '../types/ErrorResource' '../util/utils'}
+require! {
+  Q:\q, 'mongoose', 'body-parser', templating:\url-template,
+  '../types/Document', '../types/Collection', '../types/ErrorResource'
+  '../util/utils', '../config'
+}
 
 class BaseController
   (@registry) ->
-    @jsonBodyParser = bodyParser.json({type: ['json', 'application/vnd.api+json']})
+    @jsonBodyParser = bodyParser.json({type: ['json', config.specMediaType]})
 
   GET: (req, res, next) ->
     # Even if the accepts header doesn't include the
