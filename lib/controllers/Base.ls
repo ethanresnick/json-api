@@ -192,10 +192,11 @@ class BaseController
       if req.params.id?
         idOrIdsRaw = req.params.id.split(",").map(decodeURIComponent)
         idOrIdsPromise = if typeof mapper is "function"
-          then Q.all(idOrIdsRaw.map(mapper(_, model, req)).map(Q)) 
+          # partially apply mapper; bind second, third args; it'll get id as first.
+          then Q.all(idOrIdsRaw.map(mapper(_, model, req))) 
           else Q(idOrIdsRaw)
 
-        # partially apply mapper; will take id as first arg, get model as second.
+        
         idOrIdsPromise.then((idOrIds) ->
           # flatten idOrIds array, since each label can produce an array.
           # also, strip undefined, which allows the mapper to say that  
