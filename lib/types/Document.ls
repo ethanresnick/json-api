@@ -28,7 +28,8 @@ class Document
     res.id = resource.id if resource.id
     res.type = resource.type
     urlTempParams = do -> ({} <<< res)
-    if resource.links? then res.links = {}
+    res.links = {}    
+    res.links[config.resourceUrlKey] = @urlFor(res.type, config.resourceUrlKey, res.id, urlTempParams)
     for path, referenced of resource.links
       # we're going to use referencedVal to fill res.links[path] with
       # an object with keys: type, id (or ids), and, optionally, href.
