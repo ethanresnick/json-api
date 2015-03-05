@@ -48,10 +48,14 @@ class Document
 
       res.links[path] = {}
         ..[\type] = referenced.type
-        ..[idKey] = referenced[idKey]
-        # only add the href if we have stubbed resources (no attributes; not in `linked`)
-        if !referencedResources[0].attrs?
-          ..[\href] = referenced.href || @urlFor(resource.type, path, referenced[idKey], urlTempParams)
+        ..[idKey] = referenced[if isCollection then \ids else \id]
+
+        # If, down the line, link objects include a key for providing the url 
+        # of the linked entity, and we have one that's not inlcuded (and so
+        # has no attributes), let's add the url for it.
+        #if !referencedResources[0].attrs?
+        #  ..[\href] = referenced.href || 
+        # @urlFor(resource.type, path, referenced[idKey], urlTempParams)
 
       referencedResources.forEach(~>
         if it.attrs? then @addIncludedResource(it)
