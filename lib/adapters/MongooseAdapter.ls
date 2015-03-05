@@ -358,10 +358,15 @@ class MongooseAdapter
       # doesn't link to anything, just removing it)
       utils.deleteNested(path, attrs)
 
-      # if there's a toOne relationship with no value in it, or a toMany
-      # with an empty array, skip building a links key for it. Could also
-      # be a refPath whose field is excluded from the document all together.
+      # If we have a refPath whose field is excluded from the document all 
+      # together, make sure we don't add a links key for it.
+      if valAtPath is undefined
+        return
+
+      # But, if there's a toOne relationship with no value in it,
+      # or a toMany with an empty array, make an empty links for it.
       if !valAtPath or (valAtPath instanceof Array and valAtPath.length == 0)
+        links[path] = if valAtPath instanceof Array then new Collection([]) else null
         return
 
       # Now, if valAtPath is a single id or populated doc, we're going 
