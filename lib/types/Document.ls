@@ -27,6 +27,7 @@ class Document
     res = resource.attrs
     res.id = resource.id if resource.id
     res.type = resource.type
+    res.meta = resource.meta if typeof! resource.meta is "Object"
 
     urlTempParams = do -> ({} <<< res)
     res.links = {}
