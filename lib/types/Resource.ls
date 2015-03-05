@@ -1,7 +1,7 @@
 require! [\../util/utils]
 
 class Resource
-  (type, id, attrs, @links, @href) ~>
+  (type, id, attrs, @links, @href, @meta) ~>
     # set manually, unlike @links and @href, to trigger the 
     # validation checks and create the @_type etc props.
     [@type, @id, @attrs] = [type, id, attrs];
