@@ -33,11 +33,9 @@ class Document
     res.links[config.resourceUrlKey] = @urlFor(res.type, config.resourceUrlKey, res.id, urlTempParams)
 
     for path, referenced of resource.links
-      # we're going to use referencedVal to fill res.links[path] with a full
+      # we're going to use referenced to fill res.links[path] with a full
       # link object. That may be putting more info in each resource than we 
-      # want to return in the final response, but we'll filter it later. 
-      # We're also going to add any non-stub resources found in referencedVal 
-      # to @linked, so they can be preserved in the the final response.
+      # want to return in the final response, but we'll filter it later.
       isCollection = referenced instanceof Collection
       idKey = if isCollection then config.homogeneousToManyIdsKey else config.toOneIdKey
       referencedResources = if isCollection then referenced.resources else [referenced]
@@ -49,13 +47,10 @@ class Document
       res.links[path] = {}
         ..[\type] = referenced.type
         ..[idKey] = referenced[if isCollection then \ids else \id]
+        # If, down the line, link objects include a key
+        # for providing the url of the linked entity, let's add it.
+        # ..[config.urlOfLinkedEntityKey] = target.href || @urlFor(resource.type, path, referenced[idKey], urlTempParams)
 
-        # If, down the line, link objects include a key for providing the url 
-        # of the linked entity, and we have one that's not inlcuded (and so
-        # has no attributes), let's add the url for it.
-        #if !referencedResources[0].attrs?
-        #  ..[\href] = referenced.href || 
-        # @urlFor(resource.type, path, referenced[idKey], urlTempParams)
 
       referencedResources.forEach(~>
         if it.attrs? then @addIncludedResource(it)
