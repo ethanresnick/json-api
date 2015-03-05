@@ -18,8 +18,8 @@ class BaseController
     model = adapter.getModel(adapter@@getModelName(type))
 
     sorts  = req.query.sort.split(',').map(decodeURIComponent) if req.query.sort?
-    fields = req.query.fields.split(',').map(decodeURIComponent) if req.query.fields?
     filters = req.query.filter if req.query.filter?
+    fields = {[k, fields.split(',').map(decodeURIComponent)] for k, fields of req.query.fields} if req.query.fields?
 
     if req.query.include?
       includes = req.query.include.split(',').map(decodeURIComponent)
