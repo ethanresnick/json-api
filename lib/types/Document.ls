@@ -29,7 +29,7 @@ class Document
     res.type = resource.type
 
     urlTempParams = do -> ({} <<< res)
-    res.links = {}    
+    res.links = {}
     res.links[config.resourceUrlKey] = @urlFor(res.type, config.resourceUrlKey, res.id, urlTempParams)
 
     for path, referenced of resource.links
@@ -69,16 +69,21 @@ class Document
     @_urlTemplatesParsed[type + '.' + path].expand(params)
 
   get: ->
+    mainKey = if @primaryResources.type is \errors then \errors else config.primaryResourcesKey
+
     doc = {}
       # Add meta key
       ..[\meta] = @meta if @meta
 
       # Add primary resource(s)
-      ..[\data] = do ~>
-        isCollection = @primaryResources instanceof Collection
-        # render each resource
-        renderedResources = utils.mapResources(@primaryResources, @~renderResource)
-
+      ..[mainKey] = do ~>
+        # errors are currently specified as a subresource, but they really aren't
+        # (no self; "links" means something different, etc), so special case em.
+        if @primaryResources.type is \errors
+          renderedResources = utils.mapResources(@primaryResources, -> it.attrs)
+        else
+          renderedResources = utils.mapResources(@primaryResources, @~renderResource)
+        
         renderedResources
 
       ..[config.includedObjectsTopLevelKey] = @linked if not prelude.Obj.empty(@linked)
