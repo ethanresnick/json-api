@@ -39,8 +39,6 @@ class Document
       # want to return in the final response, but we'll filter it later.
       isCollection = referenced instanceof Collection
       idKey = if isCollection then config.homogeneousToManyIdsKey else config.toOneIdKey
-      referencedResources = if isCollection then referenced.resources else [referenced]
-
 
       res.links[path] = {}
         ..[\type] = referenced.type
@@ -49,10 +47,12 @@ class Document
         # for providing the url of the linked entity, let's add it.
         # ..[config.urlOfLinkedEntityKey] = target.href || @urlFor(resource.type, path, referenced[idKey], urlTempParams)
 
-
-      referencedResources.forEach(~>
+      # We're also going to add any non-stub resources found in referenced 
+      # to @linked, so they can be preserved in the the final response.
+      referencedArr = if isCollection then referenced.resources else [referenced]
+      referencedArr.forEach(~>
         if it.attrs? then @addIncludedResource(it)
-      )
+      )      
 
     res
 
