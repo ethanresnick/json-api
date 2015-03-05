@@ -40,9 +40,6 @@ class Document
       idKey = if isCollection then config.homogeneousToManyIdsKey else config.toOneIdKey
       referencedResources = if isCollection then referenced.resources else [referenced]
 
-      # a toOne relationship that's unfilled (null) or a toMany collection that's empty
-      if !referencedResources[0]
-        continue;
 
       res.links[path] = {}
         ..[\type] = referenced.type
