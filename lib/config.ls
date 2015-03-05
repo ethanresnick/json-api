@@ -1,6 +1,7 @@
 module.exports = {}
   # General
   ..\specMediaType = 'application/vnd.api+json'
+  ..\primaryResourcesKey = 'data'
 
   # Resource Objects
   ..\resourceUrlKey = 'self'
