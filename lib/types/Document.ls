@@ -9,18 +9,11 @@ class Document
     @links = {}
     @_urlTemplatesParsed = {[k, templating.parse(template)] for k, template of @urlTemplates}
 
-    # extraResources form the basis of the @linked collection, to
-    # which we'll add linked resources found in the primary ones.
-    @linked = extraResources 
-    for type, resources of @linked
-      @linked[type] = resources.map(@~renderResource)
-
-  addIncludedResource: (resource) ->
-    if not @linked[resource.type]?
-      @linked[resource.type] = []
-
-    if resource.id not in (@linked[resource.type]).map(-> it.id)
-      @linked[resource.type].push(@renderResource(resource));
+    # extraResources form the basis of the @included collection, to
+    # which we'll add included resources found in the primary ones.
+    @included = []
+    for type, resources of extraResources
+      @included.concat(resources.map(@~renderResource))
 
   # renders a non-stub resource
   renderResource: (resource) ->
@@ -51,7 +44,7 @@ class Document
       # to @linked, so they can be preserved in the the final response.
       referencedArr = if isCollection then referenced.resources else [referenced]
       referencedArr.forEach(~>
-        if it.attrs? then @addIncludedResource(it)
+        if it.attrs? then @included.push(it)
       )      
 
     res
@@ -83,8 +76,8 @@ class Document
         
         renderedResources
 
-      ..[config.includedObjectsTopLevelKey] = @linked if not prelude.Obj.empty(@linked)
-      ..[\links]  = @links if not prelude.Obj.empty(@links)
+      ..\included = utils.arrayUnique(@included) if not prelude.Obj.empty(@linked)
+      ..\links  = @links if not prelude.Obj.empty(@links)
 
     doc
 
