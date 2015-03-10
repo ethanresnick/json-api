@@ -41,7 +41,7 @@ class Document
         # ..[config.urlOfLinkedEntityKey] = target.href || @urlFor(resource.type, path, referenced[idKey], urlTempParams)
 
       # We're also going to add any non-stub resources found in referenced 
-      # to @linked, so they can be preserved in the the final response.
+      # to @included, so they can be preserved in the the final response.
       referencedArr = if isCollection then referenced.resources else [referenced]
       referencedArr.forEach(~>
         if it.attrs? then @included.push(it)
@@ -63,7 +63,7 @@ class Document
 
     doc = {}
       # Add meta key
-      ..[\meta] = @meta if @meta
+      ..\meta = @meta if @meta
 
       # Add primary resource(s)
       ..[mainKey] = do ~>
@@ -76,7 +76,7 @@ class Document
         
         renderedResources
 
-      ..\included = utils.arrayUnique(@included) if not prelude.Obj.empty(@linked)
+      ..\included = utils.arrayUnique(@included) if not prelude.Obj.empty(@included)
       ..\links  = @links if not prelude.Obj.empty(@links)
 
     doc
