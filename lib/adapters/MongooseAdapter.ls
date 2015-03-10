@@ -76,13 +76,15 @@ class MongooseAdapter
         # @@docToResource code can turn it into a Resource object that's linked
         # to the Resource representing the primary document.
         if pathParts.length == 1
+          refType = @@getType(@@getReferencedModelName(model, pathParts[0]), pluralize)
+
           # There's one special case we have to account for before populating,
           # though, which is: the current pathParts may start with a field 
           # that's been excluded from the primary resources. E.g. a request for 
           # /people?fields=name&include=address requires us to populate 
           # person.address but then ultimately not include the address in the
           # generated Resource object. So, if that's the case:
-          if (fields and pathParts[0] not in fields)
+          if (fields[type] and pathParts[0] not in fields[type])
             # We start by re-including the field in our query, enabling population.
             queryBuilder.select(pathParts[0])
 
@@ -92,13 +94,13 @@ class MongooseAdapter
             # "linked" bag *even though* it's not directly connected to any of
             # the returned primary resources, because the field showing the
             # connection was excluded).
-            extraFieldsToRefTypes[pathParts[0]] = @@getType(
-              @@getReferencedModelName(model, pathParts[0]), 
-              pluralize
-            )
+            extraFieldsToRefTypes[pathParts[0]] = refType
 
           # Finally, do the population
-          queryBuilder.populate(pathParts[0])
+          populateArgs = {}
+            ..\path = pathParts[0]
+            ..\select = fields[type] if fields[type]
+          queryBuilder.populate(populateArgs)
 
 
         # Then, we have another case of include paths in which the resources
@@ -116,8 +118,18 @@ class MongooseAdapter
                     # update model
                     lastModelName := @@getReferencedModelName(@getModel(lastModelName), part)
 
+                    # type
+                    type = @@getType(lastModelName, pluralize)
+                    populateArgs = {}
+                      ..\path = part
+                      ..\select = fields[type] if fields[type]
+
                     # populate this nested path
-                    Q.npost(@getModel(lastModelName), "populate", [resources, {path: part}]);
+                    Q.npost(
+                      @getModel(lastModelName), 
+                      "populate", 
+                      [resources, populateArgs]
+                    );
                 ).then(-> 
                   # if this population was empty, just stop
                   return it if !it or (it instanceof Array and !it.length)
@@ -169,7 +181,7 @@ class MongooseAdapter
 
               # if it's a to-one relationship, doc[field] will be a doc or undefined;
               # if it's a toMany relationship, we have an array (or undefined). Either
-              # way, we want to convert any docs in docs[field] to resources and store,
+              # way, we want to convert any docs in docs[field] to resources and store
               # them, so we always coerce it to an array.
               refDocs = if doc[field] instanceof Array then doc[field] else [doc[field]]
               refDocs.forEach(-> addDocAsExternalResource(it, refType))
