@@ -5,10 +5,11 @@
   Resource = (function(){
     Resource.displayName = 'Resource';
     var prototype = Resource.prototype, constructor = Resource;
-    function Resource(type, id, attrs, links, href){
+    function Resource(type, id, attrs, links, href, meta){
       var ref$, this$ = this instanceof ctor$ ? this : new ctor$;
       this$.links = links;
       this$.href = href;
+      this$.meta = meta;
       ref$ = [type, id, attrs], this$.type = ref$[0], this$.id = ref$[1], this$.attrs = ref$[2];
       return this$;
     } function ctor$(){} ctor$.prototype = prototype;
