@@ -1,11 +1,8 @@
 require! ['./Resource']
 
-class ErrorResource extends Resource
+class Error
   (id, attrs, @links, @href) ~>
     super("errors", id, attrs, @links, @href)
-
-  _validateType: (type) ->
-    throw new Error("type must be errors") if type != "errors"
 
   _coerceAttrs: (attrs) ->
     if attrs?
