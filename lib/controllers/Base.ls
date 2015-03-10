@@ -139,7 +139,7 @@ class BaseController
       extraResources
     )
     Q.all([primaryResources, extraResources]).spread((primary, extra) ~>
-      res.set('Content-Type', 'application/vnd.api+json; ext=bulk');
+      res.set('Content-Type', 'application/vnd.api+json; supported-ext=bulk');
       res.status(Number(status)).json((new Document(primary, extra, meta, @registry.urlTemplates!)).get!)
     ).done()
 
