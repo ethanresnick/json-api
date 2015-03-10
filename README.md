@@ -3,6 +3,8 @@ json-api
 
 This library creates a [JSON API](http://jsonapi.org/)-compliant REST API from your [Express](http://expressjs.com/) app. And it generates API documentation automatically. Currently, it works with [Mongoose](http://mongoosejs.com/) models, but it can be extended to support other databases.
 
+Note: This branch supports the "rc1" version of JSON API, which is out of date with the current specification. Work to bring this library into line with the current specification is ocurring in the rc2 branch.
+
 # Installation
 ```$ npm install json-api```
 
