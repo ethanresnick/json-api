@@ -42,14 +42,19 @@ class MongooseAdapter
     # add where clauses
     queryBuilder.where(filters) if typeof! filters is "Object"
 
+    # functionally, escape fields for security. Create mongoose `select` 
+    # objects, rather than passing the user's strings, so that the user 
+    # can't prefix a field with a minus on input to affect the query.
+    # See http://mongoosejs.com/docs/api.html#query_Query-select.
+    for key of fields
+      fields[key] = fields[key].reduce(((prev, curr) -> prev[curr] = 1; prev), {})
+
     # limit returned fields
-    # note that with this sparse fieldset handling, id may be included
-    # in the returned documend anyway, even if the user doesn't ask for
-    # it specifically, as that's the mongoose default. But that's fine. 
+    # note that with this sparse fieldset handling, id/links may be included
+    # in the returned document anyway, even if the user doesn't ask for it
+    # specifically, as that's the mongoose default. But that's fine. 
     # See: https://github.com/json-api/json-api/issues/260
-    queryBuilder.select(
-      fields.map(-> if it.charAt(0) in ['+', '-'] then it.substr(1) else it).join(' ')
-    ) if fields instanceof Array
+    queryBuilder.select(fields[type]) if fields[type] instanceof Array
 
     # setup sorting
     queryBuilder.sort(sorts.join(' ')) if sorts instanceof Array
