@@ -41,6 +41,12 @@
     },
     arrayValuesMatch: function(array1, array2){
       return array1.length === array2.length && array1.sort().join() === array2.sort().join();
+    },
+    arrayUnique: function(array){
+      console.log(array);
+      return array.filter(function(a, b, c){
+        return c.indexOf(a, b + 1) < 0;
+      });
     }
   };
 }).call(this);

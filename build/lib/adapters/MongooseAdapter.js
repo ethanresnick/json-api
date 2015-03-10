@@ -29,7 +29,7 @@
      * by id and should return all documents.
      */
     prototype.find = function(type, idOrIds, filters, fields, sorts, includePaths){
-      var model, refPaths, queryBuilder, pluralize, idQuery, mode, extraResources, extraFieldsToRefTypes, extraDocumentsPromises, duplicateQuery, i$, len$, pathParts, addDocAsExternalResource, primaryDocumentsPromise, extraResourcesPromise, primaryResourcesPromise, this$ = this;
+      var model, refPaths, queryBuilder, pluralize, idQuery, mode, key, extraResources, extraFieldsToRefTypes, extraDocumentsPromises, duplicateQuery, i$, len$, pathParts, refType, x$, populateArgs, addDocAsExternalResource, primaryDocumentsPromise, extraResourcesPromise, primaryResourcesPromise, this$ = this;
       model = this.getModel(constructor.getModelName(type));
       refPaths = constructor.getReferencePaths(model);
       queryBuilder = new mongoose.Query(null, null, model, model.collection);
@@ -55,15 +55,11 @@
       if (toString$.call(filters).slice(8, -1) === "Object") {
         queryBuilder.where(filters);
       }
-      if (fields instanceof Array) {
-        queryBuilder.select(fields.map(function(it){
-          var ref$;
-          if ((ref$ = it.charAt(0)) === '+' || ref$ === '-') {
-            return it.substr(1);
-          } else {
-            return it;
-          }
-        }).join(' '));
+      for (key in fields) {
+        fields[key] = fields[key].reduce(fn$, {});
+      }
+      if (fields[type] instanceof Array) {
+        queryBuilder.select(fields[type]);
       }
       if (sorts instanceof Array) {
         queryBuilder.sort(sorts.join(' '));
@@ -82,13 +78,19 @@
             continue;
           }
           if (pathParts.length === 1) {
-            if (fields && !in$(pathParts[0], fields)) {
+            refType = constructor.getType(constructor.getReferencedModelName(model, pathParts[0]), pluralize);
+            if (fields[type] && !in$(pathParts[0], fields[type])) {
               queryBuilder.select(pathParts[0]);
-              extraFieldsToRefTypes[pathParts[0]] = constructor.getType(constructor.getReferencedModelName(model, pathParts[0]), pluralize);
+              extraFieldsToRefTypes[pathParts[0]] = refType;
             }
-            queryBuilder.populate(pathParts[0]);
+            x$ = populateArgs = {};
+            x$['path'] = pathParts[0];
+            if (fields[type]) {
+              x$['select'] = fields[type];
+            }
+            queryBuilder.populate(populateArgs);
           } else {
-            fn$();
+            fn1$();
           }
         }
         addDocAsExternalResource = function(doc, collectionType){
@@ -147,18 +149,25 @@
       return Q.all([primaryResourcesPromise, extraResourcesPromise])['catch'](function(it){
         return [constructor.errorHandler(it), undefined];
       });
-      function fn$(){
+      function fn$(prev, curr){
+        prev[curr] = 1;
+        return prev;
+      }
+      function fn1$(){
         var lastModelName;
         lastModelName = model.modelName;
         return extraDocumentsPromises.push(pathParts.reduce(function(resourcePromises, part){
           return resourcePromises.then(function(resources){
+            var type, x$, populateArgs;
             if (resources) {
               lastModelName = constructor.getReferencedModelName(this$.getModel(lastModelName), part);
-              return Q.npost(this$.getModel(lastModelName), "populate", [
-                resources, {
-                  path: part
-                }
-              ]);
+              type = constructor.getType(lastModelName, pluralize);
+              x$ = populateArgs = {};
+              x$['path'] = part;
+              if (fields[type]) {
+                x$['select'] = fields[type];
+              }
+              return Q.npost(this$.getModel(lastModelName), "populate", [resources, populateArgs]);
             }
           }).then(function(it){
             var flatten, mapped;
@@ -351,7 +360,11 @@
           return obj[part];
         }, attrs);
         utils.deleteNested(path, attrs);
+        if (valAtPath === undefined) {
+          return;
+        }
         if (!valAtPath || (valAtPath instanceof Array && valAtPath.length === 0)) {
+          links[path] = valAtPath instanceof Array ? new Collection([]) : null;
           return;
         }
         isToOneRelationship = false;
