@@ -9,6 +9,8 @@ Note: This branch supports the "rc1" version of JSON API, which is out of date w
 ```$ npm install json-api```
 
 # Example API
+Check out the [full, working example repo](http://github.com/ethanresnick/json-api/example) for all the details on building an API with this library. Or, take a look at the basic example below:
+
 ```javascript
   var app = require('express')()
     , API = require('json-api');
