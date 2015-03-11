@@ -35,11 +35,11 @@ Note: This branch supports the "rc1" version of JSON API, which is out of date w
     urlTemplates: {"places": "/places/{places.id}"}
   });
   
-  app.get("/:type(people,places)", controller.GET);
-  app.get("/:type(people,places)/:id", controller.GET);
-  app.post("/:type(people,places)", controller.POST);
-  app.put("/:type(people,places)/:id", controller.PUT);
-  app.delete("/:type(people,places)/:id", controller.DELETE);
+  app.get("/:type(people|places)", controller.GET);
+  app.get("/:type(people|places)/:id", controller.GET);
+  app.post("/:type(people|places)", controller.POST);
+  app.put("/:type(people|places)/:id", controller.PUT);
+  app.delete("/:type(people|places)/:id", controller.DELETE);
   
   app.listen(3000);
   ```
