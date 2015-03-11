@@ -19,7 +19,7 @@ Note: This branch supports the "rc1" version of JSON API, which is out of date w
   };
  
   var registry = new API.ResourceTypeRegistry();
-  var controller = new API.controllers.Base(Registry);
+  var controller = new API.controllers.Base(registry);
   var adapter = new API.adapters.Mongoose(models);
   
   registry.type("people", {
