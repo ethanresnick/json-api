@@ -1,7 +1,7 @@
 require! {
   Q:\q, \mongoose, prelude:\prelude-ls, defaultInflector: 'pluralize',
-  \../types/Resource, \../types/Collection, \../types/ErrorResource,
-  \../util/advice, \../util/utils
+  \../types/Resource, \../types/Collection, \../types/APIError,
+  \../util/utils
 }
 
 class MongooseAdapter
@@ -304,25 +304,29 @@ class MongooseAdapter
     if err.errors?
       errors = [];
       for key, thisError of err.errors
-        generatedError = {}
-          ..[\status] = if err.name is "ValidationError" then 400 else (thisError.status || 500)
-          ..[\title] = thisError.message
-          ..[\path] = thisError.path if thisError.path?
-
-        errors.push(new ErrorResource(null, generatedError))
+        errors.push(
+          new APIError(
+            if err.name is "ValidationError" then 400 else (thisError.status || 500), 
+            null, 
+            thisError.message, 
+            null, 
+            null, 
+            if thisError.path? then [thisError.path] else null
+          )
+        )
 
       new Collection(errors, null, "errors")
 
     # allow the user to signal that their specific error message should be used.
     else if err.isJSONAPIDisplayReady
-      new ErrorResource(null, {title: err.message, status: err.status || 500})
+      new APIError(err.status || 500, null, err.message)
     
     # while still allowing us to issue something generic for most mongoose errors.
     else
-      new ErrorResource(null, {
-        "status": 400,
-        "title": "An error occurred while trying to find, create, or modify the requested resource(s)."
-      })
+      new APIError(
+        400, null, 
+        "An error occurred while trying to find, create, or modify the requested resource(s)."
+      );
 
   /**
    * @param docs The docs to turn into a resource or collection
@@ -332,9 +336,7 @@ class MongooseAdapter
   @docsToResourceOrCollection = (docs, type, pluralize) ->
     # if docs is an empty array, we don't 404: https://github.com/json-api/json-api/issues/101
     if !docs 
-      return new ErrorResource(null, {
-        status: 404, title:"No matching resource found."
-      })
+      return new APIError(404, null, "No matching resource found.")
 
     makeCollection = docs instanceof Array
     docs = [docs] if !makeCollection

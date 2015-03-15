@@ -1,6 +1,6 @@
 require! {
   Q:\q, 'mongoose', 'body-parser', templating:\url-template,
-  '../types/Document', '../types/Collection', '../types/ErrorResource'
+  '../types/Document', '../types/Collection', '../types/APIError'
   '../util/utils', '../config'
 }
 
