@@ -1,6 +1,6 @@
 require! {
   \mocha, \sinon \chai, 'body-parser', Q:\q, \supertest, \express,
-  BaseController:\../../lib/controllers/Base, \../../lib/types/ErrorResource, \../../lib/types/Collection, \../../lib/ResourceTypeRegistry
+  BaseController:\../../lib/controllers/Base, \../../lib/types/APIError, \../../lib/types/Collection, \../../lib/ResourceTypeRegistry
 }
 
 expect = chai.expect
