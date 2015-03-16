@@ -14,17 +14,18 @@ export default class ResponseContext extends BaseContext {
     // we render them instead of a standard document.
     this.errors = [];
 
-    // The response's primary data.
-    this.primary = null
+    // The response's primary data. Starts at 0 because that's an invalid
+    // value, allowing us to detect along the chain whether it's been set. 
+    this.primary = 0;
 
     // The response's included resources.
-    this.included = null;
+    this.included = 0;
 
     // The response document's top-level links.
-    this.links = null;
+    this.links = 0;
 
     // The response document's top-level meta information.
-    this.meta = null;
+    this.meta = 0;
 
     return super(initialValues);
   }

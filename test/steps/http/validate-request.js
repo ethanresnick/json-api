@@ -5,7 +5,7 @@ import Q from "q"
 import bodyParser from "body-parser"
 import express from "express"
 import supertest from "supertest"
-import * as requestValidators from "../../../lib/steps/http/validate-request"
+import * as requestValidators from "../../../src/steps/http/validate-request"
 
 var expect = chai.expect
 
@@ -101,5 +101,5 @@ describe("Request Validation functions", () => {
         (err) => { if(err.status==="415") { done(); } }
       );
     });
-  })
+  });
 });

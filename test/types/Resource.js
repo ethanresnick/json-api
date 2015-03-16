@@ -1,7 +1,7 @@
 import mocha from "mocha"
 import sinon from "sinon"
 import chai from "chai"
-import Resource from "../../lib/types/Resource"
+import Resource from "../../src/types/Resource"
 
 var expect = chai.expect
 

@@ -1,7 +1,7 @@
 import mocha from "mocha"
 import sinon from "sinon"
 import chai from "chai"
-import APIError from "../../lib/types/APIError"
+import APIError from "../../src/types/APIError"
 
 var expect = chai.expect
 

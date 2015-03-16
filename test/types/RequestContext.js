@@ -1,7 +1,7 @@
 import mocha from "mocha"
 import sinon from "sinon"
 import chai from "chai"
-import RequestContext from "../../lib/types/Context/RequestContext"
+import RequestContext from "../../src/types/Context/RequestContext"
 
 var expect = chai.expect;
 

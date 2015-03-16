@@ -1,9 +1,9 @@
 import mocha from "mocha"
 import sinon from "sinon"
 import chai from "chai"
-import * as utils from "../../lib/util/utils"
-import Resource from "../../lib/types/Resource"
-import Collection from "../../lib/types/Collection"
+import * as utils from "../../src/util/utils"
+import Resource from "../../src/types/Resource"
+import Collection from "../../src/types/Collection"
 
 var expect = chai.expect
 
