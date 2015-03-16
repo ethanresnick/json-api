@@ -31,8 +31,7 @@
     "gulp": "^3.8.6",
     "mocha": "~1.20.0",
     "supertest": "^0.13.0",
-    "sinon": "1.10.2",
-    "sinon-chai": "2.5.x"
+    "sinon": "1.10.2"
   },
   "peerDependencies": {
     "mongoose": ">= 3.6 < 4"
