@@ -37,13 +37,14 @@ describe("Resource type", () => {
       expect(r.id==="19339").to.be.true
     })
 
-    it("should reject non-object, non-empty attrs", () => {
+    it("should reject non-object attrs", () => {
       var valid  = new Resource("type", "id")
       var valid2 = new Resource("pyt", "id", {})
       expect(() => new Resource("type", "id", ["attrs"])).to.throw(/must.*object/)
       expect(() => new Resource("type", "id", "atts")).to.throw(/must.*object/)
-      expect(() => valid.attrs = "").to.throw(Error)
-      expect(() => valid.attrs = "ias").to.throw(/must.*object/)
+      expect(() => valid.attrs = "").to.throw(/must.*object/);
+      expect(() => valid.attrs = undefined).to.throw(/must.*object/);
+      expect(() => valid.attrs = "ias").to.throw(/must.*object/);
     });
 
     it("should reject reserved keys as attrs", () => {
