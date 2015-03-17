@@ -1,7 +1,72 @@
-require! [\mocha, \sinon \chai, \../../lib/types/Resource]
-expect = chai.expect
-it2 = it # a hack for livescript
+import mocha from "mocha"
+import sinon from "sinon"
+import chai from "chai"
+import Resource from "../../src/types/Resource"
+import Collection from "../../src/types/Collection"
+import Document from "../../src/types/Document"
 
+var expect = chai.expect;
+
+describe("Document class", () => {
+  describe("resourceFromJSON", () => {
+    it("should return a resource object", () => {
+      expect(
+        Document.resourceFromJSON({"type": "tests", "id":"1"})
+      ).to.be.instanceof(Resource);
+    });
+
+    it("should load up the id, type, and attributes", () => {
+      var json = {"id": "21", "type": "people", "name": "bob", "isBob":true};
+      var resource = Document.resourceFromJSON(json);
+
+      expect(resource.id).to.equal("21");
+      expect(resource.type).to.equal("people");
+      expect(resource.attrs).to.deep.equal({"name": "bob", "isBob": true});
+    });
+
+    it.skip("should create LinkObjects for each link", () => {
+      var parents = [{"type": "people", "id": "1"}, {"type": "people", "id": "2"}];
+      console.log('see https://github.com/json-api/json-api/issues/482');
+      /* var json = {
+        "id": "3", "type": "people", "name": "Ethan", 
+        "links": {
+          "parents": { "linkage": parents }
+        }
+      };*/
+    });
+  });
+
+  describe.skip("linkObjectFromJSON", () => {
+    it.skip("should read in the incoming json correctly", () => {
+      console.log('see https://github.com/json-api/json-api/issues/482');
+    })
+  })
+
+  describe("Rendering a document", () => {
+    var person = new Resource("people", "31", {"name": "mark"});
+    var person2 = new Resource("people", "32", {"name": "ethan"});
+    var people = new Collection([person]);
+
+    it("primary data should be keyed under data", () => {
+      expect((new Document(person)).get().data).to.deep.equal({
+        "id":"31", "type": "people", "name": "mark"
+      });
+    });
+
+    it("resource collections should be represented as arrays", () => {
+      expect((new Document(people)).get().data).to.deep.equal([{
+        "id":"31", "type": "people", "name": "mark"
+      }]);
+    });
+
+    it("should represent includes as an array under `included`", () => {
+      expect((new Document(people, [person2])).get().included)
+        .to.deep.equal([{"id": "32", "type": "people", "name": "ethan"}]);
+    });
+
+  });
+
+});
 /* TEST CASES
 0 resources | toOne or toMany relationship, included or referenced by href
   - { type:[] }
