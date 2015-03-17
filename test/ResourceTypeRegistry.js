@@ -4,7 +4,7 @@ import chai from "chai"
 import ResourceTypeRegistry from "../src/ResourceTypeRegistry"
 
 var expect = chai.expect;
-var registry = {}
+var registry = {};
 var makeGetterSetterTest = function(newThing, type, methodName, deep) {
   return function() {
     expect(registry[methodName](type)).to.be.undefined;
