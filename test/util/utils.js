@@ -89,4 +89,13 @@ describe("Utility methods", () => {
       expect(utils.arrayUnique([r, r])).to.have.length(1);
     });
   });
+
+  describe("arrayValuesMatch", () => {
+    it.skip("should work");
+  })
+
+  describe("objectIsEmpty", () => {
+    it.skip("should return false on an object with direct properties")
+    it.skip("should return true if the object only has prototype properties")
+  })
 })

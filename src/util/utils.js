@@ -16,14 +16,14 @@ export function deleteNested(path, object) {
     if(container.hasOwnProperty(lastPart)) {
       delete container[lastPart]
       return true;
-    } 
+    }
     else {
       throw new Error("The last property in the path didn't exist on the object.");
     }
   }
 
   catch(error) {
-    console.log("deleteNested failed with path: " + path + ", on oject: " + JSON.stringify(object));
+    console.log("deleteNested failed with path: " + path + ", on object: " + JSON.stringify(object));
     return false;
   }
 }
@@ -56,4 +56,12 @@ export function arrayUnique(array) {
 
 export function arrayValuesMatch(array1, array2) {
   return array1.length == array2.length && array1.sort().join() == array2.sort().join()
+}
+
+export function objectIsEmpty(obj) {
+  var hasOwnProperty = Object.prototype.hasOwnProperty;
+  for (var key in obj) {
+    if (hasOwnProperty.call(obj, key)) return false;
+  }
+  return true;
 }
