@@ -43,6 +43,9 @@ export default class RequestContext extends BaseContext {
     // Necessary for creating and updating our resources.
     this.primary = null;
 
+    // Query parameters that might influence the request.
+    this.queryParams = {};
+
     return super(initialValues);
   }
 
@@ -56,6 +59,8 @@ export default class RequestContext extends BaseContext {
     this.idOrIds      = req.params.id || req.params.idOrLabel;
     this.type         = req.params.type;
     this.relationship = req.params.relationship;
+
+    this.queryParams  = req.query; 
 
     if(typeParsed.parameters.ext) {
       this.ext = typeParsed.parameters.ext.split(',')
