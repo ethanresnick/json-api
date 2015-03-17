@@ -22,7 +22,8 @@
     "prelude-ls": "^1.1.1",
     "q": "^1.0.1",
     "url-template": "^2.0.4",
-    "type-is": "1.6.x"
+    "type-is": "1.6.x",
+    "negotiator": "0.5.x"
   },
   "devDependencies": {
     "babel": "^4.7.9",
