@@ -54,7 +54,7 @@ describe("Utility methods", () => {
       expect(utils.mapResources(resources[0], mapper)).to.equal("43");
     });
   });
-  
+
   describe.skip("mapArrayOrVal", () => {
     it("should call the map function on a single value");
     it("should call the map function on each value in an array");
@@ -64,7 +64,7 @@ describe("Utility methods", () => {
   describe.skip("forEachArrayOrVal", () => {
     it("should call the each function on a single value");
     it("should call the each function on each value in an array");
-    it("should return void");    
+    it("should return void");
   });
 
   describe("arrayUnique", () => {
@@ -97,5 +97,36 @@ describe("Utility methods", () => {
   describe("objectIsEmpty", () => {
     it.skip("should return false on an object with direct properties")
     it.skip("should return true if the object only has prototype properties")
-  })
-})
+  });
+
+  describe("ValueObject", () => {
+    describe("the constructor function it produces", () => {
+      let WrappedConstructor = ValueObject(function() {
+        this.allowedProp = null;
+        Object.defineProperty(this, "otherValidProp", {});
+      });
+
+      it("should use provided initial values", () => {
+        let it = new WrappedConstructor({allowedProp:"14"});
+        expect(it.allowedProp).to.equal("14");
+      });
+
+      it("should ignore initial values for unknown property names", () => {
+        let it = new WrappedConstructor({notAValidProperty:"14"});
+        expect(it.notAValidProperty).to.be.undefined;
+      });
+
+      it("should prevent adding new properties to the object", () => {
+        let it = new WrappedConstructor();
+        expect(() => it.notAValidContextProperty = 4).to.throw(TypeError);
+      });
+
+      it("should allow the values of existing properties to change", () => {
+        let it = new WrappedConstructor();
+        it.allowedProp = 9;
+        it.otherValidProp = 7; //check Object.defineProperty props too.
+        expect(it.allowedProp).to.equal(9);
+        expect(it.otherValidProp).to.equal(7);
+      });
+    })
+  });
