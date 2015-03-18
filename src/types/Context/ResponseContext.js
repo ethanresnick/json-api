@@ -1,5 +1,7 @@
 import BaseContext from "./BaseContext"
 
+let propDesc = {writable: true, enumerable: true};
+
 export default class ResponseContext extends BaseContext {
   constructor(initialValues) {
     // The JSON-API extensions used to formulate the response,
@@ -7,25 +9,32 @@ export default class ResponseContext extends BaseContext {
     // validation of the client's `Accept` header.
     this.ext = [];
 
-    // Whether the response should have a body. If not, we 204.
-    this.hasBody = null;    
-
     // The response's errors. If it has some,
     // we render them instead of a standard document.
     this.errors = [];
 
-    // The response's primary data. Starts at 0 because that's an invalid
-    // value, allowing us to detect along the chain whether it's been set. 
-    this.primary = 0;
+    // The response's content type.
+    this.contentType = null;
+
+    // The response's status.
+    this.status = null;
+
+    // The JSON for the response body.
+    this.body = null;
+
+    // The response's primary data. Have to use
+    // Object.defineProperty to default it to undefined
+    // while allowing us to set it post seal().
+    Object.defineProperty(this, "primary", propDesc);
 
     // The response's included resources.
-    this.included = 0;
+    Object.defineProperty(this, "included", propDesc);
 
     // The response document's top-level links.
-    this.links = 0;
+    Object.defineProperty(this, "links", propDesc);
 
     // The response document's top-level meta information.
-    this.meta = 0;
+    Object.defineProperty(this, "meta", propDesc);
 
     return super(initialValues);
   }
