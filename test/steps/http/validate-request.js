@@ -15,22 +15,29 @@ describe("Request Validation functions", () => {
       expect(Q.isPromise(requestValidators.checkBodyExistence({}))).to.be.true;
     });
 
-    it("should return a rejected promise if an expected body is missing", (done) => {
-      var contextMock = {hasBody: false, needsBody: true};
+    it("should return a rejected promise if a POST request is missing a body", (done) => {
+      var contextMock = {hasBody: false, method: "post"};
+      requestValidators.checkBodyExistence(contextMock).then(() => {
+        done(new Error("This fulfillment handler shoudn't run"))
+      }, () => {done()})
+    });
+
+    it("should return a rejected promise if a PATCH request is missing a body", (done) => {
+      var contextMock = {hasBody: false, method: "patch"};
       requestValidators.checkBodyExistence(contextMock).then(() => {
         done(new Error("This fulfillment handler shoudn't run"))
       }, () => {done()})
     });
 
     it("should return a rejected promise if an unexpected body is present", (done) => {
-      var contextMock = {hasBody: true, needsBody: false};
+      var contextMock = {hasBody: true, method: "get"};
       requestValidators.checkBodyExistence(contextMock).then(() => {
         done(new Error("This fulfillment handler shoudn't run"))
       }, () => {done()})
     });
 
     it("should resolve the promise successfully when expected body is present", (done) => {
-      var contextMock = {hasBody: true, needsBody: true};
+      var contextMock = {hasBody: true, method: "patch"};
       requestValidators.checkBodyExistence(contextMock).then(done);
     });
 
@@ -39,33 +46,22 @@ describe("Request Validation functions", () => {
       requestValidators.checkBodyExistence(contextMock).then(done);
     });
   });
-  
-  describe("checkBodyParsesAsJSON", () => {
-    var app = express();
-    app.use(function(req, res, next) {
-      requestValidators.checkBodyParsesAsJSON(req, res, bodyParser).then(
-        () => { res.json(req.body); },
-        (err) => { res.status(Number(err.status)).send("Error"); }
+
+  describe("checkBodyIsValidJSONAPI", () => {
+    it("should fulfill when the input is an object with data", (done) => {
+      requestValidators.checkBodyIsValidJSONAPI({"data": null}).then(done);
+    });
+
+    it("should reject the promise for all other inputs", (done) => {
+      requestValidators.checkBodyIsValidJSONAPI([]).then(
+        () => { done(new Error("Should reject array bodies.")) },
+        () => {
+          requestValidators.checkBodyIsValidJSONAPI("string").then(
+            () => { done(new Error("Should reject string bodies.")); },
+            () => { done(); }
+          )
+        }
       );
-    });
-
-    it("should try to parse all bodies, no matter the content-type", (done) => {
-      var request = supertest(app);
-      request
-        .post('/').set('Content-Type', 'application/xml').send('{"json":true}')
-        .expect(200, '{"json":true}', done);
-    });
-
-    it("should reject the promise with a 400 error for an invalid json body", (done) => {
-      var request = supertest(app);
-      request.post('/').send("unquoted:false}").expect(400, done);
-    });
-
-    it("should resolve the promise successfully for a valid body", (done) => {
-      var request = supertest(app);
-      request
-        .post('/').send('{"json":[]}')
-        .expect(200, '{"json":[]}', done);
     });
   });
 
