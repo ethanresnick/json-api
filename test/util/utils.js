@@ -101,18 +101,18 @@ describe("Utility methods", () => {
 
   describe("ValueObject", () => {
     describe("the constructor function it produces", () => {
-      let WrappedConstructor = ValueObject(function() {
+      let WrappedConstructor = utils.ValueObject(function() {
         this.allowedProp = null;
-        Object.defineProperty(this, "otherValidProp", {});
+        Object.defineProperty(this, "otherValidProp", {writable:true,enumerable:true});
       });
 
       it("should use provided initial values", () => {
-        let it = new WrappedConstructor({allowedProp:"14"});
+        let it = new WrappedConstructor({allowedProp: "14"});
         expect(it.allowedProp).to.equal("14");
       });
 
       it("should ignore initial values for unknown property names", () => {
-        let it = new WrappedConstructor({notAValidProperty:"14"});
+        let it = new WrappedConstructor({notAValidProperty: "14"});
         expect(it.notAValidProperty).to.be.undefined;
       });
 
@@ -128,5 +128,6 @@ describe("Utility methods", () => {
         expect(it.allowedProp).to.equal(9);
         expect(it.otherValidProp).to.equal(7);
       });
-    })
+    });
   });
+});
