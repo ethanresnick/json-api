@@ -1,37 +1,42 @@
 import polyfill from "babel/polyfill"
 
+let nonEnumerable = {writable: true, enumerable: false};
+
 export default class APIError extends Error {
   /*eslint-disable no-unused-vars */
   constructor(status, code, title, detail, links, paths) {
+    // Hack around lack of proxy support and default non-enumerability
+    // of class accessor properties, while still giving us validation.
+    Object.defineProperty(this, "_status", nonEnumerable);
+    Object.defineProperty(this, "_code", nonEnumerable);
+    Object.defineProperty(this, "status", {
+      enumerable: true,
+      get: () => this._status,
+      set: (value) => {
+        if(typeof value !== "undefined" && value !== null) {
+          this._status = String(value).toString();
+        }
+        else {
+          this._status = value;
+        }
+      }
+    });
+    Object.defineProperty(this, "code", {
+      enumerable: true,
+      get: () => this._code,
+      set: (value) => {
+        if(typeof value !== "undefined" && value !== null) {
+          this._code = String(value).toString();
+        }
+        else {
+          this._code = value;
+        }
+      }
+    });
+
     [this.status, this.code, this.title, this.detail, this.links, this.paths] = Array.from(arguments);
   }
   /*eslint-enable */
-
-  get status() {
-    return this._status;
-  }
-
-  set status(status) {
-    if(typeof status !== "undefined" && status !== null) {
-      this._status = String(status).toString();
-    }
-    else {
-      this._status = status;
-    }
-  }
-
-  get code() {
-    return this._code;
-  }
-
-  set code(code) {
-    if(typeof code !== "undefined" && code !== null) {
-      this._code = String(code).toString();
-    }
-    else {
-      this._code = code;
-    }
-  }
 
   /**
    * Creates a JSON-API Compliant Error Object from a JS Error object
