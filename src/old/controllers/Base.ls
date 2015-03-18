@@ -1,47 +1,21 @@
 require! {
-  Q:\q, 'mongoose', 'body-parser', templating:\url-template,
+  Q:\q, 'mongoose', templating:\url-template,
   '../types/Document', '../types/Collection', '../types/APIError'
   '../util/utils', '../config'
 }
 
 class BaseController
   (@registry) ->
-    @jsonBodyParser = bodyParser.json({type: ['json', config.specMediaType]})
 
   GET: (req, res, next) ->
-    if not req.accepts([config.specMediaType, 'application/json'])
-      res.status(406)
-      return res.send()
-
-    type = req.params.type
-    adapter = @registry.adapter(type)
-    model = adapter.getModel(adapter@@getModelName(type))
-
-    sorts  = req.query.sort.split(',').map(decodeURIComponent) if req.query.sort?
-    filters = req.query.filter if req.query.filter?
-    fields = {[k, fields.split(',').map(decodeURIComponent)] for k, fields of req.query.fields} if req.query.fields?
-
-    if req.query.include?
-      includes = req.query.include.split(',').map(decodeURIComponent)
-    else
-      includes = @registry.defaultIncludes(type)
-
-    @_readIds(req, @registry.labelToIdOrIds(type), model).then((idOrIds) ~>
-      # PROCESS QUERY RESULTS AND RESPOND.
-      adapter.find(type, idOrIds, filters, fields, sorts, includes)
-        .then((resources) ~>
-          @sendResources(req, res, resources[0], resources[1])
-        )
+    adapter.find(type, idOrIds, filters, fields, sorts, includes).then((resources) ~>
+      @sendResources(req, res, resources[0], resources[1])
     ).catch((err) ~>
       er = ErrorResource.fromError(err)
       @sendResources(req, res, er)
     ).done();
 
   POST: (req, res, next) ->
-    # below, explicitly checking for false to differentiate from null,
-    # which means the content-type may match, but the body's empty.
-    return next() if req.is('application/vnd.api+json') == false
-
     # here, we get body, which is the value of parsing the json
     # (including possibly null for an empty body).
     @@getBodyResources(req, @jsonBodyParser).then((resources) ~>
@@ -66,12 +40,6 @@ class BaseController
     ).done();
 
   PUT: (req, res, next) ->
-    return next() if req.is('application/vnd.api+json') == false
-
-    type = req.params.type
-    adapter = @registry.adapter(type)
-    model = adapter.getModel(adapter@@getModelName(type))
-
     Q.all([
       @_readIds(req, @registry.labelToIdOrIds(type), model), 
       @@getBodyResources(req, @jsonBodyParser)
@@ -124,12 +92,7 @@ class BaseController
     ).done()
 
   sendResources: (req, res, primaryResources, extraResources, meta) ->
-    if primaryResources.type == "errors"
-      if primaryResources instanceof Collection
-        status = @@pickStatus(primaryResources.resources.map(-> Number(it.attrs.status)));
-      else
-        status = primaryResources.attrs.status
-    else
+    if primaryResources.type != "errors"
       status = res.statusCode || 200 # don't override status if already set.
 
     primaryResources = Q(@~_transformRecursive(primaryResources, req, res, 'afterQuery'))
@@ -139,7 +102,6 @@ class BaseController
       extraResources
     )
     Q.all([primaryResources, extraResources]).spread((primary, extra) ~>
-      res.set('Content-Type', 'application/vnd.api+json; supported-ext=bulk');
       res.status(Number(status)).json((new Document(primary, extra, meta, @registry.urlTemplates!)).get!)
     ).done()
 
@@ -184,85 +146,6 @@ class BaseController
       resource.links[path] = @_transformRecursive(resource.links[path], req, res, transformMode)
 
     resource
-
-  _readIds: (req, mapper, model) ->
-    Q.Promise((resolve, reject) ->
-      if req.params.id?
-        idOrIdsRaw = req.params.id.split(",").map(decodeURIComponent)
-        idOrIdsPromise = if typeof mapper is "function"
-          # partially apply mapper; bind second, third args; it'll get id as first.
-          then Q.all(idOrIdsRaw.map(mapper(_, model, req))) 
-          else Q(idOrIdsRaw)
-
-        
-        idOrIdsPromise.then((idOrIds) ->
-          # flatten idOrIds array, since each label can produce an array.
-          # also, strip undefined, which allows the mapper to say that  
-          # "no ids match this label" by retturning undefined.
-          idOrIds .= reduce(((a, b) -> 
-            if typeof b is "undefined" then a else a.concat(b)
-          ), [])
-          resolve(if idOrIds.length == 1 then idOrIds[0] else idOrIds)
-        ).catch((err) -> reject(err))
-
-      else
-        resolve(void)
-    )
-
-  # Takes an array of error status codes and returns
-  # the code that best represents the collection.
-  @pickStatus = (errStatuses) ->
-    errStatuses[0]
-
-  # Returns a promise that is fulfilled with the value of the request body, 
-  # parsed as JSON. (If the body isn't parsed when this is called, it will
-  # be parsed first and saved on req.body). If the promise is rejected, it
-  # is with an ErrorResource desrcribing the error that occurred while parsing.
-  @getBodyResources = (req, parser) ->
-    _makeResources = (parsedBody) ->
-      type = req.params.type
-      resources = parsedBody && (parsedBody[type] || parsedBody.data)
-
-      if !resources or (resources instanceof Array and not resources.length)
-        throw new ErrorResource(null, {
-          title: "Request body must contain a resource or an array of resources.",
-          detail: "This resource or array of resources should be stored at the top-level 
-                   document's `" + type + "` or `data` key.",
-          status: 400
-        })
-      Document.primaryResourcesfromJSON(parsedBody)
-
-    # do body parsing (and throw ErrorResources if there's a problem)
-    if typeof req.body is not "object"
-      # don't ever register the middleware, just call it as a function.
-      Q.nfapply(parser, [req, {}]).then((-> _makeResources(req.body)), (err) ->
-        switch err.message
-        | /encoding unsupported/i =>
-            # here, we're not using ErrorResource.fromError only to keep the
-            # message from getting assigned to the error resource's detail
-            # property, as the message given is generic and better for a title.
-            throw new ErrorResource(null {
-              title: err.message,
-              status: err.status  
-            })
-        # This must come before the invalid json case, 
-        # as its message also matches that
-        | /empty body/i => 
-            req.body = null
-            _makeResources(req.body)
-        | /invalid json/i => 
-            throw new ErrorResource(null, {
-              title: "Request contains invalid JSON.", 
-              status: 400
-            })
-        | otherwise => 
-          # an error thrown from JSON.parse
-          if err instanceof SyntaxError
-            err.title = "Request contains invalid JSON."
-          throw ErrorResource.fromError(err)  
-      );
-    else
-      Q(_makeResources(req.body))
 
 #todo: 
 # have a GET for multiple resources 404 if some not found?
