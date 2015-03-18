@@ -6,7 +6,7 @@ LINT_CMD = node_modules/.bin/eslint
 SRC = src/
 LIB = lib/
 DIST = build/
-BUILD = test/
+TEST = test/
 
 .PHONY: build lint compile-lib compile-dev test
 
