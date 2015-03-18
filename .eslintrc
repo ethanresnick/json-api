@@ -21,6 +21,7 @@
     "no-var": 1
   },
   "env": {
-    "node": true
+    "node": true,
+    "mocha": true
   }
 }
