@@ -1,4 +1,4 @@
-import {ValueObject} from "../util/utils"
+import {ValueObject} from "../../util/utils"
 
 let propDesc = {writable: true, enumerable: true};
 
