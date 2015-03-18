@@ -1,9 +1,9 @@
-import BaseContext from './BaseContext'
+import BaseContext from "./BaseContext"
 
 export default class ResponseContext extends BaseContext {
   constructor(initialValues) {
-    // The JSON-API extensions used to formulate the response, 
-    // which affects the final the Content-Type header and our 
+    // The JSON-API extensions used to formulate the response,
+    // which affects the final the Content-Type header and our
     // validation of the client's `Accept` header.
     this.ext = [];
 
