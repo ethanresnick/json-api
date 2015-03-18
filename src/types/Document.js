@@ -1,16 +1,17 @@
-import LinkObject from './LinkObject'
-import Resource from './Resource'
-import Collection from './Collection'
-import {objectIsEmpty, arrayUnique, mapResources} from '../util/utils'
+import LinkObject from "./LinkObject"
+import Resource from "./Resource"
+import Collection from "./Collection"
+import {objectIsEmpty, arrayUnique, mapResources} from "../util/utils"
 
 export default class Document {
-  constructor(primary, included = [], links, meta, urlTemplates) {
     [this.primary, this.included, this.links, this.meta, this.urlTemplates] = 
       [primary, included, links, meta, this.urlTemplates];
+  /*eslint-disable no-unused-vars */
   }
+  /*eslint-enable */
 
   get() {
-    var doc = {};
+    let doc = {};
 
     if(this.meta && !objectIsEmpty(this.meta)) doc.meta = this.meta;
 
@@ -19,7 +20,7 @@ export default class Document {
 
     if(this.included && Array.isArray(this.included)) {
       doc.included = arrayUnique(this.included).map((resource) => {
-        return resourceToJSON(resource, this.urlTemplates)
+        return resourceToJSON(resource, this.urlTemplates);
       });
     }
 
@@ -29,7 +30,7 @@ export default class Document {
 
     else if(this.primary instanceof Collection || this.primary instanceof Resource) {
       doc.data = mapResources(this.primary, (resource) => {
-        return resourceToJSON(resource, this.urlTemplates)
+        return resourceToJSON(resource, this.urlTemplates);
       });
     }
 
@@ -46,13 +47,13 @@ export default class Document {
 
   static resourceFromJSON(json) {
     // save and then remove the non-attrs
-    var id    = json.id; delete json.id;
-    var type  = json.type; delete json.type;
-    var links = json.links || {}; delete json.links;
-    var meta  = json.meta; delete json.meta;
+    let id    = json.id; delete json.id;
+    let type  = json.type; delete json.type;
+    let links = json.links || {}; delete json.links;
+    let meta  = json.meta; delete json.meta;
 
     // attrs are all the fields that are left.
-    var attrs = json;
+    let attrs = json;
 
     //build LinkObjects
     for(let key in links) {
@@ -66,11 +67,11 @@ export default class Document {
 function linkObjectToJSON(linkObject, urlTemplates) {
   return {
     "linkage": linkObject.linkage
-  }
+  };
 }
 
 function resourceToJSON(resource, urlTemplates) {
-  var json = resource.attrs;
+  let json = resource.attrs;
   json.id = resource.id;
   json.type = resource.type;
 
@@ -101,11 +102,11 @@ function resourceToJSON(resource, urlTemplates) {
     res.links[config.resourceUrlKey] = @urlFor(res.type, config.resourceUrlKey, res.id, urlTempParams)
 
   urlFor: (type, path, referencedIdOrIds, extraParams) ->
-    if not @_urlTemplatesParsed[type + '.' + path]
-      throw new Error("Missing url template for " + type + '.' + path);
+    if not @_urlTemplatesParsed[type + "." + path]
+      throw new Error("Missing url template for " + type + "." + path);
 
-    params = flat.flatten({[(type + '.' + k), v] for k, v of extraParams}, {safe:true})
-    params[type + '.' + path] = referencedIdOrIds;
+    params = flat.flatten({[(type + "." + k), v] for k, v of extraParams}, {safe:true})
+    params[type + "." + path] = referencedIdOrIds;
 
-    @_urlTemplatesParsed[type + '.' + path].expand(params)
+    @_urlTemplatesParsed[type + "." + path].expand(params)
 */

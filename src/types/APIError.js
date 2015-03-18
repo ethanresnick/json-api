@@ -1,9 +1,11 @@
 import polyfill from "babel/polyfill"
 
 export default class APIError extends Error {
+  /*eslint-disable no-unused-vars */
   constructor(status, code, title, detail, links, paths) {
     [this.status, this.code, this.title, this.detail, this.links, this.paths] = Array.from(arguments);
   }
+  /*eslint-enable */
 
   get status() {
     return this._status;
@@ -14,7 +16,7 @@ export default class APIError extends Error {
       this._status = String(status).toString();
     }
     else {
-     this._status = status;
+      this._status = status;
     }
   }
 
@@ -27,14 +29,14 @@ export default class APIError extends Error {
       this._code = String(code).toString();
     }
     else {
-     this._code = code;
+      this._code = code;
     }
   }
 
   /**
    * Creates a JSON-API Compliant Error Object from a JS Error object
    *
-   * Note: the spec allows error objects to have arbitrary properties 
+   * Note: the spec allows error objects to have arbitrary properties
    * beyond the ones for which it defines a meaning (ie. id, href, code,
    * status, path, etc.), but this function strips out all such properties
    * in order to offer a neater result (as JS error objects often contain

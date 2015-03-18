@@ -1,8 +1,8 @@
-import BaseContext from './BaseContext'
+import BaseContext from "./BaseContext"
 
 export default class RequestContext extends BaseContext {
   constructor(initialValues) {
-    // Whether the request has a body, 
+    // Whether the request has a body,
     // in which case we'll need to validate the Content-Type.
     this.hasBody = null;
 
@@ -21,14 +21,14 @@ export default class RequestContext extends BaseContext {
     this.allowLabel = false;
 
     // The id provided in the request's url, optionally after treating that
-    // id as a label and mapping it to one or more entity ids. Note also: 
-    // the request could be something like /people/1/author, so the id(s) 
+    // id as a label and mapping it to one or more entity ids. Note also:
+    // the request could be something like /people/1/author, so the id(s)
     // stored here may not be the id(s) of the requested resource.
     this.idOrIds = null;
 
-    // The type provided in the request's url. As above, requests like 
-    // /people/1/author imply that the type stored here may not be that 
-    // of the returned resourses. 
+    // The type provided in the request's url. As above, requests like
+    // /people/1/author imply that the type stored here may not be that
+    // of the returned resourses.
     this.type = null;
 
     // The relationship name provided in the request's url. This is the
@@ -39,7 +39,7 @@ export default class RequestContext extends BaseContext {
     // resource object or collection. This affects how incoming data is parsed.
     this.aboutLinkObject = null;
 
-    // Any primary data included in the request's body. 
+    // Any primary data included in the request's body.
     // Necessary for creating and updating our resources.
     this.primary = null;
 
