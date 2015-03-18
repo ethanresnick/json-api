@@ -20,6 +20,7 @@ describe("RequestContext type", () => {
     it("should allow the values of existing properties to change", () => {
       var context = new RequestContext();
       context.idOrIds = [1,3];
+      context.body = {}; //check Object.defineProperty props too.
     });
 
     it("should prevent adding new properties to the object", () => {
