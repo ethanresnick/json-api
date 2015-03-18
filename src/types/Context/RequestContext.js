@@ -58,25 +58,4 @@ class RequestContext {
   }
 }
 
-  populateFromRequest(req, typeIs, contentType) {
-    var typeParsed = contentType.parse(req);
-
-    this.hasBody      = typeIs.hasBody(req)
-    this.contentType  = typeParsed.type;
-
-    this.allowLabel   = req.params.idOrLabel && !req.params.id
-    this.idOrIds      = req.params.id || req.params.idOrLabel;
-    this.type         = req.params.type;
-    this.relationship = req.params.relationship;
-
-    this.queryParams  = req.query; 
-
-    if(typeParsed.parameters.ext) {
-      this.ext = typeParsed.parameters.ext.split(',')
-    }
-
-    if(this.needsBody !== false && (req.method == "post" || req.method == "patch")) {
-      this.needsBody = true;
-    }
-  }
-}export default ValueObject(RequestContext);
+export default ValueObject(RequestContext);
