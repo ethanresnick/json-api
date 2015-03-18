@@ -1,5 +1,5 @@
-import Q from 'q'
-import APIError from '../../types/APIError'
+import Q from "q"
+import APIError from "../../types/APIError"
 
 export function checkBodyExistence(requestContext) {
   return Q.Promise(function(resolve, reject) {
@@ -49,23 +49,24 @@ export function checkBodyParsesAsJSON(req, res, bodyParser) {
 }
 
 export function checkContentType(requestContext, supportedExt) {
-  // From the spec: The value of the ext media type parameter... MUST 
+  // From the spec: The value of the ext media type parameter... MUST
   // be limited to a subset of the extensions supported by the server.
-  var invalidExt = requestContext.ext.filter((v) => supportedExt.indexOf(v) == -1);
+  let invalidExt = requestContext.ext.filter((v) => supportedExt.indexOf(v) === -1);
 
   return Q.Promise(function(resolve, reject) {
-    if(requestContext.contentType != 'application/vnd.api+json') {
-      let message = 
-        "The request's Content-Type must be application/vnd.api+json, optionally " + 
-        "including an ext parameter whose value is a comma-separated list of " + 
-        `supported extensions, which include: ${supportedExt.join(',')}.`
+    if(requestContext.contentType !== "application/vnd.api+json") {
+      let message =
+        "The request's Content-Type must be application/vnd.api+json, " +
+        "optionally including an ext parameter whose value is a comma-separated " +
+        `list of supported extensions, which include: ${supportedExt.join(",")}.`;
 
       reject(new APIError(415, null, message));
     }
     else if(invalidExt.length) {
-      let message = 
-        `You're requesting the following unsupported extensions: ${invalidExt.join(',')}. ` +
-        `The server supports only the extensions: ${supportedExt.join(',')}.`;
+      let message =
+        "You're requesting the following unsupported extensions: " +
+        `${invalidExt.join(",")}. The server supports only the extensions: ` +
+        `${supportedExt.join(",")}.`;
 
       reject(new APIError(415, null, message));
     }
