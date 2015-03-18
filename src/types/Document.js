@@ -1,12 +1,13 @@
 import LinkObject from "./LinkObject"
 import Resource from "./Resource"
 import Collection from "./Collection"
+import APIError from "./APIError"
 import {objectIsEmpty, arrayUnique, mapResources} from "../util/utils"
 
 export default class Document {
-    [this.primary, this.included, this.links, this.meta, this.urlTemplates] = 
-      [primary, included, links, meta, this.urlTemplates];
   /*eslint-disable no-unused-vars */
+  constructor(primaryOrErrors, included = [], meta, urlTemplates) {
+    [this.primaryOrErrors, this.included,  this.meta, this.urlTemplates] = Array.from(arguments);
   }
   /*eslint-enable */
 
@@ -16,7 +17,6 @@ export default class Document {
     if(this.meta && !objectIsEmpty(this.meta)) doc.meta = this.meta;
 
     // TODO: top-level links: self, related, etc.
-    if(this.links && !objectIsEmpty(this.links)) doc.links = this.links;
 
     if(this.included && Array.isArray(this.included)) {
       doc.included = arrayUnique(this.included).map((resource) => {
@@ -24,18 +24,22 @@ export default class Document {
       });
     }
 
-    if(this.primary instanceof LinkObject) {
-      doc.data = linkObjectToJSON(this.primary, this.urlTemplates);
-    }
-
-    else if(this.primary instanceof Collection || this.primary instanceof Resource) {
-      doc.data = mapResources(this.primary, (resource) => {
+    if(this.primaryOrErrors instanceof Collection || this.primaryOrErrors instanceof Resource) {
+      doc.data = mapResources(this.primaryOrErrors, (resource) => {
         return resourceToJSON(resource, this.urlTemplates);
       });
     }
 
+    else if(this.primaryOrErrors instanceof LinkObject) {
+      doc.data = linkObjectToJSON(this.primaryOrErrors, this.urlTemplates);
+    }
+
+    else if(Array.isArray(this.primaryOrErrors) && this.primaryOrErrors[0] instanceof Error) {
+      doc.errors = this.primaryOrErrors.map(errorToJSON);
+    }
+
     else {
-      doc.data = this.primary; // e.g. primary could be null.
+      doc.data = this.primaryOrErrors; // e.g. primary could be null.
     }
 
     return doc;
@@ -70,6 +74,7 @@ function linkObjectToJSON(linkObject, urlTemplates) {
   };
 }
 
+
 function resourceToJSON(resource, urlTemplates) {
   let json = resource.attrs;
   json.id = resource.id;
@@ -87,6 +92,16 @@ function resourceToJSON(resource, urlTemplates) {
   }
 
   return json;
+}
+
+function errorToJSON(error) {
+  let res = {};
+  for(let key in error) {
+    if(error.hasOwnProperty(key)) {
+      res[key] = error[key];
+    }
+  }
+  return res;
 }
 
 /*
