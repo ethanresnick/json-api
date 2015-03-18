@@ -3,10 +3,11 @@ import APIError from "../../types/APIError"
 
 export function checkBodyExistence(requestContext) {
   return Q.Promise(function(resolve, reject) {
-    if(requestContext.hasBody === requestContext.needsBody) {
-      resolve()
+    let needsBody = ["post", "patch"].indexOf(requestContext.method) !== -1;
+    if(requestContext.hasBody === needsBody) {
+      resolve();
     }
-    else if(requestContext.needsBody) {
+    else if(needsBody) {
       reject(
         new APIError(400, null, "This request needs a body, but didn't have one.")
       );
@@ -19,33 +20,16 @@ export function checkBodyExistence(requestContext) {
   });
 }
 
-export function checkBodyParsesAsJSON(req, res, bodyParser) {
-  return Q.nfcall(bodyParser.json({type: '*/*'}), req, res).then(
-    () => {},
-    (err) => {
-      switch(err.message) {
-        case /encoding unsupported/i:
-          throw new APIError(415, null, err.message);
-          break;
-
-        case /empty body/i:
-          req.body = null;
-          return Q();
-          break;
-
-        case /invalid json/i:
-          throw new APIError(400, null, "Request contains invalid JSON.");
-          break;
-
-        default:
-          if(err instanceof SyntaxError) {
-            err.title = "Request contains invalid JSON.";
-            err.status = 400;
-          }
-          throw APIError.fromError(err);
-      }
+export function checkBodyIsValidJSONAPI(body) {
+  return Q.Promise(function(resolve, reject) {
+    let ownProp = Object.prototype.hasOwnProperty;
+    if(typeof body !== "object" || !ownProp.call(body, "data")) {
+      reject(new APIError(400, null, "Request body is not a valid JSON API document."));
     }
-  );
+    else {
+      resolve();
+    }
+  });
 }
 
 export function checkContentType(requestContext, supportedExt) {
