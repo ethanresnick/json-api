@@ -5,19 +5,19 @@ import Resource from "../../src/types/Resource"
 import Collection from "../../src/types/Collection"
 import Document from "../../src/types/Document"
 
-var expect = chai.expect;
+let expect = chai.expect;
 
 describe("Document class", () => {
   describe("resourceFromJSON", () => {
     it("should return a resource object", () => {
       expect(
-        Document.resourceFromJSON({"type": "tests", "id":"1"})
+        Document.resourceFromJSON({"type": "tests", "id": "1"})
       ).to.be.instanceof(Resource);
     });
 
     it("should load up the id, type, and attributes", () => {
-      var json = {"id": "21", "type": "people", "name": "bob", "isBob":true};
-      var resource = Document.resourceFromJSON(json);
+      let json = {"id": "21", "type": "people", "name": "bob", "isBob": true};
+      let resource = Document.resourceFromJSON(json);
 
       expect(resource.id).to.equal("21");
       expect(resource.type).to.equal("people");
@@ -25,10 +25,11 @@ describe("Document class", () => {
     });
 
     it.skip("should create LinkObjects for each link", () => {
-      var parents = [{"type": "people", "id": "1"}, {"type": "people", "id": "2"}];
+      /*
+      let parents = [{"type": "people", "id": "1"}, {"type": "people", "id": "2"}];
       console.log('see https://github.com/json-api/json-api/issues/482');
-      /* var json = {
-        "id": "3", "type": "people", "name": "Ethan", 
+      let json = {
+        "id": "3", "type": "people", "name": "Ethan",
         "links": {
           "parents": { "linkage": parents }
         }
@@ -38,24 +39,24 @@ describe("Document class", () => {
 
   describe.skip("linkObjectFromJSON", () => {
     it.skip("should read in the incoming json correctly", () => {
-      console.log('see https://github.com/json-api/json-api/issues/482');
-    })
-  })
+      console.log("see https://github.com/json-api/json-api/issues/482");
+    });
+  });
 
   describe("Rendering a document", () => {
-    var person = new Resource("people", "31", {"name": "mark"});
-    var person2 = new Resource("people", "32", {"name": "ethan"});
-    var people = new Collection([person]);
+    let person = new Resource("people", "31", {"name": "mark"});
+    let person2 = new Resource("people", "32", {"name": "ethan"});
+    let people = new Collection([person]);
 
     it("primary data should be keyed under data", () => {
       expect((new Document(person)).get().data).to.deep.equal({
-        "id":"31", "type": "people", "name": "mark"
+        "id": "31", "type": "people", "name": "mark"
       });
     });
 
     it("resource collections should be represented as arrays", () => {
       expect((new Document(people)).get().data).to.deep.equal([{
-        "id":"31", "type": "people", "name": "mark"
+        "id": "31", "type": "people", "name": "mark"
       }]);
     });
 
@@ -72,14 +73,14 @@ describe("Document class", () => {
 /* TEST CASES
 0 resources | toOne or toMany relationship, included or referenced by href
   - { type:[] }
-  
+
 1 resource | toMany relationship | included
   - {
     type: {
-      "attrName": "val", 
+      "attrName": "val",
       "links": {
         propName: {
-          "type": "type2", 
+          "type": "type2",
           "ids": ["id2", "id3"]
         }
       }
@@ -101,9 +102,9 @@ describe("Document class", () => {
       },
       type: [
         {
-          "attrName": "val", 
+          "attrName": "val",
           "links": {
-            "propName": "id2" 
+            "propName": "id2"
           }
         },
         ...
@@ -114,7 +115,7 @@ describe("Document class", () => {
   - {
       //add links so you dont have to specify type at each resource-level
       //links key. Has some overhead--most notably having to include the
-      //url template, which isn't actually used--but pays off if the 
+      //url template, which isn't actually used--but pays off if the
       //response has more than a handful of resources.
       links: {
         "type.propName": {
@@ -124,9 +125,9 @@ describe("Document class", () => {
       },
       type: [
         {
-          "attrName": "val", 
+          "attrName": "val",
           "links": {
-            "propName": ["id2", "id3"] 
+            "propName": ["id2", "id3"]
           }
         },
         ...

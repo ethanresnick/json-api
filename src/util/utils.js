@@ -78,12 +78,12 @@ export function objectIsEmpty(obj) {
 export function ValueObject(constructorFn) {
   return function(initialValues) {
     let obj = new constructorFn();
-    let hasOwnPropCall = Object.prototype.hasOwnProperty.call;
+    let hasOwnProp = Object.prototype.hasOwnProperty;
 
     // Use initial values where possible.
     if(initialValues) {
       for(let key in obj) {
-        if(hasOwnPropCall(obj, key) && hasOwnPropCall(initialValues, key)) {
+        if(hasOwnProp.call(obj, key) && hasOwnProp.call(initialValues, key)) {
           obj[key] = initialValues[key];
         }
       }

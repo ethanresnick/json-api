@@ -23,7 +23,6 @@ export default class APIController {
   resourceRequest(req, res, next) {
     buildRequestContext(req).then((context) => {
       this.pipeline(context).then((responseContext) => {
-        console.log(responseContext.body);
         this.sendResources(responseContext, res);
       });
     }, (err) => {
@@ -38,7 +37,6 @@ export default class APIController {
     buildRequestContext(req).then((context) => {
       context.aboutLinkObject = true;
       this.pipeline(context).then((responseContext) => {
-        console.log(responseContext);
         this.sendResources(responseContext, res);
       });
     }, (err) => {
@@ -51,7 +49,7 @@ export default class APIController {
       res.status(406).send();
     }
     else {
-      res.set("Content-Type", contentType);
+      res.set("Content-Type", responseContext.contentType);
       res.status(responseContext.status || 200);
 
       if(responseContext.body !== null) {

@@ -19,7 +19,6 @@ export default function(acceptHeader, usedExt, supportedExt) {
       it.params.ext.split(",").map((it2) => it2.replace(/^\"+|\"+$/g, "")) :
       []
     );
-
     // If we have an Accept clause that asks for JSON-API
     // with exactly the extensions we're using, then we're golden.
     if(jsonAPIAcceptsExts.some((it) => arrayValuesMatch(it, usedExt))) {
