@@ -68,3 +68,27 @@ export function objectIsEmpty(obj) {
   }
   return true;
 }
+
+// Takes in a constructor function with no arguments and returns a new one that
+// take one argument representing initial values. These initial values will be
+// to apply to the properties that exist on the object immediately post-creation
+// (i.e. that were added to the instance by the original constructor)
+// properties immediately post construction and then seal the
+// object so that no properties can be added or deleted, which is a nice sanity check.
+export function ValueObject(constructorFn) {
+  return function(initialValues) {
+    let obj = new constructorFn();
+    let hasOwnProperty = Object.prototype.hasOwnProperty;
+
+    // Use initial values where possible.
+    for(let key in obj) {
+      if(hasOwnProperty.call(obj, key) && hasOwnProperty.call(initialValues, key)) {
+        obj[key] = initialValues[key];
+      }
+    }
+
+    // Object.seal prevents any other properties from being added to the object.
+    // Every property an object needs should be set by the original constructor.
+    return Object.seal(obj);
+  }
+}

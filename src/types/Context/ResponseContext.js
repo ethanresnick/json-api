@@ -1,8 +1,8 @@
-import BaseContext from "./BaseContext"
+import {ValueObject} from "../util/utils"
 
 let propDesc = {writable: true, enumerable: true};
 
-export default class ResponseContext extends BaseContext {
+class ResponseContext {
   constructor(initialValues) {
     // The JSON-API extensions used to formulate the response,
     // which affects the final the Content-Type header and our
@@ -35,7 +35,7 @@ export default class ResponseContext extends BaseContext {
 
     // The response document's top-level meta information.
     Object.defineProperty(this, "meta", propDesc);
-
-    return super(initialValues);
   }
 }
+
+export default ValueObject(ResponseContext);

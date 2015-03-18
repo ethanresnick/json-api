@@ -1,6 +1,6 @@
-import BaseContext from "./BaseContext"
+import {ValueObject} from "../util/utils"
 
-export default class RequestContext extends BaseContext {
+class RequestContext {
   constructor(initialValues) {
     // Whether the request has a body,
     // in which case we'll need to validate the Content-Type.
@@ -55,9 +55,8 @@ export default class RequestContext extends BaseContext {
 
     // Query parameters that might influence the request.
     this.queryParams = {};
-
-    return super(initialValues);
   }
+}
 
   populateFromRequest(req, typeIs, contentType) {
     var typeParsed = contentType.parse(req);
@@ -80,4 +79,4 @@ export default class RequestContext extends BaseContext {
       this.needsBody = true;
     }
   }
-}
+}export default ValueObject(RequestContext);
