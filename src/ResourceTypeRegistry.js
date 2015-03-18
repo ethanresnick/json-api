@@ -31,7 +31,7 @@ export default class ResourceTypeRegistry {
       });
     }
     else if(this._resourceTypes[type]) {
-      return import$({}, this._resourceTypes[type]);
+      return Object.assign({}, this._resourceTypes[type]);
     }
   }
 
@@ -50,7 +50,7 @@ export default class ResourceTypeRegistry {
       case 0:
         let templates = {};
         for(let type in this._resourceTypes) {
-          templates[type] = import$({}, this._resourceTypes[type].urlTemplates || {});
+          templates[type] = Object.assign({}, this._resourceTypes[type].urlTemplates || {});
         }
         return templates;
 
@@ -68,12 +68,6 @@ ResourceTypeRegistry.prototype.defaultIncludes = makeGetterSetter("defaultInclud
 ResourceTypeRegistry.prototype.info = makeGetterSetter("info");
 ResourceTypeRegistry.prototype.parentType = makeGetterSetter("parentType");
 
-
-function import$(obj, src){
-  var own = {}.hasOwnProperty;
-  for (var key in src) if (own.call(src, key)) obj[key] = src[key];
-  return obj;
-}
 
 function makeGetterSetter(attrName) {
   return function(type, optValue) {
