@@ -54,7 +54,7 @@ export default function(registry) {
 
       // Log any errors
       .catch((err) => {
-        responseContext.errors.push(err);
+        responseContext.errors = responseContext.errors.concat(err);
       })
 
       // Negotiate the content type

@@ -107,7 +107,7 @@ function buildRequestContext(req) {
           }
           catch (error) {
             let parseErr = new Error("Request contains invalid JSON.");
-            parseErr.status = err.statusCode = 400;
+            parseErr.status = error.statusCode = 400;
             reject(err);
           }
         }
