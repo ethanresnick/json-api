@@ -1,4 +1,4 @@
-import {ValueObject} from "../../util/utils"
+import {ValueObject} from "../../util/type-handling"
 
 class RequestContext {
   constructor(initialValues) {

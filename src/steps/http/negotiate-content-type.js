@@ -2,7 +2,7 @@ import Q from "q"
 import APIError from "../../types/APIError"
 import Negotiator from "negotiator"
 import parseAccept from "../../../lib/accept-parser"
-import {arrayValuesMatch} from "../../util/utils"
+import {arrayValuesMatch} from "../../util/arrays"
 
 export default function(acceptHeader, usedExt, supportedExt) {
   return Q.Promise(function(resolve, reject) {

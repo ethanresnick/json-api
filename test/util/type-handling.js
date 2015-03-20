@@ -1,35 +1,13 @@
 import mocha from "mocha"
 import sinon from "sinon"
 import chai from "chai"
-import * as utils from "../../src/util/utils"
+import * as utils from "../../src/util/type-handling"
 import Resource from "../../src/types/Resource"
 import Collection from "../../src/types/Collection";
 
 let expect = chai.expect;
 
 describe("Utility methods", () => {
-  describe("deleteNested", () => {
-    let obj = {"contact": {"phone": "310"}, "top-level":true};
-    let deletion = utils.deleteNested("contact.phone", obj);
-
-    it("should delete a nested property when present", () => {
-      expect(obj.contact.phone).to.equal(undefined);
-    });
-
-    it("should work on non-nested properties too", () => {
-      utils.deleteNested("top-level", obj);
-      expect(obj["top-level"]).to.be.undefined;
-    });
-
-    it("should return true if deletion succeeds", () => {
-      expect(deletion).to.be.true;
-    });
-
-    it("should return false if deletion fails", () => {
-      expect(utils.deleteNested("contact.twitter", obj)).to.be.false;
-    });
-  });
-
   describe("mapResources", () => {
     it("should call the map function on a single resource", () => {
       let mapper = sinon.spy((it) => it);
@@ -70,33 +48,6 @@ describe("Utility methods", () => {
     it("should call the each function on a single value");
     it("should call the each function on each value in an array");
     it("should return void");
-  });
-
-  describe("arrayUnique", () => {
-    it("should remove duplicate primitive values", () => {
-      let uniqueSorted = utils.arrayUnique(["2", true, "bob", "2"]).sort();
-      expect(uniqueSorted).to.deep.equal(["2", true, "bob"].sort());
-    });
-
-    it("should not coerce types", () => {
-      let uniqueSorted = utils.arrayUnique(["2", true, "true", 2]).sort();
-      expect(uniqueSorted).to.deep.equal(["2", true, "true", 2].sort());
-    });
-
-    it("should compare objects by identity, not contents", () => {
-      let arr1 = [];
-      let arr2 = [];
-      expect(utils.arrayUnique([arr1, arr2])).to.have.length(2);
-    });
-
-    it("should remove duplicate objects", () => {
-      let r = {};
-      expect(utils.arrayUnique([r, r])).to.have.length(1);
-    });
-  });
-
-  describe("arrayValuesMatch", () => {
-    it.skip("should work");
   });
 
   describe("objectIsEmpty", () => {
