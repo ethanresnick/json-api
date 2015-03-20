@@ -11,7 +11,7 @@ import parseRequestResources from "./steps/pre-query/parse-resources"
 export default function(registry) {
   let supportedExt = ["bulk"];
 
-  // The dispatcher, created once with the registry,
+  // The pipeline, created once with the registry,
   // returns a single function that can handle incoming requests.
   return function(requestContext) {
     let responseContext = new ResponseContext();
@@ -39,9 +39,8 @@ export default function(registry) {
 
       // Actually fulfill the request!
       .then(() => {
-        // If we've already populated the primary resources,
-        // which is possible because the label may have mapped to no id(s),
-        // we don't need to do any querying.
+        // If we've already populated the primary resources, which is possible
+        // because the label may have mapped to no id(s), we don't need to query.
         if(typeof responseContext.primary === "undefined") {
           switch(requestContext.method) {
             case "get":
