@@ -1,4 +1,6 @@
 import APIError from "../../types/APIError";
+import polyfill from "babel/polyfill";
+import {arrayContains} from "../../util/arrays"
 
 export default function(requestContext, responseContext, registry) {
   let type    = requestContext.type;
@@ -28,12 +30,12 @@ function parseSorts(sortParam) {
   }
   else {
     let sorts = parseCommaSeparatedParam(sortParam);
-    let invalidSorts = sorts.filter((it) => ["+", "-"].indexOf(it.charAt(0)) === -1);
+    let invalidSorts = sorts.filter((it) => !(it.startsWith("+") || it.startsWith('-')));
     if(invalidSorts.length) {
       throw new APIError(
         400, null,
         "All sort parameters must start with a + or a -.",
-        `The following sort parameters were invalid: $(invalidSorts.join(', ')).`
+        `The following sort parameters were invalid: ${invalidSorts.join(', ')}.`
       );
     }
     return sorts;
@@ -44,7 +46,7 @@ function parseFields(fieldsParam) {
   let fields;
   if(typeof fieldsParam === "object") {
     fields = {};
-    let isField = (it) => ["id", "type", "meta"].indexOf(it) === -1;
+    let isField = (it) => !arrayContains(["id", "type", "meta"], it);
 
     for(let type in fieldsParam) {
       let provided = parseCommaSeparatedParam(fieldsParam[type]);
