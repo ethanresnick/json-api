@@ -94,7 +94,6 @@ export default class MongooseAdapter {
             // if it's a toMany relationship, we have an array (or undefined).
             let refDocs = Array.isArray(doc[path]) ? doc[path] : [doc[path]];
             refDocs.forEach((it) => {
-              console.log(it instanceof mongoose.Document);
               includedResources.push(
                 this.constructor.docToResource(it, pluralize, fields)
               );
@@ -414,7 +413,7 @@ export default class MongooseAdapter {
 
       let linkage = [];
       valAtPath.forEach((docOrIdOrNull, i) => {
-        if(docOrIdOrNull instanceof mongoose.model) {
+        if(docOrIdOrNull instanceof mongoose.Document) {
           linkage.push({type: referencedType, id: docOrIdOrNull.id});
         }
         else if(docOrIdOrNull) {
