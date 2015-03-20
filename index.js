@@ -1,6 +1,6 @@
 module.exports = {
   adapters: {
-    Mongoose: require('./build/src/adapters/MongooseAdapter')
+    Mongoose: require('./build/src/adapters/Mongoose/MongooseAdapter')
   },
   types: {
     Collection: require('./build/src/types/Collection'),
