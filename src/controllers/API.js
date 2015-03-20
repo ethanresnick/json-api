@@ -52,6 +52,10 @@ export default class APIController {
       res.set("Content-Type", responseContext.contentType);
       res.status(responseContext.status || 200);
 
+      if(responseContext.location) {
+        res.set("Location", responseContext.location);
+      }
+
       if(responseContext.body !== null) {
         res.json(responseContext.body).end();
       }
