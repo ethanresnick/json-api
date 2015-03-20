@@ -16,6 +16,9 @@ class ResponseContext {
     // The response's content type.
     this.contentType = null;
 
+    // The response's location header
+    this.location = null;
+
     // The response's status.
     this.status = null;
 
