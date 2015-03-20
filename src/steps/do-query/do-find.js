@@ -9,14 +9,14 @@ export default function(requestContext, responseContext, registry) {
   if(!requestContext.aboutLinkObject) {
     fields = parseFields(requestContext.queryParams.fields);
     sorts  = parseSorts(requestContext.queryParams.sort);
-    includes = parseCommaSeparatedParam(requestContext.queryParams.includes);
+    includes = parseCommaSeparatedParam(requestContext.queryParams.include);
     if(!includes) {
       includes = registry.defaultIncludes(type);
     }
   }
 
   return adapter
-    .find(type, requestContext.idOrIds, fields, sorts, includes, filters)
+    .find(type, requestContext.idOrIds, fields, sorts, filters, includes)
     .then((resources) => {
       [responseContext.primary, responseContext.included] = resources;
     });
@@ -47,8 +47,11 @@ function parseFields(fieldsParam) {
     let isField = (it) => ["id", "type", "meta"].indexOf(it) === -1;
 
     for(let type in fieldsParam) {
-      let allowed = parseCommaSeparatedParam(fieldsParam[type]).filter(isField);
-      fields[type] = allowed;
+      let provided = parseCommaSeparatedParam(fieldsParam[type]);
+      //this check handles query strings like fields[people]=
+      if(provided) {
+        fields[type] = provided.filter(isField);
+      }
     }
   }
   return fields;
