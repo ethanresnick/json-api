@@ -15,19 +15,27 @@ export default function(requestContext) {
     }
 
     else if(requestContext.hasBody) {
-      if(requestContext.aboutLinkObject) {
-        requestContext.primary = Document.linkObjectFromJSON(bodyJSON.data);
-      }
-      else if(Array.isArray(bodyJSON.data)) {
-        requestContext.primary = new Collection(
-          bodyJSON.data.map(Document.resourceObjectFromJSON)
-        );
-      }
-      else {
-        requestContext.primary = Document.resourceFromJSON(bodyJSON.data);
+      try {
+        if(requestContext.aboutLinkObject) {
+          requestContext.primary = Document.linkObjectFromJSON(bodyJSON.data);
+        }
+        else if(Array.isArray(bodyJSON.data)) {
+          requestContext.primary = new Collection(
+            bodyJSON.data.map(Document.resourceFromJSON)
+          );
+        }
+        else {
+          requestContext.primary = Document.resourceFromJSON(bodyJSON.data);
+        }
+        resolve();
       }
 
-      resolve();
+      catch(error) {
+        const title = "The resources you provided could not be parsed."
+        const details = `The precise error was: "${error.message}".`;
+        reject(new APIError(400, undefined, title, details));
+      }
+
     }
 
     else {
