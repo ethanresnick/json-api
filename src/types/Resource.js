@@ -1,4 +1,4 @@
-import deleteNested from "../util/utils"
+import {deleteNested} from "../util/type-handling"
 
 export default class Resource {
   constructor(type, id, attrs = {}, links = {}, meta = {}) {

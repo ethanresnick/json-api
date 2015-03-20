@@ -2,7 +2,8 @@ import LinkObject from "./LinkObject"
 import Resource from "./Resource"
 import Collection from "./Collection"
 import APIError from "./APIError"
-import {objectIsEmpty, arrayUnique, mapResources} from "../util/utils"
+import {objectIsEmpty, mapResources} from "../util/type-handling"
+import {arrayUnique} from "../util/arrays"
 
 export default class Document {
   /*eslint-disable no-unused-vars */
