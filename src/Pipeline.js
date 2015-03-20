@@ -2,10 +2,13 @@ import ResponseContext from "./types/Context/ResponseContext"
 import Document from "./types/Document"
 import * as requestValidators from "./steps/http/validate-request"
 import negotiateContentType from "./steps/http/negotiate-content-type"
-import doFind from "./steps/do-query/do-find"
-import doCreate from "./steps/do-query/do-create"
+
 import labelToIds from "./steps/pre-query/label-to-ids"
 import parseRequestResources from "./steps/pre-query/parse-resources"
+
+import doFind from "./steps/do-query/do-find"
+import doCreate from "./steps/do-query/do-create"
+import doUpdate from "./steps/do-query/do-update"
 
 
 export default function(registry) {
@@ -48,6 +51,9 @@ export default function(registry) {
 
             case "post":
               return doCreate(requestContext, responseContext, registry);
+
+            case "patch":
+              return doUpdate(requestContext, responseContext, registry);
           }
         }
       })
