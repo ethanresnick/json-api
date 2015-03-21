@@ -62,7 +62,7 @@ export default class ResourceTypeRegistry {
 
 ResourceTypeRegistry.prototype.adapter = makeGetterSetter("adapter");
 ResourceTypeRegistry.prototype.beforeSave = makeGetterSetter("beforeSave");
-ResourceTypeRegistry.prototype.afterQuery = makeGetterSetter("afterQuery");
+ResourceTypeRegistry.prototype.beforeRender = makeGetterSetter("beforeRender");
 ResourceTypeRegistry.prototype.labelMappers = makeGetterSetter("labelMappers");
 ResourceTypeRegistry.prototype.defaultIncludes = makeGetterSetter("defaultIncludes");
 ResourceTypeRegistry.prototype.info = makeGetterSetter("info");
