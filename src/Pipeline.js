@@ -5,6 +5,7 @@ import negotiateContentType from "./steps/http/negotiate-content-type"
 
 import labelToIds from "./steps/pre-query/label-to-ids"
 import parseRequestResources from "./steps/pre-query/parse-resources"
+import applyTransform from "./steps/apply-transform"
 
 import doFind from "./steps/do-query/do-find"
 import doCreate from "./steps/do-query/do-create"
@@ -38,7 +39,11 @@ export default function(registry) {
         if(requestContext.hasBody) {
           return requestValidators.checkBodyIsValidJSONAPI(requestContext.body).then(() => {
             return requestValidators.checkContentType(requestContext, supportedExt).then(() => {
-              parseRequestResources(requestContext);
+              return parseRequestResources(requestContext).then(() => {
+                requestContext.primary = applyTransform(
+                  requestContext.primary, "beforeSave", registry, frameworkReq, frameworkRes
+                );
+              });
             });
           });
         }
@@ -74,6 +79,7 @@ export default function(registry) {
 
       // Log any errors
       .catch((err) => {
+        console.log(err, err.stack);
         responseContext.errors = responseContext.errors.concat(err);
       })
 
@@ -85,6 +91,17 @@ export default function(registry) {
           (it) => { responseContext.contentType = it; }
         );
       })
+
+      // apply transforms pre-send
+      .then(() => {
+        responseContext.primary = applyTransform(
+          responseContext.primary, "beforeRender", registry, frameworkReq, frameworkRes
+        );
+        responseContext.included = applyTransform(
+          responseContext.included, "beforeRender", registry, frameworkReq, frameworkRes
+        );
+      })
+
       .then(() => {
         if(responseContext.errors.length) {
           responseContext.status = pickStatus(responseContext.errors.map(
