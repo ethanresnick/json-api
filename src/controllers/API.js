@@ -22,7 +22,7 @@ export default class APIController {
   // DELETE /:type; ext=bulk
   resourceRequest(req, res, next) {
     buildRequestContext(req).then((context) => {
-      this.pipeline(context).then((responseContext) => {
+      this.pipeline(context, req, res).then((responseContext) => {
         this.sendResources(responseContext, res);
       });
     }, (err) => {
@@ -36,7 +36,7 @@ export default class APIController {
   linkObjectRequest(req, res, next) {
     buildRequestContext(req).then((context) => {
       context.aboutLinkObject = true;
-      this.pipeline(context).then((responseContext) => {
+      this.pipeline(context, req, res).then((responseContext) => {
         this.sendResources(responseContext, res);
       });
     }, (err) => {
