@@ -19,7 +19,8 @@ This library creates a [JSON API](http://jsonapi.org/)-compliant REST API from y
   };
 
   var registry = new API.ResourceTypeRegistry();
-  var controller = new API.controllers.API(Registry);
+  var controller = new API.controllers.API(registry);
+  var requestHandler = controller.resourceRequest.bind(controller);
   var adapter = new API.adapters.Mongoose(models);
 
   registry.type("people", {
@@ -34,11 +35,11 @@ This library creates a [JSON API](http://jsonapi.org/)-compliant REST API from y
     urlTemplates: {"self": "/places/{id}"}
   });
 
-  app.get("/:type(people,places)", controller.GET);
-  app.get("/:type(people,places)/:id", controller.GET);
-  app.post("/:type(people,places)", controller.POST);
-  app.put("/:type(people,places)/:id", controller.PUT);
-  app.delete("/:type(people,places)/:id", controller.DELETE);
+  app.get("/:type(people|places)", requestHandler);
+  app.get("/:type(people|places)/:id", requestHandler);
+  app.post("/:type(people|places)", requestHandler);
+  app.patch("/:type(people|places)/:id", requestHandler);
+  app.delete("/:type(people|places)/:id", requestHandler);
 
   app.listen(3000);
   ```
