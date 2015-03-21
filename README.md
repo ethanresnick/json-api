@@ -1,7 +1,9 @@
 json-api
 ========
 
-This library creates a [JSON API](http://jsonapi.org/)-compliant REST API from your Node app. And it generates API documentation automatically. It currently integrates with [Express](http://expressjs.com/) apps that use [Mongoose](http://mongoosejs.com/) models, but it can easily be integrated with other frameworks and databases. If you want to see an integration with another stack, just open an issue!
+This library creates a [JSON API](http://jsonapi.org/)-compliant REST API from your Node app. And it generates API documentation automatically. 
+
+It currently integrates with [Express](http://expressjs.com/) apps that use [Mongoose](http://mongoosejs.com/) models, but it can easily be integrated with other frameworks and databases. If you want to see an integration with another stack, just open an issue!
 
 *Heads up:* The JSON-API spec isn't quite at version 1.0 yet, so small things may still change. Also, this library doesn't implement the whole spec yet, so some advanced routes do not work. That said, all the basic CRUD operations are supported and development is progressing very quickly. The goal is to have the entire spec implemented by the time the final JSON API spec is officially released.
 
