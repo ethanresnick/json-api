@@ -47,7 +47,7 @@ export default class Document {
   }
 
   static linkObjectFromJSON(json) {
-    return new LinkObject(json);
+    return new LinkObject(json.linkage);
   }
 
   static resourceFromJSON(json) {
