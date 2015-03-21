@@ -18,7 +18,7 @@ var express = _interopRequire(require("express"));
 
 var supertest = _interopRequire(require("supertest"));
 
-var requestValidators = _interopRequireWildcard(require("../../../lib/steps/http/validate-request"));
+var requestValidators = _interopRequireWildcard(require("../../../src/steps/http/validate-request"));
 
 var expect = chai.expect;
 
@@ -28,8 +28,17 @@ describe("Request Validation functions", function () {
       expect(Q.isPromise(requestValidators.checkBodyExistence({}))).to.be["true"];
     });
 
-    it("should return a rejected promise if an expected body is missing", function (done) {
-      var contextMock = { hasBody: false, needsBody: true };
+    it("should return a rejected promise if a POST request is missing a body", function (done) {
+      var contextMock = { hasBody: false, method: "post" };
+      requestValidators.checkBodyExistence(contextMock).then(function () {
+        done(new Error("This fulfillment handler shoudn't run"));
+      }, function () {
+        done();
+      });
+    });
+
+    it("should return a rejected promise if a PATCH request is missing a body", function (done) {
+      var contextMock = { hasBody: false, method: "patch" };
       requestValidators.checkBodyExistence(contextMock).then(function () {
         done(new Error("This fulfillment handler shoudn't run"));
       }, function () {
@@ -38,7 +47,7 @@ describe("Request Validation functions", function () {
     });
 
     it("should return a rejected promise if an unexpected body is present", function (done) {
-      var contextMock = { hasBody: true, needsBody: false };
+      var contextMock = { hasBody: true, method: "get" };
       requestValidators.checkBodyExistence(contextMock).then(function () {
         done(new Error("This fulfillment handler shoudn't run"));
       }, function () {
@@ -47,7 +56,7 @@ describe("Request Validation functions", function () {
     });
 
     it("should resolve the promise successfully when expected body is present", function (done) {
-      var contextMock = { hasBody: true, needsBody: true };
+      var contextMock = { hasBody: true, method: "patch" };
       requestValidators.checkBodyExistence(contextMock).then(done);
     });
 
@@ -57,29 +66,21 @@ describe("Request Validation functions", function () {
     });
   });
 
-  describe("checkBodyParsesAsJSON", function () {
-    var app = express();
-    app.use(function (req, res, next) {
-      requestValidators.checkBodyParsesAsJSON(req, res, bodyParser).then(function () {
-        res.json(req.body);
-      }, function (err) {
-        res.status(Number(err.status)).send("Error");
+  describe("checkBodyIsValidJSONAPI", function () {
+    it("should fulfill when the input is an object with data", function (done) {
+      requestValidators.checkBodyIsValidJSONAPI({ data: null }).then(done);
+    });
+
+    it("should reject the promise for all other inputs", function (done) {
+      requestValidators.checkBodyIsValidJSONAPI([]).then(function () {
+        done(new Error("Should reject array bodies."));
+      }, function () {
+        requestValidators.checkBodyIsValidJSONAPI("string").then(function () {
+          done(new Error("Should reject string bodies."));
+        }, function () {
+          done();
+        });
       });
-    });
-
-    it("should try to parse all bodies, no matter the content-type", function (done) {
-      var request = supertest(app);
-      request.post("/").set("Content-Type", "application/xml").send("{\"json\":true}").expect(200, "{\"json\":true}", done);
-    });
-
-    it("should reject the promise with a 400 error for an invalid json body", function (done) {
-      var request = supertest(app);
-      request.post("/").send("unquoted:false}").expect(400, done);
-    });
-
-    it("should resolve the promise successfully for a valid body", function (done) {
-      var request = supertest(app);
-      request.post("/").send("{\"json\":[]}").expect(200, "{\"json\":[]}", done);
     });
   });
 

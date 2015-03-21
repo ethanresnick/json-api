@@ -14,13 +14,13 @@ var Document = _interopRequire(require("./types/Document"));
 
 /**
  * To fulfill a JSON API request, you often need to know about all the resources
- * in the system--not just the primary resource associated with the type being 
- * requested. For example, if the request is for a User, you might need to 
+ * in the system--not just the primary resource associated with the type being
+ * requested. For example, if the request is for a User, you might need to
  * include related Projects, so the code handling the users request needs access
- * to the Project resource's beforeSave and afterQuery methods. Similarly, it 
+ * to the Project resource's beforeSave and afterQuery methods. Similarly, it
  * would need access to url templates that point at relationships on the Project
- * resources. Etc. So we handle this by introducing a ResourceTypeRegistry that 
- * the Dispatcher can have access to. Each resource type is registered by its 
+ * resources. Etc. So we handle this by introducing a ResourceTypeRegistry that
+ * the Dispatcher can have access to. Each resource type is registered by its
  * JSON api type and has a number of properties defining it.
  */
 
@@ -56,7 +56,7 @@ var ResourceTypeRegistry = (function () {
             }
           });
         } else if (this._resourceTypes[type]) {
-          return import$({}, this._resourceTypes[type]);
+          return Object.assign({}, this._resourceTypes[type]);
         }
       })
     },
@@ -66,7 +66,10 @@ var ResourceTypeRegistry = (function () {
       }
     },
     urlTemplates: {
-      value: function urlTemplates(type, templates) {
+
+      //calling the arg "templatesToSet" to avoid conflict with templates var below
+
+      value: function urlTemplates(type, templatesToSet) {
         this._resourceTypes[type] = this._resourceTypes[type] || {};
 
         switch (arguments.length) {
@@ -76,12 +79,12 @@ var ResourceTypeRegistry = (function () {
           case 0:
             var templates = {};
             for (var _type2 in this._resourceTypes) {
-              templates[_type2] = import$({}, this._resourceTypes[_type2].urlTemplates || {});
+              templates[_type2] = Object.assign({}, this._resourceTypes[_type2].urlTemplates || {});
             }
             return templates;
 
           default:
-            this._resourceTypes[type].urlTemplates = templates;
+            this._resourceTypes[type].urlTemplates = templatesToSet;
         }
       }
     }
@@ -94,24 +97,18 @@ module.exports = ResourceTypeRegistry;
 
 ResourceTypeRegistry.prototype.adapter = makeGetterSetter("adapter");
 ResourceTypeRegistry.prototype.beforeSave = makeGetterSetter("beforeSave");
-ResourceTypeRegistry.prototype.afterQuery = makeGetterSetter("afterQuery");
-ResourceTypeRegistry.prototype.labelToIdOrIds = makeGetterSetter("labelToIdOrIds");
+ResourceTypeRegistry.prototype.beforeRender = makeGetterSetter("beforeRender");
+ResourceTypeRegistry.prototype.labelMappers = makeGetterSetter("labelMappers");
 ResourceTypeRegistry.prototype.defaultIncludes = makeGetterSetter("defaultIncludes");
 ResourceTypeRegistry.prototype.info = makeGetterSetter("info");
 ResourceTypeRegistry.prototype.parentType = makeGetterSetter("parentType");
-
-function import$(obj, src) {
-  var own = ({}).hasOwnProperty;
-  for (var key in src) if (own.call(src, key)) obj[key] = src[key];
-  return obj;
-}
 
 function makeGetterSetter(attrName) {
   return function (type, optValue) {
     this._resourceTypes[type] = this._resourceTypes[type] || {};
 
     if (optValue) {
-      return this._resourceTypes[type][attrName] = optValue;
+      this._resourceTypes[type][attrName] = optValue;
     } else {
       return this._resourceTypes[type][attrName];
     }
