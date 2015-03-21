@@ -1,4 +1,4 @@
-import {deleteNested} from "../util/type-handling"
+import {deleteNested} from "../util/misc"
 
 export default class Resource {
   constructor(type, id, attrs = {}, links = {}, meta = {}) {
@@ -7,7 +7,7 @@ export default class Resource {
   }
 
   removeAttr(attrPath) {
-    if(this.attrs) {
+    if(this._attrs) {
       deleteNested(attrPath, this._attrs);
     }
   }
