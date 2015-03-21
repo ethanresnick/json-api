@@ -42,10 +42,13 @@ export default class MongooseAdapter {
       else {
         idQuery = {"$in": idOrIds};
       }
+
+      queryBuilder[mode]({'_id': idQuery});
     }
 
-    // set up basic query for the collection or for the requested ids
-    queryBuilder[mode](idQuery);
+    else {
+      queryBuilder.find();
+    }
 
     // do sorting
     if(Array.isArray(sorts)) {
