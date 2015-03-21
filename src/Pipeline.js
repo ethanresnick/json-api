@@ -46,7 +46,7 @@ export default function(registry) {
       // Map label to idOrIds, if applicable.
       .then(() => {
         if(requestContext.idOrIds && requestContext.allowLabel) {
-          return labelToIds(registry, requestContext, responseContext);
+          return labelToIds(registry, frameworkReq, requestContext, responseContext);
         }
       })
 
