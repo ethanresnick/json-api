@@ -23,7 +23,7 @@ export default class ResourceTypeRegistry {
       this._resourceTypes[type] = {};
 
       // Set all the properties for the type that the description provides.
-      ["adapter", "beforeSave", "afterQuery", "labelToIdOrIds",
+      ["adapter", "beforeSave", "beforeRender", "labelMappers",
       "urlTemplates", "defaultIncludes", "info", "parentType"].forEach((k) => {
         if(Object.prototype.hasOwnProperty.call(description, k)) {
           this[k](type, description[k]);
