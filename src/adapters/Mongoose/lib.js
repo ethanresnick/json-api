@@ -2,7 +2,47 @@
 // aren't part of the class's public interface. Don't use them in your own
 // code, as their APIs are subject to change.
 import Collection from "../../types/Collection";
+import APIError from "../../types/APIError";
 import {isSubsetOf} from "../../util/misc";
+
+/**
+ * Takes any error that resulted from the above operations throws an array of
+ * errors that can be sent back to the caller as the Promise's rejection value.
+ */
+export function errorHandler(err) {
+    const errors = [];
+    //Convert validation errors collection to something reasonable
+    if(err.errors) {
+      for(let errKey in err.errors) {
+        let thisError = err.errors[errKey];
+        errors.push(
+          new APIError(
+            (err.name === "ValidationError") ? 400 : (thisError.status || 500),
+            undefined,
+            thisError.message,
+            undefined,
+            undefined,
+            (thisError.path) ? [thisError.path] : undefined
+          )
+        );
+      }
+    }
+
+    // allow the user to signal (e.g. from a custom validator that the
+    // mongoose hooks run) that their specific error message should be used.
+    else if(err.isJSONAPIDisplayReady) {
+      errors.push(new APIError(err.status || 500, undefined, err.message));
+    }
+
+    // Otherwise, issue something generic to not reveal any internal db concerns.
+    else {
+      errors.push(new APIError(500, undefined,
+        "An error occurred while trying to find, create, or modify the requested resource(s)."
+      ));
+    }
+
+    throw errors;
+  }
 
 export function groupResourcesByType(resourceOrCollection) {
   const resourcesByType = {};

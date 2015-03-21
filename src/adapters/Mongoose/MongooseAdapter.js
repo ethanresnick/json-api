@@ -117,7 +117,7 @@ export default class MongooseAdapter {
     return Q.all([primaryDocumentsPromise.then((it) => {
         const makeCollection = !idOrIds || Array.isArray(idOrIds) ? true : false;
         return this.constructor.docsToResourceOrCollection(it, makeCollection, pluralizer, fields);
-      }), includedResourcesPromise], this.constructor.errorHandler);
+      }), includedResourcesPromise]).catch(util.errorHandler);
   }
 
   /**
@@ -245,7 +245,7 @@ export default class MongooseAdapter {
     }).then((docs) => {
       let makeCollection = resourceOrCollection instanceof Collection;
       return this.constructor.docsToResourceOrCollection(docs, makeCollection, plural);
-    }).catch(this.constructor.errorHandler);
+    }).catch(util.errorHandler);
   }
 
   delete(parentType, idOrIds) {
@@ -267,9 +267,9 @@ export default class MongooseAdapter {
     }
 
     return Q(model[mode]({'_id': idQuery}).exec()).then((docs) => {
-      forEachArrayOrVal(docs, (it) => { it.remove() });
+      forEachArrayOrVal(docs, (it) => { it.remove(); });
       return docs;
-    }).catch(this.constructor.errorHandler);
+    }).catch(util.errorHandler);
   }
 
   getModel(modelName) {
@@ -281,46 +281,6 @@ export default class MongooseAdapter {
     return [parentType].concat(
       this.constructor.getChildTypes(parentModel, this.inflector.plural)
     );
-  }
-
-  /**
-   * Takes any error that resulted from the above operations throws an array of
-   * errors that can be sent back to the caller as the Promise's rejection value.
-   */
-  static errorHandler(err) {
-    const errors = [];
-    console.log(err, err.stack);
-    //Convert validation errors collection to something reasonable
-    if(err.errors) {
-      for(let errKey in err.errors) {
-        let thisError = err.errors[errKey];
-        errors.push(
-          new APIError(
-            (err.name === "ValidationError") ? 400 : (thisError.status || 500),
-            undefined,
-            thisError.message,
-            undefined,
-            undefined,
-            (thisError.path) ? [thisError.path] : undefined
-          )
-        );
-      }
-    }
-
-    // allow the user to signal (e.g. from a custom validator that the
-    // mongoose hooks run) that their specific error message should be used.
-    else if(err.isJSONAPIDisplayReady) {
-      errors.push(new APIError(err.status || 500, undefined, err.message));
-    }
-
-    // Otherwise, issue something generic to not reveal any internal db concerns.
-    else {
-      errors.push(new APIError(400, undefined,
-        "An error occurred while trying to find, create, or modify the requested resource(s)."
-      ));
-    }
-
-    throw errors;
   }
 
   /**
