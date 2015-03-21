@@ -4,6 +4,10 @@ import getRawBody from "raw-body"
 import pipeline from "../Pipeline"
 import RequestContext from "../types/Context/RequestContext"
 
+import APIError from "../types/APIError"
+import Document from "../types/Document"
+import negotiateContentType from "../steps/http/negotiate-content-type"
+
 /**
  * This controller offers the outside world distinct entry points into the
  * pipeline for handling different types of requests. It also acts as the only
@@ -63,6 +67,28 @@ export default class APIController {
         res.end();
       }
     }
+  }
+
+  /**
+   * A user of this library may wish to send an error for something that
+   * the JSON API Pipeline can't process because it's outside the main spec's
+   * scope (e.g. an authentication error). So, the controller exposes this
+   * method which allows them to do that. (Even if we refactor some of this
+   * logic down the line to be handled in the pipeline--e.g. giving it another
+   * path--it's good to expose this on the controller's interface.)
+   */
+  sendError(error, req, res) {
+    buildRequestContext(req).then((context) => {
+      negotiateContentType(context.accepts, [], this.pipeline.supportedExt)
+        .then((contentType) => {
+          let errors = [APIError.fromError(error)];
+          res.set('Content-Type', contentType);
+          res.status(errors[0].status || 400);
+          res.send((new Document(errors)).get());
+        }, () => {
+          res.status(406).send();
+        });
+    });
   }
 }
 
