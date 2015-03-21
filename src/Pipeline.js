@@ -1,5 +1,6 @@
 import ResponseContext from "./types/Context/ResponseContext"
 import Document from "./types/Document"
+import APIError from "./types/APIError"
 import * as requestValidators from "./steps/http/validate-request"
 import negotiateContentType from "./steps/http/negotiate-content-type"
 
@@ -77,10 +78,25 @@ export default function(registry) {
         }
       })
 
-      // Log any errors
-      .catch((err) => {
-        console.log(err, err.stack);
-        responseContext.errors = responseContext.errors.concat(err);
+      // Add errors to the responseContext and, if necessary, convert them to
+      // APIError instances. Might be needed if, e.g., the error was unexpected
+      // or the user couldn't throw an APIError for compatibility with other code).
+      .catch((errors) => {
+        errors = (Array.isArray(errors) ? errors : [errors]).map((it) => {
+          if(it instanceof APIError) {
+            return it;
+          }
+          else {
+            const status = it.status || it.statusCode || 500;
+            // if the user can't throw an APIError instance but wants to signal
+            // that their specific error message should be used, let them do so.
+            const message = it.isJSONAPIDisplayReady ? it.message :
+              "An unknown error occurred while trying to process this request.";
+
+            return new APIError(status, undefined, message);
+          }
+        });
+        responseContext.errors = responseContext.errors.concat(errors);
       })
 
       // Negotiate the content type

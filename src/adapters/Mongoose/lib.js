@@ -28,17 +28,11 @@ export function errorHandler(err) {
       }
     }
 
-    // allow the user to signal (e.g. from a custom validator that the
-    // mongoose hooks run) that their specific error message should be used.
-    else if(err.isJSONAPIDisplayReady) {
-      errors.push(new APIError(err.status || 500, undefined, err.message));
-    }
-
-    // Otherwise, issue something generic to not reveal any internal db concerns.
+    // Send the raw error.
+    // Don't worry about revealing internal concerns, as the pipeline maps
+    // all unhandled errors to generic json-api APIError objects pre responding.
     else {
-      errors.push(new APIError(500, undefined,
-        "An error occurred while trying to find, create, or modify the requested resource(s)."
-      ));
+      errors.push(err);
     }
 
     throw errors;
