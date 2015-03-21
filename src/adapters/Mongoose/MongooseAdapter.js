@@ -30,7 +30,7 @@ export default class MongooseAdapter {
   find(type, idOrIds, fields, sorts, filters, includePaths) {
     let model = this.getModel(this.constructor.getModelName(type));
     let queryBuilder = new mongoose.Query(null, null, model, model.collection);
-    let pluralize = this.inflector.plural;
+    let pluralizer = this.inflector.plural;
     let mode = "find", idQuery, makeCollection;
     let primaryDocumentsPromise, includedResourcesPromise = Q(null);
 
@@ -95,7 +95,7 @@ export default class MongooseAdapter {
             let refDocs = Array.isArray(doc[path]) ? doc[path] : [doc[path]];
             refDocs.forEach((it) => {
               includedResources.push(
-                this.constructor.docToResource(it, pluralize, fields)
+                this.constructor.docToResource(it, pluralizer, fields)
               );
             });
           });
@@ -115,7 +115,7 @@ export default class MongooseAdapter {
 
     return Q.all([primaryDocumentsPromise.then((it) => {
         const makeCollection = !idOrIds || Array.isArray(idOrIds) ? true : false;
-        return this.constructor.docsToResourceOrCollection(it, makeCollection, pluralize, fields);
+        return this.constructor.docsToResourceOrCollection(it, makeCollection, pluralizer, fields);
       }), includedResourcesPromise], this.constructor.errorHandler);
   }
 
@@ -338,9 +338,9 @@ export default class MongooseAdapter {
    *
    * @param docs The docs to turn into a resource or collection
    * @param makeCollection Whether we're making a collection.
-   * @param pluralize An inflector function for setting the Resource's type
+   * @param pluralizer An inflector function for setting the Resource's type
    */
-  static docsToResourceOrCollection(docs, makeCollection, pluralize, fields) {
+  static docsToResourceOrCollection(docs, makeCollection, pluralizer, fields) {
     // if docs is an empty array and we're making a collection, that's ok.
     // but, if we're looking for a single doc, we must 404 if we didn't find any.
     if(!docs || (!makeCollection && Array.isArray(docs) && docs.length === 0)) {
@@ -348,13 +348,13 @@ export default class MongooseAdapter {
     }
 
     docs = !Array.isArray(docs) ? [docs] : docs;
-    docs = docs.map((it) => this.docToResource(it, pluralize, fields));
+    docs = docs.map((it) => this.docToResource(it, pluralizer, fields));
     return makeCollection ? new Collection(docs) : docs[0];
   }
 
   // Useful to have this as static for calling as a utility outside this class.
-  static docToResource(doc, pluralize = pluralize.plural, fields) {
-    let type = this.getType(doc.constructor.modelName, pluralize);
+  static docToResource(doc, pluralizer = pluralize.plural, fields) {
+    let type = this.getType(doc.constructor.modelName, pluralizer);
     let refPaths = util.getReferencePaths(doc.constructor);
 
     // Get and clean up attributes
@@ -434,25 +434,25 @@ export default class MongooseAdapter {
     return new Resource(type, doc.id, attrs, links);
   }
 
-  static getModelName(type, singularize = pluralize.singular) {
+  static getModelName(type, singularizer = pluralize.singular) {
     let words = type.split("-");
-    words[words.length-1] = singularize(words[words.length-1]);
+    words[words.length-1] = singularizer(words[words.length-1]);
     return words.map((it) => it.charAt(0).toUpperCase() + it.slice(1)).join("");
   }
 
   // Get the json api type name for a model.
-  static getType(modelName, pluralize = pluralize.plural) {
-    return pluralize(modelName.replace(/([A-Z])/g, '\-$1').slice(1).toLowerCase());
+  static getType(modelName, pluralizer = pluralize.plural) {
+    return pluralizer(modelName.replace(/([A-Z])/g, '\-$1').slice(1).toLowerCase());
   }
 
-  static getReferencedType(model, path) {
-    return this.getType(util.getReferencedModelName(model, path), pluralize);
+  static getReferencedType(model, path, pluralizer = pluralize.plural) {
+    return this.getType(util.getReferencedModelName(model, path), pluralizer);
   }
 
-  static getChildTypes(model, pluralize = pluralize.plural) {
+  static getChildTypes(model, pluralizer = pluralize.plural) {
     if(!model.discriminators) return [];
 
-    return Object.keys(model.discriminators).map(it => this.getType(it, pluralize));
+    return Object.keys(model.discriminators).map(it => this.getType(it, pluralizer));
   }
 }
 
