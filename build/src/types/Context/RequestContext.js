@@ -2,7 +2,7 @@
 
 var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
-var ValueObject = require("../util/utils").ValueObject;
+var ValueObject = require("../../util/type-handling").ValueObject;
 
 var RequestContext = function RequestContext(initialValues) {
   _classCallCheck(this, RequestContext);
