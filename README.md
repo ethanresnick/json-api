@@ -3,9 +3,7 @@ json-api
 
 This library creates a [JSON API](http://jsonapi.org/)-compliant REST API from your Node app. And it generates API documentation automatically. It currently integrates with [Express](http://expressjs.com/) apps that use [Mongoose](http://mongoosejs.com/) models, but it can easily be integrated with other frameworks and databases. If you want to see an integration with another stack, just open an issue!
 
-**Heads up:** The JSON-API spec isn't quite at version 1.0 yet, so small things may still change. Also, this library doesn't implement the whole spec yet, so some advanced routes do not work. That said, all the basic CRUD operations are supported and development is progressing very quickly. The goal is to have the entire spec implemented by the time the final JSON API spec is officially released.
-
-Note: This branch supports the "rc1" version of JSON API, which is out of date with the current specification. Work to bring this library into line with the current specification is ocurring in the rc2 branch.
+*Heads up:* The JSON-API spec isn't quite at version 1.0 yet, so small things may still change. Also, this library doesn't implement the whole spec yet, so some advanced routes do not work. That said, all the basic CRUD operations are supported and development is progressing very quickly. The goal is to have the entire spec implemented by the time the final JSON API spec is officially released.
 
 # Installation
 ```$ npm install json-api```
@@ -64,5 +62,5 @@ To use this library, you describe the special behavior (if any) that resources o
 This library gives you a base API controller (shown in the example) and a `Documentation` controller, but it doesn't prescribe how requests get to these controllers. This allows you to use any url scheme, routing layer, or authentication system you already have in place. You just need to make sure `req.params.type` reflects the requested resource type, and `req.params.id` reflects the requested id (or comma-separated list of ids), if present. In the example above, routing is handled with Express's built-in `app[VERB]` methods. If you're looking for something more robust, you might be interested in [Express Simple Router](https://github.com/ethanresnick/express-simple-router). For authentication, check out [Express Simple Firewall](https://github.com/ethanresnick/express-simple-firewall).
 
 ## Adapters
-An adapter handles all the interaction with the database. It is responsible for turning requests into standard [`Resource`](https://github.com/ethanresnick/json-api/blob/master/lib/types/Resource.js) or [`Collection`](https://github.com/ethanresnick/json-api/blob/master/lib/types/Collection.js) objects that the rest of the library will use. See the built-in [MongooseAdapter](https://github.com/ethanresnick/json-api/blob/master/lib/adapters/MongooseAdapter.js) for an example.
+An adapter handles all the interaction with the database. It is responsible for turning requests into standard [`Resource`](https://github.com/ethanresnick/json-api/blob/master/src/types/Resource.js) or [`Collection`](https://github.com/ethanresnick/json-api/blob/master/src/types/Collection.js) objects that the rest of the library will use. See the built-in [MongooseAdapter](https://github.com/ethanresnick/json-api/blob/master/src/adapters/Mongoose/MongooseAdapter.js) for an example.
 
