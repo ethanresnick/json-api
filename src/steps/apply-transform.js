@@ -1,5 +1,5 @@
-import Resource from "../../types/Resource";
-import Collection from "../../types/Resource";
+import Resource from "../types/Resource";
+import Collection from "../types/Resource";
 
 /**
  * @param toTransform Could be a single resource, a collection, a link object, or null.
