@@ -1,0 +1,27 @@
+{
+  "parser": "babel-eslint",
+  "rules": {
+    "strict": 0,
+
+    "curly": 0,
+    "indent": [2, 2, {indentSwitchCase: true}],
+    "brace-style": [2, "stroustrup", { "allowSingleLine": true }],
+    "new-cap": [2, {"capIsNewExceptions": ["Q", "Promise"]}],
+    "quotes": [2, "double"],
+
+    "no-use-before-define": [1, "nofunc"],
+    "no-underscore-dangle": 0,
+    "no-multi-spaces": 0,
+    "no-unused-vars": 1,
+    "no-unreachable": 2,
+    "use-isnan": 2,
+    "no-constant-condition": 2,
+    "no-shadow": 1,
+    "valid-typeof": 1,
+    "no-var": 1
+  },
+  "env": {
+    "node": true,
+    "mocha": true
+  }
+}
