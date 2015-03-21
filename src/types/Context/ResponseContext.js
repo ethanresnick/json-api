@@ -3,7 +3,7 @@ import {ValueObject} from "../../util/type-handling"
 let propDesc = {writable: true, enumerable: true};
 
 class ResponseContext {
-  constructor(initialValues) {
+  constructor() {
     // The JSON-API extensions used to formulate the response,
     // which affects the final the Content-Type header and our
     // validation of the client's `Accept` header.

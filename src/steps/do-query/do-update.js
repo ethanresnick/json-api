@@ -1,6 +1,7 @@
 import APIError from "../../types/APIError";
 import Collection from "../../types/Collection";
 import Resource from "../../types/Resource";
+import LinkObject from "../../types/LinkObject";
 import {arrayValuesMatch} from "../../util/arrays";
 import {mapResources} from "../../util/type-handling";
 

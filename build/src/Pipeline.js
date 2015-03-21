@@ -8,6 +8,8 @@ var ResponseContext = _interopRequire(require("./types/Context/ResponseContext")
 
 var Document = _interopRequire(require("./types/Document"));
 
+var APIError = _interopRequire(require("./types/APIError"));
+
 var requestValidators = _interopRequireWildcard(require("./steps/http/validate-request"));
 
 var negotiateContentType = _interopRequire(require("./steps/http/negotiate-content-type"));
@@ -32,6 +34,7 @@ var doDelete = _interopRequire(require("./steps/do-query/do-delete"));
 
 module.exports = function (registry) {
   var supportedExt = ["bulk"];
+
   /**
    *
    * @param {RequestContext} requestContext The request context that will be
@@ -43,7 +46,7 @@ module.exports = function (registry) {
    * @param {Object} frameworkRes Theoretically, the response objcet generated
    *     by your http framework but, like with frameworkReq, it can be anything.
    */
-  return function (requestContext, frameworkReq, frameworkRes) {
+  function pipeline(requestContext, frameworkReq, frameworkRes) {
     var responseContext = new ResponseContext();
 
     // Now, kick off the chain for generating the response.
@@ -89,10 +92,24 @@ module.exports = function (registry) {
       }
     })
 
-    // Log any errors
-    ["catch"](function (err) {
-      console.log(err, err.stack);
-      responseContext.errors = responseContext.errors.concat(err);
+    // Add errors to the responseContext and, if necessary, convert them to
+    // APIError instances. Might be needed if, e.g., the error was unexpected
+    // or the user couldn't throw an APIError for compatibility with other code).
+    ["catch"](function (errors) {
+      console.log(errors, errors.stack);
+      errors = (Array.isArray(errors) ? errors : [errors]).map(function (it) {
+        if (it instanceof APIError) {
+          return it;
+        } else {
+          var _status = it.status || it.statusCode || 500;
+          // if the user can't throw an APIError instance but wants to signal
+          // that their specific error message should be used, let them do so.
+          var message = it.isJSONAPIDisplayReady ? it.message : "An unknown error occurred while trying to process this request.";
+
+          return new APIError(_status, undefined, message);
+        }
+      });
+      responseContext.errors = responseContext.errors.concat(errors);
     })
 
     // Negotiate the content type
@@ -120,6 +137,10 @@ module.exports = function (registry) {
       return responseContext;
     });
   };
+
+  pipeline.supportedExt = supportedExt;
+
+  return pipeline;
 };
 
 /**

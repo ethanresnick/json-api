@@ -30,12 +30,12 @@ function parseSorts(sortParam) {
   }
   else {
     let sorts = parseCommaSeparatedParam(sortParam);
-    let invalidSorts = sorts.filter((it) => !(it.startsWith("+") || it.startsWith('-')));
+    let invalidSorts = sorts.filter((it) => !(it.startsWith("+") || it.startsWith("-")));
     if(invalidSorts.length) {
       throw new APIError(
         400, null,
         "All sort parameters must start with a + or a -.",
-        `The following sort parameters were invalid: ${invalidSorts.join(', ')}.`
+        `The following sort parameters were invalid: ${invalidSorts.join(", ")}.`
       );
     }
     return sorts;

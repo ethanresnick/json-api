@@ -31,7 +31,7 @@ export default class MongooseAdapter {
     let model = this.getModel(this.constructor.getModelName(type));
     let queryBuilder = new mongoose.Query(null, null, model, model.collection);
     let pluralizer = this.inflector.plural;
-    let mode = "find", idQuery, makeCollection;
+    let mode = "find", idQuery;
     let primaryDocumentsPromise, includedResourcesPromise = Q(null);
 
     if(idOrIds) {
@@ -43,7 +43,7 @@ export default class MongooseAdapter {
         idQuery = {"$in": idOrIds};
       }
 
-      queryBuilder[mode]({'_id': idQuery});
+      queryBuilder[mode]({"_id": idQuery});
     }
 
     else {
@@ -52,7 +52,7 @@ export default class MongooseAdapter {
 
     // do sorting
     if(Array.isArray(sorts)) {
-      sorts = sorts.map((it) => it.startsWith('+') ? it.substr(1) : it);
+      sorts = sorts.map((it) => it.startsWith("+") ? it.substr(1) : it);
       queryBuilder.sort(sorts.join(" "));
     }
 
@@ -69,7 +69,7 @@ export default class MongooseAdapter {
       const populatedPaths = [];
       const refPaths = util.getReferencePaths(model);
 
-      includePaths = includePaths.map((it) => it.split('.'));
+      includePaths = includePaths.map((it) => it.split("."));
       includePaths.forEach((pathParts) => {
         // first, check that the include path is valid.
         if(!arrayContains(refPaths, pathParts[0])) {
@@ -115,9 +115,9 @@ export default class MongooseAdapter {
     }
 
     return Q.all([primaryDocumentsPromise.then((it) => {
-        const makeCollection = !idOrIds || Array.isArray(idOrIds) ? true : false;
-        return this.constructor.docsToResourceOrCollection(it, makeCollection, pluralizer, fields);
-      }), includedResourcesPromise]).catch(util.errorHandler);
+      const makeCollection = !idOrIds || Array.isArray(idOrIds) ? true : false;
+      return this.constructor.docsToResourceOrCollection(it, makeCollection, pluralizer, fields);
+    }), includedResourcesPromise]).catch(util.errorHandler);
   }
 
   /**
@@ -146,25 +146,26 @@ export default class MongooseAdapter {
     // documents. That's unfortunately much slower, but it ensures that
     // mongoose runs all the user's hooks.
     let creationPromises = [];
+    let setIdWithGenerator = (doc) => { doc._id = this.idGenerator(doc); };
     for(let type in resourcesByType) {
       let model = this.getModel(this.constructor.getModelName(type));
       let resources = resourcesByType[type];
       let docObjects = resources.map(util.resourceToDocObject);
 
       if(typeof this.idGenerator === "function") {
-        forEachArrayOrVal(docObjects, (doc) => {
-          doc._id = this.idGenerator(doc);
-        });
+        forEachArrayOrVal(docObjects, setIdWithGenerator);
       }
 
       creationPromises.push(Q.ninvoke(model, "create", docObjects));
     }
 
     return Q.all(creationPromises).then((docArrays) => {
-        const makeCollection = resourceOrCollection instanceof Collection;
-        const finalDocs = docArrays.reduce((a, b) => a.concat(b), []);
-        return this.constructor.docsToResourceOrCollection(finalDocs, makeCollection, this.inflector.plural);
-      }).catch(util.errorHandler);
+      const makeCollection = resourceOrCollection instanceof Collection;
+      const finalDocs = docArrays.reduce((a, b) => a.concat(b), []);
+      return this.constructor.docsToResourceOrCollection(
+        finalDocs, makeCollection, this.inflector.plural
+      );
+    }).catch(util.errorHandler);
   }
 
   /**
@@ -191,7 +192,7 @@ export default class MongooseAdapter {
     });
 
     const mode    = typeof idOrIds === "string" ? "findOne" : "find";
-    const idQuery = typeof idOrIds === "string" ? idOrIds : {'$in':idOrIds};
+    const idQuery = typeof idOrIds === "string" ? idOrIds : {"$in": idOrIds};
 
     // Validate that incoming resources are of the proper type.
     const allowedTypes = this.getTypesAllowedInCollection(parentType);
@@ -201,7 +202,7 @@ export default class MongooseAdapter {
       return Q.Promise((resolve, reject) => { reject(resourceTypeError); });
     }
 
-    return Q(model[mode]({'_id': idQuery}).exec()).then((docs) => {
+    return Q(model[mode]({"_id": idQuery}).exec()).then((docs) => {
       const successfulSavesPromises = [];
 
       forEachArrayOrVal(docs, (currDoc) => {
@@ -266,7 +267,7 @@ export default class MongooseAdapter {
       idQuery = {"$in": idOrIds};
     }
 
-    return Q(model[mode]({'_id': idQuery}).exec()).then((docs) => {
+    return Q(model[mode]({"_id": idQuery}).exec()).then((docs) => {
       forEachArrayOrVal(docs, (it) => { it.remove(); });
       return docs;
     }).catch(util.errorHandler);
@@ -318,7 +319,7 @@ export default class MongooseAdapter {
     // Get and clean up attributes
     let attrs = doc.toObject();
     let schemaOptions = doc.constructor.schema.options;
-    delete attrs['_id'];
+    delete attrs["_id"];
     delete attrs[schemaOptions.versionKey];
     delete attrs[schemaOptions.discriminatorKey];
 
@@ -343,7 +344,7 @@ export default class MongooseAdapter {
 
       // get value at the path w/ the reference, in both the json'd + full docs.
       let getNested = (obj, part) => obj[part];
-      let pathParts = path.split('.');
+      let pathParts = path.split(".");
       let valAtPath = pathParts.reduce(getNested, doc);
       let jsonValAtPath = pathParts.reduce(getNested, attrs);
       let referencedType = this.getReferencedType(doc.constructor, path);
@@ -353,7 +354,7 @@ export default class MongooseAdapter {
 
       // in the rare case that this is a refPath whose field has been excluded
       // from the document, make sure we don't add a links key for it.
-      if(typeof valAtPath === "undefined") { return }
+      if(typeof valAtPath === "undefined") { return; }
 
       // Now, since the value wasn't excluded, we need to build its LinkObject.
       // Note: the value could still be null or an empty array. And, because of
@@ -400,7 +401,7 @@ export default class MongooseAdapter {
 
   // Get the json api type name for a model.
   static getType(modelName, pluralizer = pluralize.plural) {
-    return pluralizer(modelName.replace(/([A-Z])/g, '\-$1').slice(1).toLowerCase());
+    return pluralizer(modelName.replace(/([A-Z])/g, "\-$1").slice(1).toLowerCase());
   }
 
   static getReferencedType(model, path, pluralizer = pluralize.plural) {

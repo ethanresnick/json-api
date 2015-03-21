@@ -9,7 +9,7 @@ var makeGetterSetterTest = function(newThing, type, methodName, deep) {
   return function() {
     expect(registry[methodName](type)).to.be.undefined;
     registry[methodName](type, newThing)
-    
+
     // You may get a copy of the set object back, not a direct
     // reference. And that's acceptable. A deep check lets that pass.
     if(deep) {
@@ -17,7 +17,7 @@ var makeGetterSetterTest = function(newThing, type, methodName, deep) {
     }
     else {
       expect(registry[methodName](type)).to.equal(newThing);
-    } 
+    }
   }
 }
 
@@ -41,25 +41,31 @@ describe("ResourceTypeRegistry", function() {
   });
 
   describe("adapter", () => {
-    it("should be a getter/setter for a type's adapter", 
+    it("should be a getter/setter for a type's adapter",
       makeGetterSetterTest({'a':'new model'}, "mytypes", "adapter")
     );
   });
 
   describe("beforeSave", () => {
-    it("should be a getter/setter for a type for a type's beforeSave", 
+    it("should be a getter/setter for a type for a type's beforeSave",
       makeGetterSetterTest(() => {}, "mytypes", "beforeSave")
     );
   });
 
-  describe("afterQuery", () => {
-    it("should be a getter/setter for a type's afterQuery", 
-      makeGetterSetterTest(() => {}, "mytypes", "afterQuery")
+  describe("beforeRender", () => {
+    it("should be a getter/setter for a type's beforeRender",
+      makeGetterSetterTest(() => {}, "mytypes", "beforeRender")
+    );
+  });
+
+  describe("labelMappers", () => {
+    it("should be a getter/setter for a type's labelMappers",
+      makeGetterSetterTest({"label": () => {}}, "mytypes", "labelMappers")
     );
   });
 
   describe("info", () => {
-    it("should be a getter/setter for a type's info", 
+    it("should be a getter/setter for a type's info",
       makeGetterSetterTest({}, "mytypes", "info")
     )
   });
@@ -67,7 +73,7 @@ describe("ResourceTypeRegistry", function() {
   describe("urlTemplates", () => {
     it("should be a getter/setter for a type's urlTemplates",
       makeGetterSetterTest(
-        {'path': 'test template'}, 
+        {'path': 'test template'},
         "mytypes", "urlTemplates", true
       )
     )

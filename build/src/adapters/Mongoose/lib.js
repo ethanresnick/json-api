@@ -2,6 +2,11 @@
 
 var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
+/**
+ * Takes any error that resulted from the above operations throws an array of
+ * errors that can be sent back to the caller as the Promise's rejection value.
+ */
+exports.errorHandler = errorHandler;
 exports.groupResourcesByType = groupResourcesByType;
 
 /**
@@ -31,7 +36,29 @@ Object.defineProperty(exports, "__esModule", {
 
 var Collection = _interopRequire(require("../../types/Collection"));
 
+var APIError = _interopRequire(require("../../types/APIError"));
+
 var isSubsetOf = require("../../util/misc").isSubsetOf;
+
+function errorHandler(err) {
+  var errors = [];
+  //Convert validation errors collection to something reasonable
+  if (err.errors) {
+    for (var errKey in err.errors) {
+      var thisError = err.errors[errKey];
+      errors.push(new APIError(err.name === "ValidationError" ? 400 : thisError.status || 500, undefined, thisError.message, undefined, undefined, thisError.path ? [thisError.path] : undefined));
+    }
+  }
+
+  // Send the raw error.
+  // Don't worry about revealing internal concerns, as the pipeline maps
+  // all unhandled errors to generic json-api APIError objects pre responding.
+  else {
+    errors.push(err);
+  }
+
+  throw errors;
+}
 
 function groupResourcesByType(resourceOrCollection) {
   var resourcesByType = {};

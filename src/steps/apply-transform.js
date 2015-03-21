@@ -5,8 +5,6 @@ import Collection from "../types/Collection";
  * @param toTransform Could be a single resource, a collection, a link object, or null.
  */
 export default function(toTransform, mode, registry, frameworkReq, frameworkRes) {
-  const transformed = [];
-
   if(toTransform instanceof Resource) {
     return transform(toTransform, frameworkReq, frameworkRes, mode, registry);
   }
@@ -35,13 +33,13 @@ function transform(resource, req, res, transformMode, registry) {
   // transformer. Otherwise, it'll return the result of calling
   // the parentType's transformer with the provided arguments.
   let superFn = (resource, req, res) => {
-    let parentType = registry.parentType(resource.type)
+    let parentType = registry.parentType(resource.type);
 
     if(!parentType || !registry[transformMode](parentType)) {
-      return resource
+      return resource;
     }
     else {
-      return registry[transformMode](parentType)(resource, req, res, superFn)
+      return registry[transformMode](parentType)(resource, req, res, superFn);
     }
   };
 

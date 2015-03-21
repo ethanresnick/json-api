@@ -1,4 +1,4 @@
-require! [\mocha, \sinon \chai, \../../lib/types/Resource \../../lib/adapters/MongooseAdapter]
+/*require! [\mocha, \sinon \chai, \../../lib/types/Resource \../../lib/adapters/MongooseAdapter]
 expect = chai.expect
 it2 = it # a hack for livescript
 
@@ -11,10 +11,10 @@ describe("Mongoose Adapter", ->
         prop: 'val'
         _id: 'blah'
         __t: 'blah4'
-        __v: 'blah3' 
+        __v: 'blah3'
         toObject: sinon.spy(-> {_id: @_id, __v:@__v, __t: @__t, prop:'valToObject'})
         # above, toObject doesn't copy over id, which may be "virtual"
-  
+
       resource = MongooseAdapter.docToResource(doc, type, [])
 
       expect(MongooseAdapter.docToResource).to.be.a("function")
@@ -35,7 +35,7 @@ describe("Mongoose Adapter", ->
       venues: \Venue
       'related-clubs': \RelatedClub
       'team-memberships': \TeamMembership
-    
+
     describe("getType", ->
       it2("should lowercase & pluralize the model name, and use dashes in camelCased names", ->
         for type, modelName of typesToModelNames
@@ -47,7 +47,7 @@ describe("Mongoose Adapter", ->
         expect(MongooseAdapter.getType('TestModel', plural)).to.equal('mycustomresult')
       )
     )
-    
+
     describe("getModelName", ->
       it2("should reverse getType", ->
         for type, modelName of typesToModelNames
@@ -55,4 +55,4 @@ describe("Mongoose Adapter", ->
       )
     )
   )
-)
+)*/

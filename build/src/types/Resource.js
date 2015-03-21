@@ -6,7 +6,7 @@ var _createClass = (function () { function defineProperties(target, props) { for
 
 var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
-var deleteNested = require("../util/type-handling").deleteNested;
+var deleteNested = require("../util/misc").deleteNested;
 
 var Resource = (function () {
   function Resource(type, id) {
@@ -30,7 +30,7 @@ var Resource = (function () {
   _createClass(Resource, {
     removeAttr: {
       value: function removeAttr(attrPath) {
-        if (this.attrs) {
+        if (this._attrs) {
           deleteNested(attrPath, this._attrs);
         }
       }

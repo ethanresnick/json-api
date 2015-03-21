@@ -2,11 +2,9 @@
 
 var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
-var _typesResource = require("../../types/Resource");
+var Resource = _interopRequire(require("../types/Resource"));
 
-var Resource = _interopRequire(_typesResource);
-
-var Collection = _interopRequire(_typesResource);
+var Collection = _interopRequire(require("../types/Collection"));
 
 /**
  * @param toTransform Could be a single resource, a collection, a link object, or null.

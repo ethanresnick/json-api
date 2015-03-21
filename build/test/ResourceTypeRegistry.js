@@ -52,8 +52,12 @@ describe("ResourceTypeRegistry", function () {
     it("should be a getter/setter for a type for a type's beforeSave", makeGetterSetterTest(function () {}, "mytypes", "beforeSave"));
   });
 
-  describe("afterQuery", function () {
-    it("should be a getter/setter for a type's afterQuery", makeGetterSetterTest(function () {}, "mytypes", "afterQuery"));
+  describe("beforeRender", function () {
+    it("should be a getter/setter for a type's beforeRender", makeGetterSetterTest(function () {}, "mytypes", "beforeRender"));
+  });
+
+  describe("labelMappers", function () {
+    it("should be a getter/setter for a type's labelMappers", makeGetterSetterTest({ label: function () {} }, "mytypes", "labelMappers"));
   });
 
   describe("info", function () {

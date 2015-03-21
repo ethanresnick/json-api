@@ -12,6 +12,6 @@ export function arrayContains(arr, value) {
     return arr.indexOf(value) !== -1;
   }
   else {
-    return arr.some(Number.isNaN) === true
+    return arr.some(Number.isNaN) === true;
   }
 }

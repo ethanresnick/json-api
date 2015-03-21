@@ -50,7 +50,7 @@ var ResourceTypeRegistry = (function () {
           this._resourceTypes[type] = {};
 
           // Set all the properties for the type that the description provides.
-          ["adapter", "beforeSave", "afterQuery", "labelToIdOrIds", "urlTemplates", "defaultIncludes", "info", "parentType"].forEach(function (k) {
+          ["adapter", "beforeSave", "beforeRender", "labelMappers", "urlTemplates", "defaultIncludes", "info", "parentType"].forEach(function (k) {
             if (Object.prototype.hasOwnProperty.call(description, k)) {
               _this[k](type, description[k]);
             }

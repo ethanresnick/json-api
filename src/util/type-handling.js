@@ -7,9 +7,9 @@ import Collection from "../types/Collection"
  * input constructor function immediately post-creation. Then the object will be
  * sealed so that no properties can be added or deleted--a nice sanity check.
  */
-export function ValueObject(constructorFn) {
+export function ValueObject(ConstructorFn) {
   return function(initialValues) {
-    let obj = new constructorFn();
+    let obj = new ConstructorFn();
     let hasOwnProp = Object.prototype.hasOwnProperty;
 
     // Use initial values where possible.
@@ -24,7 +24,7 @@ export function ValueObject(constructorFn) {
     // Object.seal prevents any other properties from being added to the object.
     // Every property an object needs should be set by the original constructor.
     return Object.seal(obj);
-  }
+  };
 }
 
 export function objectIsEmpty(obj) {

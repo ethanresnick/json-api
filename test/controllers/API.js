@@ -1,3 +1,32 @@
+/* FROM PREVIOUS JSON PARSING
+      requestValidators.checkBodyParsesAsJSON(req, res, bodyParser).then(
+        () => { res.json(req.body); },
+        (err) => { res.status(Number(err.status)).send("Error"); }
+      );
+    });
+
+    it("should try to parse all bodies, no matter the content-type", (done) => {
+      var request = supertest(app);
+      request
+        .post('/').set('Content-Type', 'application/xml').send('{"json":true}')
+        .expect(200, '{"json":true}', done);
+    });
+
+    it("should reject the promise with a 400 error for an invalid json body", (done) => {
+      var request = supertest(app);
+      request.post('/').send("unquoted:false}").expect(400, done);
+    });
+
+    it("should resolve the promise successfully for a valid body", (done) => {
+      var request = supertest(app);
+      request
+        .post('/').send('{"json":[]}')
+        .expect(200, '{"json":[]}', done);
+    }); */
+
+/*
+FROM PREVIOUS BASE CONTROLLER
+
 require! {
   \mocha, \sinon \chai, 'body-parser', Q:\q, \supertest, \express,
   BaseController:\../../lib/controllers/Base, \../../lib/types/APIError, \../../lib/types/Collection, \../../lib/ResourceTypeRegistry
@@ -7,7 +36,7 @@ expect = chai.expect
 it2 = it # a hack for livescript
 app = express()
 
-adapter = 
+adapter =
   find: sinon.stub().returns(Q.fcall(-> throw new Error("Blah")))
 
 registry =
@@ -35,7 +64,7 @@ describe("Base Controller", ->
 
     describe("finding resources through the adapter", ->
       beforeEach(-> adapter.find.reset!; registry.adapter.reset!)
-      
+
       urlsToFindOptions =
         '/mytypes': ['mytypes', void, {}, void, void, void]
         '/mytypes/1': ['mytypes', '1', {}, void, void, void]
@@ -48,18 +77,18 @@ describe("Base Controller", ->
 
       for url, options of urlsToFindOptions
         ((url, options) ->
-          it2("a request for " + url + " should make the right call", (done) -> 
+          it2("a request for " + url + " should make the right call", (done) ->
             request.get(url).end(->
               expect(registry.adapter.calledOnce).to.be.true
               expect(registry.adapter.calledWith("mytypes")).to.be.true
               expect(adapter.find.calledOnce).to.be.true
               expect(adapter.find.firstCall.args).to.deep.equal(options)
               done!
-            ) 
+            )
           )
         )(url, options)
     )
-    
+
     it2.skip("should run afterQuery recursively on the found resources", ->
     )
   )
@@ -70,7 +99,7 @@ describe("Base Controller", ->
       BaseController.sendResources(resSpy, new ErrorResource(null, {'status': 411}))
       BaseController.sendResources(resSpy, new ErrorResource(null, {'status': 408}))
       expect(resSpy.json.firstCall.args).to.have.length(2)
-      expect(resSpy.json.secondCall.args).to.have.length(2)      
+      expect(resSpy.json.secondCall.args).to.have.length(2)
       expect(resSpy.json.firstCall.args[0]).to.equal(411)
       expect(resSpy.json.secondCall.args[0]).to.equal(408)
       expect(resSpy.json.firstCall.args[1]).to.be.an("object")
@@ -86,7 +115,7 @@ describe("Base Controller", ->
       pickStatusSpy = sinon.spy(BaseController, "_pickStatus");
 
       BaseController.sendResources(resSpy, coll)
-      
+
       expect(pickStatusSpy.callCount).to.equal(1)
       expect(pickStatusSpy.calledWith([411, 408])).to.be.true
       expect(resSpy.json.firstCall.args).to.have.length(2)
@@ -117,4 +146,4 @@ describe("Base Controller", ->
     it2.skip("sends a 400 invalid json error for any other json syntax errors", ->)
   )
   describe("", ->)
-)
+)*/

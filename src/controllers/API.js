@@ -82,7 +82,7 @@ export default class APIController {
       negotiateContentType(context.accepts, [], this.pipeline.supportedExt)
         .then((contentType) => {
           let errors = [APIError.fromError(error)];
-          res.set('Content-Type', contentType);
+          res.set("Content-Type", contentType);
           res.status(errors[0].status || 400);
           res.send((new Document(errors)).get());
         }, () => {

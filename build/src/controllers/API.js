@@ -16,6 +16,12 @@ var pipeline = _interopRequire(require("../Pipeline"));
 
 var RequestContext = _interopRequire(require("../types/Context/RequestContext"));
 
+var APIError = _interopRequire(require("../types/APIError"));
+
+var Document = _interopRequire(require("../types/Document"));
+
+var negotiateContentType = _interopRequire(require("../steps/http/negotiate-content-type"));
+
 /**
  * This controller offers the outside world distinct entry points into the
  * pipeline for handling different types of requests. It also acts as the only
@@ -88,6 +94,32 @@ var APIController = (function () {
             res.end();
           }
         }
+      }
+    },
+    sendError: {
+
+      /**
+       * A user of this library may wish to send an error for something that
+       * the JSON API Pipeline can't process because it's outside the main spec's
+       * scope (e.g. an authentication error). So, the controller exposes this
+       * method which allows them to do that. (Even if we refactor some of this
+       * logic down the line to be handled in the pipeline--e.g. giving it another
+       * path--it's good to expose this on the controller's interface.)
+       */
+
+      value: function sendError(error, req, res) {
+        var _this = this;
+
+        buildRequestContext(req).then(function (context) {
+          negotiateContentType(context.accepts, [], _this.pipeline.supportedExt).then(function (contentType) {
+            var errors = [APIError.fromError(error)];
+            res.set("Content-Type", contentType);
+            res.status(errors[0].status || 400);
+            res.send(new Document(errors).get());
+          }, function () {
+            res.status(406).send();
+          });
+        });
       }
     }
   });

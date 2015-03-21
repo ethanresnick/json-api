@@ -65,7 +65,7 @@ var MongooseAdapter = (function () {
 
         var model = this.getModel(this.constructor.getModelName(type));
         var queryBuilder = new mongoose.Query(null, null, model, model.collection);
-        var pluralize = this.inflector.plural;
+        var pluralizer = this.inflector.plural;
         var mode = "find",
             idQuery = undefined,
             makeCollection = undefined;
@@ -79,10 +79,11 @@ var MongooseAdapter = (function () {
           } else {
             idQuery = { $in: idOrIds };
           }
-        }
 
-        // set up basic query for the collection or for the requested ids
-        queryBuilder[mode](idQuery);
+          queryBuilder[mode]({ _id: idQuery });
+        } else {
+          queryBuilder.find();
+        }
 
         // do sorting
         if (Array.isArray(sorts)) {
@@ -128,15 +129,13 @@ var MongooseAdapter = (function () {
 
             var includedResources = [];
             primaryDocumentsPromise = Q(queryBuilder.exec()).then(function (docs) {
-              console.log(nodeUtil.inspect(docs));
               forEachArrayOrVal(docs, function (doc) {
-                console.log(mongoose.Document);
                 populatedPaths.forEach(function (path) {
                   // if it's a toOne relationship, doc[path] will be a doc or undefined;
                   // if it's a toMany relationship, we have an array (or undefined).
                   var refDocs = Array.isArray(doc[path]) ? doc[path] : [doc[path]];
                   refDocs.forEach(function (it) {
-                    includedResources.push(_this.constructor.docToResource(it, pluralize, fields));
+                    includedResources.push(_this.constructor.docToResource(it, pluralizer, fields));
                   });
                 });
               });
@@ -154,8 +153,8 @@ var MongooseAdapter = (function () {
 
         return Q.all([primaryDocumentsPromise.then(function (it) {
           var makeCollection = !idOrIds || Array.isArray(idOrIds) ? true : false;
-          return _this.constructor.docsToResourceOrCollection(it, makeCollection, pluralize, fields);
-        }), includedResourcesPromise], this.constructor.errorHandler);
+          return _this.constructor.docsToResourceOrCollection(it, makeCollection, pluralizer, fields);
+        }), includedResourcesPromise])["catch"](util.errorHandler);
       }
     },
     create: {
@@ -209,7 +208,7 @@ var MongooseAdapter = (function () {
             return a.concat(b);
           }, []);
           return _this.constructor.docsToResourceOrCollection(finalDocs, makeCollection, _this.inflector.plural);
-        }, this.constructor.errorHandler);
+        })["catch"](util.errorHandler);
       }
     },
     update: {
@@ -295,7 +294,7 @@ var MongooseAdapter = (function () {
         }).then(function (docs) {
           var makeCollection = resourceOrCollection instanceof Collection;
           return _this.constructor.docsToResourceOrCollection(docs, makeCollection, plural);
-        })["catch"](this.constructor.errorHandler);
+        })["catch"](util.errorHandler);
       }
     },
     "delete": {
@@ -320,7 +319,7 @@ var MongooseAdapter = (function () {
             it.remove();
           });
           return docs;
-        })["catch"](this.constructor.errorHandler);
+        })["catch"](util.errorHandler);
       }
     },
     getModel: {
@@ -335,38 +334,6 @@ var MongooseAdapter = (function () {
       }
     }
   }, {
-    errorHandler: {
-
-      /**
-       * Takes any error that resulted from the above operations throws an array of
-       * errors that can be sent back to the caller as the Promise's rejection value.
-       */
-
-      value: function errorHandler(err) {
-        var errors = [];
-        console.log(err, err.stack);
-        //Convert validation errors collection to something reasonable
-        if (err.errors) {
-          for (var errKey in err.errors) {
-            var thisError = err.errors[errKey];
-            errors.push(new APIError(err.name === "ValidationError" ? 400 : thisError.status || 500, undefined, thisError.message, undefined, undefined, thisError.path ? [thisError.path] : undefined));
-          }
-        }
-
-        // allow the user to signal (e.g. from a custom validator that the
-        // mongoose hooks run) that their specific error message should be used.
-        else if (err.isJSONAPIDisplayReady) {
-          errors.push(new APIError(err.status || 500, undefined, err.message));
-        }
-
-        // Otherwise, issue something generic to not reveal any internal db concerns.
-        else {
-          errors.push(new APIError(400, undefined, "An error occurred while trying to find, create, or modify the requested resource(s)."));
-        }
-
-        throw errors;
-      }
-    },
     docsToResourceOrCollection: {
 
       /**
@@ -382,10 +349,10 @@ var MongooseAdapter = (function () {
        *
        * @param docs The docs to turn into a resource or collection
        * @param makeCollection Whether we're making a collection.
-       * @param pluralize An inflector function for setting the Resource's type
+       * @param pluralizer An inflector function for setting the Resource's type
        */
 
-      value: function docsToResourceOrCollection(docs, makeCollection, pluralize, fields) {
+      value: function docsToResourceOrCollection(docs, makeCollection, pluralizer, fields) {
         var _this = this;
 
         // if docs is an empty array and we're making a collection, that's ok.
@@ -396,7 +363,7 @@ var MongooseAdapter = (function () {
 
         docs = !Array.isArray(docs) ? [docs] : docs;
         docs = docs.map(function (it) {
-          return _this.docToResource(it, pluralize, fields);
+          return _this.docToResource(it, pluralizer, fields);
         });
         return makeCollection ? new Collection(docs) : docs[0];
       }
@@ -408,99 +375,98 @@ var MongooseAdapter = (function () {
       value: function docToResource(doc, _x, fields) {
         var _this = this;
 
-        var pluralize = arguments[1] === undefined ? pluralize.plural : arguments[1];
-        return (function () {
-          var type = _this.getType(doc.constructor.modelName, pluralize);
-          var refPaths = util.getReferencePaths(doc.constructor);
+        var pluralizer = arguments[1] === undefined ? pluralize.plural : arguments[1];
 
-          // Get and clean up attributes
-          var attrs = doc.toObject();
-          var schemaOptions = doc.constructor.schema.options;
-          delete attrs._id;
-          delete attrs[schemaOptions.versionKey];
-          delete attrs[schemaOptions.discriminatorKey];
+        var type = this.getType(doc.constructor.modelName, pluralizer);
+        var refPaths = util.getReferencePaths(doc.constructor);
 
-          // Delete attributes that aren't in the included fields.
-          if (fields && fields[type]) {
-            (function () {
-              var newAttrs = {};
-              fields[type].forEach(function (field) {
-                if (attrs[field]) {
-                  newAttrs[field] = attrs[field];
-                }
-              });
-              attrs = newAttrs;
-            })();
-          }
+        // Get and clean up attributes
+        var attrs = doc.toObject();
+        var schemaOptions = doc.constructor.schema.options;
+        delete attrs._id;
+        delete attrs[schemaOptions.versionKey];
+        delete attrs[schemaOptions.discriminatorKey];
 
-          // Build Links
-          var links = {};
-          refPaths.forEach(function (path) {
-            // skip if applicable
-            if (fields && fields[type] && !arrayContains(fields[type], path)) {
-              return;
-            }
-
-            // get value at the path w/ the reference, in both the json'd + full docs.
-            var getNested = function (obj, part) {
-              return obj[part];
-            };
-            var pathParts = path.split(".");
-            var valAtPath = pathParts.reduce(getNested, doc);
-            var jsonValAtPath = pathParts.reduce(getNested, attrs);
-            var referencedType = _this.getReferencedType(doc.constructor, path);
-
-            // delete the attribute, since we're moving it to links
-            deleteNested(path, attrs);
-
-            // in the rare case that this is a refPath whose field has been excluded
-            // from the document, make sure we don't add a links key for it.
-            if (typeof valAtPath === "undefined") {
-              return;
-            }
-
-            // Now, since the value wasn't excluded, we need to build its LinkObject.
-            // Note: the value could still be null or an empty array. And, because of
-            // of population, it could be a single document or array of documents,
-            // in addition to a single/array of ids. So, as is customary, we'll start
-            // by coercing it to an array no matter what, tracking whether to make it
-            // a non-array at the end, to simplify our code.
-            var isToOneRelationship = false;
-
-            if (!Array.isArray(valAtPath)) {
-              valAtPath = [valAtPath];
-              jsonValAtPath = [jsonValAtPath];
-              isToOneRelationship = true;
-            }
-
-            var linkage = [];
-            valAtPath.forEach(function (docOrIdOrNull, i) {
-              if (docOrIdOrNull instanceof mongoose.Document) {
-                linkage.push({ type: referencedType, id: docOrIdOrNull.id });
-              } else if (docOrIdOrNull) {
-                // docOrIdOrNull might be an OId here, so use jsonValAtPath,
-                // which will have been converted to a string.
-                linkage.push({ type: referencedType, id: jsonValAtPath[i] });
-              } else {
-                linkage.push(docOrIdOrNull);
+        // Delete attributes that aren't in the included fields.
+        if (fields && fields[type]) {
+          (function () {
+            var newAttrs = {};
+            fields[type].forEach(function (field) {
+              if (attrs[field]) {
+                newAttrs[field] = attrs[field];
               }
             });
+            attrs = newAttrs;
+          })();
+        }
 
-            // go back from an array if neccessary and save.
-            links[path] = new LinkObject(isToOneRelationship ? linkage[0] : linkage);
+        // Build Links
+        var links = {};
+        refPaths.forEach(function (path) {
+          // skip if applicable
+          if (fields && fields[type] && !arrayContains(fields[type], path)) {
+            return;
+          }
+
+          // get value at the path w/ the reference, in both the json'd + full docs.
+          var getNested = function (obj, part) {
+            return obj[part];
+          };
+          var pathParts = path.split(".");
+          var valAtPath = pathParts.reduce(getNested, doc);
+          var jsonValAtPath = pathParts.reduce(getNested, attrs);
+          var referencedType = _this.getReferencedType(doc.constructor, path);
+
+          // delete the attribute, since we're moving it to links
+          deleteNested(path, attrs);
+
+          // in the rare case that this is a refPath whose field has been excluded
+          // from the document, make sure we don't add a links key for it.
+          if (typeof valAtPath === "undefined") {
+            return;
+          }
+
+          // Now, since the value wasn't excluded, we need to build its LinkObject.
+          // Note: the value could still be null or an empty array. And, because of
+          // of population, it could be a single document or array of documents,
+          // in addition to a single/array of ids. So, as is customary, we'll start
+          // by coercing it to an array no matter what, tracking whether to make it
+          // a non-array at the end, to simplify our code.
+          var isToOneRelationship = false;
+
+          if (!Array.isArray(valAtPath)) {
+            valAtPath = [valAtPath];
+            jsonValAtPath = [jsonValAtPath];
+            isToOneRelationship = true;
+          }
+
+          var linkage = [];
+          valAtPath.forEach(function (docOrIdOrNull, i) {
+            if (docOrIdOrNull instanceof mongoose.Document) {
+              linkage.push({ type: referencedType, id: docOrIdOrNull.id });
+            } else if (docOrIdOrNull) {
+              // docOrIdOrNull might be an OId here, so use jsonValAtPath,
+              // which will have been converted to a string.
+              linkage.push({ type: referencedType, id: jsonValAtPath[i] });
+            } else {
+              linkage.push(docOrIdOrNull);
+            }
           });
 
-          // finally, create the resource.
-          return new Resource(type, doc.id, attrs, links);
-        })();
+          // go back from an array if neccessary and save.
+          links[path] = new LinkObject(isToOneRelationship ? linkage[0] : linkage);
+        });
+
+        // finally, create the resource.
+        return new Resource(type, doc.id, attrs, links);
       }
     },
     getModelName: {
       value: function getModelName(type) {
-        var singularize = arguments[1] === undefined ? pluralize.singular : arguments[1];
+        var singularizer = arguments[1] === undefined ? pluralize.singular : arguments[1];
 
         var words = type.split("-");
-        words[words.length - 1] = singularize(words[words.length - 1]);
+        words[words.length - 1] = singularizer(words[words.length - 1]);
         return words.map(function (it) {
           return it.charAt(0).toUpperCase() + it.slice(1);
         }).join("");
@@ -511,29 +477,29 @@ var MongooseAdapter = (function () {
       // Get the json api type name for a model.
 
       value: function getType(modelName) {
-        var pluralize = arguments[1] === undefined ? pluralize.plural : arguments[1];
-        return (function () {
-          return pluralize(modelName.replace(/([A-Z])/g, "-$1").slice(1).toLowerCase());
-        })();
+        var pluralizer = arguments[1] === undefined ? pluralize.plural : arguments[1];
+
+        return pluralizer(modelName.replace(/([A-Z])/g, "-$1").slice(1).toLowerCase());
       }
     },
     getReferencedType: {
       value: function getReferencedType(model, path) {
-        return this.getType(util.getReferencedModelName(model, path), pluralize);
+        var pluralizer = arguments[2] === undefined ? pluralize.plural : arguments[2];
+
+        return this.getType(util.getReferencedModelName(model, path), pluralizer);
       }
     },
     getChildTypes: {
       value: function getChildTypes(model) {
         var _this = this;
 
-        var pluralize = arguments[1] === undefined ? pluralize.plural : arguments[1];
-        return (function () {
-          if (!model.discriminators) return [];
+        var pluralizer = arguments[1] === undefined ? pluralize.plural : arguments[1];
 
-          return Object.keys(model.discriminators).map(function (it) {
-            return _this.getType(it, pluralize);
-          });
-        })();
+        if (!model.discriminators) {
+          return [];
+        }return Object.keys(model.discriminators).map(function (it) {
+          return _this.getType(it, pluralizer);
+        });
       }
     }
   });

@@ -1,7 +1,7 @@
 import {ValueObject} from "../../util/type-handling"
 
 class RequestContext {
-  constructor(initialValues) {
+  constructor() {
     // Whether the request has a body,
     // in which case we'll need to validate the Content-Type.
     this.hasBody = null;

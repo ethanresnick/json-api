@@ -60,7 +60,7 @@ export function getResourceTypeError(allowedTypes, resourceTypes) {
   if(!isSubsetOf(allowedTypes, resourceTypes)) {
     let title = "Some of the resources you provided are of a type that " +
                 "doesn't belong in this collection.";
-    let detail = `Valid types for this collection are: ${allowedTypes.join(', ')}.`;
+    let detail = `Valid types for this collection are: ${allowedTypes.join(", ")}.`;
 
     return new APIError(400, undefined, title, detail);
   }
@@ -95,9 +95,10 @@ export function getReferencedModelName(model, path) {
  */
 export function resourceToDocObject(resource) {
   let res = Object.assign({}, resource.attrs);
+  let getId = (it) => it.id;
   for(let key in resource.links) {
     let linkage = resource.links[key].linkage;
-    res[key] = Array.isArray(linkage) ? linkage.map(it => it.id) : linkage.id;
+    res[key] = Array.isArray(linkage) ? linkage.map(getId) : linkage.id;
   }
   return res;
 }

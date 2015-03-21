@@ -31,7 +31,7 @@ export default function(requestContext) {
       }
 
       catch(error) {
-        const title = "The resources you provided could not be parsed."
+        const title = "The resources you provided could not be parsed.";
         const details = `The precise error was: "${error.message}".`;
         reject(new APIError(400, undefined, title, details));
       }
