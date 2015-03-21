@@ -18,6 +18,7 @@ import doDelete from "./steps/do-query/do-delete"
  */
 export default function(registry) {
   let supportedExt = ["bulk"];
+
   /**
    *
    * @param {RequestContext} requestContext The request context that will be
@@ -29,7 +30,7 @@ export default function(registry) {
    * @param {Object} frameworkRes Theoretically, the response objcet generated
    *     by your http framework but, like with frameworkReq, it can be anything.
    */
-  return function(requestContext, frameworkReq, frameworkRes) {
+  function pipeline(requestContext, frameworkReq, frameworkRes) {
     let responseContext = new ResponseContext();
 
     // Now, kick off the chain for generating the response.
@@ -82,6 +83,7 @@ export default function(registry) {
       // APIError instances. Might be needed if, e.g., the error was unexpected
       // or the user couldn't throw an APIError for compatibility with other code).
       .catch((errors) => {
+        console.log(errors, errors.stack)
         errors = (Array.isArray(errors) ? errors : [errors]).map((it) => {
           if(it instanceof APIError) {
             return it;
@@ -133,6 +135,10 @@ export default function(registry) {
         return responseContext;
       });
   };
+
+  pipeline.supportedExt = supportedExt;
+
+  return pipeline;
 }
 
 /**
