@@ -89,10 +89,8 @@ export default class MongooseAdapter {
 
       let includedResources = [];
       primaryDocumentsPromise = Q(queryBuilder.exec()).then((docs) => {
-        console.log(nodeUtil.inspect(docs));
         forEachArrayOrVal(docs, (doc) => {
-          console.log(mongoose.Document);
-         populatedPaths.forEach((path) => {
+          populatedPaths.forEach((path) => {
             // if it's a toOne relationship, doc[path] will be a doc or undefined;
             // if it's a toMany relationship, we have an array (or undefined).
             let refDocs = Array.isArray(doc[path]) ? doc[path] : [doc[path]];
@@ -162,14 +160,11 @@ export default class MongooseAdapter {
       creationPromises.push(Q.ninvoke(model, "create", docObjects));
     }
 
-    return Q.all(creationPromises).then(
-      (docArrays) => {
+    return Q.all(creationPromises).then((docArrays) => {
         const makeCollection = resourceOrCollection instanceof Collection;
         const finalDocs = docArrays.reduce((a, b) => a.concat(b), []);
         return this.constructor.docsToResourceOrCollection(finalDocs, makeCollection, this.inflector.plural);
-      },
-      this.constructor.errorHandler
-    );
+      }).catch(util.errorHandler);
   }
 
   /**
