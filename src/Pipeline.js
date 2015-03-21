@@ -9,6 +9,7 @@ import parseRequestResources from "./steps/pre-query/parse-resources"
 import doFind from "./steps/do-query/do-find"
 import doCreate from "./steps/do-query/do-create"
 import doUpdate from "./steps/do-query/do-update"
+import doDelete from "./steps/do-query/do-delete"
 
 /**
  *
@@ -64,6 +65,9 @@ export default function(registry) {
 
             case "patch":
               return doUpdate(requestContext, responseContext, registry);
+
+            case "delete":
+              return doDelete(requestContext, responseContext, registry);
           }
         }
       })
