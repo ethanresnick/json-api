@@ -14,7 +14,7 @@ export default function(toTransform, mode, registry, frameworkReq, frameworkRes)
   else if (toTransform instanceof Collection) {
     // below, allow the user to return undefined to remove a vlaue.
     let newResources = toTransform.resources.map((it) =>
-      transform(it, frameworkReq, frameworkRes, mode, registry);
+      transform(it, frameworkReq, frameworkRes, mode, registry)
     ).filter((it) => it !== undefined);
 
     return new Collection(newResources);
