@@ -318,7 +318,9 @@ export default class MongooseAdapter {
     let refPaths = util.getReferencePaths(doc.constructor);
 
     // Get and clean up attributes
-    let attrs = doc.toObject();
+    // Loading with toJSON and depopulate means we don't have to handle
+    // ObjectIds or worry about linked docs--we'll always get id Strings.
+    let attrs = doc.toJSON({depopulate: true});
     let schemaOptions = doc.constructor.schema.options;
     delete attrs["_id"];
     delete attrs[schemaOptions.versionKey];
@@ -337,6 +339,8 @@ export default class MongooseAdapter {
 
     // Build Links
     let links = {};
+    let getProp = (obj, part) => obj[part];
+
     refPaths.forEach((path) => {
       // skip if applicable
       if(fields && fields[type] && !arrayContains(fields[type], path)) {
@@ -344,18 +348,12 @@ export default class MongooseAdapter {
       }
 
       // get value at the path w/ the reference, in both the json'd + full docs.
-      let getNested = (obj, part) => obj[part];
       let pathParts = path.split(".");
-      let valAtPath = pathParts.reduce(getNested, doc);
-      let jsonValAtPath = pathParts.reduce(getNested, attrs);
+      let jsonValAtPath = pathParts.reduce(getProp, attrs);
       let referencedType = this.getReferencedType(doc.constructor, path);
 
       // delete the attribute, since we're moving it to links
       deleteNested(path, attrs);
-
-      // in the rare case that this is a refPath whose field has been excluded
-      // from the document, make sure we don't add a links key for it.
-      if(typeof valAtPath === "undefined") { return; }
 
       // Now, since the value wasn't excluded, we need to build its LinkObject.
       // Note: the value could still be null or an empty array. And, because of
@@ -365,25 +363,17 @@ export default class MongooseAdapter {
       // a non-array at the end, to simplify our code.
       let isToOneRelationship = false;
 
-      if(!Array.isArray(valAtPath)) {
-        valAtPath = [valAtPath];
+      if(!Array.isArray(jsonValAtPath)) {
         jsonValAtPath = [jsonValAtPath];
         isToOneRelationship = true;
       }
 
       let linkage = [];
-      valAtPath.forEach((docOrIdOrNull, i) => {
-        if(docOrIdOrNull instanceof mongoose.Document) {
-          linkage.push({type: referencedType, id: docOrIdOrNull.id});
-        }
-        else if(docOrIdOrNull) {
-          // docOrIdOrNull might be an OId here, so use jsonValAtPath,
-          // which will have been converted to a string.
-          linkage.push({type: referencedType, id: jsonValAtPath[i]});
-        }
-        else {
-          linkage.push(docOrIdOrNull);
-        }
+      jsonValAtPath.forEach((idOrNull, i) => {
+        // Even though we did toJSON(), id may be an ObjectId. (lame.)
+        idOrNull = idOrNull ? String(idOrNull).toString() : idOrNull;
+
+        linkage.push(idOrNull ? {type: referencedType, id: idOrNull} : null);
       });
 
       // go back from an array if neccessary and save.
