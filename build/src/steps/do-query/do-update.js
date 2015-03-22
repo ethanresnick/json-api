@@ -10,6 +10,8 @@ var Collection = _interopRequire(require("../../types/Collection"));
 
 var Resource = _interopRequire(require("../../types/Resource"));
 
+var LinkObject = _interopRequire(require("../../types/LinkObject"));
+
 var arrayValuesMatch = require("../../util/arrays").arrayValuesMatch;
 
 var mapResources = require("../../util/type-handling").mapResources;

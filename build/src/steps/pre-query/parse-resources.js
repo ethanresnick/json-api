@@ -6,7 +6,13 @@ var Q = _interopRequire(require("q"));
 
 var APIError = _interopRequire(require("../../types/APIError"));
 
-var Document = _interopRequire(require("../../types/Document"));
+var Resource = _interopRequire(require("./Resource"));
+
+var _LinkObject = require("./LinkObject");
+
+var LinkObject = _interopRequire(_LinkObject);
+
+var Linkage = _interopRequire(_LinkObject);
 
 var Collection = _interopRequire(require("../../types/Collection"));
 
@@ -16,17 +22,17 @@ module.exports = function (requestContext) {
 
     // Below, detect if no primary data was provided.
     if (requestContext.needsBody && !(bodyJSON && bodyJSON.data !== undefined)) {
-      var expected = requestContext.aboutLinkObject ? "link object" : "resource or array of resources";
-      var message = "The request must contain a " + expected + " at the document's top-level \"data\" key.";
+      var expected = requestContext.aboutLinkObject ? "linkage" : "a resource or array of resources";
+      var message = "The request must contain " + expected + " at the document's top-level \"data\" key.";
       reject(new APIError(400, null, message));
     } else if (requestContext.hasBody) {
       try {
         if (requestContext.aboutLinkObject) {
-          requestContext.primary = Document.linkObjectFromJSON(bodyJSON.data);
+          requestContext.primary = linkageFromJSON(bodyJSON.data);
         } else if (Array.isArray(bodyJSON.data)) {
-          requestContext.primary = new Collection(bodyJSON.data.map(Document.resourceFromJSON));
+          requestContext.primary = new Collection(bodyJSON.data.map(resourceFromJSON));
         } else {
-          requestContext.primary = Document.resourceFromJSON(bodyJSON.data);
+          requestContext.primary = resourceFromJSON(bodyJSON.data);
         }
         resolve();
       } catch (error) {
@@ -39,3 +45,29 @@ module.exports = function (requestContext) {
     }
   });
 };
+
+function linkObjectFromJSON(json) {
+  return new LinkObject(linkageFromJSON(json.linkage));
+}
+
+function linkageFromJSON(json) {
+  return new Linkage(json);
+}
+
+function resourceFromJSON(json) {
+  // save and then remove the non-attrs
+  var id = json.id;delete json.id;
+  var type = json.type;delete json.type;
+  var links = json.links || {};delete json.links;
+  var meta = json.meta;delete json.meta;
+
+  // attrs are all the fields that are left.
+  var attrs = json;
+
+  //build LinkObjects
+  for (var key in links) {
+    links[key] = linkObjectFromJSON(links[key]);
+  }
+
+  return new Resource(type, id, attrs, links, meta);
+}

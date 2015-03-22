@@ -4,7 +4,7 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
 
 var ValueObject = require("../../util/type-handling").ValueObject;
 
-var RequestContext = function RequestContext(initialValues) {
+var RequestContext = function RequestContext() {
   _classCallCheck(this, RequestContext);
 
   // Whether the request has a body,
@@ -52,6 +52,8 @@ var RequestContext = function RequestContext(initialValues) {
 
   // Whether the target of the request is a link object, as opposed to a
   // resource object or collection. This affects how incoming data is parsed.
+  // Note: the body of the request will be Linkage rather than LinkObjects, in
+  // the same way that POSTs targeting a collection include a single resource.
   this.aboutLinkObject = false;
 
   // Any primary data included in the request's body.

@@ -10,6 +10,8 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
 
 var LinkObject = _interopRequire(require("./LinkObject"));
 
+var Linkage = _interopRequire(require("./Linkage"));
+
 var Resource = _interopRequire(require("./Resource"));
 
 var Collection = _interopRequire(require("./Collection"));
@@ -66,6 +68,8 @@ var Document = (function () {
           });
         } else if (this.primaryOrErrors instanceof LinkObject) {
           doc.data = linkObjectToJSON(this.primaryOrErrors, this.urlTemplates);
+        } else if (this.primaryOrErrors instanceof Linkage) {
+          doc.data = linkageToJSON(this.primaryOrErrors);
         } else if (Array.isArray(this.primaryOrErrors) && this.primaryOrErrors[0] instanceof Error) {
           doc.errors = this.primaryOrErrors.map(errorToJSON);
         } else {
@@ -75,31 +79,6 @@ var Document = (function () {
         return doc;
       }
     }
-  }, {
-    linkObjectFromJSON: {
-      value: function linkObjectFromJSON(json) {
-        return new LinkObject(json.linkage);
-      }
-    },
-    resourceFromJSON: {
-      value: function resourceFromJSON(json) {
-        // save and then remove the non-attrs
-        var id = json.id;delete json.id;
-        var type = json.type;delete json.type;
-        var links = json.links || {};delete json.links;
-        var meta = json.meta;delete json.meta;
-
-        // attrs are all the fields that are left.
-        var attrs = json;
-
-        //build LinkObjects
-        for (var key in links) {
-          links[key] = this.linkObjectFromJSON(links[key]);
-        }
-
-        return new Resource(type, id, attrs, links, meta);
-      }
-    }
   });
 
   return Document;
@@ -107,9 +86,13 @@ var Document = (function () {
 
 module.exports = Document;
 
+function linkageToJSON(linkage) {
+  return linkage.value;
+}
+
 function linkObjectToJSON(linkObject, urlTemplates) {
   return {
-    linkage: linkObject.linkage
+    linkage: linkageToJSON(linkObject.linkage)
   };
 }
 

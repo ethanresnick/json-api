@@ -27,9 +27,9 @@ Object.defineProperty(exports, "__esModule", {
 
 var Collection = _interopRequire(require("../types/Collection"));
 
-function ValueObject(constructorFn) {
+function ValueObject(ConstructorFn) {
   return function (initialValues) {
-    var obj = new constructorFn();
+    var obj = new ConstructorFn();
     var hasOwnProp = Object.prototype.hasOwnProperty;
 
     // Use initial values where possible.

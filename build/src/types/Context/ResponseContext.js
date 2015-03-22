@@ -6,7 +6,7 @@ var ValueObject = require("../../util/type-handling").ValueObject;
 
 var propDesc = { writable: true, enumerable: true };
 
-var ResponseContext = function ResponseContext(initialValues) {
+var ResponseContext = function ResponseContext() {
   _classCallCheck(this, ResponseContext);
 
   // The JSON-API extensions used to formulate the response,

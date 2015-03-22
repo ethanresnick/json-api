@@ -96,7 +96,6 @@ module.exports = function (registry) {
     // APIError instances. Might be needed if, e.g., the error was unexpected
     // or the user couldn't throw an APIError for compatibility with other code).
     ["catch"](function (errors) {
-      console.log(errors, errors.stack);
       errors = (Array.isArray(errors) ? errors : [errors]).map(function (it) {
         if (it instanceof APIError) {
           return it;
@@ -136,7 +135,7 @@ module.exports = function (registry) {
       }
       return responseContext;
     });
-  };
+  }
 
   pipeline.supportedExt = supportedExt;
 

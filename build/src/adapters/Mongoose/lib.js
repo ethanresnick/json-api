@@ -103,11 +103,12 @@ function getReferencedModelName(model, path) {
 
 function resourceToDocObject(resource) {
   var res = Object.assign({}, resource.attrs);
+  var getId = function (it) {
+    return it.id;
+  };
   for (var key in resource.links) {
     var linkage = resource.links[key].linkage;
-    res[key] = Array.isArray(linkage) ? linkage.map(function (it) {
-      return it.id;
-    }) : linkage.id;
+    res[key] = Array.isArray(linkage) ? linkage.map(getId) : linkage.id;
   }
   return res;
 }

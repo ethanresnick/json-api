@@ -33,6 +33,8 @@ var Resource = _interopRequire(require("../../types/Resource"));
 
 var Collection = _interopRequire(require("../../types/Collection"));
 
+var Linkage = _interopRequire(require("../../types/Linkage"));
+
 var LinkObject = _interopRequire(require("../../types/LinkObject"));
 
 var APIError = _interopRequire(require("../../types/APIError"));
@@ -67,8 +69,7 @@ var MongooseAdapter = (function () {
         var queryBuilder = new mongoose.Query(null, null, model, model.collection);
         var pluralizer = this.inflector.plural;
         var mode = "find",
-            idQuery = undefined,
-            makeCollection = undefined;
+            idQuery = undefined;
         var primaryDocumentsPromise = undefined,
             includedResourcesPromise = Q(null);
 
@@ -188,15 +189,16 @@ var MongooseAdapter = (function () {
         // documents. That's unfortunately much slower, but it ensures that
         // mongoose runs all the user's hooks.
         var creationPromises = [];
+        var setIdWithGenerator = function (doc) {
+          doc._id = _this.idGenerator(doc);
+        };
         for (var type in resourcesByType) {
           var model = this.getModel(this.constructor.getModelName(type));
           var resources = resourcesByType[type];
           var docObjects = resources.map(util.resourceToDocObject);
 
           if (typeof this.idGenerator === "function") {
-            forEachArrayOrVal(docObjects, function (doc) {
-              doc._id = _this.idGenerator(doc);
-            });
+            forEachArrayOrVal(docObjects, setIdWithGenerator);
           }
 
           creationPromises.push(Q.ninvoke(model, "create", docObjects));
@@ -454,7 +456,8 @@ var MongooseAdapter = (function () {
           });
 
           // go back from an array if neccessary and save.
-          links[path] = new LinkObject(isToOneRelationship ? linkage[0] : linkage);
+          linkage = new Linkage(isToOneRelationship ? linkage[0] : linkage);
+          links[path] = new LinkObject(linkage);
         });
 
         // finally, create the resource.

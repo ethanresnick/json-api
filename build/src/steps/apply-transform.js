@@ -11,8 +11,6 @@ var Collection = _interopRequire(require("../types/Collection"));
  */
 
 module.exports = function (toTransform, mode, registry, frameworkReq, frameworkRes) {
-  var transformed = [];
-
   if (toTransform instanceof Resource) {
     return transform(toTransform, frameworkReq, frameworkRes, mode, registry);
   } else if (toTransform instanceof Collection) {

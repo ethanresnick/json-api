@@ -22,7 +22,7 @@ var LinkObject = (function () {
   _createClass(LinkObject, {
     empty: {
       value: function empty() {
-        this.linkage = Array.isArray(this.linkage) ? [] : null;
+        this.linkage.empty();
       }
     }
   });
