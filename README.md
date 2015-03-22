@@ -10,7 +10,7 @@ It currently integrates with [Express](http://expressjs.com/) apps that use [Mon
 # Installation
 ```$ npm install json-api```
 
-*On Versioning*: After the JSON API spec is finalized, this library's major version will be bumped to 3.0.0 and it will use semantic versioning going forward. Until then, the 2.x versions should be considered like this library's second "major version zero"--which is needed only because the 1.0 version of this library was stable and used in production for quite a while.
+*On Versioning*: After the JSON API spec is finalized, this library's major version will be bumped to 3.0.0 and it will use semantic versioning going forward. Until then, the 2.x versions should be considered like this library's second "major version zero"—which is needed only because the 1.0 version of this library was stable and used in production for a while.
 
 # Example API
 Check out the [full, working example repo](http://github.com/ethanresnick/json-api/example) for all the details on building an API with this library. Or, take a look at the basic example below:
