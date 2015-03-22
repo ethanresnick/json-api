@@ -47,6 +47,8 @@ class RequestContext {
 
     // Whether the target of the request is a link object, as opposed to a
     // resource object or collection. This affects how incoming data is parsed.
+    // Note: the body of the request will be Linkage rather than LinkObjects, in
+    // the same way that POSTs targeting a collection include a single resource.
     this.aboutLinkObject = false;
 
     // Any primary data included in the request's body.

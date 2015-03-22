@@ -1,4 +1,5 @@
 import LinkObject from "./LinkObject"
+import Linkage from "./Linkage"
 import Resource from "./Resource"
 import Collection from "./Collection"
 import APIError from "./APIError"
@@ -35,6 +36,10 @@ export default class Document {
       doc.data = linkObjectToJSON(this.primaryOrErrors, this.urlTemplates);
     }
 
+    else if(this.primaryOrErrors instanceof Linkage) {
+      doc.data = linkageToJSON(this.primaryOrErrors);
+    }
+
     else if(Array.isArray(this.primaryOrErrors) && this.primaryOrErrors[0] instanceof Error) {
       doc.errors = this.primaryOrErrors.map(errorToJSON);
     }
@@ -45,36 +50,17 @@ export default class Document {
 
     return doc;
   }
+}
 
-  static linkObjectFromJSON(json) {
-    return new LinkObject(json.linkage);
-  }
-
-  static resourceFromJSON(json) {
-    // save and then remove the non-attrs
-    let id    = json.id; delete json.id;
-    let type  = json.type; delete json.type;
-    let links = json.links || {}; delete json.links;
-    let meta  = json.meta; delete json.meta;
-
-    // attrs are all the fields that are left.
-    let attrs = json;
-
-    //build LinkObjects
-    for(let key in links) {
-      links[key] = this.linkObjectFromJSON(links[key]);
-    }
-
-    return new Resource(type, id, attrs, links, meta);
-  }
+function linkageToJSON(linkage) {
+  return linkage.value;
 }
 
 function linkObjectToJSON(linkObject, urlTemplates) {
   return {
-    "linkage": linkObject.linkage
+    "linkage": linkageToJSON(linkObject.linkage)
   };
 }
-
 
 function resourceToJSON(resource, urlTemplates) {
   let json = resource.attrs;

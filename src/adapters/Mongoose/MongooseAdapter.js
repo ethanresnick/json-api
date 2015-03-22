@@ -8,6 +8,7 @@ import * as util from "./lib"
 import pluralize from "pluralize"
 import Resource from "../../types/Resource"
 import Collection from "../../types/Collection"
+import Linkage from "../../types/Linkage"
 import LinkObject from "../../types/LinkObject"
 import APIError from "../../types/APIError"
 import nodeUtil from "util";
@@ -386,7 +387,8 @@ export default class MongooseAdapter {
       });
 
       // go back from an array if neccessary and save.
-      links[path] = new LinkObject(isToOneRelationship ? linkage[0] : linkage);
+      linkage = new Linkage(isToOneRelationship ? linkage[0] : linkage);
+      links[path] = new LinkObject(linkage);
     });
 
     // finally, create the resource.

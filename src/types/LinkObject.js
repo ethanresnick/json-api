@@ -4,6 +4,6 @@ export default class LinkObject {
   }
 
   empty() {
-    this.linkage = (Array.isArray(this.linkage)) ? [] : null;
+    this.linkage.empty();
   }
 }
