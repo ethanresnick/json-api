@@ -1,8 +1,8 @@
 import Q from "q";
 import APIError from "../../types/APIError";
-import Resource from "./Resource";
-import LinkObject from "./LinkObject";
-import Linkage from "./LinkObject";
+import Resource from "../../types/Resource";
+import LinkObject from "../../types/LinkObject";
+import Linkage from "../../types/Linkage";
 import Collection from "../../types/Collection";
 
 export default function(requestContext) {
