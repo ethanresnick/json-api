@@ -9,7 +9,7 @@ let expect = chai.expect;
 
 describe("Utility methods", () => {
   describe("deleteNested", () => {
-    let obj = {"contact": {"phone": "310"}, "top-level":true};
+    let obj = {"contact": {"phone": "310"}, "top-level": true};
     let deletion = utils.deleteNested("contact.phone", obj);
 
     it("should delete a nested property when present", () => {
@@ -32,7 +32,7 @@ describe("Utility methods", () => {
 
   describe("isSubsetOf", () => {
     it("should return true for two equal arrays", () => {
-      expect(utils.isSubsetOf([1,2,3], [1,2,3])).to.be.true;
+      expect(utils.isSubsetOf([1, 2, 3], [1, 2, 3])).to.be.true;
     });
 
     it("should return true for strict subsets", () => {
@@ -41,7 +41,7 @@ describe("Utility methods", () => {
 
     it("should return false for non-subsets", () => {
       expect(utils.isSubsetOf(["myprop", "bob"], ["john", "mary"])).to.be.false;
-    })
+    });
 
     it("should handle duplicate elements in either argument", () => {
       expect(utils.isSubsetOf(["test", 3, 3], ["test", 3])).to.be.true;
@@ -54,5 +54,5 @@ describe("Utility methods", () => {
       expect(utils.isSubsetOf(["false"], [false])).to.be.false;
       expect(utils.isSubsetOf(["false"], [0])).to.be.false;
     });
-  })
+  });
 });

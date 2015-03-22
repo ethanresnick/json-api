@@ -6,13 +6,11 @@ var Q = _interopRequire(require("q"));
 
 var APIError = _interopRequire(require("../../types/APIError"));
 
-var Resource = _interopRequire(require("./Resource"));
+var Resource = _interopRequire(require("../../types/Resource"));
 
-var _LinkObject = require("./LinkObject");
+var LinkObject = _interopRequire(require("../../types/LinkObject"));
 
-var LinkObject = _interopRequire(_LinkObject);
-
-var Linkage = _interopRequire(_LinkObject);
+var Linkage = _interopRequire(require("../../types/Linkage"));
 
 var Collection = _interopRequire(require("../../types/Collection"));
 

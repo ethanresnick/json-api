@@ -7,7 +7,7 @@
     "indent": [2, 2, {indentSwitchCase: true}],
     "brace-style": [2, "stroustrup", { "allowSingleLine": true }],
     "new-cap": [2, {"capIsNewExceptions": ["Q", "Promise"]}],
-    "quotes": [2, "double"],
+    "quotes": [2, "double", "avoid-escape"],
 
     "no-use-before-define": [1, "nofunc"],
     "no-underscore-dangle": 0,

@@ -22,7 +22,7 @@ describe("negotiateContentType", function () {
   it("should use json api with supported-ext when json api is supported and we're using no extensions", function (done) {
     var accept = "application/vnd.api+json";
     negotiate(accept, [], ["ext1", "ext2"]).then(function (contentType) {
-      if (contentType == "application/vnd.api+json; supported-ext=\"ext1,ext2\"") {
+      if (contentType === "application/vnd.api+json; supported-ext=\"ext1,ext2\"") {
         done();
       } else {
         done(new Error("Expected JSON API Content Type"));
@@ -33,7 +33,7 @@ describe("negotiateContentType", function () {
   it("should use json api with supported-ext and ext if json api with our extensions is supported", function (done) {
     var accept = "application/vnd.api+json; ext=\"inuse,second\", */*";
     negotiate(accept, ["inuse", "second"], ["inuse", "second", "three"]).then(function (contentType) {
-      if (contentType == "application/vnd.api+json; supported-ext=\"inuse,second,three\"; ext=\"inuse,second\"") {
+      if (contentType === "application/vnd.api+json; supported-ext=\"inuse,second,three\"; ext=\"inuse,second\"") {
         done();
       } else {
         done(new Error("Expected JSON API Content Type; got: " + contentType));
@@ -44,7 +44,7 @@ describe("negotiateContentType", function () {
   it("should use json if client accepts json and json api, but not with our extensions", function (done) {
     var accept = "application/vnd.api+json; ext=\"ext2\",application/json;q=0.9,*/*;q=0.8";
     negotiate(accept, ["bulk"], ["ext1, ext2"]).then(function (contentType) {
-      if (contentType == "application/json") {
+      if (contentType === "application/json") {
         done();
       } else {
         done(new Error("Expected JSON Content Type"));
@@ -55,7 +55,7 @@ describe("negotiateContentType", function () {
   it("should use json if client accepts only json", function (done) {
     var accept = "text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8";
     negotiate(accept, [], ["ext1, ext2"]).then(function (contentType) {
-      if (contentType == "application/json") {
+      if (contentType === "application/json") {
         done();
       } else {
         done(new Error("Expected JSON Content Type"));

@@ -369,7 +369,7 @@ export default class MongooseAdapter {
       }
 
       let linkage = [];
-      jsonValAtPath.forEach((idOrNull, i) => {
+      jsonValAtPath.forEach((idOrNull) => {
         // Even though we did toJSON(), id may be an ObjectId. (lame.)
         idOrNull = idOrNull ? String(idOrNull).toString() : idOrNull;
 

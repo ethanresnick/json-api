@@ -36,7 +36,7 @@ describe("ResourceTypeRegistry", function () {
     var description = {
       adapter: {},
       beforeSave: function () {},
-      afterQuery: function () {},
+      beforeRender: function () {},
       info: {},
       urlTemplates: { path: "test template" }
     };

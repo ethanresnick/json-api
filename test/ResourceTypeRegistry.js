@@ -3,12 +3,12 @@ import sinon from "sinon"
 import chai from "chai"
 import ResourceTypeRegistry from "../src/ResourceTypeRegistry"
 
-var expect = chai.expect;
-var registry = {};
-var makeGetterSetterTest = function(newThing, type, methodName, deep) {
+let expect = chai.expect;
+let registry = {};
+let makeGetterSetterTest = function(newThing, type, methodName, deep) {
   return function() {
     expect(registry[methodName](type)).to.be.undefined;
-    registry[methodName](type, newThing)
+    registry[methodName](type, newThing);
 
     // You may get a copy of the set object back, not a direct
     // reference. And that's acceptable. A deep check lets that pass.
@@ -18,31 +18,31 @@ var makeGetterSetterTest = function(newThing, type, methodName, deep) {
     else {
       expect(registry[methodName](type)).to.equal(newThing);
     }
-  }
-}
+  };
+};
 
 describe("ResourceTypeRegistry", function() {
   beforeEach(() => {
-    registry = new ResourceTypeRegistry()
+    registry = new ResourceTypeRegistry();
   });
 
   describe("type", () => {
-    var description = {
+    let description = {
       adapter: {},
       beforeSave: () => {},
-      afterQuery: () => {},
+      beforeRender: () => {},
       info: {},
-      urlTemplates: {'path': 'test template'}
+      urlTemplates: {"path": "test template"}
     };
 
     it("should be a getter/setter for a type",
       makeGetterSetterTest(description, "mytypes", "type", true)
-    )
+    );
   });
 
   describe("adapter", () => {
     it("should be a getter/setter for a type's adapter",
-      makeGetterSetterTest({'a':'new model'}, "mytypes", "adapter")
+      makeGetterSetterTest({"a": "new model"}, "mytypes", "adapter")
     );
   });
 
@@ -67,15 +67,15 @@ describe("ResourceTypeRegistry", function() {
   describe("info", () => {
     it("should be a getter/setter for a type's info",
       makeGetterSetterTest({}, "mytypes", "info")
-    )
+    );
   });
 
   describe("urlTemplates", () => {
     it("should be a getter/setter for a type's urlTemplates",
       makeGetterSetterTest(
-        {'path': 'test template'},
+        {"path": "test template"},
         "mytypes", "urlTemplates", true
       )
-    )
+    );
   });
 });

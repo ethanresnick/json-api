@@ -17,29 +17,6 @@ var Document = _interopRequire(require("../../src/types/Document"));
 var expect = chai.expect;
 
 describe("Document class", function () {
-  describe("resourceFromJSON", function () {
-    it("should return a resource object", function () {
-      expect(Document.resourceFromJSON({ type: "tests", id: "1" })).to.be["instanceof"](Resource);
-    });
-
-    it("should load up the id, type, and attributes", function () {
-      var json = { id: "21", type: "people", name: "bob", isBob: true };
-      var resource = Document.resourceFromJSON(json);
-
-      expect(resource.id).to.equal("21");
-      expect(resource.type).to.equal("people");
-      expect(resource.attrs).to.deep.equal({ name: "bob", isBob: true });
-    });
-
-    it.skip("should create LinkObjects for each link", function () {});
-  });
-
-  describe.skip("linkObjectFromJSON", function () {
-    it.skip("should read in the incoming json correctly", function () {
-      console.log("see https://github.com/json-api/json-api/issues/482");
-    });
-  });
-
   describe("Rendering a document", function () {
     var person = new Resource("people", "31", { name: "mark" });
     var person2 = new Resource("people", "32", { name: "ethan" });
@@ -134,13 +111,3 @@ describe("Document class", function () {
       }
     }
 */
-
-/*
-let parents = [{"type": "people", "id": "1"}, {"type": "people", "id": "2"}];
-console.log('see https://github.com/json-api/json-api/issues/482');
-let json = {
-  "id": "3", "type": "people", "name": "Ethan",
-  "links": {
-    "parents": { "linkage": parents }
-  }
-};*/
