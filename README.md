@@ -5,10 +5,12 @@ This library creates a [JSON API](http://jsonapi.org/)-compliant REST API from y
 
 It currently integrates with [Express](http://expressjs.com/) apps that use [Mongoose](http://mongoosejs.com/) models, but it can easily be integrated with other frameworks and databases. If you want to see an integration with another stack, just open an issue!
 
-*Heads up:* The JSON-API spec isn't quite at version 1.0 yet, so small things may still change. Also, this library doesn't implement the whole spec yet, so some advanced routes do not work. That said, all the basic CRUD operations are supported and development is progressing very quickly. The goal is to have the entire spec implemented by the time the final JSON API spec is officially released.
+*Heads up:* The JSON-API spec isn't quite at version 1.0 yet, nor does this library yet implement the whole spec. In particular,  some advanced routes do not work and the library's API is subject to change. That said, all the basic CRUD operations are supported and development is progressing very quickly. The goal is to have the entire spec implemented by the time the final JSON API spec is officially released.
 
 # Installation
 ```$ npm install json-api```
+
+*On Versioning*: After the JSON API spec is finalized, this library's major version will be bumped to 3.0.0 and it will use semantic versioning going forward. Until then, the 2.x versions should be considered like this library's second "major version zero"--which is needed only because the 1.0 version of this library was stable and used in production for quite a while.
 
 # Example API
 Check out the [full, working example repo](http://github.com/ethanresnick/json-api/example) for all the details on building an API with this library. Or, take a look at the basic example below:
@@ -61,7 +63,7 @@ To use this library, you describe the special behavior (if any) that resources o
 - `labelMappers` (optional): this lets you create urls (or, in REST terminology, resources) that map to different database items over time. For example, you could have a `/events/upcoming` resource or a `/users/me` resource. In those examples, "upcoming" and "me" are called the labels and, in labelMappers, you provide a function that maps each label to the proper database id(s) at any given time. The function can return a Promise if needed.
 
 ## Routing, Authentication & Controllers
-This library gives you a base API controller (shown in the example) and a `Documentation` controller, but it doesn't prescribe how requests get to these controllers. This allows you to use any url scheme, routing layer, or authentication system you already have in place. You just need to make sure `req.params.type` reflects the requested resource type, and `req.params.id` reflects the requested id (or comma-separated list of ids), if present. In the example above, routing is handled with Express's built-in `app[VERB]` methods. If you're looking for something more robust, you might be interested in [Express Simple Router](https://github.com/ethanresnick/express-simple-router). For authentication, check out [Express Simple Firewall](https://github.com/ethanresnick/express-simple-firewall).
+This library gives you a base API controller (shown in the example) and a `Documentation` controller, but it doesn't prescribe how requests get to these controllers. This allows you to use any url scheme, routing layer, or authentication system you already have in place. You just need to make sure `req.params.type` reflects the requested resource type, and `req.params.id` or (if you want to allow labels on a request) `req.params.idOrLabel` reflects the requested id, if any. In the example above, routing is handled with Express's built-in `app[VERB]` methods. If you're looking for something more robust, you might be interested in [Express Simple Router](https://github.com/ethanresnick/express-simple-router). For authentication, check out [Express Simple Firewall](https://github.com/ethanresnick/express-simple-firewall).
 
 ## Adapters
 An adapter handles all the interaction with the database. It is responsible for turning requests into standard [`Resource`](https://github.com/ethanresnick/json-api/blob/master/src/types/Resource.js) or [`Collection`](https://github.com/ethanresnick/json-api/blob/master/src/types/Collection.js) objects that the rest of the library will use. See the built-in [MongooseAdapter](https://github.com/ethanresnick/json-api/blob/master/src/adapters/Mongoose/MongooseAdapter.js) for an example.
