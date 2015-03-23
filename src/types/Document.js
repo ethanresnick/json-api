@@ -32,20 +32,13 @@ export default class Document {
       });
     }
 
-    else if(this.primaryOrErrors instanceof LinkObject) {
-      doc.data = linkObjectToJSON(this.primaryOrErrors, this.urlTemplates);
-    }
-
     else if(this.primaryOrErrors instanceof Linkage) {
       doc.data = linkageToJSON(this.primaryOrErrors);
     }
 
-    else if(Array.isArray(this.primaryOrErrors) && this.primaryOrErrors[0] instanceof Error) {
-      doc.errors = this.primaryOrErrors.map(errorToJSON);
-    }
-
+    // it's either resource, a collection, linkage or errors...
     else {
-      doc.data = this.primaryOrErrors; // e.g. primary could be null.
+      doc.errors = this.primaryOrErrors.map(errorToJSON);
     }
 
     return doc;
