@@ -104,8 +104,9 @@ function buildRequestContext(req) {
     context.relationship = req.params.relationship;
 
     // Handle HTTP/Conneg.
-    context.accepts = req.headers.accept;
+    context.uri     = req.protocol + '://' + req.get('Host') + req.url;
     context.method  = req.method.toLowerCase();
+    context.accepts = req.headers.accept;
 
     context.hasBody = hasBody(req);
 

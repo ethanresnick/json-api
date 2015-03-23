@@ -129,7 +129,7 @@ export default function(registry) {
         else {
           responseContext.body = new Document(
             responseContext.primary, responseContext.included,
-            {}, registry.urlTemplates()
+            {}, registry.urlTemplates(), requestContext.uri
           ).get();
         }
         return responseContext;

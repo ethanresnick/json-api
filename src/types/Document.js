@@ -9,13 +9,15 @@ import templating from "url-template";
 
 export default class Document {
   /*eslint-disable no-unused-vars */
-  constructor(primaryOrErrors, included = [], meta, urlTemplates) {
+  constructor(primaryOrErrors, included = [], meta, urlTemplates, reqURI) {
     [this.primaryOrErrors, this.included,  this.meta] = Array.from(arguments).slice(0, 3);
 
     // parse all the templates once on construction.
     this.urlTemplates = mapObject(urlTemplates || {}, (templatesForType) => {
       return mapObject(templatesForType, templating.parse.bind(templating));
     });
+
+    this.reqURI = reqURI;
   }
   /*eslint-enable */
 
@@ -25,6 +27,9 @@ export default class Document {
     if(this.meta && !objectIsEmpty(this.meta)) doc.meta = this.meta;
 
     // TODO: top-level related link.
+    if(this.reqURI) {
+      doc.links = {"self": this.reqURI};
+    }
 
     if(this.included && Array.isArray(this.included)) {
       doc.included = arrayUnique(this.included).map((resource) => {
