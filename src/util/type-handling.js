@@ -35,6 +35,16 @@ export function objectIsEmpty(obj) {
   return true;
 }
 
+export function mapObject(obj, mapFn) {
+  let mappedObj = Object.assign({}, obj);
+
+  for(let key in mappedObj) {
+    mappedObj[key] = mapFn(obj[key]);
+  }
+
+  return mappedObj;
+}
+
 /**
  * If `resourceOrCollection` is a collection, it applies `mapFn` to each of
  * its resources; otherwise, if `resourceOrCollection` is a single resource,

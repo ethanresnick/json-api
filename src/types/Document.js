@@ -1,15 +1,21 @@
-import LinkObject from "./LinkObject"
-import Linkage from "./Linkage"
-import Resource from "./Resource"
-import Collection from "./Collection"
-import APIError from "./APIError"
-import {objectIsEmpty, mapResources} from "../util/type-handling"
-import {arrayUnique} from "../util/arrays"
+import LinkObject from "./LinkObject";
+import Linkage from "./Linkage";
+import Resource from "./Resource";
+import Collection from "./Collection";
+import APIError from "./APIError";
+import {objectIsEmpty, mapResources, mapObject} from "../util/type-handling";
+import {arrayUnique} from "../util/arrays";
+import templating from "url-template";
 
 export default class Document {
   /*eslint-disable no-unused-vars */
   constructor(primaryOrErrors, included = [], meta, urlTemplates) {
-    [this.primaryOrErrors, this.included,  this.meta, this.urlTemplates] = Array.from(arguments);
+    [this.primaryOrErrors, this.included,  this.meta] = Array.from(arguments).slice(0, 3);
+
+    // parse all the templates once on construction.
+    this.urlTemplates = mapObject(urlTemplates || {}, (templatesForType) => {
+      return mapObject(templatesForType, templating.parse.bind(templating));
+    });
   }
   /*eslint-enable */
 
@@ -18,7 +24,7 @@ export default class Document {
 
     if(this.meta && !objectIsEmpty(this.meta)) doc.meta = this.meta;
 
-    // TODO: top-level links: self, related, etc.
+    // TODO: top-level related link.
 
     if(this.included && Array.isArray(this.included)) {
       doc.included = arrayUnique(this.included).map((resource) => {
@@ -57,11 +63,16 @@ function linkObjectToJSON(linkObject, urlTemplates) {
 
 function resourceToJSON(resource, urlTemplates) {
   let json = resource.attrs;
+  let selfTemplate = urlTemplates[resource.type] && urlTemplates[resource.type].self;
   json.id = resource.id;
   json.type = resource.type;
 
-  if(!objectIsEmpty(resource.links)) {
+  if(!objectIsEmpty(resource.links) || selfTemplate) {
     json.links = {};
+    if(selfTemplate) {
+      let templateData = Object.assign({"id": resource.id}, resource.attrs);
+      json.links.self = urlTemplates[resource.type].self.expand(templateData);
+    }
     for(let path in resource.links) {
       json.links[path] = linkObjectToJSON(resource.links[path], urlTemplates);
     }

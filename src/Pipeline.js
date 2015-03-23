@@ -128,7 +128,8 @@ export default function(registry) {
         }
         else {
           responseContext.body = new Document(
-            responseContext.primary, responseContext.included
+            responseContext.primary, responseContext.included,
+            {}, registry.urlTemplates()
           ).get();
         }
         return responseContext;
