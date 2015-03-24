@@ -26,9 +26,16 @@ var Document = _interopRequire(require("./types/Document"));
 
 var ResourceTypeRegistry = (function () {
   function ResourceTypeRegistry() {
+    var _this = this;
+
+    var typeDescriptions = arguments[0] === undefined ? [] : arguments[0];
+
     _classCallCheck(this, ResourceTypeRegistry);
 
     this._resourceTypes = {};
+    typeDescriptions.forEach(function (it) {
+      _this.type(it);
+    });
   }
 
   _createClass(ResourceTypeRegistry, {
@@ -45,6 +52,14 @@ var ResourceTypeRegistry = (function () {
         return _typeWrapper;
       })(function (type, description) {
         var _this = this;
+
+        // create a one-argument version that takes the
+        // type as a key on the description object.
+        if (typeof type === "object" && typeof description === "undefined") {
+          description = type;
+          type = type.type;
+          delete description.type;
+        }
 
         if (description) {
           this._resourceTypes[type] = {};

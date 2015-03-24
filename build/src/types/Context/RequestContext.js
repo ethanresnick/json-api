@@ -22,6 +22,9 @@ var RequestContext = function RequestContext() {
   // The HTTP method for the request.
   this.method = null;
 
+  // The URI (or IRI) being requested.
+  this.uri = null;
+
   // The request's Content-Type, *excluding* media-type parameters.
   this.contentType = null;
 

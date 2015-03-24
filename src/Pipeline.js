@@ -147,7 +147,7 @@ export default function(registry) {
         responseContext.body  = (new Document([APIError.fromError(error)])).get();
       }, () => {}
     );
-  }
+  };
 
   return pipeline;
 }

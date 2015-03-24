@@ -11,6 +11,7 @@ var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["defau
  */
 exports.ValueObject = ValueObject;
 exports.objectIsEmpty = objectIsEmpty;
+exports.mapObject = mapObject;
 
 /**
  * If `resourceOrCollection` is a collection, it applies `mapFn` to each of
@@ -55,6 +56,16 @@ function objectIsEmpty(obj) {
     }
   }
   return true;
+}
+
+function mapObject(obj, mapFn) {
+  var mappedObj = Object.assign({}, obj);
+
+  for (var key in mappedObj) {
+    mappedObj[key] = mapFn(obj[key]);
+  }
+
+  return mappedObj;
 }
 
 function mapResources(resourceOrCollection, mapFn) {

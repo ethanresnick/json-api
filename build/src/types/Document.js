@@ -22,25 +22,34 @@ var _utilTypeHandling = require("../util/type-handling");
 
 var objectIsEmpty = _utilTypeHandling.objectIsEmpty;
 var mapResources = _utilTypeHandling.mapResources;
+var mapObject = _utilTypeHandling.mapObject;
 
 var arrayUnique = require("../util/arrays").arrayUnique;
+
+var templating = _interopRequire(require("url-template"));
 
 var Document = (function () {
   /*eslint-disable no-unused-vars */
 
-  function Document(primaryOrErrors, _x, meta, urlTemplates) {
+  function Document(primaryOrErrors, _x, meta, urlTemplates, reqURI) {
     var included = arguments[1] === undefined ? [] : arguments[1];
 
     _classCallCheck(this, Document);
 
-    var _ref = Array.from(arguments);
+    var _ref = Array.from(arguments).slice(0, 3);
 
-    var _ref2 = _slicedToArray(_ref, 4);
+    var _ref2 = _slicedToArray(_ref, 3);
 
     this.primaryOrErrors = _ref2[0];
     this.included = _ref2[1];
     this.meta = _ref2[2];
-    this.urlTemplates = _ref2[3];
+
+    // parse all the templates once on construction.
+    this.urlTemplates = mapObject(urlTemplates || {}, function (templatesForType) {
+      return mapObject(templatesForType, templating.parse.bind(templating));
+    });
+
+    this.reqURI = reqURI;
   }
 
   _createClass(Document, {
@@ -54,7 +63,10 @@ var Document = (function () {
 
         if (this.meta && !objectIsEmpty(this.meta)) doc.meta = this.meta;
 
-        // TODO: top-level links: self, related, etc.
+        // TODO: top-level related link.
+        if (this.reqURI) {
+          doc.links = { self: this.reqURI };
+        }
 
         if (this.included && Array.isArray(this.included)) {
           doc.included = arrayUnique(this.included).map(function (resource) {
@@ -66,14 +78,13 @@ var Document = (function () {
           doc.data = mapResources(this.primaryOrErrors, function (resource) {
             return resourceToJSON(resource, _this.urlTemplates);
           });
-        } else if (this.primaryOrErrors instanceof LinkObject) {
-          doc.data = linkObjectToJSON(this.primaryOrErrors, this.urlTemplates);
         } else if (this.primaryOrErrors instanceof Linkage) {
           doc.data = linkageToJSON(this.primaryOrErrors);
-        } else if (Array.isArray(this.primaryOrErrors) && this.primaryOrErrors[0] instanceof Error) {
+        }
+
+        // it's either resource, a collection, linkage or errors...
+        else {
           doc.errors = this.primaryOrErrors.map(errorToJSON);
-        } else {
-          doc.data = this.primaryOrErrors; // e.g. primary could be null.
         }
 
         return doc;
@@ -98,11 +109,16 @@ function linkObjectToJSON(linkObject, urlTemplates) {
 
 function resourceToJSON(resource, urlTemplates) {
   var json = resource.attrs;
+  var selfTemplate = urlTemplates[resource.type] && urlTemplates[resource.type].self;
   json.id = resource.id;
   json.type = resource.type;
 
-  if (!objectIsEmpty(resource.links)) {
+  if (!objectIsEmpty(resource.links) || selfTemplate) {
     json.links = {};
+    if (selfTemplate) {
+      var templateData = Object.assign({ id: resource.id }, resource.attrs);
+      json.links.self = urlTemplates[resource.type].self.expand(templateData);
+    }
     for (var path in resource.links) {
       json.links[path] = linkObjectToJSON(resource.links[path], urlTemplates);
     }

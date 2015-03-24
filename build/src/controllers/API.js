@@ -16,11 +16,7 @@ var pipeline = _interopRequire(require("../Pipeline"));
 
 var RequestContext = _interopRequire(require("../types/Context/RequestContext"));
 
-var APIError = _interopRequire(require("../types/APIError"));
-
-var Document = _interopRequire(require("../types/Document"));
-
-var negotiateContentType = _interopRequire(require("../steps/http/negotiate-content-type"));
+var ResourceTypeRegistry = _interopRequire(require("../ResourceTypeRegistry"));
 
 /**
  * This controller offers the outside world distinct entry points into the
@@ -28,13 +24,19 @@ var negotiateContentType = _interopRequire(require("../steps/http/negotiate-cont
  * point of interaction between this library and express. Inside the pipeline,
  * we use the ResponseContext that this controller provides to generate a
  * ResponseContext object, which the controller then turns into a response.
+ * @param {ResourceTypeRegistry|array} registryOrResourceDescriptions
  */
 
 var APIController = (function () {
-  function APIController(registry) {
+  function APIController(registryOrResourceDescriptions) {
     _classCallCheck(this, APIController);
 
-    this.pipeline = pipeline(registry);
+    if (Array.isArray(registryOrResourceDescriptions)) {
+      var registry = new ResourceTypeRegistry(registryOrResourceDescriptions);
+      this.pipeline = pipeline(registry);
+    } else {
+      this.pipeline = pipeline(registryOrResourceDescriptions);
+    }
   }
 
   _createClass(APIController, {
@@ -99,25 +101,18 @@ var APIController = (function () {
     sendError: {
 
       /**
-       * A user of this library may wish to send an error for something that
-       * the JSON API Pipeline can't process because it's outside the main spec's
-       * scope (e.g. an authentication error). So, the controller exposes this
-       * method which allows them to do that. (Even if we refactor some of this
-       * logic down the line to be handled in the pipeline--e.g. giving it another
-       * path--it's good to expose this on the controller's interface.)
+       * A user of this library may wish to send an error response for an exception
+       * that originated outside of the JSON API Pipeline and that's outside the
+       * main spec's scope (e.g. an authentication error). So, the controller
+       * exposes this method which allows them to do that.
        */
 
       value: function sendError(error, req, res) {
         var _this = this;
 
         buildRequestContext(req).then(function (context) {
-          negotiateContentType(context.accepts, [], _this.pipeline.supportedExt).then(function (contentType) {
-            var errors = [APIError.fromError(error)];
-            res.set("Content-Type", contentType);
-            res.status(errors[0].status || 400);
-            res.send(new Document(errors).get());
-          }, function () {
-            res.status(406).send();
+          _this.pipeline.responseFromExternalError(context, error).then(function (responseContext) {
+            return _this.sendResources(responseContext, res);
           });
         });
       }
@@ -141,8 +136,9 @@ function buildRequestContext(req) {
     context.relationship = req.params.relationship;
 
     // Handle HTTP/Conneg.
-    context.accepts = req.headers.accept;
+    context.uri = req.protocol + "://" + req.get("Host") + req.url;
     context.method = req.method.toLowerCase();
+    context.accepts = req.headers.accept;
 
     context.hasBody = hasBody(req);
 

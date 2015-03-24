@@ -12,7 +12,7 @@ export default class DocumentationController {
     // compute template data on construction
     // (it never changes, so this makes more sense than doing it per request)
     let data = Object.assign({}, apiInfo);
-    data.resourcesMap = {}
+    data.resourcesMap = {};
 
     // Store in the resourcesMap the info object about each type,
     // as returned by @getTypeInfo.
@@ -30,7 +30,7 @@ export default class DocumentationController {
   // Clients can extend this if, say, the adapter can't infer
   // as much info about the models' structure as they would like.
   getTypeInfo(type) {
-    const adapter   = this.registry.adapter(type)
+    const adapter   = this.registry.adapter(type);
     const modelName = adapter.constructor.getModelName(type);
     const model     = adapter.getModel(modelName);
 
@@ -41,7 +41,7 @@ export default class DocumentationController {
 
     if(info && info.fields) {
       for(let path in schema) {
-        if(info.fields[path]) schema[path].description = info.fields[path]
+        if(info.fields[path]) schema[path].description = info.fields[path];
       }
     }
     // Other info
