@@ -143,7 +143,7 @@ export default function(registry) {
     negotiateContentType(requestContext.accepts, [], supportedExt)
       .then((contentType) => {
         responseContext.contentType = contentType;
-        responseContext.status = errors[0].status || 400;
+        responseContext.status = error.status || 400;
         responseContext.body  = (new Document([APIError.fromError(error)])).get();
       }, () => {}
     );
