@@ -10,7 +10,7 @@ module.exports = {
   },
   controllers: {
     API: require('./build/src/controllers/API'),
-    //Documentation: require('./build/lib/controllers/Documentation')
+    Documentation: require('./build/src/controllers/Documentation')
   },
   ResourceTypeRegistry: require('./build/src/ResourceTypeRegistry')
 };

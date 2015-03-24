@@ -42,7 +42,7 @@ html(lang='en')
           if modelInfo.schema
             h4 Fields
             table
-              thead: tr 
+              thead: tr
                   th Field Name
                   th Type
                   th Description
@@ -56,7 +56,7 @@ html(lang='en')
               each path in orderedFields
                 - var field = modelInfo.schema[path]
                 - var fieldId = "resources-"+type+'-'+path
-                if !modelInfo.parentType || !resourcesMap[modelInfo.parentType].schema[path] 
+                if !modelInfo.parentType || !resourcesMap[modelInfo.parentType].schema[path]
                   tr
                     td
                       if field.required
@@ -87,8 +87,8 @@ html(lang='en')
             a resource or resources, the spec also offers conventions for: <a href="http://jsonapi.org/format/#fetching-sorting">
             sorting the returned resources</a>, <a href="http://jsonapi.org/format/#fetching-sparse-fieldsets">
             limiting the fields returned in each resource</a>, <a href="http://jsonapi.org/format/#fetching-includes">
-            including linked resources</a> to form <a href="http://jsonapi.org/format/#document-structure-compound-documents">
-            compound documents</a>, etc. Accordingly, these features of the #{name} aren&rsquo;t redocumented here; 
+            including related resources</a> to form <a href="http://jsonapi.org/format/#document-structure-compound-documents">
+            compound documents</a>, etc. Accordingly, these features of the #{name} aren&rsquo;t redocumented here;
             simply see the JSON API <a href="http://jsonapi.org/format">spec</a> to learn how to use them.
 
           section
@@ -97,7 +97,7 @@ html(lang='en')
               This implementation of JSON API does not allow clients to set a resource&rsquo;s id; any attempt to
               do so will be  silently ignored, with the server-generated id being used instead. This implementation
               also does not yet support <code class="http-method">PATCH</code> operations of any kind or using
-              <a href="http://jsonapi.org/format/#urls-relationships">relationship endpoints</a>.  
+              <a href="http://jsonapi.org/format/#urls-relationships">relationship endpoints</a>.
 
       section#resources
         h2 Resource Types
