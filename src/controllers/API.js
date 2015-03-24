@@ -3,6 +3,7 @@ import contentType from "content-type"
 import getRawBody from "raw-body"
 import pipeline from "../Pipeline"
 import RequestContext from "../types/Context/RequestContext"
+import ResourceTypeRegistry from "../ResourceTypeRegistry"
 
 /**
  * This controller offers the outside world distinct entry points into the
@@ -10,10 +11,17 @@ import RequestContext from "../types/Context/RequestContext"
  * point of interaction between this library and express. Inside the pipeline,
  * we use the ResponseContext that this controller provides to generate a
  * ResponseContext object, which the controller then turns into a response.
+ * @param {ResourceTypeRegistry|array} registryOrResourceDescriptions
  */
 export default class APIController {
-  constructor(registry) {
-    this.pipeline = pipeline(registry);
+  constructor(registryOrResourceDescriptions) {
+    if(Array.isArray(registryOrResourceDescriptions)) {
+      let registry = new ResourceTypeRegistry(registryOrResourceDescriptions);
+      this.pipeline = pipeline(registry);
+    }
+    else {
+      this.pipeline = pipeline(registryOrResourceDescriptions);
+    }
   }
 
   // For requests like GET /:type, GET /:type/:id/:relationship,
@@ -92,7 +100,7 @@ function buildRequestContext(req) {
     context.relationship = req.params.relationship;
 
     // Handle HTTP/Conneg.
-    context.uri     = req.protocol + '://' + req.get('Host') + req.url;
+    context.uri     = req.protocol + "://" + req.get("Host") + req.url;
     context.method  = req.method.toLowerCase();
     context.accepts = req.headers.accept;
 

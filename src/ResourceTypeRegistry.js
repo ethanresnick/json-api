@@ -14,11 +14,20 @@ import Document from "./types/Document"
  * JSON api type and has a number of properties defining it.
  */
 export default class ResourceTypeRegistry {
-  constructor() {
+  constructor(typeDescriptions = []) {
     this._resourceTypes = {};
+    typeDescriptions.forEach((it) => { this.type(it); });
   }
 
   type(type, description) {
+    // create a one-argument version that takes the
+    // type as a key on the description object.
+    if(typeof type === "object" && typeof description === "undefined") {
+      description = type;
+      type = type.type;
+      delete description.type;
+    }
+
     if(description) {
       this._resourceTypes[type] = {};
 
