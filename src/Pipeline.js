@@ -40,9 +40,9 @@ export default function(registry) {
         if(requestContext.hasBody) {
           return requestValidators.checkBodyIsValidJSONAPI(requestContext.body).then(() => {
             return requestValidators.checkContentType(requestContext, supportedExt).then(() => {
-              return parseRequestResources(requestContext).then(() => {
+              return parseRequestResources(requestContext.body.data, requestContext.aboutLinkObject).then((parsedPrimary) => {
                 requestContext.primary = applyTransform(
-                  requestContext.primary, "beforeSave", registry, frameworkReq, frameworkRes
+                  parsedPrimary, "beforeSave", registry, frameworkReq, frameworkRes
                 );
               });
             });

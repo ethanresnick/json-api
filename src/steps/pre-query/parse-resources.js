@@ -5,44 +5,25 @@ import LinkObject from "../../types/LinkObject";
 import Linkage from "../../types/Linkage";
 import Collection from "../../types/Collection";
 
-export default function(requestContext) {
+export default function(data, parseAsLinkage) {
   return Q.Promise(function(resolve, reject) {
-    let bodyJSON = requestContext.body;
-
-    // Below, detect if no primary data was provided.
-    if(requestContext.needsBody && !(bodyJSON && bodyJSON.data !== undefined)) {
-      let expected = requestContext.aboutLinkObject ? "linkage" : "a resource or array of resources";
-      let message = `The request must contain ${expected} at the document's top-level "data" key.`;
-      reject(new APIError(400, null, message));
-    }
-
-    else if(requestContext.hasBody) {
-      try {
-        if(requestContext.aboutLinkObject) {
-          requestContext.primary = linkageFromJSON(bodyJSON.data);
-        }
-
-        else if(Array.isArray(bodyJSON.data)) {
-          requestContext.primary = new Collection(
-            bodyJSON.data.map(resourceFromJSON)
-          );
-        }
-        else {
-          requestContext.primary = resourceFromJSON(bodyJSON.data);
-        }
-        resolve();
+    try {
+      if(parseAsLinkage) {
+        resolve(linkageFromJSON(data));
       }
 
-      catch(error) {
-        const title = "The resources you provided could not be parsed.";
-        const details = `The precise error was: "${error.message}".`;
-        reject(new APIError(400, undefined, title, details));
+      else if(Array.isArray(data)) {
+        resolve(new Collection(data.map(resourceFromJSON)));
       }
-
+      else {
+        resolve(resourceFromJSON(data));
+      }
     }
 
-    else {
-      resolve();
+    catch (error) {
+      const title = "The resources you provided could not be parsed.";
+      const details = `The precise error was: "${error.message}".`;
+      reject(new APIError(400, undefined, title, details));
     }
   });
 }
