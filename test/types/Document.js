@@ -9,20 +9,22 @@ let expect = chai.expect;
 
 describe("Document class", () => {
   describe("Rendering a document", () => {
-    let person = new Resource("people", "31", {"name": "mark"});
-    let person2 = new Resource("people", "32", {"name": "ethan"});
-    let people = new Collection([person]);
+    const person = new Resource("people", "31", {"name": "mark"});
+    const person2 = new Resource("people", "32", {"name": "ethan"});
+    const people = new Collection([person]);
+    const topLevelMeta = {"mcawesome": true};
 
-    it("primary data should be keyed under data", () => {
-      expect((new Document(person)).get().data).to.deep.equal({
+    const singleResourceDocJSON = new Document(person, undefined, topLevelMeta).get();
+    const collectionDocJSON = new Document(people, undefined, topLevelMeta).get();
+
+    it("should key primary data under data, with each resource's type, id", () => {
+      expect(singleResourceDocJSON.data).to.deep.equal({
         "id": "31", "type": "people", "name": "mark"
       });
     });
 
     it("resource collections should be represented as arrays", () => {
-      expect((new Document(people)).get().data).to.deep.equal([{
-        "id": "31", "type": "people", "name": "mark"
-      }]);
+      expect(collectionDocJSON.data).to.be.an("array");
     });
 
     it("should represent includes as an array under `included`", () => {
@@ -30,7 +32,22 @@ describe("Document class", () => {
         .to.deep.equal([{"id": "32", "type": "people", "name": "ethan"}]);
     });
 
-    it.skip("Should include appropriate top-level links.");
+    it("Should include a top-level self links", () => {
+      const doc = new Document(people, [person2], undefined, undefined, 'http://bob');
+      const docJSON = doc.get();
+      expect(docJSON.links).to.be.an('object');
+      expect(docJSON.links.self).to.equal('http://bob');
+    });
+
+    it("should output top-level meta information, iff provided", () => {
+      const docWithoutMeta = new Document(people, [person2], undefined);
+      expect(collectionDocJSON.meta).to.deep.equal(topLevelMeta);
+      expect(docWithoutMeta.get().meta).to.be.undefined;
+    });
+
+    it("should reject non-object meta information", () => {
+      expect(() => new Document(people, [person2], ["bob"])).to.throw(/meta.*object/i);
+    });
   });
 
 });

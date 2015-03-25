@@ -78,15 +78,16 @@ function linkObjectToJSON(linkObject, urlTemplates) {
 
 function resourceToJSON(resource, urlTemplates) {
   let json = resource.attrs;
-  let selfTemplate = urlTemplates[resource.type] && urlTemplates[resource.type].self;
   json.id = resource.id;
   json.type = resource.type;
+
+  let templateData = Object.assign({"id": resource.id, "meta": resource.meta}, resource.attrs);
+  let selfTemplate = urlTemplates[resource.type] && urlTemplates[resource.type].self;
 
   if(!objectIsEmpty(resource.links) || selfTemplate) {
     json.links = {};
     if(selfTemplate) {
-      let templateData = Object.assign({"id": resource.id}, resource.attrs);
-      json.links.self = urlTemplates[resource.type].self.expand(templateData);
+      json.links.self = selfTemplate.expand(templateData);
     }
     for(let path in resource.links) {
       json.links[path] = linkObjectToJSON(resource.links[path], urlTemplates);
@@ -111,11 +112,6 @@ function errorToJSON(error) {
 }
 
 /*
-  (@primaryResources, extraResources, @meta, @urlTemplates)->
-    # urlTemplate stuff
-    @links = {}
-    @_urlTemplatesParsed = {[k, templating.parse(template)] for k, template of @urlTemplates}
-
   # renders a non-stub resource
   renderResource: (resource) ->
     urlTempParams = do -> ({} <<< res)
