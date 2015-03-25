@@ -42,7 +42,7 @@ export default function(registry) {
             return requestValidators.checkContentType(requestContext, supportedExt).then(() => {
               return parseRequestResources(requestContext.body.data, requestContext.aboutLinkObject).then((parsedPrimary) => {
                 requestContext.primary = applyTransform(
-                  parsedPrimary, "beforeSave", registry, frameworkReq, frameworkRes
+                  parsedPrimary, "beforeQuery", registry, frameworkReq, frameworkRes
                 );
               });
             });
