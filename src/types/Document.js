@@ -10,7 +10,17 @@ import templating from "url-template";
 export default class Document {
   /*eslint-disable no-unused-vars */
   constructor(primaryOrErrors, included = [], meta, urlTemplates, reqURI) {
-    [this.primaryOrErrors, this.included,  this.meta] = Array.from(arguments).slice(0, 3);
+    [this.primaryOrErrors, this.included, this.reqURI] = [primaryOrErrors, included, reqURI];
+
+    // validate meta
+    if(meta !== undefined) {
+      if(typeof meta === "object" && !Array.isArray(meta)) {
+        this.meta = meta;
+      }
+      else {
+        throw new Error("Meta information must be an object");
+      }
+    }
 
     // parse all the templates once on construction.
     this.urlTemplates = mapObject(urlTemplates || {}, (templatesForType) => {
@@ -24,7 +34,7 @@ export default class Document {
   get() {
     let doc = {};
 
-    if(this.meta && !objectIsEmpty(this.meta)) doc.meta = this.meta;
+    if(this.meta) doc.meta = this.meta;
 
     // TODO: top-level related link.
     if(this.reqURI) {
