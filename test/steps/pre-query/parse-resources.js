@@ -49,7 +49,7 @@ describe("Resource Parser", () => {
 
     it("should reject invalid resources", (done) => {
       parseResources({"id": "1"}).then(() => {}, (err) => {
-        expect(err.detail).to.match(/type.*required/)
+        expect(err.detail).to.match(/type.*required/);
         done();
       });
     });

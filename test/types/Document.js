@@ -1,11 +1,11 @@
-import mocha from "mocha"
-import sinon from "sinon"
-import chai from "chai"
-import Resource from "../../src/types/Resource"
-import Collection from "../../src/types/Collection"
-import Document from "../../src/types/Document"
+import mocha from "mocha";
+import sinon from "sinon";
+import chai from "chai";
+import Resource from "../../src/types/Resource";
+import Collection from "../../src/types/Collection";
+import Document from "../../src/types/Document";
 
-let expect = chai.expect;
+const expect = chai.expect;
 
 describe("Document class", () => {
   describe("Rendering a document", () => {
@@ -33,10 +33,12 @@ describe("Document class", () => {
     });
 
     it("Should include a top-level self links", () => {
-      const doc = new Document(people, [person2], undefined, undefined, 'http://bob');
+      const reqURI = "http://bob";
+      const doc = new Document(people, [person2], undefined, undefined, reqURI);
       const docJSON = doc.get();
-      expect(docJSON.links).to.be.an('object');
-      expect(docJSON.links.self).to.equal('http://bob');
+
+      expect(docJSON.links).to.be.an("object");
+      expect(docJSON.links.self).to.equal(reqURI);
     });
 
     it("should output top-level meta information, iff provided", () => {
