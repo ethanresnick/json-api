@@ -27,7 +27,7 @@ export default class Resource {
 
   set type(type) {
     validateType(type);
-    this._type = String(type).toString();
+    this._type = String(type);
   }
 
   get id() {
@@ -37,7 +37,7 @@ export default class Resource {
   set id(id) {
     // allow empty id, e.g. for the case of a new resource
     // posted from the client and not yet saved.
-    this._id = (id) ? String(id).toString() : undefined;
+    this._id = (id) ? String(id) : undefined;
   }
 }
 
