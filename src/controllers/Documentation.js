@@ -41,7 +41,9 @@ export default class DocumentationController {
 
     if(info && info.fields) {
       for(let path in schema) {
-        if(info.fields[path]) schema[path].description = info.fields[path];
+        if(info.fields[path] && info.fields[path].description) {
+          schema[path].description = info.fields[path].description;
+        }
       }
     }
     // Other info
