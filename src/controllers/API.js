@@ -97,7 +97,8 @@ function buildRequestContext(req) {
     context.allowLabel   = !!(req.params.idOrLabel && !req.params.id);
     context.idOrIds      = req.params.id || req.params.idOrLabel;
     context.type         = req.params.type;
-    context.relationship = req.params.relationship;
+    context.aboutLinkObject = !!req.params.relationship;
+    context.relationship = req.params.related || req.params.relationship;
 
     // Handle HTTP/Conneg.
     context.uri     = req.protocol + "://" + req.get("Host") + req.url;
