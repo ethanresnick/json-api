@@ -80,7 +80,7 @@ module.exports = function (registry) {
           case 10:
             parsedResources = context$3$0.sent;
 
-            requestContext.primary = applyTransform(parsedResources, "beforeQuery", registry, frameworkReq, frameworkRes);
+            requestContext.primary = applyTransform(parsedResources, "beforeSave", registry, frameworkReq, frameworkRes);
 
           case 12:
             if (!(requestContext.idOrIds && requestContext.allowLabel)) {

@@ -50,7 +50,7 @@ export default function(registry) {
             requestContext.body.data, requestContext.aboutLinkObject
           );
           requestContext.primary = applyTransform(
-            parsedResources, "beforeQuery", registry, frameworkReq, frameworkRes
+            parsedResources, "beforeSave", registry, frameworkReq, frameworkRes
           );
         }
 
