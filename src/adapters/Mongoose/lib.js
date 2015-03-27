@@ -97,7 +97,7 @@ export function resourceToDocObject(resource) {
   let res = Object.assign({}, resource.attrs);
   let getId = (it) => it.id;
   for(let key in resource.links) {
-    let linkage = resource.links[key].linkage;
+    let linkage = resource.links[key].linkage.value;
     res[key] = Array.isArray(linkage) ? linkage.map(getId) : linkage.id;
   }
   return res;
