@@ -4,6 +4,10 @@ var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? ob
 
 var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
+var co = _interopRequire(require("co"));
+
+var polyfill = _interopRequire(require("babel/polyfill"));
+
 var ResponseContext = _interopRequire(require("./types/Context/ResponseContext"));
 
 var Document = _interopRequire(require("./types/Document"));
@@ -48,92 +52,146 @@ module.exports = function (registry) {
   function pipeline(requestContext, frameworkReq, frameworkRes) {
     var responseContext = new ResponseContext();
 
-    // Now, kick off the chain for generating the response.
-    // We'll validate and parse the body if one is present and, if one isn't,
-    // we'll throw an error if one was supposed to be (or vice-versa).
-    return requestValidators.checkBodyExistence(requestContext).then(function () {
-      if (requestContext.hasBody) {
-        return requestValidators.checkBodyIsValidJSONAPI(requestContext.body).then(function () {
-          return requestValidators.checkContentType(requestContext, supportedExt).then(function () {
-            return parseRequestResources(requestContext).then(function () {
-              requestContext.primary = applyTransform(requestContext.primary, "beforeSave", registry, frameworkReq, frameworkRes);
-            });
-          });
-        });
-      }
-    })
+    // Kick off the chain for generating the response.
+    return co(regeneratorRuntime.mark(function callee$2$0() {
+      var parsedResources, mappedLabel, mappedIsEmptyArray;
+      return regeneratorRuntime.wrap(function callee$2$0$(context$3$0) {
+        while (1) switch (context$3$0.prev = context$3$0.next) {
+          case 0:
+            context$3$0.prev = 0;
+            context$3$0.next = 3;
+            return requestValidators.checkBodyExistence(requestContext);
 
-    // Map label to idOrIds, if applicable.
-    .then(function () {
-      if (requestContext.idOrIds && requestContext.allowLabel) {
-        return labelToIds(registry, frameworkReq, requestContext, responseContext);
-      }
-    })
+          case 3:
+            if (!requestContext.hasBody) {
+              context$3$0.next = 12;
+              break;
+            }
 
-    // Actually fulfill the request!
-    .then(function () {
-      // If we've already populated the primary resources, which is possible
-      // because the label may have mapped to no id(s), we don't need to query.
-      if (typeof responseContext.primary === "undefined") {
-        switch (requestContext.method) {
-          case "get":
+            context$3$0.next = 6;
+            return requestValidators.checkBodyIsValidJSONAPI(requestContext.body);
+
+          case 6:
+            context$3$0.next = 8;
+            return requestValidators.checkContentType(requestContext, supportedExt);
+
+          case 8:
+            context$3$0.next = 10;
+            return parseRequestResources(requestContext.body.data, requestContext.aboutLinkObject);
+
+          case 10:
+            parsedResources = context$3$0.sent;
+
+            requestContext.primary = applyTransform(parsedResources, "beforeQuery", registry, frameworkReq, frameworkRes);
+
+          case 12:
+            if (!(requestContext.idOrIds && requestContext.allowLabel)) {
+              context$3$0.next = 19;
+              break;
+            }
+
+            context$3$0.next = 15;
+            return labelToIds(requestContext.type, requestContext.idOrIds, registry, frameworkReq);
+
+          case 15:
+            mappedLabel = context$3$0.sent;
+
+            // set the idOrIds on the request context
+            requestContext.idOrIds = mappedLabel;
+
+            mappedIsEmptyArray = Array.isArray(mappedLabel) && !mappedLabel.length;
+
+            if (mappedLabel === null || mappedLabel === undefined || mappedIsEmptyArray) {
+              responseContext.primary = mappedLabel ? new Collection() : null;
+            }
+
+          case 19:
+            if (!(typeof responseContext.primary === "undefined")) {
+              context$3$0.next = 34;
+              break;
+            }
+
+            context$3$0.t12 = requestContext.method;
+            context$3$0.next = context$3$0.t12 === "get" ? 23 : context$3$0.t12 === "post" ? 26 : context$3$0.t12 === "patch" ? 29 : context$3$0.t12 === "delete" ? 32 : 34;
+            break;
+
+          case 23:
+            context$3$0.next = 25;
             return doFind(requestContext, responseContext, registry);
 
-          case "post":
+          case 25:
+            return context$3$0.abrupt("break", 34);
+
+          case 26:
+            context$3$0.next = 28;
             return doCreate(requestContext, responseContext, registry);
 
-          case "patch":
+          case 28:
+            return context$3$0.abrupt("break", 34);
+
+          case 29:
+            context$3$0.next = 31;
             return doUpdate(requestContext, responseContext, registry);
 
-          case "delete":
+          case 31:
+            return context$3$0.abrupt("break", 34);
+
+          case 32:
+            context$3$0.next = 34;
             return doDelete(requestContext, responseContext, registry);
+
+          case 34:
+            context$3$0.next = 41;
+            break;
+
+          case 36:
+            context$3$0.prev = 36;
+            context$3$0.t13 = context$3$0["catch"](0);
+
+            console.log(context$3$0.t13, context$3$0.t13.stack);
+            context$3$0.t13 = (Array.isArray(context$3$0.t13) ? context$3$0.t13 : [context$3$0.t13]).map(function (it) {
+              if (it instanceof APIError) {
+                return it;
+              } else {
+                var _status = it.status || it.statusCode || 500;
+                // if the user can't throw an APIError instance but wants to signal
+                // that their specific error message should be used, let them do so.
+                var message = it.isJSONAPIDisplayReady ? it.message : "An unknown error occurred while trying to process this request.";
+
+                return new APIError(_status, undefined, message);
+              }
+            });
+            responseContext.errors = responseContext.errors.concat(context$3$0.t13);
+
+          case 41:
+            context$3$0.next = 43;
+            return negotiateContentType(requestContext.accepts, responseContext.ext, supportedExt);
+
+          case 43:
+            responseContext.contentType = context$3$0.sent;
+
+            // apply transforms pre-send
+            responseContext.primary = applyTransform(responseContext.primary, "beforeRender", registry, frameworkReq, frameworkRes);
+
+            responseContext.included = applyTransform(responseContext.included, "beforeRender", registry, frameworkReq, frameworkRes);
+
+            if (responseContext.errors.length) {
+              responseContext.status = pickStatus(responseContext.errors.map(function (v) {
+                return Number(v.status);
+              }));
+              responseContext.body = new Document(responseContext.errors).get();
+            } else {
+              responseContext.body = new Document(responseContext.primary, responseContext.included, {}, registry.urlTemplates(), requestContext.uri).get();
+            }
+
+            return context$3$0.abrupt("return", responseContext);
+
+          case 48:
+          case "end":
+            return context$3$0.stop();
         }
-      }
-    })
-
-    // Add errors to the responseContext and, if necessary, convert them to
-    // APIError instances. Might be needed if, e.g., the error was unexpected
-    // or the user couldn't throw an APIError for compatibility with other code).
-    ["catch"](function (errors) {
-      errors = (Array.isArray(errors) ? errors : [errors]).map(function (it) {
-        if (it instanceof APIError) {
-          return it;
-        } else {
-          var _status = it.status || it.statusCode || 500;
-          // if the user can't throw an APIError instance but wants to signal
-          // that their specific error message should be used, let them do so.
-          var message = it.isJSONAPIDisplayReady ? it.message : "An unknown error occurred while trying to process this request.";
-
-          return new APIError(_status, undefined, message);
-        }
-      });
-      responseContext.errors = responseContext.errors.concat(errors);
-    })
-
-    // Negotiate the content type
-    .then(function () {
-      var accept = requestContext.accepts;
-      var usedExt = responseContext.ext;
-      return negotiateContentType(accept, usedExt, supportedExt).then(function (it) {
-        responseContext.contentType = it;
-      }, function () {});
-    })
-
-    // apply transforms pre-send
-    .then(function () {
-      responseContext.primary = applyTransform(responseContext.primary, "beforeRender", registry, frameworkReq, frameworkRes);
-      responseContext.included = applyTransform(responseContext.included, "beforeRender", registry, frameworkReq, frameworkRes);
-    }).then(function () {
-      if (responseContext.errors.length) {
-        responseContext.status = pickStatus(responseContext.errors.map(function (v) {
-          return Number(v.status);
-        }));
-        responseContext.body = new Document(responseContext.errors).get();
-      } else {
-        responseContext.body = new Document(responseContext.primary, responseContext.included, {}, registry.urlTemplates(), requestContext.uri).get();
-      }
-      return responseContext;
-    });
+      }, callee$2$0, this, [[0, 36]]);
+    }));
   }
 
   pipeline.supportedExt = supportedExt;
@@ -156,3 +214,22 @@ module.exports = function (registry) {
 function pickStatus(errStatuses) {
   return errStatuses[0];
 }
+
+// throw if the body is supposed to be present but isn't (or vice-versa).
+
+// If the request has a body, validate it and parse its resources.
+
+// Map label to idOrIds, if applicable.
+// if our new ids are null/undefined or an empty array,
+// we can set the primary resources too!
+
+// Actually fulfill the request!
+// If we've already populated the primary resources, which is possible
+// because the label may have mapped to no id(s), we don't need to query.
+
+// Add errors to the responseContext converting them, if necessary, to
+// APIError instances first. Might be needed if, e.g., the error was
+// unexpected (and so uncaught and not transformed) in one of prior steps
+// or the user couldn't throw an APIError for compatibility with other code.
+
+// Negotiate the content type

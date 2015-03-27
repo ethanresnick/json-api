@@ -36,13 +36,22 @@ var Document = (function () {
 
     _classCallCheck(this, Document);
 
-    var _ref = Array.from(arguments).slice(0, 3);
+    var _ref = [primaryOrErrors, included, reqURI];
 
     var _ref2 = _slicedToArray(_ref, 3);
 
     this.primaryOrErrors = _ref2[0];
     this.included = _ref2[1];
-    this.meta = _ref2[2];
+    this.reqURI = _ref2[2];
+
+    // validate meta
+    if (meta !== undefined) {
+      if (typeof meta === "object" && !Array.isArray(meta)) {
+        this.meta = meta;
+      } else {
+        throw new Error("Meta information must be an object");
+      }
+    }
 
     // parse all the templates once on construction.
     this.urlTemplates = mapObject(urlTemplates || {}, function (templatesForType) {
@@ -61,7 +70,7 @@ var Document = (function () {
 
         var doc = {};
 
-        if (this.meta && !objectIsEmpty(this.meta)) doc.meta = this.meta;
+        if (this.meta) doc.meta = this.meta;
 
         // TODO: top-level related link.
         if (this.reqURI) {
@@ -109,15 +118,16 @@ function linkObjectToJSON(linkObject, urlTemplates) {
 
 function resourceToJSON(resource, urlTemplates) {
   var json = resource.attrs;
-  var selfTemplate = urlTemplates[resource.type] && urlTemplates[resource.type].self;
   json.id = resource.id;
   json.type = resource.type;
+
+  var templateData = Object.assign({ id: resource.id, meta: resource.meta }, resource.attrs);
+  var selfTemplate = urlTemplates[resource.type] && urlTemplates[resource.type].self;
 
   if (!objectIsEmpty(resource.links) || selfTemplate) {
     json.links = {};
     if (selfTemplate) {
-      var templateData = Object.assign({ id: resource.id }, resource.attrs);
-      json.links.self = urlTemplates[resource.type].self.expand(templateData);
+      json.links.self = selfTemplate.expand(templateData);
     }
     for (var path in resource.links) {
       json.links[path] = linkObjectToJSON(resource.links[path], urlTemplates);
@@ -142,11 +152,6 @@ function errorToJSON(error) {
 }
 
 /*
-  (@primaryResources, extraResources, @meta, @urlTemplates)->
-    # urlTemplate stuff
-    @links = {}
-    @_urlTemplatesParsed = {[k, templating.parse(template)] for k, template of @urlTemplates}
-
   # renders a non-stub resource
   renderResource: (resource) ->
     urlTempParams = do -> ({} <<< res)

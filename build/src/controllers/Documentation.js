@@ -61,7 +61,9 @@ var DocumentationController = (function () {
 
         if (info && info.fields) {
           for (var _path in schema) {
-            if (info.fields[_path]) schema[_path].description = info.fields[_path];
+            if (info.fields[_path] && info.fields[_path].description) {
+              schema[_path].description = info.fields[_path].description;
+            }
           }
         }
         // Other info

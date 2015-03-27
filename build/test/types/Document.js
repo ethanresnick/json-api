@@ -21,24 +21,45 @@ describe("Document class", function () {
     var person = new Resource("people", "31", { name: "mark" });
     var person2 = new Resource("people", "32", { name: "ethan" });
     var people = new Collection([person]);
+    var topLevelMeta = { mcawesome: true };
 
-    it("primary data should be keyed under data", function () {
-      expect(new Document(person).get().data).to.deep.equal({
+    var singleResourceDocJSON = new Document(person, undefined, topLevelMeta).get();
+    var collectionDocJSON = new Document(people, undefined, topLevelMeta).get();
+
+    it("should key primary data under data, with each resource's type, id", function () {
+      expect(singleResourceDocJSON.data).to.deep.equal({
         id: "31", type: "people", name: "mark"
       });
     });
 
     it("resource collections should be represented as arrays", function () {
-      expect(new Document(people).get().data).to.deep.equal([{
-        id: "31", type: "people", name: "mark"
-      }]);
+      expect(collectionDocJSON.data).to.be.an("array");
     });
 
     it("should represent includes as an array under `included`", function () {
       expect(new Document(people, [person2]).get().included).to.deep.equal([{ id: "32", type: "people", name: "ethan" }]);
     });
 
-    it.skip("Should include appropriate top-level links.");
+    it("Should include a top-level self links", function () {
+      var reqURI = "http://bob";
+      var doc = new Document(people, [person2], undefined, undefined, reqURI);
+      var docJSON = doc.get();
+
+      expect(docJSON.links).to.be.an("object");
+      expect(docJSON.links.self).to.equal(reqURI);
+    });
+
+    it("should output top-level meta information, iff provided", function () {
+      var docWithoutMeta = new Document(people, [person2], undefined);
+      expect(collectionDocJSON.meta).to.deep.equal(topLevelMeta);
+      expect(docWithoutMeta.get().meta).to.be.undefined;
+    });
+
+    it("should reject non-object meta information", function () {
+      expect(function () {
+        return new Document(people, [person2], ["bob"]);
+      }).to["throw"](/meta.*object/i);
+    });
   });
 });
 

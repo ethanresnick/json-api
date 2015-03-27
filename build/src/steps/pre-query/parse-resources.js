@@ -14,32 +14,20 @@ var Linkage = _interopRequire(require("../../types/Linkage"));
 
 var Collection = _interopRequire(require("../../types/Collection"));
 
-module.exports = function (requestContext) {
+module.exports = function (data, parseAsLinkage) {
   return Q.Promise(function (resolve, reject) {
-    var bodyJSON = requestContext.body;
-
-    // Below, detect if no primary data was provided.
-    if (requestContext.needsBody && !(bodyJSON && bodyJSON.data !== undefined)) {
-      var expected = requestContext.aboutLinkObject ? "linkage" : "a resource or array of resources";
-      var message = "The request must contain " + expected + " at the document's top-level \"data\" key.";
-      reject(new APIError(400, null, message));
-    } else if (requestContext.hasBody) {
-      try {
-        if (requestContext.aboutLinkObject) {
-          requestContext.primary = linkageFromJSON(bodyJSON.data);
-        } else if (Array.isArray(bodyJSON.data)) {
-          requestContext.primary = new Collection(bodyJSON.data.map(resourceFromJSON));
-        } else {
-          requestContext.primary = resourceFromJSON(bodyJSON.data);
-        }
-        resolve();
-      } catch (error) {
-        var title = "The resources you provided could not be parsed.";
-        var details = "The precise error was: \"" + error.message + "\".";
-        reject(new APIError(400, undefined, title, details));
+    try {
+      if (parseAsLinkage) {
+        resolve(linkageFromJSON(data));
+      } else if (Array.isArray(data)) {
+        resolve(new Collection(data.map(resourceFromJSON)));
+      } else {
+        resolve(resourceFromJSON(data));
       }
-    } else {
-      resolve();
+    } catch (error) {
+      var title = "The resources you provided could not be parsed.";
+      var details = "The precise error was: \"" + error.message + "\".";
+      reject(new APIError(400, undefined, title, details));
     }
   });
 };

@@ -6,32 +6,22 @@ var Collection = _interopRequire(require("../../types/Collection"));
 
 var Q = _interopRequire(require("q"));
 
-module.exports = function (registry, frameworkReq, requestContext, responseContext) {
+module.exports = function (type, labelOrId, registry, frameworkReq) {
   return Q.Promise(function (resolve, reject) {
-    if (!requestContext.allowLabel) {
-      resolve();
-    } else {
-      var type = requestContext.type;
-      var adapter = registry.adapter(type);
-      var model = adapter.getModel(adapter.constructor.getModelName(type));
-      var idMappers = registry.labelMappers(type);
-      var idMapper = idMappers && idMappers[requestContext.idOrIds];
+    var adapter = registry.adapter(type);
+    var model = adapter.getModel(adapter.constructor.getModelName(type));
+    var labelMappers = registry.labelMappers(type);
+    var labelMapper = labelMappers && labelMappers[labelOrId];
 
-      if (typeof idMapper === "function") {
-        Q(idMapper(model, frameworkReq)).then(function (newId) {
-          var newIdIsEmptyArray = Array.isArray(newId) && newId.length === 0;
+    // reolve with the mapped label
+    if (typeof labelMapper === "function") {
+      Q(labelMapper(model, frameworkReq)).then(resolve);
+    }
 
-          requestContext.idOrIds = newId;
-
-          if (newId === null || newId === undefined || newIdIsEmptyArray) {
-            responseContext.primary = newId ? new Collection() : null;
-          }
-
-          resolve();
-        });
-      } else {
-        resolve();
-      }
+    // or, if we couldn't find a label mapper, that means
+    // we were given an id, so we just resolve with that id.
+    else {
+      resolve(labelOrId);
     }
   });
 };
