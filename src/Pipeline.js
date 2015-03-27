@@ -13,10 +13,10 @@ import labelToIds from "./steps/pre-query/label-to-ids";
 import parseRequestResources from "./steps/pre-query/parse-resources";
 import applyTransform from "./steps/apply-transform";
 
-import doFind from "./steps/do-query/do-find";
-import doCreate from "./steps/do-query/do-create";
-import doUpdate from "./steps/do-query/do-update";
-import doDelete from "./steps/do-query/do-delete";
+import doGET from "./steps/do-query/do-get";
+import doPOST from "./steps/do-query/do-post";
+import doPATCH from "./steps/do-query/do-patch";
+import doDELETE from "./steps/do-query/do-delete";
 
 
 export default function(registry) {
@@ -79,19 +79,19 @@ export default function(registry) {
         if(typeof responseContext.primary === "undefined") {
           switch(requestContext.method) {
             case "get":
-              yield doFind(requestContext, responseContext, registry);
+              yield doGET(requestContext, responseContext, registry);
               break;
 
             case "post":
-              yield doCreate(requestContext, responseContext, registry);
+              yield doPOST(requestContext, responseContext, registry);
               break;
 
             case "patch":
-              yield doUpdate(requestContext, responseContext, registry);
+              yield doPATCH(requestContext, responseContext, registry);
               break;
 
             case "delete":
-              yield doDelete(requestContext, responseContext, registry);
+              yield doDELETE(requestContext, responseContext, registry);
           }
         }
       }
