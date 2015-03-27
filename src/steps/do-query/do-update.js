@@ -1,7 +1,7 @@
 import APIError from "../../types/APIError";
 import Collection from "../../types/Collection";
 import Resource from "../../types/Resource";
-import LinkObject from "../../types/LinkObject";
+import Linkage from "../../types/Linkage";
 import {arrayValuesMatch} from "../../util/arrays";
 import {mapResources} from "../../util/type-handling";
 
@@ -32,7 +32,7 @@ export default function(requestContext, responseContext, registry) {
     changedResourceOrCollection = primary;
   }
 
-  else if(primary instanceof LinkObject) {
+  else if(primary instanceof Linkage) {
     changedResourceOrCollection = new Resource(
       requestContext.type,
       requestContext.idOrIds,
