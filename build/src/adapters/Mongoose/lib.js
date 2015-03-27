@@ -107,7 +107,7 @@ function resourceToDocObject(resource) {
     return it.id;
   };
   for (var key in resource.links) {
-    var linkage = resource.links[key].linkage;
+    var linkage = resource.links[key].linkage.value;
     res[key] = Array.isArray(linkage) ? linkage.map(getId) : linkage.id;
   }
   return res;

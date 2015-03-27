@@ -4,6 +4,8 @@ var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? ob
 
 var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
+var _defineProperty = function (obj, key, value) { return Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); };
+
 var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
 var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
@@ -219,7 +221,7 @@ var MongooseAdapter = (function () {
        * @param {string} parentType - All the resources to be created must be this
        *   type or be sub-types of it.
        * @param {Object} resourceOrCollection - The changed Resource or Collection
-       *   of resources.
+       *   of resources. Should only have the fields that are changed.
        */
 
       value: function update(parentType, resourceOrCollection) {
@@ -228,6 +230,9 @@ var MongooseAdapter = (function () {
         // It'd be faster to bypass Mongoose Document creation & just have mongoose
         // send a findAndUpdate command directly to mongo, but we want Mongoose's
         // standard validation and lifecycle hooks, and so we have to find first.
+        // Note that, starting in Mongoose 4, we'll be able to run the validations
+        // on update, which should be enough, so we won't need to find first.
+        // https://github.com/Automattic/mongoose/issues/860
         var model = this.getModel(this.constructor.getModelName(parentType));
         var singular = this.inflector.singular;
         var plural = this.inflector.plural;
@@ -263,11 +268,11 @@ var MongooseAdapter = (function () {
             // Allowing the type to change is a bit of a pain. If the type's
             // changed, it means the mongoose Model representing the doc must be
             // different too. So we have to get the data from the old doc with
-            // .toObject(), change change its discriminator, and then create an
-            // instance of the new model with that data. We also have to mark that
-            // new instance as not representing a new document, so that mongoose
-            // will do an update query rather than a save. Finally, we have to do
-            // all this before updating other attributes, so that they're correctly
+            // .toObject(), change its discriminator, and then create an instance
+            // of the new model with that data. We also have to mark that new
+            // instance as not representing a new document, so that mongoose will
+            // do an update query rather than a save. Finally, we have to do all
+            // this before updating other attributes, so that they're correctly
             // marked as modified when changed.
             var currentModelName = currDoc.constructor.modelName;
             var newModelName = _this.constructor.getModelName(newResource.type, singular);
@@ -322,6 +327,28 @@ var MongooseAdapter = (function () {
           });
           return docs;
         })["catch"](util.errorHandler);
+      }
+    },
+    addToRelationship: {
+
+      /**
+       * Unlike update(), which would do full replacement of a to-many relationship
+       * if new linkage was provided, this method adds the new linkage to the existing
+       * relationship. It doesn't do a find-then-save, so some mongoose hooks may not
+       * run. But validation and the update query hooks will work if you're using
+       * Mongoose 4.0.
+       */
+
+      value: function addToRelationship(type, id, relationshipPath, newLinkage) {
+        var model = this.getModel(this.constructor.getModelName(type));
+        var update = {
+          $addToSet: _defineProperty({}, relationshipPath, { $each: newLinkage.value.map(function (it) {
+              return it.id;
+            }) })
+        };
+        var options = { runValidators: true };
+
+        return Q.ninvoke(model, "findOneAndUpdate", { _id: id }, update, options)["catch"](util.errorHandler);
       }
     },
     getModel: {
@@ -385,6 +412,8 @@ var MongooseAdapter = (function () {
         // Get and clean up attributes
         // Loading with toJSON and depopulate means we don't have to handle
         // ObjectIds or worry about linked docs--we'll always get id Strings.
+        // Starting in 4.0, we won't need the delete versionKey line:
+        // https://github.com/Automattic/mongoose/issues/2675
         var attrs = doc.toJSON({ depopulate: true });
         var schemaOptions = doc.constructor.schema.options;
         delete attrs._id;

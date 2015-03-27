@@ -10,7 +10,7 @@ var Collection = _interopRequire(require("../../types/Collection"));
 
 var Resource = _interopRequire(require("../../types/Resource"));
 
-var LinkObject = _interopRequire(require("../../types/LinkObject"));
+var Linkage = _interopRequire(require("../../types/Linkage"));
 
 var arrayValuesMatch = require("../../util/arrays").arrayValuesMatch;
 
@@ -38,7 +38,7 @@ module.exports = function (requestContext, responseContext, registry) {
       throw new APIError(400, undefined, title);
     }
     changedResourceOrCollection = primary;
-  } else if (primary instanceof LinkObject) {
+  } else if (primary instanceof Linkage) {
     changedResourceOrCollection = new Resource(requestContext.type, requestContext.idOrIds, _defineProperty({}, requestContext.relationship, requestContext.primary));
   }
 

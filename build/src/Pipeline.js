@@ -26,13 +26,13 @@ var parseRequestResources = _interopRequire(require("./steps/pre-query/parse-res
 
 var applyTransform = _interopRequire(require("./steps/apply-transform"));
 
-var doFind = _interopRequire(require("./steps/do-query/do-find"));
+var doGET = _interopRequire(require("./steps/do-query/do-get"));
 
-var doCreate = _interopRequire(require("./steps/do-query/do-create"));
+var doPOST = _interopRequire(require("./steps/do-query/do-post"));
 
-var doUpdate = _interopRequire(require("./steps/do-query/do-update"));
+var doPATCH = _interopRequire(require("./steps/do-query/do-patch"));
 
-var doDelete = _interopRequire(require("./steps/do-query/do-delete"));
+var doDELETE = _interopRequire(require("./steps/do-query/do-delete"));
 
 module.exports = function (registry) {
   var supportedExt = ["bulk"];
@@ -115,28 +115,28 @@ module.exports = function (registry) {
 
           case 23:
             context$3$0.next = 25;
-            return doFind(requestContext, responseContext, registry);
+            return doGET(requestContext, responseContext, registry);
 
           case 25:
             return context$3$0.abrupt("break", 34);
 
           case 26:
             context$3$0.next = 28;
-            return doCreate(requestContext, responseContext, registry);
+            return doPOST(requestContext, responseContext, registry);
 
           case 28:
             return context$3$0.abrupt("break", 34);
 
           case 29:
             context$3$0.next = 31;
-            return doUpdate(requestContext, responseContext, registry);
+            return doPATCH(requestContext, responseContext, registry);
 
           case 31:
             return context$3$0.abrupt("break", 34);
 
           case 32:
             context$3$0.next = 34;
-            return doDelete(requestContext, responseContext, registry);
+            return doDELETE(requestContext, responseContext, registry);
 
           case 34:
             context$3$0.next = 40;
@@ -177,7 +177,7 @@ module.exports = function (registry) {
                 return Number(v.status);
               }));
               responseContext.body = new Document(responseContext.errors).get();
-            } else {
+            } else if (responseContext.status !== 204) {
               responseContext.body = new Document(responseContext.primary, responseContext.included, {}, registry.urlTemplates(), requestContext.uri).get();
             }
 
