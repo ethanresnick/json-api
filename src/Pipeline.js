@@ -139,7 +139,7 @@ export default function(registry) {
         responseContext.body = new Document(responseContext.errors).get();
       }
 
-      else {
+      else if(responseContext.status !== 204) {
         responseContext.body = new Document(
           responseContext.primary, responseContext.included,
           {}, registry.urlTemplates(), requestContext.uri
