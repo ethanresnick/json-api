@@ -12,6 +12,8 @@ var ResponseContext = _interopRequire(require("./types/Context/ResponseContext")
 
 var Document = _interopRequire(require("./types/Document"));
 
+var Collection = _interopRequire(require("./types/Collection"));
+
 var APIError = _interopRequire(require("./types/APIError"));
 
 var requestValidators = _interopRequireWildcard(require("./steps/http/validate-request"));
@@ -31,10 +33,6 @@ var doCreate = _interopRequire(require("./steps/do-query/do-create"));
 var doUpdate = _interopRequire(require("./steps/do-query/do-update"));
 
 var doDelete = _interopRequire(require("./steps/do-query/do-delete"));
-
-/**
- *
- */
 
 module.exports = function (registry) {
   var supportedExt = ["bulk"];
@@ -111,8 +109,8 @@ module.exports = function (registry) {
               break;
             }
 
-            context$3$0.t12 = requestContext.method;
-            context$3$0.next = context$3$0.t12 === "get" ? 23 : context$3$0.t12 === "post" ? 26 : context$3$0.t12 === "patch" ? 29 : context$3$0.t12 === "delete" ? 32 : 34;
+            context$3$0.t0 = requestContext.method;
+            context$3$0.next = context$3$0.t0 === "get" ? 23 : context$3$0.t0 === "post" ? 26 : context$3$0.t0 === "patch" ? 29 : context$3$0.t0 === "delete" ? 32 : 34;
             break;
 
           case 23:
@@ -141,15 +139,14 @@ module.exports = function (registry) {
             return doDelete(requestContext, responseContext, registry);
 
           case 34:
-            context$3$0.next = 41;
+            context$3$0.next = 40;
             break;
 
           case 36:
             context$3$0.prev = 36;
-            context$3$0.t13 = context$3$0["catch"](0);
+            context$3$0.t1 = context$3$0["catch"](0);
 
-            console.log(context$3$0.t13, context$3$0.t13.stack);
-            context$3$0.t13 = (Array.isArray(context$3$0.t13) ? context$3$0.t13 : [context$3$0.t13]).map(function (it) {
+            context$3$0.t1 = (Array.isArray(context$3$0.t1) ? context$3$0.t1 : [context$3$0.t1]).map(function (it) {
               if (it instanceof APIError) {
                 return it;
               } else {
@@ -161,13 +158,13 @@ module.exports = function (registry) {
                 return new APIError(_status, undefined, message);
               }
             });
-            responseContext.errors = responseContext.errors.concat(context$3$0.t13);
+            responseContext.errors = responseContext.errors.concat(context$3$0.t1);
 
-          case 41:
-            context$3$0.next = 43;
+          case 40:
+            context$3$0.next = 42;
             return negotiateContentType(requestContext.accepts, responseContext.ext, supportedExt);
 
-          case 43:
+          case 42:
             responseContext.contentType = context$3$0.sent;
 
             // apply transforms pre-send
@@ -186,7 +183,7 @@ module.exports = function (registry) {
 
             return context$3$0.abrupt("return", responseContext);
 
-          case 48:
+          case 47:
           case "end":
             return context$3$0.stop();
         }
@@ -220,8 +217,9 @@ function pickStatus(errStatuses) {
 // If the request has a body, validate it and parse its resources.
 
 // Map label to idOrIds, if applicable.
-// if our new ids are null/undefined or an empty array,
-// we can set the primary resources too!
+// if our new ids are null/undefined or an empty array, we can set
+// the primary resources too! (Note: one could argue that we should
+// 404 rather than return null when the label matches no ids.)
 
 // Actually fulfill the request!
 // If we've already populated the primary resources, which is possible
