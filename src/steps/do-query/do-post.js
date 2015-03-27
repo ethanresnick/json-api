@@ -1,11 +1,30 @@
 import APIError from "../../types/APIError";
 import Resource from "../../types/Resource";
+import Linkage from "../../types/Linkage";
 import templating from "url-template";
 
 export default function(requestContext, responseContext, registry) {
   let primary = requestContext.primary;
   let type    = requestContext.type;
   let adapter = registry.adapter(type);
+
+  // We're going to do an adapter.create, below, EXCEPT if we're adding to
+  // an existing toMany relationship, which uses a different adapter method.
+  if(primary instanceof Linkage) {
+    if(!Array.isArray(primary.value)) {
+      throw new APIError(
+        400,
+        undefined,
+        "To add to a to-many relationship, you must POST an array of linkage objects."
+      );
+    }
+
+    return adapter.addToRelationship(
+      type, requestContext.idOrIds, requestContext.relationship, primary
+    ).then(() => {
+      responseContext.status = 204;
+    });
+  }
 
   return adapter.create(type, primary).then((created) => {
     responseContext.primary = created;
