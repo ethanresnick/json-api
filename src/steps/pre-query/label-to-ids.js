@@ -1,35 +1,22 @@
 import Collection from "../../types/Collection"
 import Q from "q"
 
-export default function(registry, frameworkReq, requestContext, responseContext) {
+export default function(type, labelOrId, registry, frameworkReq) {
   return Q.Promise(function(resolve, reject) {
-    if(!requestContext.allowLabel) {
-      resolve();
+    let adapter      = registry.adapter(type);
+    let model        = adapter.getModel(adapter.constructor.getModelName(type));
+    let labelMappers = registry.labelMappers(type);
+    let labelMapper  = labelMappers && labelMappers[labelOrId];
+
+    // reolve with the mapped label
+    if(typeof labelMapper === "function") {
+      Q(idMapper(model, frameworkReq)).then(resolve);
     }
+
+    // or, if we couldn't find a label mapper, that means
+    // we were given an id, so we just resolve with that id.
     else {
-      let type      = requestContext.type;
-      let adapter   = registry.adapter(type);
-      let model     = adapter.getModel(adapter.constructor.getModelName(type));
-      let idMappers = registry.labelMappers(type);
-      let idMapper  = idMappers && idMappers[requestContext.idOrIds];
-
-      if(typeof idMapper === "function") {
-        Q(idMapper(model, frameworkReq)).then((newId) => {
-          let newIdIsEmptyArray = (Array.isArray(newId) && newId.length === 0);
-
-          requestContext.idOrIds = newId;
-
-          if(newId === null || newId === undefined || newIdIsEmptyArray) {
-            responseContext.primary = (newId) ? new Collection() : null;
-          }
-
-          resolve();
-        });
-      }
-
-      else {
-        resolve();
-      }
+      resolve(labelOrId);
     }
   });
 }

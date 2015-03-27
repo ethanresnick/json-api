@@ -1,21 +1,24 @@
-import ResponseContext from "./types/Context/ResponseContext"
-import Document from "./types/Document"
-import APIError from "./types/APIError"
-import * as requestValidators from "./steps/http/validate-request"
-import negotiateContentType from "./steps/http/negotiate-content-type"
+import co from "co";
+import polyfill from "babel/polyfill";
 
-import labelToIds from "./steps/pre-query/label-to-ids"
-import parseRequestResources from "./steps/pre-query/parse-resources"
-import applyTransform from "./steps/apply-transform"
+import ResponseContext from "./types/Context/ResponseContext";
+import Document from "./types/Document";
+import Collection from "./types/Collection";
+import APIError from "./types/APIError";
 
-import doFind from "./steps/do-query/do-find"
-import doCreate from "./steps/do-query/do-create"
-import doUpdate from "./steps/do-query/do-update"
-import doDelete from "./steps/do-query/do-delete"
+import * as requestValidators from "./steps/http/validate-request";
+import negotiateContentType from "./steps/http/negotiate-content-type";
 
-/**
- *
- */
+import labelToIds from "./steps/pre-query/label-to-ids";
+import parseRequestResources from "./steps/pre-query/parse-resources";
+import applyTransform from "./steps/apply-transform";
+
+import doFind from "./steps/do-query/do-find";
+import doCreate from "./steps/do-query/do-create";
+import doUpdate from "./steps/do-query/do-update";
+import doDelete from "./steps/do-query/do-delete";
+
+
 export default function(registry) {
   let supportedExt = ["bulk"];
 
@@ -32,56 +35,72 @@ export default function(registry) {
   function pipeline(requestContext, frameworkReq, frameworkRes) {
     let responseContext = new ResponseContext();
 
-    // Now, kick off the chain for generating the response.
-    // We'll validate and parse the body if one is present and, if one isn't,
-    // we'll throw an error if one was supposed to be (or vice-versa).
-    return requestValidators.checkBodyExistence(requestContext)
-      .then(() => {
+    // Kick off the chain for generating the response.
+    return co(function*() {
+      try {
+        // throw if the body is supposed to be present but isn't (or vice-versa).
+        yield requestValidators.checkBodyExistence(requestContext);
+
+        // If the request has a body, validate it and parse its resources.
         if(requestContext.hasBody) {
-          return requestValidators.checkBodyIsValidJSONAPI(requestContext.body).then(() => {
-            return requestValidators.checkContentType(requestContext, supportedExt).then(() => {
-              return parseRequestResources(requestContext.body.data, requestContext.aboutLinkObject).then((parsedPrimary) => {
-                requestContext.primary = applyTransform(
-                  parsedPrimary, "beforeQuery", registry, frameworkReq, frameworkRes
-                );
-              });
-            });
-          });
-        }
-      })
+          yield requestValidators.checkBodyIsValidJSONAPI(requestContext.body);
+          yield requestValidators.checkContentType(requestContext, supportedExt);
 
-      // Map label to idOrIds, if applicable.
-      .then(() => {
+          let parsedResources = yield parseRequestResources(
+            requestContext.body.data, requestContext.aboutLinkObject
+          );
+          requestContext.primary = applyTransform(
+            parsedResources, "beforeQuery", registry, frameworkReq, frameworkRes
+          );
+        }
+
+        // Map label to idOrIds, if applicable.
         if(requestContext.idOrIds && requestContext.allowLabel) {
-          return labelToIds(registry, frameworkReq, requestContext, responseContext);
-        }
-      })
+          let mappedLabel = yield labelToIds(
+            requestContext.type, requestContext.idOrIds, registry, frameworkReq
+          );
 
-      // Actually fulfill the request!
-      .then(() => {
+          // set the idOrIds on the request context
+          requestContext.idOrIds = mappedLabel;
+
+          // if our new ids are null/undefined or an empty array, we can set
+          // the primary resources too! (Note: one could argue that we should
+          // 404 rather than return null when the label matches no ids.)
+          let mappedIsEmptyArray = Array.isArray(mappedLabel) && !mappedLabel.length;
+
+          if(mappedLabel === null || mappedLabel === undefined || mappedIsEmptyArray) {
+            responseContext.primary = (mappedLabel) ? new Collection() : null;
+          }
+        }
+
+        // Actually fulfill the request!
         // If we've already populated the primary resources, which is possible
         // because the label may have mapped to no id(s), we don't need to query.
         if(typeof responseContext.primary === "undefined") {
           switch(requestContext.method) {
             case "get":
-              return doFind(requestContext, responseContext, registry);
+              yield doFind(requestContext, responseContext, registry);
+              break;
 
             case "post":
-              return doCreate(requestContext, responseContext, registry);
+              yield doCreate(requestContext, responseContext, registry);
+              break;
 
             case "patch":
-              return doUpdate(requestContext, responseContext, registry);
+              yield doUpdate(requestContext, responseContext, registry);
+              break;
 
             case "delete":
-              return doDelete(requestContext, responseContext, registry);
+              yield doDelete(requestContext, responseContext, registry);
           }
         }
-      })
+      }
 
-      // Add errors to the responseContext and, if necessary, convert them to
-      // APIError instances. Might be needed if, e.g., the error was unexpected
-      // or the user couldn't throw an APIError for compatibility with other code).
-      .catch((errors) => {
+      // Add errors to the responseContext converting them, if necessary, to
+      // APIError instances first. Might be needed if, e.g., the error was
+      // unexpected (and so uncaught and not transformed) in one of prior steps
+      // or the user couldn't throw an APIError for compatibility with other code.
+      catch (errors) {
         errors = (Array.isArray(errors) ? errors : [errors]).map((it) => {
           if(it instanceof APIError) {
             return it;
@@ -97,43 +116,38 @@ export default function(registry) {
           }
         });
         responseContext.errors = responseContext.errors.concat(errors);
-      })
+      }
 
       // Negotiate the content type
-      .then(() => {
-        let accept = requestContext.accepts;
-        let usedExt = responseContext.ext;
-        return negotiateContentType(accept, usedExt, supportedExt).then(
-          (it) => { responseContext.contentType = it; },
-          () => {}
-        );
-      })
+      responseContext.contentType = yield negotiateContentType(
+        requestContext.accepts, responseContext.ext, supportedExt
+      );
 
       // apply transforms pre-send
-      .then(() => {
-        responseContext.primary = applyTransform(
-          responseContext.primary, "beforeRender", registry, frameworkReq, frameworkRes
-        );
-        responseContext.included = applyTransform(
-          responseContext.included, "beforeRender", registry, frameworkReq, frameworkRes
-        );
-      })
+      responseContext.primary = applyTransform(
+        responseContext.primary, "beforeRender", registry, frameworkReq, frameworkRes
+      );
 
-      .then(() => {
-        if(responseContext.errors.length) {
-          responseContext.status = pickStatus(responseContext.errors.map(
-            (v) => Number(v.status)
-          ));
-          responseContext.body = new Document(responseContext.errors).get();
-        }
-        else {
-          responseContext.body = new Document(
-            responseContext.primary, responseContext.included,
-            {}, registry.urlTemplates(), requestContext.uri
-          ).get();
-        }
-        return responseContext;
-      });
+      responseContext.included = applyTransform(
+        responseContext.included, "beforeRender", registry, frameworkReq, frameworkRes
+      );
+
+      if(responseContext.errors.length) {
+        responseContext.status = pickStatus(responseContext.errors.map(
+          (v) => Number(v.status)
+        ));
+        responseContext.body = new Document(responseContext.errors).get();
+      }
+
+      else {
+        responseContext.body = new Document(
+          responseContext.primary, responseContext.included,
+          {}, registry.urlTemplates(), requestContext.uri
+        ).get();
+      }
+
+      return responseContext;
+    });
   }
 
   pipeline.supportedExt = supportedExt;

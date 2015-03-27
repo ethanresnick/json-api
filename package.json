@@ -15,6 +15,7 @@
   "dependencies": {
     "babel-runtime": "4.7.x",
     "express": "4.x.x",
+    "co": "4.5.x",
     "flat": "^1.2.1",
     "jade": "1.5.x",
     "pluralize": "0.0.11",
