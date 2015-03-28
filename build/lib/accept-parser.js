@@ -1,5 +1,7 @@
 "use strict";
 
+var _core = require("babel-runtime/core-js")["default"];
+
 exports["default"] = parseAccept;
 exports.parseMediaType = parseMediaType;
 Object.defineProperty(exports, "__esModule", {
@@ -91,7 +93,7 @@ function specify(type, spec, index) {
     return null;
   }
 
-  var keys = Object.keys(spec.params);
+  var keys = _core.Object.keys(spec.params);
   if (keys.length > 0) {
     if (keys.every(function (k) {
       return spec.params[k] == "*" || (spec.params[k] || "").toLowerCase() == (p.params[k] || "").toLowerCase();

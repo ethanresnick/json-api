@@ -1,12 +1,14 @@
 "use strict";
 
-var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default"];
 
-var _slicedToArray = function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { var _arr = []; for (var _iterator = arr[Symbol.iterator](), _step; !(_step = _iterator.next()).done;) { _arr.push(_step.value); if (i && _arr.length === i) break; } return _arr; } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } };
+var _createClass = require("babel-runtime/helpers/create-class")["default"];
 
-var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+var _slicedToArray = require("babel-runtime/helpers/sliced-to-array")["default"];
 
-var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
+var _core = require("babel-runtime/core-js")["default"];
+
+var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
 
 var LinkObject = _interopRequire(require("./LinkObject"));
 
@@ -119,7 +121,7 @@ function resourceToJSON(resource, urlTemplates) {
   json.id = resource.id;
   json.type = resource.type;
 
-  var templateData = Object.assign({ id: resource.id, meta: resource.meta }, resource.attrs);
+  var templateData = _core.Object.assign({ id: resource.id, meta: resource.meta }, resource.attrs);
   var selfTemplate = urlTemplates[resource.type] && urlTemplates[resource.type].self;
 
   if (!objectIsEmpty(resource.links) || selfTemplate) {

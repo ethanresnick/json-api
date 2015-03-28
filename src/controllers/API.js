@@ -1,5 +1,4 @@
 import co from "co";
-import polyfill from "babel/polyfill";
 
 import Response from "../types/HTTP/Response";
 import Document from "../types/Document";

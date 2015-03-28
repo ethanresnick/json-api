@@ -1,6 +1,4 @@
-"use strict";
 
-var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
 /**
  * Takes in a constructor function that takes no arguments and returns a new one
@@ -9,6 +7,12 @@ var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["defau
  * input constructor function immediately post-creation. Then the object will be
  * sealed so that no properties can be added or deleted--a nice sanity check.
  */
+"use strict";
+
+var _core = require("babel-runtime/core-js")["default"];
+
+var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
+
 exports.ValueObject = ValueObject;
 exports.objectIsEmpty = objectIsEmpty;
 exports.mapObject = mapObject;
@@ -44,7 +48,7 @@ function ValueObject(ConstructorFn) {
 
     // Object.seal prevents any other properties from being added to the object.
     // Every property an object needs should be set by the original constructor.
-    return Object.seal(obj);
+    return _core.Object.seal(obj);
   };
 }
 
@@ -59,7 +63,7 @@ function objectIsEmpty(obj) {
 }
 
 function mapObject(obj, mapFn) {
-  var mappedObj = Object.assign({}, obj);
+  var mappedObj = _core.Object.assign({}, obj);
 
   for (var key in mappedObj) {
     mappedObj[key] = mapFn(obj[key]);

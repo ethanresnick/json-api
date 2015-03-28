@@ -1,16 +1,16 @@
 "use strict";
 
-var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { "default": obj }; };
+var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default"];
 
-var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+var _createClass = require("babel-runtime/helpers/create-class")["default"];
 
-var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+var _regeneratorRuntime = require("babel-runtime/regenerator")["default"];
 
-var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
+var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
+
+var _interopRequireWildcard = require("babel-runtime/helpers/interop-require-wildcard")["default"];
 
 var co = _interopRequire(require("co"));
-
-var polyfill = _interopRequire(require("babel/polyfill"));
 
 var Response = _interopRequire(require("../types/HTTP/Response"));
 
@@ -66,9 +66,9 @@ var APIController = (function () {
         var registry = this.registry;
 
         // Kick off the chain for generating the response.
-        return co(regeneratorRuntime.mark(function callee$2$0() {
+        return co(_regeneratorRuntime.mark(function callee$2$0() {
           var parsedResources, mappedLabel, mappedIsEmptyArray;
-          return regeneratorRuntime.wrap(function callee$2$0$(context$3$0) {
+          return _regeneratorRuntime.wrap(function callee$2$0$(context$3$0) {
             while (1) switch (context$3$0.prev = context$3$0.next) {
               case 0:
                 context$3$0.prev = 0;

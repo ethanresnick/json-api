@@ -1,11 +1,15 @@
-"use strict";
 
-var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
 /**
  * Takes any error that resulted from the above operations throws an array of
  * errors that can be sent back to the caller as the Promise's rejection value.
  */
+"use strict";
+
+var _core = require("babel-runtime/core-js")["default"];
+
+var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
+
 exports.errorHandler = errorHandler;
 exports.groupResourcesByType = groupResourcesByType;
 
@@ -102,7 +106,7 @@ function getReferencedModelName(model, path) {
 }
 
 function resourceToDocObject(resource) {
-  var res = Object.assign({}, resource.attrs);
+  var res = _core.Object.assign({}, resource.attrs);
   var getId = function (it) {
     return it.id;
   };

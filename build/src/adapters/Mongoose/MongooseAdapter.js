@@ -1,20 +1,20 @@
 "use strict";
 
-var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { "default": obj }; };
+var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default"];
 
-var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+var _createClass = require("babel-runtime/helpers/create-class")["default"];
 
-var _defineProperty = function (obj, key, value) { return Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); };
+var _defineProperty = require("babel-runtime/helpers/define-property")["default"];
 
-var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+var _core = require("babel-runtime/core-js")["default"];
 
-var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
+var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
+
+var _interopRequireWildcard = require("babel-runtime/helpers/interop-require-wildcard")["default"];
 
 var Q = _interopRequire(require("q"));
 
 var mongoose = _interopRequire(require("mongoose"));
-
-var polyfill = _interopRequire(require("babel/polyfill"));
 
 var arrayContains = require("../../util/arrays").arrayContains;
 
@@ -181,7 +181,7 @@ var MongooseAdapter = (function () {
         var resourcesByType = util.groupResourcesByType(resourceOrCollection);
         var allowedTypes = this.getTypesAllowedInCollection(parentType);
 
-        var resourceTypeError = util.getResourceTypeError(allowedTypes, Object.keys(resourcesByType));
+        var resourceTypeError = util.getResourceTypeError(allowedTypes, _core.Object.keys(resourcesByType));
 
         if (resourceTypeError) {
           return Q.Promise(function (resolve, reject) {
@@ -531,7 +531,7 @@ var MongooseAdapter = (function () {
 
         if (!model.discriminators) {
           return [];
-        }return Object.keys(model.discriminators).map(function (it) {
+        }return _core.Object.keys(model.discriminators).map(function (it) {
           return _this.getType(it, pluralizer);
         });
       }

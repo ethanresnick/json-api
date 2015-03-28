@@ -1,5 +1,3 @@
-import polyfill from "babel/polyfill"
-
 let nonEnumerable = {writable: true, enumerable: false};
 
 export default class APIError extends Error {

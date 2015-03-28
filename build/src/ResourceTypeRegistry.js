@@ -1,10 +1,12 @@
 "use strict";
 
-var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default"];
 
-var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+var _createClass = require("babel-runtime/helpers/create-class")["default"];
 
-var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
+var _core = require("babel-runtime/core-js")["default"];
+
+var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
 
 var Q = _interopRequire(require("q"));
 
@@ -71,13 +73,13 @@ var ResourceTypeRegistry = (function () {
             }
           });
         } else if (this._resourceTypes[type]) {
-          return Object.assign({}, this._resourceTypes[type]);
+          return _core.Object.assign({}, this._resourceTypes[type]);
         }
       })
     },
     types: {
       value: function types() {
-        return Object.keys(this._resourceTypes);
+        return _core.Object.keys(this._resourceTypes);
       }
     },
     urlTemplates: {
@@ -94,7 +96,7 @@ var ResourceTypeRegistry = (function () {
           case 0:
             var templates = {};
             for (var _type2 in this._resourceTypes) {
-              templates[_type2] = Object.assign({}, this._resourceTypes[_type2].urlTemplates || {});
+              templates[_type2] = _core.Object.assign({}, this._resourceTypes[_type2].urlTemplates || {});
             }
             return templates;
 

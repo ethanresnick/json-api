@@ -1,12 +1,12 @@
-"use strict";
-
-var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
-
 /**
  * Takes an arbitrary path string e.g. "user.contact.phone" and locates the
  * corresponding property on an object `obj` and deletes it (ie. does
  * `delete obj.user.contact.phone`). It doesn't use eval, which makes it safer.
  */
+"use strict";
+
+var _core = require("babel-runtime/core-js")["default"];
+
 exports.deleteNested = deleteNested;
 
 /**
@@ -17,8 +17,6 @@ exports.isSubsetOf = isSubsetOf;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-var polyfill = _interopRequire(require("babel/polyfill"));
 
 function deleteNested(path, object) {
   try {
@@ -43,7 +41,7 @@ function deleteNested(path, object) {
 }
 
 function isSubsetOf(setArr, potentialSubsetArr) {
-  var set = new Set(setArr);
+  var set = new _core.Set(setArr);
 
   return potentialSubsetArr.every(function (it) {
     return set.has(it) === true;

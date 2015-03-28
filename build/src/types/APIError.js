@@ -1,16 +1,14 @@
 "use strict";
 
-var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default"];
 
-var _slicedToArray = function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { var _arr = []; for (var _iterator = arr[Symbol.iterator](), _step; !(_step = _iterator.next()).done;) { _arr.push(_step.value); if (i && _arr.length === i) break; } return _arr; } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } };
+var _inherits = require("babel-runtime/helpers/inherits")["default"];
 
-var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+var _createClass = require("babel-runtime/helpers/create-class")["default"];
 
-var _inherits = function (subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; };
+var _slicedToArray = require("babel-runtime/helpers/sliced-to-array")["default"];
 
-var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
-
-var polyfill = _interopRequire(require("babel/polyfill"));
+var _core = require("babel-runtime/core-js")["default"];
 
 var nonEnumerable = { writable: true, enumerable: false };
 
@@ -53,7 +51,7 @@ var APIError = (function (_Error) {
       }
     });
 
-    var _ref = Array.from(arguments);
+    var _ref = _core.Array.from(arguments);
 
     var _ref2 = _slicedToArray(_ref, 6);
 

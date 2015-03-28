@@ -19,17 +19,9 @@ compile:
 	mkdir -p $(DIST)$(LIB)
 	mkdir -p $(DIST)$(SRC)
 	mkdir -p $(DIST)$(TEST)
-	$(COMPILE_CMD) $(LIB) --out-dir $(DIST)$(LIB)
-	$(COMPILE_CMD) $(SRC) --out-dir $(DIST)$(SRC)
-	$(COMPILE_CMD) $(TEST) --out-dir $(DIST)$(TEST)
-
-compile-dev:
-	mkdir -p $(DIST)$(LIB)
-	mkdir -p $(DIST)$(SRC)
-	mkdir -p $(DIST)$(TEST)
-	$(COMPILE_CMD) $(LIB) --watch --out-dir $(DIST)$(LIB)
-	$(COMPILE_CMD) $(SRC) --watch --out-dir $(DIST)$(SRC)
-	$(COMPILE_CMD) $(TEST) --watch --out-dir $(DIST)$(TEST)
+	$(COMPILE_CMD) $(LIB) --out-dir $(DIST)$(LIB) --optional runtime
+	$(COMPILE_CMD) $(SRC) --out-dir $(DIST)$(SRC) --optional runtime
+	$(COMPILE_CMD) $(TEST) --out-dir $(DIST)$(TEST) --optional runtime
 
 test:
 	npm test

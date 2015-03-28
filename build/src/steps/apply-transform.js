@@ -1,6 +1,6 @@
 "use strict";
 
-var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
 
 var Resource = _interopRequire(require("../types/Resource"));
 

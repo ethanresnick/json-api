@@ -1,10 +1,12 @@
 "use strict";
 
-var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default"];
 
-var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+var _createClass = require("babel-runtime/helpers/create-class")["default"];
 
-var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
+var _core = require("babel-runtime/core-js")["default"];
+
+var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
 
 var Q = _interopRequire(require("q"));
 
@@ -36,7 +38,7 @@ var DocumentationController = (function () {
 
     // compute template data on construction
     // (it never changes, so this makes more sense than doing it per request)
-    var data = Object.assign({}, apiInfo);
+    var data = _core.Object.assign({}, apiInfo);
     data.resourcesMap = {};
 
     // Store in the resourcesMap the info object about each type,
@@ -67,7 +69,7 @@ var DocumentationController = (function () {
             var typeInfo = this.templateData.resourcesMap[type];
 
             // Build attributes for this description resource.
-            var attrs = Object.assign({}, typeInfo);
+            var attrs = _core.Object.assign({}, typeInfo);
             attrs.fields = [];
             attrs.name = {
               singular: attrs.singularName,

@@ -1,8 +1,8 @@
 "use strict";
 
-var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { "default": obj }; };
+var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
 
-var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+var _interopRequireWildcard = require("babel-runtime/helpers/interop-require-wildcard")["default"];
 
 var mocha = _interopRequire(require("mocha"));
 

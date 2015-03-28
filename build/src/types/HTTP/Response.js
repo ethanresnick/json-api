@@ -1,6 +1,6 @@
 "use strict";
 
-var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
+var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default"];
 
 var ValueObject = require("../../util/type-handling").ValueObject;
 

@@ -1,5 +1,7 @@
 "use strict";
 
+var _core = require("babel-runtime/core-js")["default"];
+
 exports.arrayUnique = arrayUnique;
 exports.arrayValuesMatch = arrayValuesMatch;
 exports.arrayContains = arrayContains;
@@ -18,9 +20,9 @@ function arrayValuesMatch(array1, array2) {
 }
 
 function arrayContains(arr, value) {
-  if (!Number.isNaN(value)) {
+  if (!_core.Number.isNaN(value)) {
     return arr.indexOf(value) !== -1;
   } else {
-    return arr.some(Number.isNaN) === true;
+    return arr.some(_core.Number.isNaN) === true;
   }
 }

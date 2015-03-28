@@ -1,8 +1,7 @@
-import Q from "q"
-import mongoose from "mongoose"
-import polyfill from "babel/polyfill"
-import {arrayContains} from "../../util/arrays"
-import {deleteNested} from "../../util/misc"
+import Q from "q";
+import mongoose from "mongoose";
+import {arrayContains} from "../../util/arrays";
+import {deleteNested} from "../../util/misc";
 import {forEachArrayOrVal, objectIsEmpty, mapArrayOrVal, mapResources} from "../../util/type-handling"
 import * as util from "./lib"
 import pluralize from "pluralize"

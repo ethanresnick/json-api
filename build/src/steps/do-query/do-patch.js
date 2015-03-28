@@ -1,8 +1,8 @@
 "use strict";
 
-var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+var _defineProperty = require("babel-runtime/helpers/define-property")["default"];
 
-var _defineProperty = function (obj, key, value) { return Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); };
+var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
 
 var APIError = _interopRequire(require("../../types/APIError"));
 

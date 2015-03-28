@@ -1,5 +1,4 @@
 import APIError from "../../types/APIError";
-import polyfill from "babel/polyfill";
 import {arrayContains} from "../../util/arrays"
 
 export default function(requestContext, responseContext, registry) {

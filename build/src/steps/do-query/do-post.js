@@ -1,6 +1,8 @@
 "use strict";
 
-var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+var _core = require("babel-runtime/core-js")["default"];
+
+var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
 
 var APIError = _interopRequire(require("../../types/APIError"));
 
@@ -36,7 +38,7 @@ module.exports = function (requestContext, responseContext, registry) {
       var templates = registry.urlTemplates(created.type);
       var template = templates && templates.self;
       if (template) {
-        var templateData = Object.assign({ id: created.id }, created.attrs);
+        var templateData = _core.Object.assign({ id: created.id }, created.attrs);
         responseContext.location = templating.parse(template).expand(templateData);
       }
     }

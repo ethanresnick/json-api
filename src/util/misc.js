@@ -1,5 +1,3 @@
-import polyfill from "babel/polyfill"
-
 /**
  * Takes an arbitrary path string e.g. "user.contact.phone" and locates the
  * corresponding property on an object `obj` and deletes it (ie. does
