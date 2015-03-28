@@ -9,7 +9,7 @@ import templating from "url-template";
 
 export default class Document {
   /*eslint-disable no-unused-vars */
-  constructor(primaryOrErrors, included = [], meta, urlTemplates, reqURI) {
+  constructor(primaryOrErrors, included, meta, urlTemplates, reqURI) {
     [this.primaryOrErrors, this.included, this.reqURI] = [primaryOrErrors, included, reqURI];
 
     // validate meta
@@ -31,7 +31,7 @@ export default class Document {
   }
   /*eslint-enable */
 
-  get() {
+  get(stringify) {
     let doc = {};
 
     if(this.meta) doc.meta = this.meta;
@@ -62,7 +62,7 @@ export default class Document {
       doc.errors = this.primaryOrErrors.map(errorToJSON);
     }
 
-    return doc;
+    return stringify ? JSON.stringify(doc) : doc;
   }
 }
 
