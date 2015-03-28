@@ -49,9 +49,17 @@ export default class DocumentationController {
 
         // Build attributes for this description resource.
         let attrs = Object.assign({}, typeInfo);
+        attrs.fields = [];
+        attrs.name = {
+          "singular": attrs.singularName,
+          "plural": attrs.pluralName,
+          "model": attrs.name
+        };
+
         delete attrs.schema;
         delete attrs.childTypes;
-        attrs.fields = [];
+        delete attrs.singularName;
+        delete attrs.pluralName;
 
         for(let path in typeInfo.schema) {
           let fieldDesc = {
@@ -69,7 +77,7 @@ export default class DocumentationController {
           }
 
           let fieldDefault = typeInfo.schema[path].default;
-          fieldDesc.default = fieldDefault === "(auto generated)" ? "AUTO" : fieldDefault;
+          fieldDesc.default = fieldDefault === "(auto generated)" ? "__AUTO__" : fieldDefault;
 
           attrs.fields.push(fieldDesc);
         }
