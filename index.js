@@ -9,6 +9,7 @@ module.exports = {
     Resource: require('./build/src/types/Resource')
   },
   controllers: {
+    Front: require('./build/src/controllers/Front'),
     API: require('./build/src/controllers/API'),
     Documentation: require('./build/src/controllers/Documentation')
   },

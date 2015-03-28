@@ -1,6 +1,6 @@
 import {ValueObject} from "../../util/type-handling"
 
-class RequestContext {
+class Request {
   constructor() {
     // Whether the request has a body,
     // in which case we'll need to validate the Content-Type.
@@ -63,4 +63,4 @@ class RequestContext {
   }
 }
 
-export default ValueObject(RequestContext);
+export default ValueObject(Request);

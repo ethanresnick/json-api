@@ -2,7 +2,7 @@ import {ValueObject} from "../../util/type-handling"
 
 let propDesc = {writable: true, enumerable: true};
 
-class ResponseContext {
+class Response {
   constructor() {
     // The JSON-API extensions used to formulate the response,
     // which affects the final the Content-Type header and our
@@ -22,7 +22,8 @@ class ResponseContext {
     // The response's status.
     this.status = null;
 
-    // The JSON for the response body.
+    // The JSON for the response body, as a string.
+    // Down the line, this might allow for a stream.
     this.body = null;
 
     // The response's primary data. Have to use
@@ -41,4 +42,4 @@ class ResponseContext {
   }
 }
 
-export default ValueObject(ResponseContext);
+export default ValueObject(Response);
