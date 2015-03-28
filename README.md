@@ -25,8 +25,6 @@ Check out the [full, working example repo](http://github.com/ethanresnick/json-a
   };
 
   var registry = new API.ResourceTypeRegistry();
-  var controller = new API.controllers.API(registry);
-  var requestHandler = controller.resourceRequest.bind(controller);
   var adapter = new API.adapters.Mongoose(models);
 
   registry.type("people", {
@@ -40,6 +38,16 @@ Check out the [full, working example repo](http://github.com/ethanresnick/json-a
     adapter: adapter,
     urlTemplates: {"self": "/places/{id}"}
   });
+
+  // Initialize the automatic documentation.
+  // Note: don't do this til after you've registered all your resources.
+  var templatePath = path.resolve(__dirname, './public/views/style-docs.jade')
+  var DocsController = new API.controllers.Documentation(registry, {name: 'Example API'}, templatePath);
+  
+  // Set up our controllers
+  var APIController = new API.controllers.API(registry);
+  var Front = new API.controllers.Front(APIController, DocsController);
+  var requestHandler = Front.apiRequest.bind(Controller);
 
   app.get("/:type(people|places)", requestHandler);
   app.get("/:type(people|places)/:id", requestHandler);
