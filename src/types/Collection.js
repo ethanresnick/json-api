@@ -1,5 +1,5 @@
 export default class Collection {
-  constructor(resources) {
+  constructor(resources = []) {
     this.resources = resources;
   }
 
@@ -9,5 +9,9 @@ export default class Collection {
 
   get types() {
     return this.resources.map(it => it.type);
+  }
+
+  add(resource) {
+    this.resources.push(resource);
   }
 }
