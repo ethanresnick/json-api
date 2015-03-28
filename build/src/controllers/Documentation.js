@@ -134,13 +134,11 @@ var DocumentationController = (function () {
 
         if (info && info.fields) {
           for (var _path in schema) {
-            if (info.fields[_path]) {
-              if (info.fields[_path].description) {
-                schema[_path].description = info.fields[_path].description;
-              }
-              if (info.fields[_path].friendlyName) {
-                schema[_path].friendlyName = info.fields[_path].friendlyName;
-              }
+            if (info.fields[_path] && info.fields[_path].description) {
+              schema[_path].description = info.fields[_path].description;
+            }
+            if (info.fields[_path] && info.fields[_path].friendlyName) {
+              schema[_path].friendlyName = info.fields[_path].friendlyName;
             } else {
               schema[_path].friendlyName = toFriendlyName(_path);
             }

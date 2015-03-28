@@ -108,13 +108,11 @@ export default class DocumentationController {
 
     if(info && info.fields) {
       for(let path in schema) {
-        if(info.fields[path]) {
-          if(info.fields[path].description) {
-            schema[path].description = info.fields[path].description;
-          }
-          if(info.fields[path].friendlyName) {
-            schema[path].friendlyName = info.fields[path].friendlyName;
-          }
+        if(info.fields[path] && info.fields[path].description) {
+          schema[path].description = info.fields[path].description;
+        }
+        if(info.fields[path] && info.fields[path].friendlyName) {
+          schema[path].friendlyName = info.fields[path].friendlyName;
         }
         else {
           schema[path].friendlyName = toFriendlyName(path);
