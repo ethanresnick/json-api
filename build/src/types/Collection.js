@@ -5,7 +5,9 @@ var _createClass = (function () { function defineProperties(target, props) { for
 var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
 var Collection = (function () {
-  function Collection(resources) {
+  function Collection() {
+    var resources = arguments[0] === undefined ? [] : arguments[0];
+
     _classCallCheck(this, Collection);
 
     this.resources = resources;
@@ -24,6 +26,11 @@ var Collection = (function () {
         return this.resources.map(function (it) {
           return it.type;
         });
+      }
+    },
+    add: {
+      value: function add(resource) {
+        this.resources.push(resource);
       }
     }
   });

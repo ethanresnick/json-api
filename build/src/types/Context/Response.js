@@ -6,8 +6,8 @@ var ValueObject = require("../../util/type-handling").ValueObject;
 
 var propDesc = { writable: true, enumerable: true };
 
-var ResponseContext = function ResponseContext() {
-  _classCallCheck(this, ResponseContext);
+var Response = function Response() {
+  _classCallCheck(this, Response);
 
   // The JSON-API extensions used to formulate the response,
   // which affects the final the Content-Type header and our
@@ -46,4 +46,4 @@ var ResponseContext = function ResponseContext() {
   Object.defineProperty(this, "meta", propDesc);
 };
 
-module.exports = ValueObject(ResponseContext);
+module.exports = ValueObject(Response);

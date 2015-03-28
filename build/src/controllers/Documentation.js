@@ -12,7 +12,17 @@ var templating = _interopRequire(require("url-template"));
 
 var jade = _interopRequire(require("jade"));
 
+var Negotiator = _interopRequire(require("negotiator"));
+
 var path = _interopRequire(require("path"));
+
+var Response = _interopRequire(require("../types/HTTP/Response"));
+
+var Document = _interopRequire(require("../types/Document"));
+
+var Collection = _interopRequire(require("../types/Collection"));
+
+var Resource = _interopRequire(require("../types/Resource"));
 
 var DocumentationController = (function () {
   function DocumentationController(registry, apiInfo, templatePath) {
@@ -39,9 +49,66 @@ var DocumentationController = (function () {
   }
 
   _createClass(DocumentationController, {
-    index: {
-      value: function index(req, res) {
-        res.send(jade.renderFile(this.template, this.templateData));
+    handle: {
+      value: function handle(request) {
+        var response = new Response();
+        var negotiator = new Negotiator({ headers: { accept: request.accepts } });
+        var contentType = negotiator.mediaType(["text/html", "application/vnd.api+json"]);
+
+        // set content type as negotiated
+        response.contentType = contentType;
+
+        if (contentType === "text/html") {
+          response.body = jade.renderFile(this.template, this.templateData);
+        } else {
+          // Create a collection of "jsonapi-descriptions" from the templateData
+          var descriptionResources = new Collection();
+          for (var type in this.templateData.resourcesMap) {
+            var typeInfo = this.templateData.resourcesMap[type];
+
+            // Build attributes for this description resource.
+            var attrs = Object.assign({}, typeInfo);
+            attrs.fields = [];
+            attrs.name = {
+              singular: attrs.singularName,
+              plural: attrs.pluralName,
+              model: attrs.name
+            };
+
+            delete attrs.schema;
+            delete attrs.childTypes;
+            delete attrs.singularName;
+            delete attrs.pluralName;
+
+            for (var _path in typeInfo.schema) {
+              var fieldDesc = {
+                name: _path,
+                friendlyName: typeInfo.schema[_path].friendlyName,
+                kind: typeInfo.schema[_path].type,
+                description: typeInfo.schema[_path].description,
+                requirements: {
+                  required: !!typeInfo.schema[_path].required
+                }
+              };
+
+              if (typeInfo.schema[_path].enumValues) {
+                fieldDesc.oneOf = typeInfo.schema[_path].enumValues;
+              }
+
+              var fieldDefault = typeInfo.schema[_path]["default"];
+              fieldDesc["default"] = fieldDefault === "(auto generated)" ? "__AUTO__" : fieldDefault;
+
+              attrs.fields.push(fieldDesc);
+            }
+
+            var typeDescription = new Resource("jsonapi-descriptions", type, attrs);
+            descriptionResources.add(typeDescription);
+          }
+
+          response.body = new Document(descriptionResources).get(true);
+        }
+
+        return Q(response);
       }
     },
     getTypeInfo: {
@@ -58,17 +125,32 @@ var DocumentationController = (function () {
         // from the adapter in order to build the final schema for the template.
         var info = this.registry.info(type);
         var schema = adapter.constructor.getStandardizedSchema(model);
+        var toTitleCase = function (v) {
+          return v.charAt(0).toUpperCase() + v.slice(1);
+        };
+        var toFriendlyName = function (v) {
+          return toTitleCase(v).split(/(?=[A-Z])/).join(" ");
+        };
 
         if (info && info.fields) {
           for (var _path in schema) {
-            if (info.fields[_path] && info.fields[_path].description) {
-              schema[_path].description = info.fields[_path].description;
+            if (info.fields[_path]) {
+              if (info.fields[_path].description) {
+                schema[_path].description = info.fields[_path].description;
+              }
+              if (info.fields[_path].friendlyName) {
+                schema[_path].friendlyName = info.fields[_path].friendlyName;
+              }
+            } else {
+              schema[_path].friendlyName = toFriendlyName(_path);
             }
           }
         }
         // Other info
         var result = {
           name: modelName,
+          singularName: toFriendlyName(modelName),
+          pluralName: type.split("-").map(toTitleCase).join(" "),
           schema: schema,
           parentType: this.registry.parentType(type),
           childTypes: adapter.constructor.getChildTypes(model)

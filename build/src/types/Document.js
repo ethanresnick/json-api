@@ -31,9 +31,7 @@ var templating = _interopRequire(require("url-template"));
 var Document = (function () {
   /*eslint-disable no-unused-vars */
 
-  function Document(primaryOrErrors, _x, meta, urlTemplates, reqURI) {
-    var included = arguments[1] === undefined ? [] : arguments[1];
-
+  function Document(primaryOrErrors, included, meta, urlTemplates, reqURI) {
     _classCallCheck(this, Document);
 
     var _ref = [primaryOrErrors, included, reqURI];
@@ -65,7 +63,7 @@ var Document = (function () {
     get: {
       /*eslint-enable */
 
-      value: function get() {
+      value: function get(stringify) {
         var _this = this;
 
         var doc = {};
@@ -96,7 +94,7 @@ var Document = (function () {
           doc.errors = this.primaryOrErrors.map(errorToJSON);
         }
 
-        return doc;
+        return stringify ? JSON.stringify(doc) : doc;
       }
     }
   });
