@@ -21,7 +21,6 @@ export function deleteNested(path, object) {
   }
 
   catch(error) {
-    console.log("deleteNested failed with path: " + path + ", on object: " + JSON.stringify(object));
     return false;
   }
 }

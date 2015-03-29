@@ -8,7 +8,6 @@ import {arrayUnique} from "../util/arrays";
 import templating from "url-template";
 
 export default class Document {
-  /*eslint-disable no-unused-vars */
   constructor(primaryOrErrors, included, meta, urlTemplates, reqURI) {
     [this.primaryOrErrors, this.included, this.reqURI] = [primaryOrErrors, included, reqURI];
 
@@ -29,7 +28,6 @@ export default class Document {
 
     this.reqURI = reqURI;
   }
-  /*eslint-enable */
 
   get(stringify) {
     let doc = {};
@@ -70,10 +68,27 @@ function linkageToJSON(linkage) {
   return linkage.value;
 }
 
-function linkObjectToJSON(linkObject, urlTemplates) {
-  return {
+function linkObjectToJSON(linkObject, urlTemplates, templateData) {
+  let result = {
     "linkage": linkageToJSON(linkObject.linkage)
   };
+
+  // Add urls that we can.
+  if(urlTemplates[templateData.ownerType]) {
+    let relatedUrlTemplate = urlTemplates[templateData.ownerType].related;
+
+    if(relatedUrlTemplate) {
+      result.related = relatedUrlTemplate.expand(templateData);
+    }
+
+    let selfUrlTemplate = urlTemplates[templateData.ownerType].relationship;
+
+    if(selfUrlTemplate) {
+      result.self = selfUrlTemplate.expand(templateData);
+    }
+  }
+
+  return result;
 }
 
 function resourceToJSON(resource, urlTemplates) {
@@ -81,7 +96,13 @@ function resourceToJSON(resource, urlTemplates) {
   json.id = resource.id;
   json.type = resource.type;
 
-  let templateData = Object.assign({"id": resource.id, "meta": resource.meta}, resource.attrs);
+  if(resource.meta && !objectIsEmpty(resource.meta)) {
+    json.meta = resource.meta;
+  }
+
+  // use type, id, meta and attrs for template data, even though building
+  // links from attr values is usually stupid (but there are cases for it).
+  let templateData = Object.assign({}, json);
   let selfTemplate = urlTemplates[resource.type] && urlTemplates[resource.type].self;
 
   if(!objectIsEmpty(resource.links) || selfTemplate) {
@@ -90,12 +111,9 @@ function resourceToJSON(resource, urlTemplates) {
       json.links.self = selfTemplate.expand(templateData);
     }
     for(let path in resource.links) {
-      json.links[path] = linkObjectToJSON(resource.links[path], urlTemplates);
+      let linkTemplateData = {"ownerType": json.type, "ownerId": json.id, "path": path};
+      json.links[path] = linkObjectToJSON(resource.links[path], urlTemplates, linkTemplateData);
     }
-  }
-
-  if(resource.meta && !objectIsEmpty(resource.meta)) {
-    json.meta = resource.meta;
   }
 
   return json;
