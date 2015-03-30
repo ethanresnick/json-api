@@ -37,11 +37,17 @@ export default function(requestContext, responseContext, registry) {
       );
     }
 
-    return adapter.find(type, requestContext.idOrIds).spread((resource, included) => {
+    return adapter.find(type, requestContext.idOrIds).spread((resource) => {
       if(resource.links && !resource.links[requestContext.relationship]) {
         // 404. doing it here is later than necessary, but more convenient than
         // loding in a schema.
+        let title = "Invalid relationship name.";
+        let detail = `${requestContext.relationship} is not a valid ` +
+                     `relationship name on resources of type "${type}"`;
+
+        throw new APIError(404, undefined, title, detail);
       }
+
       responseContext.primary = resource.links[requestContext.relationship].linkage;
     });
   }
