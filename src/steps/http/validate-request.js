@@ -3,18 +3,21 @@ import APIError from "../../types/APIError"
 
 export function checkBodyExistence(requestContext) {
   return Q.Promise(function(resolve, reject) {
-    let needsBody = ["post", "patch"].indexOf(requestContext.method) !== -1;
+    let needsBody =
+      ["post", "patch"].indexOf(requestContext.method) !== -1 ||
+      (requestContext.method === "delete" && requestContext.aboutLinkObject);
+
     if(requestContext.hasBody === needsBody) {
       resolve();
     }
     else if(needsBody) {
       reject(
-        new APIError(400, null, "This request needs a body, but didn't have one.")
+        new APIError(400, undefined, "This request needs a body, but didn't have one.")
       );
     }
     else {
       reject(
-        new APIError(400, null, "This request should not have a body, but does.")
+        new APIError(400, undefined, "This request should not have a body, but does.")
       );
     }
   });
