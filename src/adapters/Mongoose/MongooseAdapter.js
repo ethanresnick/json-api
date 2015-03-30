@@ -299,6 +299,19 @@ export default class MongooseAdapter {
       .catch(util.errorHandler);
   }
 
+  removeFromRelationship(type, id, relationshipPath, linkageToRemove) {
+    let model = this.getModel(this.constructor.getModelName(type));
+    let update = {
+      $pullAll: {
+        [relationshipPath]: linkageToRemove.value.map(it => it.id)
+      }
+    };
+    let options = {runValidators: true};
+
+    return Q.ninvoke(model, "findOneAndUpdate", {"_id": id}, update, options)
+      .catch(util.errorHandler);
+  }
+
   getModel(modelName) {
     return this.models[modelName];
   }
