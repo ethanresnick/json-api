@@ -35,7 +35,6 @@ function deleteNested(path, object) {
       throw new Error("The last property in the path didn't exist on the object.");
     }
   } catch (error) {
-    console.log("deleteNested failed with path: " + path + ", on object: " + JSON.stringify(object));
     return false;
   }
 }
