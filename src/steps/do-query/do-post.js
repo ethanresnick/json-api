@@ -2,6 +2,7 @@ import APIError from "../../types/APIError";
 import Resource from "../../types/Resource";
 import Linkage from "../../types/Linkage";
 import templating from "url-template";
+import {forEachResources} from "../../util/type-handling";
 
 export default function(requestContext, responseContext, registry) {
   let primary = requestContext.primary;
@@ -26,18 +27,25 @@ export default function(requestContext, responseContext, registry) {
     });
   }
 
-  return adapter.create(type, primary).then((created) => {
-    responseContext.primary = created;
-    responseContext.status = 201;
+  else {
+    let noClientIds = "Client-generated ids are not supported.";
+    forEachResources(primary, (it) => {
+      if(it.id) throw new APIError(403, undefined, noClientIds);
+    });
 
-    // We can only generate a Location url for a single resource.
-    if(created instanceof Resource) {
-      let templates = registry.urlTemplates(created.type);
-      let template = templates && templates.self;
-      if(template) {
-        let templateData = Object.assign({"id": created.id}, created.attrs);
-        responseContext.location = templating.parse(template).expand(templateData);
+    return adapter.create(type, primary).then((created) => {
+      responseContext.primary = created;
+      responseContext.status = 201;
+
+      // We can only generate a Location url for a single resource.
+      if(created instanceof Resource) {
+        let templates = registry.urlTemplates(created.type);
+        let template = templates && templates.self;
+        if(template) {
+          let templateData = Object.assign({"id": created.id}, created.attrs);
+          responseContext.location = templating.parse(template).expand(templateData);
+        }
       }
-    }
-  });
+    });
+  }
 }
