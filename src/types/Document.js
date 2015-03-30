@@ -39,12 +39,6 @@ export default class Document {
       doc.links = {"self": this.reqURI};
     }
 
-    if(this.included && Array.isArray(this.included)) {
-      doc.included = arrayUnique(this.included).map((resource) => {
-        return resourceToJSON(resource, this.urlTemplates);
-      });
-    }
-
     if(this.primaryOrErrors instanceof Collection || this.primaryOrErrors instanceof Resource) {
       doc.data = mapResources(this.primaryOrErrors, (resource) => {
         return resourceToJSON(resource, this.urlTemplates);
@@ -58,6 +52,12 @@ export default class Document {
     // it's either resource, a collection, linkage or errors...
     else {
       doc.errors = this.primaryOrErrors.map(errorToJSON);
+    }
+
+    if(this.included && Array.isArray(this.included)) {
+      doc.included = arrayUnique(this.included).map((resource) => {
+        return resourceToJSON(resource, this.urlTemplates);
+      });
     }
 
     return stringify ? JSON.stringify(doc) : doc;
