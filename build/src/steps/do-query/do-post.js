@@ -12,6 +12,8 @@ var Linkage = _interopRequire(require("../../types/Linkage"));
 
 var templating = _interopRequire(require("url-template"));
 
+var forEachResources = require("../../util/type-handling").forEachResources;
+
 module.exports = function (requestContext, responseContext, registry) {
   var primary = requestContext.primary;
   var type = requestContext.type;
@@ -27,20 +29,31 @@ module.exports = function (requestContext, responseContext, registry) {
     return adapter.addToRelationship(type, requestContext.idOrIds, requestContext.relationship, primary).then(function () {
       responseContext.status = 204;
     });
+  } else {
+    var _ret = (function () {
+      var noClientIds = "Client-generated ids are not supported.";
+      forEachResources(primary, function (it) {
+        if (it.id) throw new APIError(403, undefined, noClientIds);
+      });
+
+      return {
+        v: adapter.create(type, primary).then(function (created) {
+          responseContext.primary = created;
+          responseContext.status = 201;
+
+          // We can only generate a Location url for a single resource.
+          if (created instanceof Resource) {
+            var templates = registry.urlTemplates(created.type);
+            var template = templates && templates.self;
+            if (template) {
+              var templateData = _core.Object.assign({ id: created.id }, created.attrs);
+              responseContext.location = templating.parse(template).expand(templateData);
+            }
+          }
+        })
+      };
+    })();
+
+    if (typeof _ret === "object") return _ret.v;
   }
-
-  return adapter.create(type, primary).then(function (created) {
-    responseContext.primary = created;
-    responseContext.status = 201;
-
-    // We can only generate a Location url for a single resource.
-    if (created instanceof Resource) {
-      var templates = registry.urlTemplates(created.type);
-      var template = templates && templates.self;
-      if (template) {
-        var templateData = _core.Object.assign({ id: created.id }, created.attrs);
-        responseContext.location = templating.parse(template).expand(templateData);
-      }
-    }
-  });
 };

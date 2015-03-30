@@ -15,13 +15,14 @@ var APIError = _interopRequire(require("../../types/APIError"));
 
 function checkBodyExistence(requestContext) {
   return Q.Promise(function (resolve, reject) {
-    var needsBody = ["post", "patch"].indexOf(requestContext.method) !== -1;
+    var needsBody = ["post", "patch"].indexOf(requestContext.method) !== -1 || requestContext.method === "delete" && requestContext.aboutLinkObject;
+
     if (requestContext.hasBody === needsBody) {
       resolve();
     } else if (needsBody) {
-      reject(new APIError(400, null, "This request needs a body, but didn't have one."));
+      reject(new APIError(400, undefined, "This request needs a body, but didn't have one."));
     } else {
-      reject(new APIError(400, null, "This request should not have a body, but does."));
+      reject(new APIError(400, undefined, "This request should not have a body, but does."));
     }
   });
 }

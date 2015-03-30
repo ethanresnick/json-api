@@ -31,8 +31,6 @@ var arrayUnique = require("../util/arrays").arrayUnique;
 var templating = _interopRequire(require("url-template"));
 
 var Document = (function () {
-  /*eslint-disable no-unused-vars */
-
   function Document(primaryOrErrors, included, meta, urlTemplates, reqURI) {
     _classCallCheck(this, Document);
 
@@ -63,8 +61,6 @@ var Document = (function () {
 
   _createClass(Document, {
     get: {
-      /*eslint-enable */
-
       value: function get(stringify) {
         var _this = this;
 
@@ -75,12 +71,6 @@ var Document = (function () {
         // TODO: top-level related link.
         if (this.reqURI) {
           doc.links = { self: this.reqURI };
-        }
-
-        if (this.included && Array.isArray(this.included)) {
-          doc.included = arrayUnique(this.included).map(function (resource) {
-            return resourceToJSON(resource, _this.urlTemplates);
-          });
         }
 
         if (this.primaryOrErrors instanceof Collection || this.primaryOrErrors instanceof Resource) {
@@ -94,6 +84,12 @@ var Document = (function () {
         // it's either resource, a collection, linkage or errors...
         else {
           doc.errors = this.primaryOrErrors.map(errorToJSON);
+        }
+
+        if (this.included && Array.isArray(this.included)) {
+          doc.included = arrayUnique(this.included).map(function (resource) {
+            return resourceToJSON(resource, _this.urlTemplates);
+          });
         }
 
         return stringify ? JSON.stringify(doc) : doc;
@@ -110,10 +106,27 @@ function linkageToJSON(linkage) {
   return linkage.value;
 }
 
-function linkObjectToJSON(linkObject, urlTemplates) {
-  return {
+function linkObjectToJSON(linkObject, urlTemplates, templateData) {
+  var result = {
     linkage: linkageToJSON(linkObject.linkage)
   };
+
+  // Add urls that we can.
+  if (urlTemplates[templateData.ownerType]) {
+    var relatedUrlTemplate = urlTemplates[templateData.ownerType].related;
+
+    if (relatedUrlTemplate) {
+      result.related = relatedUrlTemplate.expand(templateData);
+    }
+
+    var selfUrlTemplate = urlTemplates[templateData.ownerType].relationship;
+
+    if (selfUrlTemplate) {
+      result.self = selfUrlTemplate.expand(templateData);
+    }
+  }
+
+  return result;
 }
 
 function resourceToJSON(resource, urlTemplates) {
@@ -121,7 +134,13 @@ function resourceToJSON(resource, urlTemplates) {
   json.id = resource.id;
   json.type = resource.type;
 
-  var templateData = _core.Object.assign({ id: resource.id, meta: resource.meta }, resource.attrs);
+  if (resource.meta && !objectIsEmpty(resource.meta)) {
+    json.meta = resource.meta;
+  }
+
+  // use type, id, meta and attrs for template data, even though building
+  // links from attr values is usually stupid (but there are cases for it).
+  var templateData = _core.Object.assign({}, json);
   var selfTemplate = urlTemplates[resource.type] && urlTemplates[resource.type].self;
 
   if (!objectIsEmpty(resource.links) || selfTemplate) {
@@ -130,12 +149,9 @@ function resourceToJSON(resource, urlTemplates) {
       json.links.self = selfTemplate.expand(templateData);
     }
     for (var path in resource.links) {
-      json.links[path] = linkObjectToJSON(resource.links[path], urlTemplates);
+      var linkTemplateData = { ownerType: json.type, ownerId: json.id, path: path };
+      json.links[path] = linkObjectToJSON(resource.links[path], urlTemplates, linkTemplateData);
     }
-  }
-
-  if (resource.meta && !objectIsEmpty(resource.meta)) {
-    json.meta = resource.meta;
   }
 
   return json;

@@ -354,6 +354,19 @@ var MongooseAdapter = (function () {
         return Q.ninvoke(model, "findOneAndUpdate", { _id: id }, update, options)["catch"](util.errorHandler);
       }
     },
+    removeFromRelationship: {
+      value: function removeFromRelationship(type, id, relationshipPath, linkageToRemove) {
+        var model = this.getModel(this.constructor.getModelName(type));
+        var update = {
+          $pullAll: _defineProperty({}, relationshipPath, linkageToRemove.value.map(function (it) {
+            return it.id;
+          }))
+        };
+        var options = { runValidators: true };
+
+        return Q.ninvoke(model, "findOneAndUpdate", { _id: id }, update, options)["catch"](util.errorHandler);
+      }
+    },
     getModel: {
       value: function getModel(modelName) {
         return this.models[modelName];

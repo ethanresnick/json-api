@@ -161,7 +161,7 @@ var APIController = (function () {
                 context$3$0.prev = 36;
                 context$3$0.t1 = context$3$0["catch"](0);
 
-                console.log(context$3$0.t1, context$3$0.t1.stack, context$3$0.t1[0].stack);
+                console.log(context$3$0.t1, context$3$0.t1.stack);
                 context$3$0.t1 = (Array.isArray(context$3$0.t1) ? context$3$0.t1 : [context$3$0.t1]).map(function (it) {
                   if (it instanceof APIError) {
                     return it;
