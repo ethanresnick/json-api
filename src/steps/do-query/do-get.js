@@ -14,13 +14,38 @@ export default function(requestContext, responseContext, registry) {
     if(!includes) {
       includes = registry.defaultIncludes(type);
     }
+
+    return adapter
+      .find(type, requestContext.idOrIds, fields, sorts, filters, includes)
+      .then((resources) => {
+        [responseContext.primary, responseContext.included] = resources;
+      });
   }
 
-  return adapter
-    .find(type, requestContext.idOrIds, fields, sorts, filters, includes)
-    .then((resources) => {
-      [responseContext.primary, responseContext.included] = resources;
+  // the user's asking for linkage. In this case:
+  // - fields don't apply because fields only pick out members of resource
+  //   objects, and here we're not returning a resource object;
+  // - includes don't apply because the path names for an includes must match
+  //   those in the primary data's `links` key, and this primary data doesn't
+  //   have a links key.
+  // - sorts don't apply beacuse that's only for resource collections.
+  else {
+    if(Array.isArray(requestContext.idOrIds)) {
+      throw new APIError(
+        400, undefined,
+        "You can only request the linkage for one resource at a time."
+      );
+    }
+
+    return adapter.find(type, requestContext.idOrIds).spread((resource, included) => {
+      if(resource.links && !resource.links[requestContext.relationship]) {
+        // 404. doing it here is later than necessary, but more convenient than
+        // loding in a schema.
+      }
+      responseContext.primary = resource.links[requestContext.relationship].linkage;
     });
+  }
+
 }
 
 function parseSorts(sortParam) {
