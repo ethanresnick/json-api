@@ -56,12 +56,25 @@ export default class MongooseAdapter {
       queryBuilder.sort(sorts.join(" "));
     }
 
-    // in an ideal world, we'd use mongoose to filter the fields before
+    // in an ideal world, we'd use mongoose here to filter the fields before
     // querying. But, because the fields to filter can be scoped by type and
-    // we don't always know about a document's type until post query (becuase of
-    // discriminator keys), and because filtering out fields can really
-    // complicate population for includes, we don't filter at query time and
-    // instead just hide fields filtered by type in @docToResource.
+    // we don't always know about a document's type until after query (becuase
+    // of discriminator keys), and because filtering out fields can really
+    // complicate population for includes, we don't yet filter at query time but
+    // instead just hide filtered fields in @docToResource. There is a more-
+    // efficient way to do this down the road, though--something like taking the
+    // provided fields and expanding them just enough (by looking at the type
+    // heirarachy and the relationship paths) to make sure that we're not going
+    // to run into any of the problems outlined above, while still querying for
+    // less data than we would without any fields restriction. For reference, the
+    // code for safely using the user's `fields` input, by putting them into a
+    // mongoose `.select()` object so that the user can't prefix a field with a
+    // minus on input to affect the query, is below.
+    // Reference: http://mongoosejs.com/docs/api.html#query_Query-select.
+    // let arrToSelectObject = (prev, curr) => { prev[curr] = 1; return prev; };
+    // for(let type in fields) {
+    //   fields[type] = fields[type].reduce(arrToSelectObject, {});
+    // }
 
     // support includes, but only a level deep for now (recursive includes,
     // especially if done in an efficient way query wise, are a pain in the ass).
