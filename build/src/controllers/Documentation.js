@@ -61,6 +61,21 @@ var DocumentationController = (function () {
         response.contentType = contentType;
 
         if (contentType === "text/html") {
+          for (var type in this.templateData.resourcesMap) {
+            var typeSchema = this.templateData.resourcesMap[type].schema;
+
+            for (var _path in typeSchema) {
+              var typeObject = typeSchema[_path].type;
+              var targetModel = typeObject.targetModel;
+
+              var typeString = typeObject.isArray ? "Array[" : "";
+              typeString += targetModel ? targetModel + "Id" : typeObject.name;
+              typeString += typeObject.isArray ? "]" : "";
+
+              typeSchema[_path].type = typeString;
+            }
+          }
+
           response.body = jade.renderFile(this.template, this.templateData);
         } else {
           // Create a collection of "jsonapi-descriptions" from the templateData
@@ -82,22 +97,24 @@ var DocumentationController = (function () {
             delete attrs.singularName;
             delete attrs.pluralName;
 
-            for (var _path in typeInfo.schema) {
+            for (var _path2 in typeInfo.schema) {
               var fieldDesc = {
-                name: _path,
-                friendlyName: typeInfo.schema[_path].friendlyName,
-                kind: typeInfo.schema[_path].type,
-                description: typeInfo.schema[_path].description,
+                name: _path2,
+                friendlyName: typeInfo.schema[_path2].friendlyName,
+                kind: typeInfo.schema[_path2].type,
+                description: typeInfo.schema[_path2].description,
                 requirements: {
-                  required: !!typeInfo.schema[_path].required
+                  required: !!typeInfo.schema[_path2].required
                 }
               };
 
-              if (typeInfo.schema[_path].enumValues) {
-                fieldDesc.oneOf = typeInfo.schema[_path].enumValues;
+              if (fieldDesc.kind) delete fieldDesc.kind.targetModel;
+
+              if (typeInfo.schema[_path2].enumValues) {
+                fieldDesc.oneOf = typeInfo.schema[_path2].enumValues;
               }
 
-              var fieldDefault = typeInfo.schema[_path]["default"];
+              var fieldDefault = typeInfo.schema[_path2]["default"];
               fieldDesc["default"] = fieldDefault === "(auto generated)" ? "__AUTO__" : fieldDefault;
 
               attrs.fields.push(fieldDesc);
@@ -134,18 +151,29 @@ var DocumentationController = (function () {
           return toTitleCase(v).split(/(?=[A-Z])/).join(" ");
         };
 
-        if (info && info.fields) {
-          for (var _path in schema) {
-            if (info.fields[_path] && info.fields[_path].description) {
+        for (var _path in schema) {
+          // look up user defined field info on info.fields.
+          if (info && info.fields && info.fields[_path]) {
+            if (info.fields[_path].description) {
               schema[_path].description = info.fields[_path].description;
             }
-            if (info.fields[_path] && info.fields[_path].friendlyName) {
+
+            if (info.fields[_path].friendlyName) {
               schema[_path].friendlyName = info.fields[_path].friendlyName;
-            } else {
-              schema[_path].friendlyName = toFriendlyName(_path);
             }
           }
+
+          // fill in default field info.
+          else {
+            schema[_path].friendlyName = toFriendlyName(_path);
+          }
+
+          // specifically generate targetType from targetModel on relationship fields.
+          if (schema[_path].type.targetModel) {
+            schema[_path].type.targetType = adapter.constructor.getType(schema[_path].type.targetModel);
+          }
         }
+
         // Other info
         var result = {
           name: modelName,
