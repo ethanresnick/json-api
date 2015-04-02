@@ -64,23 +64,15 @@ export default class DocumentationController {
 
         // populate the `fields` attribute with a description of each field
         for(let path in typeInfo.schema) {
-          let fieldDesc = {
-            name: path,
-            friendlyName: typeInfo.schema[path].friendlyName,
-            kind: typeInfo.schema[path].type,
-            description: typeInfo.schema[path].description,
-            requirements: {
-              required: !!typeInfo.schema[path].required
-            }
-          };
+          let fieldDesc = Object.assign({}, typeInfo.schema[path]);
+          fieldDesc.name = path;
 
-          if(typeInfo.schema[path].enumValues) {
-            fieldDesc.oneOf = typeInfo.schema[path].enumValues;
-          }
+          //work around jsonapi reserved `type` keyword.
+          fieldDesc.kind = fieldDesc.type;
+          delete fieldDesc.type;
+          delete fieldDesc.typeString;
 
-          let fieldDefault = typeInfo.schema[path].default;
-          fieldDesc.default = fieldDefault === "(auto generated)" ? "__AUTO__" : fieldDefault;
-
+          if(fieldDesc.default === "(auto generated)") fieldDesc.default = "__AUTO__";
           attrs.fields.push(fieldDesc);
         }
 
@@ -161,6 +153,3 @@ export default class DocumentationController {
     return result;
   }
 }
-
-
-
