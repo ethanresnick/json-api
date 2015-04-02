@@ -522,8 +522,11 @@ export default class MongooseAdapter {
         type: standardType,
         friendlyName: this.toFriendlyName(name),
         default: defaultVal,
-        enumValues: type.options.enum ? type.enumValues : undefined,
-        required: type.options.required
+        requirements: {
+          oneOf: type.options.enum ? type.enumValues : undefined,
+          required: !!type.options.required
+        }
+
       };
     });
 
