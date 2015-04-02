@@ -63,7 +63,7 @@ html(lang='en')
                         b(id=fieldId)= path
                       else
                         span(id=fieldId)= path
-                    td= field.type
+                    td= field.typeString
                     td
                       != field.description
                       if (field.default != null && path != 'id') || field.enumValues != null

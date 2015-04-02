@@ -38,21 +38,6 @@ export default class DocumentationController {
     response.contentType = contentType;
 
     if(contentType === "text/html") {
-      for(let type in this.templateData.resourcesMap) {
-        let typeSchema = this.templateData.resourcesMap[type].schema;
-
-        for(let path in typeSchema) {
-          let typeObject = typeSchema[path].type;
-          let targetModel = typeObject.targetModel;
-
-          let typeString = typeObject.isArray ? "Array[" : "";
-          typeString += targetModel ? (targetModel + "Id") : typeObject.name;
-          typeString += typeObject.isArray ? "]" : "";
-
-          typeSchema[path].type = typeString;
-        }
-      }
-
       response.body = jade.renderFile(this.template, this.templateData);
     }
 
@@ -133,9 +118,24 @@ export default class DocumentationController {
       }
 
       // specifically generate targetType from targetModel on relationship fields.
-      if(schema[path].type.targetModel) {
-        schema[path].type.targetType =
-          adapter.constructor.getType(schema[path].type.targetModel);
+      if(schema[path].type) {
+        if(schema[path].type.targetModel) {
+          schema[path].type.targetType =
+            adapter.constructor.getType(schema[path].type.targetModel);
+        }
+        else {
+          schema[path].type.targetType = null;
+        }
+
+        // and generate typeString from the type object.
+        let typeObject = schema[path].type;
+        let targetModel = typeObject.targetModel;
+
+        let typeString = typeObject.isArray ? "Array[" : "";
+        typeString += targetModel ? (targetModel + "Id") : typeObject.name;
+        typeString += typeObject.isArray ? "]" : "";
+
+        schema[path].typeString = typeString;
       }
     }
 
