@@ -576,7 +576,7 @@ var MongooseAdapter = (function () {
         // Array[ModelNameId].
         var getStandardType = function (path, schemaType) {
           if (path === "_id") {
-            return { name: "Id", isArray: false, targetModel: null };
+            return { name: "Id", isArray: false, targetModel: undefined };
           }
 
           var typeOptions = schemaType.options.type;
@@ -611,8 +611,11 @@ var MongooseAdapter = (function () {
             type: standardType,
             friendlyName: _this.toFriendlyName(name),
             "default": defaultVal,
-            enumValues: type.options["enum"] ? type.enumValues : undefined,
-            required: type.options.required
+            requirements: {
+              oneOf: type.options["enum"] ? type.enumValues : undefined,
+              required: !!type.options.required
+            }
+
           };
         });
 

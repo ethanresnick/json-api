@@ -85,23 +85,15 @@ var DocumentationController = (function () {
 
             // populate the `fields` attribute with a description of each field
             for (var _path in typeInfo.schema) {
-              var fieldDesc = {
-                name: _path,
-                friendlyName: typeInfo.schema[_path].friendlyName,
-                kind: typeInfo.schema[_path].type,
-                description: typeInfo.schema[_path].description,
-                requirements: {
-                  required: !!typeInfo.schema[_path].required
-                }
-              };
+              var fieldDesc = _core.Object.assign({}, typeInfo.schema[_path]);
+              fieldDesc.name = _path;
 
-              if (typeInfo.schema[_path].enumValues) {
-                fieldDesc.oneOf = typeInfo.schema[_path].enumValues;
-              }
+              //work around jsonapi reserved `type` keyword.
+              fieldDesc.kind = fieldDesc.type;
+              delete fieldDesc.type;
+              delete fieldDesc.typeString;
 
-              var fieldDefault = typeInfo.schema[_path]["default"];
-              fieldDesc["default"] = fieldDefault === "(auto generated)" ? "__AUTO__" : fieldDefault;
-
+              if (fieldDesc["default"] === "(auto generated)") fieldDesc["default"] = "__AUTO__";
               attrs.fields.push(fieldDesc);
             }
 
@@ -150,7 +142,9 @@ var DocumentationController = (function () {
           if (schema[_path].type) {
             if (schema[_path].type.targetModel) {
               schema[_path].type.targetType = adapter.constructor.getType(schema[_path].type.targetModel);
-            } else {
+            }
+            // create targetType if targetModel is null, but not if its undefined.
+            else if (typeof schema[_path].type.targetModel !== "undefined") {
               schema[_path].type.targetType = null;
             }
 
