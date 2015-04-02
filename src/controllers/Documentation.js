@@ -118,7 +118,8 @@ export default class DocumentationController {
           schema[path].type.targetType =
             adapter.constructor.getType(schema[path].type.targetModel);
         }
-        else {
+        // create targetType if targetModel is null, but not if its undefined.
+        else if(typeof schema[path].type.targetModel !== "undefined") {
           schema[path].type.targetType = null;
         }
 

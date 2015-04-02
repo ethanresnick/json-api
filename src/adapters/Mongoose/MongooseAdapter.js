@@ -481,7 +481,7 @@ export default class MongooseAdapter {
     // Array[ModelNameId].
     const getStandardType = (path, schemaType) => {
       if(path === "_id") {
-        return {name: "Id", isArray: false, targetModel: null};
+        return {name: "Id", isArray: false, targetModel: undefined};
       }
 
       const typeOptions = schemaType.options.type;
