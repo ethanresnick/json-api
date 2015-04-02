@@ -520,6 +520,7 @@ export default class MongooseAdapter {
 
       standardSchema[name] = {
         type: standardType,
+        friendlyName: this.toFriendlyName(name),
         default: defaultVal,
         enumValues: type.options.enum ? type.enumValues : undefined,
         required: type.options.required
@@ -527,5 +528,10 @@ export default class MongooseAdapter {
     });
 
     return standardSchema;
+  }
+
+  static toFriendlyName(pathOrModelName) {
+    const ucFirst = (v) => v.charAt(0).toUpperCase() + v.slice(1);
+    return pathOrModelName.split('.').map(ucFirst).join("").split(/(?=[A-Z])/).join(" ");
   }
 }

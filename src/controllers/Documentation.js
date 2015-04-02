@@ -121,24 +121,18 @@ export default class DocumentationController {
     const info = this.registry.info(type);
     const schema = adapter.constructor.getStandardizedSchema(model);
     const toTitleCase = (v) => v.charAt(0).toUpperCase() + v.slice(1);
-    const toFriendlyName = (v) =>
-      v.split('.').map(toTitleCase).join("").split(/(?=[A-Z])/).join(" ");
 
     for(let path in schema) {
       // look up user defined field info on info.fields.
-      let pathInfoExists = info && info.fields && info.fields[path];
+      let pathInfo = info && info.fields && info.fields[path];
 
-      if(pathInfoExists && info.fields[path].description) {
-        schema[path].description = info.fields[path].description;
+      if(pathInfo && pathInfo.description) {
+        schema[path].description = pathInfo.description;
       }
 
       // but, below, set a default friendly name if none is provided.
-      if(pathInfoExists && info.fields[path].friendlyName) {
-        schema[path].friendlyName = info.fields[path].friendlyName;
-      }
-
-      else {
-        schema[path].friendlyName = toFriendlyName(path);
+      if(pathInfo && pathInfo.friendlyName) {
+        schema[path].friendlyName = pathInfo.friendlyName;
       }
 
       // specifically generate targetType from targetModel on relationship fields.
@@ -151,8 +145,8 @@ export default class DocumentationController {
     // Other info
     let result = {
       name: modelName,
-      singularName: toFriendlyName(modelName),
       pluralName: type.split("-").map(toTitleCase).join(" "),
+      singularName: adapter.constructor.toFriendlyName(modelName),
       schema: schema,
       parentType: this.registry.parentType(type),
       childTypes: adapter.constructor.getChildTypes(model)
