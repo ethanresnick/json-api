@@ -148,23 +148,21 @@ var DocumentationController = (function () {
           return v.charAt(0).toUpperCase() + v.slice(1);
         };
         var toFriendlyName = function (v) {
-          return toTitleCase(v).split(/(?=[A-Z])/).join(" ");
+          return v.split(".").map(toTitleCase).join("").split(/(?=[A-Z])/).join(" ");
         };
 
         for (var _path in schema) {
           // look up user defined field info on info.fields.
-          if (info && info.fields && info.fields[_path]) {
-            if (info.fields[_path].description) {
-              schema[_path].description = info.fields[_path].description;
-            }
+          var pathInfoExists = info && info.fields && info.fields[_path];
 
-            if (info.fields[_path].friendlyName) {
-              schema[_path].friendlyName = info.fields[_path].friendlyName;
-            }
+          if (pathInfoExists && info.fields[_path].description) {
+            schema[_path].description = info.fields[_path].description;
           }
 
-          // fill in default field info.
-          else {
+          // but, below, set a default friendly name if none is provided.
+          if (pathInfoExists && info.fields[_path].friendlyName) {
+            schema[_path].friendlyName = info.fields[_path].friendlyName;
+          } else {
             schema[_path].friendlyName = toFriendlyName(_path);
           }
 

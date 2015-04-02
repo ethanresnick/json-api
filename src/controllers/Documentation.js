@@ -121,21 +121,22 @@ export default class DocumentationController {
     const info = this.registry.info(type);
     const schema = adapter.constructor.getStandardizedSchema(model);
     const toTitleCase = (v) => v.charAt(0).toUpperCase() + v.slice(1);
-    const toFriendlyName = (v) => toTitleCase(v).split(/(?=[A-Z])/).join(" ");
+    const toFriendlyName = (v) =>
+      v.split('.').map(toTitleCase).join("").split(/(?=[A-Z])/).join(" ");
 
     for(let path in schema) {
       // look up user defined field info on info.fields.
-      if(info && info.fields && info.fields[path]) {
-        if(info.fields[path].description) {
-          schema[path].description = info.fields[path].description;
-        }
+      let pathInfoExists = info && info.fields && info.fields[path];
 
-        if(info.fields[path].friendlyName) {
-          schema[path].friendlyName = info.fields[path].friendlyName;
-        }
+      if(pathInfoExists && info.fields[path].description) {
+        schema[path].description = info.fields[path].description;
       }
 
-      // fill in default field info.
+      // but, below, set a default friendly name if none is provided.
+      if(pathInfoExists && info.fields[path].friendlyName) {
+        schema[path].friendlyName = info.fields[path].friendlyName;
+      }
+
       else {
         schema[path].friendlyName = toFriendlyName(path);
       }
