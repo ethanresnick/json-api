@@ -72,7 +72,6 @@ export default class DocumentationController {
         };
 
         delete attrs.schema;
-        delete attrs.childTypes;
         delete attrs.singularName;
         delete attrs.pluralName;
 
@@ -86,8 +85,6 @@ export default class DocumentationController {
               required: !!typeInfo.schema[path].required
             }
           };
-
-          if(fieldDesc.kind) delete fieldDesc.kind.targetModel;
 
           if(typeInfo.schema[path].enumValues) {
             fieldDesc.oneOf = typeInfo.schema[path].enumValues;
