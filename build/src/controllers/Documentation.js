@@ -61,25 +61,12 @@ var DocumentationController = (function () {
         response.contentType = contentType;
 
         if (contentType === "text/html") {
-          for (var type in this.templateData.resourcesMap) {
-            var typeSchema = this.templateData.resourcesMap[type].schema;
-
-            for (var _path in typeSchema) {
-              var typeObject = typeSchema[_path].type;
-              var targetModel = typeObject.targetModel;
-
-              var typeString = typeObject.isArray ? "Array[" : "";
-              typeString += targetModel ? targetModel + "Id" : typeObject.name;
-              typeString += typeObject.isArray ? "]" : "";
-
-              typeSchema[_path].type = typeString;
-            }
-          }
-
           response.body = jade.renderFile(this.template, this.templateData);
         } else {
           // Create a collection of "jsonapi-descriptions" from the templateData
           var descriptionResources = new Collection();
+
+          // Add a description resource for each resource type to the collection.
           for (var type in this.templateData.resourcesMap) {
             var typeInfo = this.templateData.resourcesMap[type];
 
@@ -93,28 +80,26 @@ var DocumentationController = (function () {
             };
 
             delete attrs.schema;
-            delete attrs.childTypes;
             delete attrs.singularName;
             delete attrs.pluralName;
 
-            for (var _path2 in typeInfo.schema) {
+            // populate the `fields` attribute with a description of each field
+            for (var _path in typeInfo.schema) {
               var fieldDesc = {
-                name: _path2,
-                friendlyName: typeInfo.schema[_path2].friendlyName,
-                kind: typeInfo.schema[_path2].type,
-                description: typeInfo.schema[_path2].description,
+                name: _path,
+                friendlyName: typeInfo.schema[_path].friendlyName,
+                kind: typeInfo.schema[_path].type,
+                description: typeInfo.schema[_path].description,
                 requirements: {
-                  required: !!typeInfo.schema[_path2].required
+                  required: !!typeInfo.schema[_path].required
                 }
               };
 
-              if (fieldDesc.kind) delete fieldDesc.kind.targetModel;
-
-              if (typeInfo.schema[_path2].enumValues) {
-                fieldDesc.oneOf = typeInfo.schema[_path2].enumValues;
+              if (typeInfo.schema[_path].enumValues) {
+                fieldDesc.oneOf = typeInfo.schema[_path].enumValues;
               }
 
-              var fieldDefault = typeInfo.schema[_path2]["default"];
+              var fieldDefault = typeInfo.schema[_path]["default"];
               fieldDesc["default"] = fieldDefault === "(auto generated)" ? "__AUTO__" : fieldDefault;
 
               attrs.fields.push(fieldDesc);
@@ -144,39 +129,48 @@ var DocumentationController = (function () {
         // from the adapter in order to build the final schema for the template.
         var info = this.registry.info(type);
         var schema = adapter.constructor.getStandardizedSchema(model);
-        var toTitleCase = function (v) {
+        var ucFirst = function (v) {
           return v.charAt(0).toUpperCase() + v.slice(1);
-        };
-        var toFriendlyName = function (v) {
-          return v.split(".").map(toTitleCase).join("").split(/(?=[A-Z])/).join(" ");
         };
 
         for (var _path in schema) {
           // look up user defined field info on info.fields.
-          var pathInfoExists = info && info.fields && info.fields[_path];
+          var pathInfo = info && info.fields && info.fields[_path];
 
-          if (pathInfoExists && info.fields[_path].description) {
-            schema[_path].description = info.fields[_path].description;
+          if (pathInfo && pathInfo.description) {
+            schema[_path].description = pathInfo.description;
           }
 
           // but, below, set a default friendly name if none is provided.
-          if (pathInfoExists && info.fields[_path].friendlyName) {
-            schema[_path].friendlyName = info.fields[_path].friendlyName;
-          } else {
-            schema[_path].friendlyName = toFriendlyName(_path);
+          if (pathInfo && pathInfo.friendlyName) {
+            schema[_path].friendlyName = pathInfo.friendlyName;
           }
 
           // specifically generate targetType from targetModel on relationship fields.
-          if (schema[_path].type.targetModel) {
-            schema[_path].type.targetType = adapter.constructor.getType(schema[_path].type.targetModel);
+          if (schema[_path].type) {
+            if (schema[_path].type.targetModel) {
+              schema[_path].type.targetType = adapter.constructor.getType(schema[_path].type.targetModel);
+            } else {
+              schema[_path].type.targetType = null;
+            }
+
+            // and generate typeString from the type object.
+            var typeObject = schema[_path].type;
+            var targetModel = typeObject.targetModel;
+
+            var typeString = typeObject.isArray ? "Array[" : "";
+            typeString += targetModel ? targetModel + "Id" : typeObject.name;
+            typeString += typeObject.isArray ? "]" : "";
+
+            schema[_path].typeString = typeString;
           }
         }
 
         // Other info
         var result = {
           name: modelName,
-          singularName: toFriendlyName(modelName),
-          pluralName: type.split("-").map(toTitleCase).join(" "),
+          singularName: adapter.constructor.toFriendlyName(modelName),
+          pluralName: type.split("-").map(ucFirst).join(" "),
           schema: schema,
           parentType: this.registry.parentType(type),
           childTypes: adapter.constructor.getChildTypes(model)

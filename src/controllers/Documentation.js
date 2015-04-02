@@ -44,6 +44,8 @@ export default class DocumentationController {
     else {
       // Create a collection of "jsonapi-descriptions" from the templateData
       let descriptionResources = new Collection();
+
+      // Add a description resource for each resource type to the collection.
       for(let type in this.templateData.resourcesMap) {
         let typeInfo = this.templateData.resourcesMap[type];
 
@@ -60,6 +62,7 @@ export default class DocumentationController {
         delete attrs.singularName;
         delete attrs.pluralName;
 
+        // populate the `fields` attribute with a description of each field
         for(let path in typeInfo.schema) {
           let fieldDesc = {
             name: path,
@@ -102,7 +105,7 @@ export default class DocumentationController {
     // from the adapter in order to build the final schema for the template.
     const info = this.registry.info(type);
     const schema = adapter.constructor.getStandardizedSchema(model);
-    const toTitleCase = (v) => v.charAt(0).toUpperCase() + v.slice(1);
+    const ucFirst = (v) => v.charAt(0).toUpperCase() + v.slice(1);
 
     for(let path in schema) {
       // look up user defined field info on info.fields.
@@ -142,8 +145,8 @@ export default class DocumentationController {
     // Other info
     let result = {
       name: modelName,
-      pluralName: type.split("-").map(toTitleCase).join(" "),
       singularName: adapter.constructor.toFriendlyName(modelName),
+      pluralName: type.split("-").map(ucFirst).join(" "),
       schema: schema,
       parentType: this.registry.parentType(type),
       childTypes: adapter.constructor.getChildTypes(model)

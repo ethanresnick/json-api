@@ -564,6 +564,8 @@ var MongooseAdapter = (function () {
     },
     getStandardizedSchema: {
       value: function getStandardizedSchema(model) {
+        var _this = this;
+
         var schemaOptions = model.schema.options;
         var versionKey = schemaOptions.versionKey;
         var discriminatorKey = schemaOptions.discriminatorKey;
@@ -607,6 +609,7 @@ var MongooseAdapter = (function () {
 
           standardSchema[name] = {
             type: standardType,
+            friendlyName: _this.toFriendlyName(name),
             "default": defaultVal,
             enumValues: type.options["enum"] ? type.enumValues : undefined,
             required: type.options.required
@@ -614,6 +617,14 @@ var MongooseAdapter = (function () {
         });
 
         return standardSchema;
+      }
+    },
+    toFriendlyName: {
+      value: function toFriendlyName(pathOrModelName) {
+        var ucFirst = function (v) {
+          return v.charAt(0).toUpperCase() + v.slice(1);
+        };
+        return pathOrModelName.split(".").map(ucFirst).join("").split(/(?=[A-Z])/).join(" ");
       }
     }
   });
