@@ -38,6 +38,21 @@ export default class DocumentationController {
     response.contentType = contentType;
 
     if(contentType === "text/html") {
+      for(let type in this.templateData.resourcesMap) {
+        let typeSchema = this.templateData.resourcesMap[type].schema;
+
+        for(let path in typeSchema) {
+          let typeObject = typeSchema[path].type;
+          let targetModel = typeObject.targetModel;
+
+          let typeString = typeObject.isArray ? "Array[" : "";
+          typeString += targetModel ? (targetModel + "Id") : typeObject.name;
+          typeString += typeObject.isArray ? "]" : "";
+
+          typeSchema[path].type = typeString;
+        }
+      }
+
       response.body = jade.renderFile(this.template, this.templateData);
     }
 
@@ -71,6 +86,8 @@ export default class DocumentationController {
               required: !!typeInfo.schema[path].required
             }
           };
+
+          if(fieldDesc.kind) delete fieldDesc.kind.targetModel;
 
           if(typeInfo.schema[path].enumValues) {
             fieldDesc.oneOf = typeInfo.schema[path].enumValues;
@@ -106,19 +123,30 @@ export default class DocumentationController {
     const toTitleCase = (v) => v.charAt(0).toUpperCase() + v.slice(1);
     const toFriendlyName = (v) => toTitleCase(v).split(/(?=[A-Z])/).join(" ");
 
-    if(info && info.fields) {
-      for(let path in schema) {
-        if(info.fields[path] && info.fields[path].description) {
+    for(let path in schema) {
+      // look up user defined field info on info.fields.
+      if(info && info.fields && info.fields[path]) {
+        if(info.fields[path].description) {
           schema[path].description = info.fields[path].description;
         }
-        if(info.fields[path] && info.fields[path].friendlyName) {
+
+        if(info.fields[path].friendlyName) {
           schema[path].friendlyName = info.fields[path].friendlyName;
         }
-        else {
-          schema[path].friendlyName = toFriendlyName(path);
-        }
+      }
+
+      // fill in default field info.
+      else {
+        schema[path].friendlyName = toFriendlyName(path);
+      }
+
+      // specifically generate targetType from targetModel on relationship fields.
+      if(schema[path].type.targetModel) {
+        schema[path].type.targetType =
+          adapter.constructor.getType(schema[path].type.targetModel);
       }
     }
+
     // Other info
     let result = {
       name: modelName,
