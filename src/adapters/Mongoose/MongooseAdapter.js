@@ -355,7 +355,7 @@ export default class MongooseAdapter {
     // if docs is an empty array and we're making a collection, that's ok.
     // but, if we're looking for a single doc, we must 404 if we didn't find any.
     if(!docs || (!makeCollection && Array.isArray(docs) && docs.length === 0)) {
-      return new APIError(404, undefined, "No matching resource found.");
+      throw new APIError(404, undefined, "No matching resource found.");
     }
 
     docs = !Array.isArray(docs) ? [docs] : docs;
