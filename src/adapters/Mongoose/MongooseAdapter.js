@@ -329,7 +329,9 @@ export default class MongooseAdapter {
   }
 
   getTypesAllowedInCollection(parentType) {
-    const parentModel = this.getModel(this.constructor.getModelName(parentType));
+    const parentModel = this.getModel(
+      this.constructor.getModelName(parentType, this.inflector.singular)
+    );
     return [parentType].concat(
       this.constructor.getChildTypes(parentModel, this.inflector.plural)
     );
@@ -534,6 +536,6 @@ export default class MongooseAdapter {
 
   static toFriendlyName(pathOrModelName) {
     const ucFirst = (v) => v.charAt(0).toUpperCase() + v.slice(1);
-    return pathOrModelName.split('.').map(ucFirst).join("").split(/(?=[A-Z])/).join(" ");
+    return pathOrModelName.split(".").map(ucFirst).join("").split(/(?=[A-Z])/).join(" ");
   }
 }
