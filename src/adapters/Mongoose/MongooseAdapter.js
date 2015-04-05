@@ -122,7 +122,7 @@ export default class MongooseAdapter {
       });
 
       includedResourcesPromise = primaryDocumentsPromise.then(() =>
-        includedResources
+        new Collection(includedResources)
       );
     }
 

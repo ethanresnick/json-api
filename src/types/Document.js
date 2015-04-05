@@ -54,8 +54,8 @@ export default class Document {
       doc.errors = this.primaryOrErrors.map(errorToJSON);
     }
 
-    if(this.included && Array.isArray(this.included)) {
-      doc.included = arrayUnique(this.included).map((resource) => {
+    if(this.included && this.included instanceof Collection) {
+      doc.included = arrayUnique(this.included.resources).map((resource) => {
         return resourceToJSON(resource, this.urlTemplates);
       });
     }
