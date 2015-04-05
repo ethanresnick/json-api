@@ -128,20 +128,3 @@ function errorToJSON(error) {
   }
   return res;
 }
-
-/*
-  # renders a non-stub resource
-  renderResource: (resource) ->
-    urlTempParams = do -> ({} <<< res)
-    res.links = {}
-    res.links[config.resourceUrlKey] = @urlFor(res.type, config.resourceUrlKey, res.id, urlTempParams)
-
-  urlFor: (type, path, referencedIdOrIds, extraParams) ->
-    if not @_urlTemplatesParsed[type + "." + path]
-      throw new Error("Missing url template for " + type + "." + path);
-
-    params = flat.flatten({[(type + "." + k), v] for k, v of extraParams}, {safe:true})
-    params[type + "." + path] = referencedIdOrIds;
-
-    @_urlTemplatesParsed[type + "." + path].expand(params)
-*/

@@ -9,8 +9,7 @@ import Resource from "../../types/Resource"
 import Collection from "../../types/Collection"
 import Linkage from "../../types/Linkage"
 import LinkObject from "../../types/LinkObject"
-import APIError from "../../types/APIError"
-import nodeUtil from "util";
+import APIError from "../../types/APIError";
 
 export default class MongooseAdapter {
   constructor(models, inflector, idGenerator) {

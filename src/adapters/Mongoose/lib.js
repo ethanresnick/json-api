@@ -10,22 +10,21 @@ import {isSubsetOf} from "../../util/misc";
  * errors that can be sent back to the caller as the Promise's rejection value.
  */
 export function errorHandler(err) {
-    const errors = [];
-    //Convert validation errors collection to something reasonable
-    if(err.errors) {
-      for(let errKey in err.errors) {
-        let thisError = err.errors[errKey];
-        errors.push(
-          new APIError(
-            (err.name === "ValidationError") ? 400 : (thisError.status || 500),
-            undefined,
-            thisError.message,
-            undefined,
-            undefined,
-            (thisError.path) ? [thisError.path] : undefined
-          )
-        );
-      }
+  const errors = [];
+  //Convert validation errors collection to something reasonable
+  if(err.errors) {
+    for(let errKey in err.errors) {
+      let thisError = err.errors[errKey];
+      errors.push(
+        new APIError(
+          (err.name === "ValidationError") ? 400 : (thisError.status || 500),
+          undefined,
+          thisError.message,
+          undefined,
+          undefined,
+          (thisError.path) ? [thisError.path] : undefined
+        )
+      );
     }
 
     // Send the raw error.
