@@ -2,7 +2,7 @@ import Q from "q";
 import mongoose from "mongoose";
 import {arrayContains} from "../../util/arrays";
 import {deleteNested} from "../../util/misc";
-import {forEachArrayOrVal, objectIsEmpty, mapArrayOrVal, mapResources} from "../../util/type-handling"
+import {forEachArrayOrVal, objectIsEmpty, mapArrayOrVal, mapResources, groupResourcesByType} from "../../util/type-handling"
 import * as util from "./lib"
 import pluralize from "pluralize"
 import Resource from "../../types/Resource"
@@ -145,16 +145,7 @@ export default class MongooseAdapter {
    *   collection of resources to create.
    */
   create(parentType, resourceOrCollection) {
-    const resourcesByType = util.groupResourcesByType(resourceOrCollection);
-    const allowedTypes = this.getTypesAllowedInCollection(parentType);
-
-    const resourceTypeError = util.getResourceTypeError(
-      allowedTypes, Object.keys(resourcesByType)
-    );
-
-    if(resourceTypeError) {
-      return Q.Promise((resolve, reject) => { reject(resourceTypeError); });
-    }
+    const resourcesByType = groupResourcesByType(resourceOrCollection);
 
     // Note: creating the resources as we do below means that we do one
     // query for each type, as opposed to only one query for all of the

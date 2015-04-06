@@ -26,44 +26,19 @@ export function errorHandler(err) {
         )
       );
     }
-
-    // Send the raw error.
-    // Don't worry about revealing internal concerns, as the pipeline maps
-    // all unhandled errors to generic json-api APIError objects pre responding.
-    else {
-      errors.push(err);
-    }
-
-    throw errors;
   }
 
-export function groupResourcesByType(resourceOrCollection) {
-  const resourcesByType = {};
-  if(resourceOrCollection instanceof Collection) {
-    resourceOrCollection.resources.forEach((it) => {
-      resourcesByType[it.type] = resourcesByType[it.type] || [];
-      resourcesByType[it.type].push(it);
-    });
-  }
+  // Send the raw error.
+  // Don't worry about revealing internal concerns, as the pipeline maps
+  // all unhandled errors to generic json-api APIError objects pre responding.
   else {
-    resourcesByType[resourceOrCollection.type] = [resourceOrCollection];
+    errors.push(err);
   }
-  return resourcesByType;
+
+  throw errors;
 }
 
-/**
- * Returns an APIError that the caller can throw if the resource types
- * provided aren't all valid. Just removes a bit of boilerplate.
- */
-export function getResourceTypeError(allowedTypes, resourceTypes) {
-  if(!isSubsetOf(allowedTypes, resourceTypes)) {
-    let title = "Some of the resources you provided are of a type that " +
-                "doesn't belong in this collection.";
-    let detail = `Valid types for this collection are: ${allowedTypes.join(", ")}.`;
 
-    return new APIError(400, undefined, title, detail);
-  }
-}
 
 export function getReferencePaths(model) {
   let paths = [];

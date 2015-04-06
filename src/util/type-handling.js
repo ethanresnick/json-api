@@ -70,6 +70,20 @@ export function forEachResources(resourceOrCollection, eachFn) {
   /*eslint-enable */
 }
 
+export function groupResourcesByType(resourceOrCollection) {
+  const resourcesByType = {};
+  if(resourceOrCollection instanceof Collection) {
+    resourceOrCollection.resources.forEach((it) => {
+      resourcesByType[it.type] = resourcesByType[it.type] || [];
+      resourcesByType[it.type].push(it);
+    });
+  }
+  else {
+    resourcesByType[resourceOrCollection.type] = [resourceOrCollection];
+  }
+  return resourcesByType;
+}
+
 export function mapArrayOrVal(arrayOrVal, mapFn) {
   return Array.isArray(arrayOrVal) ? arrayOrVal.map(mapFn) : mapFn(arrayOrVal);
 }

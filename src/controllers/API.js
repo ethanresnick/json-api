@@ -10,6 +10,7 @@ import negotiateContentType from "../steps/http/negotiate-content-type";
 
 import labelToIds from "../steps/pre-query/label-to-ids";
 import parseRequestResources from "../steps/pre-query/parse-resources";
+import validateRequestResources from "../steps/pre-query/validate-resources";
 import applyTransform from "../steps/apply-transform";
 
 import doGET from "../steps/do-query/do-get";
@@ -52,6 +53,10 @@ class APIController {
           let parsedResources = yield parseRequestResources(
             request.body.data, request.aboutLinkObject
           );
+
+          // validate the request resources's type.
+          yield validateRequestResources(request.type, parsedResources, registry);
+
           request.primary = applyTransform(
             parsedResources, "beforeSave", registry, frameworkReq, frameworkRes
           );
