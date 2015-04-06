@@ -37,7 +37,7 @@ describe("Document class", function () {
     });
 
     it("should represent includes as an array under `included`", function () {
-      expect(new Document(people, [person2]).get().included).to.deep.equal([{ id: "32", type: "people", name: "ethan" }]);
+      expect(new Document(people, new Collection([person2])).get().included).to.deep.equal([{ id: "32", type: "people", name: "ethan" }]);
     });
 
     it("Should include a top-level self links", function () {
@@ -57,7 +57,7 @@ describe("Document class", function () {
 
     it("should reject non-object meta information", function () {
       expect(function () {
-        return new Document(people, [person2], ["bob"]);
+        return new Document(people, new Collection([person2]), ["bob"]);
       }).to["throw"](/meta.*object/i);
     });
   });

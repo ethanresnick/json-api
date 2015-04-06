@@ -12,8 +12,6 @@ var chai = _interopRequire(require("chai"));
 
 var Q = _interopRequire(require("q"));
 
-var bodyParser = _interopRequire(require("body-parser"));
-
 var express = _interopRequire(require("express"));
 
 var supertest = _interopRequire(require("supertest"));
