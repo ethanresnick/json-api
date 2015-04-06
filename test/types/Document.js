@@ -28,7 +28,7 @@ describe("Document class", () => {
     });
 
     it("should represent includes as an array under `included`", () => {
-      expect((new Document(people, [person2])).get().included)
+      expect((new Document(people, new Collection([person2]))).get().included)
         .to.deep.equal([{"id": "32", "type": "people", "name": "ethan"}]);
     });
 
@@ -48,7 +48,8 @@ describe("Document class", () => {
     });
 
     it("should reject non-object meta information", () => {
-      expect(() => new Document(people, [person2], ["bob"])).to.throw(/meta.*object/i);
+      expect(() => new Document(people, new Collection([person2]), ["bob"]))
+        .to.throw(/meta.*object/i);
     });
   });
 
