@@ -1,6 +1,6 @@
 import Q from "q";
 import mongoose from "mongoose";
-import {arrayContains} from "../../util/arrays";
+import {arrayContains, arrayValuesMatch} from "../../util/arrays";
 import {deleteNested} from "../../util/misc";
 import {forEachArrayOrVal, objectIsEmpty, mapArrayOrVal, mapResources, groupResourcesByType} from "../../util/type-handling"
 import * as util from "./lib"
@@ -205,6 +205,24 @@ export default class MongooseAdapter {
 
     return Q(model[mode]({"_id": idQuery}).exec()).then((docs) => {
       const successfulSavesPromises = [];
+
+      // if some ids were invalid/deleted/not found, we can't let *any* update
+      // succeed. this is the beginning of our simulation of transactions.
+      // There are two types of invalid cases here: we looked up one or more
+      // docs and got none back (i.e. docs === null) or we looked up an array of
+      // docs and got back docs that were missing some requested ids.
+      if(docs === null) {
+        throw new APIError(404, undefined, "No matching resource found.");
+      }
+      else {
+        const idOrIdsAsArray = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
+        const docIdOrIdsAsArray = Array.isArray(docs) ? docs.map(it => it.id) : [docs.id];
+
+        if(!arrayValuesMatch(idOrIdsAsArray, docIdOrIdsAsArray)) {
+          let title = "Some of the resources you're trying to update could not be found.";
+          throw new APIError(404, undefined, title);
+        }
+      }
 
       forEachArrayOrVal(docs, (currDoc) => {
         let newResource = changeSets[currDoc.id];
