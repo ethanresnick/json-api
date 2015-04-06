@@ -23,7 +23,7 @@ describe("negotiateContentType", () => {
     }, done);
   });
 
-  it("should use json api with supported-ext and ext if json api with our extensions is supported", (done) => {
+  it.skip("should use json api with supported-ext and ext if json api with our extensions is supported", (done) => {
     let accept = 'application/vnd.api+json; ext="inuse,second", */*';
     negotiate(accept, ["inuse", "second"], ["inuse", "second", "three"]).then((contentType) => {
       if(contentType === 'application/vnd.api+json; supported-ext="inuse,second,three"; ext="inuse,second"') {
