@@ -187,7 +187,7 @@ export default class MongooseAdapter {
     // Note that, starting in Mongoose 4, we'll be able to run the validations
     // on update, which should be enough, so we won't need to find first.
     // https://github.com/Automattic/mongoose/issues/860
-    const model   = this.getModel(this.constructor.getModelName(parentType));
+    const model = this.getModel(this.constructor.getModelName(parentType));
     const singular = this.inflector.singular;
     const plural = this.inflector.plural;
 
@@ -202,14 +202,6 @@ export default class MongooseAdapter {
 
     const mode    = typeof idOrIds === "string" ? "findOne" : "find";
     const idQuery = typeof idOrIds === "string" ? idOrIds : {"$in": idOrIds};
-
-    // Validate that incoming resources are of the proper type.
-    const allowedTypes = this.getTypesAllowedInCollection(parentType);
-    const resourceTypeError = util.getResourceTypeError(allowedTypes, resourceTypes);
-
-    if(resourceTypeError) {
-      return Q.Promise((resolve, reject) => { reject(resourceTypeError); });
-    }
 
     return Q(model[mode]({"_id": idQuery}).exec()).then((docs) => {
       const successfulSavesPromises = [];
