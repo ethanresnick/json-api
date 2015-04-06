@@ -321,6 +321,18 @@ export default class MongooseAdapter {
   }
 
   /**
+   * Return the paths that, for the provided type, must always must be filled
+   * with relationship info, if they're present. Occassionally, a path might be
+   * optionally fillable w/ relationship info; this shouldn't return those paths.
+   */
+  getRelationshipNames(type) {
+    let model = this.getModel(
+      this.constructor.getModelName(type, this.inflector.singular)
+    );
+    return util.getReferencePaths(model);
+  }
+
+  /**
    * We want to always return a collection when the user is asking for something
    * that's logically a Collection (even if it only has 1 item), and a Resource
    * otherwise. But, because mongoose returns a single doc if you query for a
