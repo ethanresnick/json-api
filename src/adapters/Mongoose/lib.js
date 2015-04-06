@@ -38,8 +38,6 @@ export function errorHandler(err) {
   throw errors;
 }
 
-
-
 export function getReferencePaths(model) {
   let paths = [];
   model.schema.eachPath((name, type) => {
@@ -72,7 +70,15 @@ export function resourceToDocObject(resource) {
   let getId = (it) => it.id;
   for(let key in resource.links) {
     let linkage = resource.links[key].linkage.value;
-    res[key] = Array.isArray(linkage) ? linkage.map(getId) : linkage.id;
+
+    // handle linkage when set explicitly for empty relationships
+    if(linkage === null || (Array.isArray(linkage) && linkage.length == 0)) {
+      res[key] = linkage;
+    }
+
+    else {
+      res[key] = Array.isArray(linkage) ? linkage.map(getId) : linkage.id;
+    }
   }
   return res;
 }
