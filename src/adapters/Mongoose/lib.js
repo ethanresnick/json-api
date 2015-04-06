@@ -72,7 +72,7 @@ export function resourceToDocObject(resource) {
     let linkage = resource.links[key].linkage.value;
 
     // handle linkage when set explicitly for empty relationships
-    if(linkage === null || (Array.isArray(linkage) && linkage.length == 0)) {
+    if(linkage === null || (Array.isArray(linkage) && linkage.length === 0)) {
       res[key] = linkage;
     }
 

@@ -48,9 +48,11 @@ module.exports = function (requestContext, responseContext, registry) {
     }
 
     return adapter.find(type, requestContext.idOrIds).spread(function (resource) {
+      // 404 if the requested relationship is not a relationship path. Doing
+      // it here is more accurate than using adapter.getRelationshipNames,
+      // since we're allowing for paths that can optionally hold linkage,
+      // which getRelationshipNames doesn't return.
       if (resource.links && !resource.links[requestContext.relationship]) {
-        // 404. doing it here is later than necessary, but more convenient than
-        // loding in a schema.
         var title = "Invalid relationship name.";
         var detail = "" + requestContext.relationship + " is not a valid " + ("relationship name on resources of type \"" + type + "\"");
 

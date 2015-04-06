@@ -11,13 +11,6 @@ var _core = require("babel-runtime/core-js")["default"];
 var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
 
 exports.errorHandler = errorHandler;
-exports.groupResourcesByType = groupResourcesByType;
-
-/**
- * Returns an APIError that the caller can throw if the resource types
- * provided aren't all valid. Just removes a bit of boilerplate.
- */
-exports.getResourceTypeError = getResourceTypeError;
 exports.getReferencePaths = getReferencePaths;
 exports.isReferencePath = isReferencePath;
 exports.getReferencedModelName = getReferencedModelName;
@@ -64,28 +57,6 @@ function errorHandler(err) {
   throw errors;
 }
 
-function groupResourcesByType(resourceOrCollection) {
-  var resourcesByType = {};
-  if (resourceOrCollection instanceof Collection) {
-    resourceOrCollection.resources.forEach(function (it) {
-      resourcesByType[it.type] = resourcesByType[it.type] || [];
-      resourcesByType[it.type].push(it);
-    });
-  } else {
-    resourcesByType[resourceOrCollection.type] = [resourceOrCollection];
-  }
-  return resourcesByType;
-}
-
-function getResourceTypeError(allowedTypes, resourceTypes) {
-  if (!isSubsetOf(allowedTypes, resourceTypes)) {
-    var title = "Some of the resources you provided are of a type that " + "doesn't belong in this collection.";
-    var detail = "Valid types for this collection are: " + allowedTypes.join(", ") + ".";
-
-    return new APIError(400, undefined, title, detail);
-  }
-}
-
 function getReferencePaths(model) {
   var paths = [];
   model.schema.eachPath(function (name, type) {
@@ -112,7 +83,13 @@ function resourceToDocObject(resource) {
   };
   for (var key in resource.links) {
     var linkage = resource.links[key].linkage.value;
-    res[key] = Array.isArray(linkage) ? linkage.map(getId) : linkage.id;
+
+    // handle linkage when set explicitly for empty relationships
+    if (linkage === null || Array.isArray(linkage) && linkage.length === 0) {
+      res[key] = linkage;
+    } else {
+      res[key] = Array.isArray(linkage) ? linkage.map(getId) : linkage.id;
+    }
   }
   return res;
 }

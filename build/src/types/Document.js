@@ -86,8 +86,8 @@ var Document = (function () {
           doc.errors = this.primaryOrErrors.map(errorToJSON);
         }
 
-        if (this.included && Array.isArray(this.included)) {
-          doc.included = arrayUnique(this.included).map(function (resource) {
+        if (this.included && this.included instanceof Collection) {
+          doc.included = arrayUnique(this.included.resources).map(function (resource) {
             return resourceToJSON(resource, _this.urlTemplates);
           });
         }
@@ -166,20 +166,3 @@ function errorToJSON(error) {
   }
   return res;
 }
-
-/*
-  # renders a non-stub resource
-  renderResource: (resource) ->
-    urlTempParams = do -> ({} <<< res)
-    res.links = {}
-    res.links[config.resourceUrlKey] = @urlFor(res.type, config.resourceUrlKey, res.id, urlTempParams)
-
-  urlFor: (type, path, referencedIdOrIds, extraParams) ->
-    if not @_urlTemplatesParsed[type + "." + path]
-      throw new Error("Missing url template for " + type + "." + path);
-
-    params = flat.flatten({[(type + "." + k), v] for k, v of extraParams}, {safe:true})
-    params[type + "." + path] = referencedIdOrIds;
-
-    @_urlTemplatesParsed[type + "." + path].expand(params)
-*/

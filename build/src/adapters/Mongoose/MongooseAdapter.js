@@ -16,7 +16,10 @@ var Q = _interopRequire(require("q"));
 
 var mongoose = _interopRequire(require("mongoose"));
 
-var arrayContains = require("../../util/arrays").arrayContains;
+var _utilArrays = require("../../util/arrays");
+
+var arrayContains = _utilArrays.arrayContains;
+var arrayValuesMatch = _utilArrays.arrayValuesMatch;
 
 var deleteNested = require("../../util/misc").deleteNested;
 
@@ -26,6 +29,7 @@ var forEachArrayOrVal = _utilTypeHandling.forEachArrayOrVal;
 var objectIsEmpty = _utilTypeHandling.objectIsEmpty;
 var mapArrayOrVal = _utilTypeHandling.mapArrayOrVal;
 var mapResources = _utilTypeHandling.mapResources;
+var groupResourcesByType = _utilTypeHandling.groupResourcesByType;
 
 var util = _interopRequireWildcard(require("./lib"));
 
@@ -40,8 +44,6 @@ var Linkage = _interopRequire(require("../../types/Linkage"));
 var LinkObject = _interopRequire(require("../../types/LinkObject"));
 
 var APIError = _interopRequire(require("../../types/APIError"));
-
-var nodeUtil = _interopRequire(require("util"));
 
 var MongooseAdapter = (function () {
   function MongooseAdapter(models, inflector, idGenerator) {
@@ -163,7 +165,7 @@ var MongooseAdapter = (function () {
             });
 
             includedResourcesPromise = primaryDocumentsPromise.then(function () {
-              return includedResources;
+              return new Collection(includedResources);
             });
           })();
         } else {
@@ -191,16 +193,7 @@ var MongooseAdapter = (function () {
       value: function create(parentType, resourceOrCollection) {
         var _this = this;
 
-        var resourcesByType = util.groupResourcesByType(resourceOrCollection);
-        var allowedTypes = this.getTypesAllowedInCollection(parentType);
-
-        var resourceTypeError = util.getResourceTypeError(allowedTypes, _core.Object.keys(resourcesByType));
-
-        if (resourceTypeError) {
-          return Q.Promise(function (resolve, reject) {
-            reject(resourceTypeError);
-          });
-        }
+        var resourcesByType = groupResourcesByType(resourceOrCollection);
 
         // Note: creating the resources as we do below means that we do one
         // query for each type, as opposed to only one query for all of the
@@ -265,18 +258,27 @@ var MongooseAdapter = (function () {
         var mode = typeof idOrIds === "string" ? "findOne" : "find";
         var idQuery = typeof idOrIds === "string" ? idOrIds : { $in: idOrIds };
 
-        // Validate that incoming resources are of the proper type.
-        var allowedTypes = this.getTypesAllowedInCollection(parentType);
-        var resourceTypeError = util.getResourceTypeError(allowedTypes, resourceTypes);
-
-        if (resourceTypeError) {
-          return Q.Promise(function (resolve, reject) {
-            reject(resourceTypeError);
-          });
-        }
-
         return Q(model[mode]({ _id: idQuery }).exec()).then(function (docs) {
           var successfulSavesPromises = [];
+
+          // if some ids were invalid/deleted/not found, we can't let *any* update
+          // succeed. this is the beginning of our simulation of transactions.
+          // There are two types of invalid cases here: we looked up one or more
+          // docs and got none back (i.e. docs === null) or we looked up an array of
+          // docs and got back docs that were missing some requested ids.
+          if (docs === null) {
+            throw new APIError(404, undefined, "No matching resource found.");
+          } else {
+            var idOrIdsAsArray = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
+            var docIdOrIdsAsArray = Array.isArray(docs) ? docs.map(function (it) {
+              return it.id;
+            }) : [docs.id];
+
+            if (!arrayValuesMatch(idOrIdsAsArray, docIdOrIdsAsArray)) {
+              var title = "Some of the resources you're trying to update could not be found.";
+              throw new APIError(404, undefined, title);
+            }
+          }
 
           forEachArrayOrVal(docs, function (currDoc) {
             var newResource = changeSets[currDoc.id];
@@ -387,8 +389,21 @@ var MongooseAdapter = (function () {
     },
     getTypesAllowedInCollection: {
       value: function getTypesAllowedInCollection(parentType) {
-        var parentModel = this.getModel(this.constructor.getModelName(parentType));
+        var parentModel = this.getModel(this.constructor.getModelName(parentType, this.inflector.singular));
         return [parentType].concat(this.constructor.getChildTypes(parentModel, this.inflector.plural));
+      }
+    },
+    getRelationshipNames: {
+
+      /**
+       * Return the paths that, for the provided type, must always must be filled
+       * with relationship info, if they're present. Occassionally, a path might be
+       * optionally fillable w/ relationship info; this shouldn't return those paths.
+       */
+
+      value: function getRelationshipNames(type) {
+        var model = this.getModel(this.constructor.getModelName(type, this.inflector.singular));
+        return util.getReferencePaths(model);
       }
     }
   }, {

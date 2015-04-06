@@ -28,6 +28,8 @@ var labelToIds = _interopRequire(require("../steps/pre-query/label-to-ids"));
 
 var parseRequestResources = _interopRequire(require("../steps/pre-query/parse-resources"));
 
+var validateRequestResources = _interopRequire(require("../steps/pre-query/validate-resources"));
+
 var applyTransform = _interopRequire(require("../steps/apply-transform"));
 
 var doGET = _interopRequire(require("../steps/do-query/do-get"));
@@ -77,7 +79,7 @@ var APIController = (function () {
 
               case 3:
                 if (!request.hasBody) {
-                  context$3$0.next = 12;
+                  context$3$0.next = 14;
                   break;
                 }
 
@@ -94,19 +96,23 @@ var APIController = (function () {
 
               case 10:
                 parsedResources = context$3$0.sent;
+                context$3$0.next = 13;
+                return validateRequestResources(request.type, parsedResources, registry);
+
+              case 13:
 
                 request.primary = applyTransform(parsedResources, "beforeSave", registry, frameworkReq, frameworkRes);
 
-              case 12:
+              case 14:
                 if (!(request.idOrIds && request.allowLabel)) {
-                  context$3$0.next = 19;
+                  context$3$0.next = 21;
                   break;
                 }
 
-                context$3$0.next = 15;
+                context$3$0.next = 17;
                 return labelToIds(request.type, request.idOrIds, registry, frameworkReq);
 
-              case 15:
+              case 17:
                 mappedLabel = context$3$0.sent;
 
                 // set the idOrIds on the request context
@@ -118,51 +124,51 @@ var APIController = (function () {
                   response.primary = mappedLabel ? new Collection() : null;
                 }
 
-              case 19:
+              case 21:
                 if (!(typeof response.primary === "undefined")) {
-                  context$3$0.next = 34;
+                  context$3$0.next = 36;
                   break;
                 }
 
-                context$3$0.t0 = request.method;
-                context$3$0.next = context$3$0.t0 === "get" ? 23 : context$3$0.t0 === "post" ? 26 : context$3$0.t0 === "patch" ? 29 : context$3$0.t0 === "delete" ? 32 : 34;
+                context$3$0.t8 = request.method;
+                context$3$0.next = context$3$0.t8 === "get" ? 25 : context$3$0.t8 === "post" ? 28 : context$3$0.t8 === "patch" ? 31 : context$3$0.t8 === "delete" ? 34 : 36;
                 break;
-
-              case 23:
-                context$3$0.next = 25;
-                return doGET(request, response, registry);
 
               case 25:
-                return context$3$0.abrupt("break", 34);
+                context$3$0.next = 27;
+                return doGET(request, response, registry);
 
-              case 26:
-                context$3$0.next = 28;
-                return doPOST(request, response, registry);
+              case 27:
+                return context$3$0.abrupt("break", 36);
 
               case 28:
-                return context$3$0.abrupt("break", 34);
+                context$3$0.next = 30;
+                return doPOST(request, response, registry);
 
-              case 29:
-                context$3$0.next = 31;
-                return doPATCH(request, response, registry);
+              case 30:
+                return context$3$0.abrupt("break", 36);
 
               case 31:
-                return context$3$0.abrupt("break", 34);
+                context$3$0.next = 33;
+                return doPATCH(request, response, registry);
 
-              case 32:
-                context$3$0.next = 34;
-                return doDELETE(request, response, registry);
+              case 33:
+                return context$3$0.abrupt("break", 36);
 
               case 34:
-                context$3$0.next = 41;
-                break;
+                context$3$0.next = 36;
+                return doDELETE(request, response, registry);
 
               case 36:
-                context$3$0.prev = 36;
-                context$3$0.t1 = context$3$0["catch"](0);
+                context$3$0.next = 43;
+                break;
 
-                console.log(context$3$0.t1, context$3$0.t1.stack);
-                context$3$0.t1 = (Array.isArray(context$3$0.t1) ? context$3$0.t1 : [context$3$0.t1]).map(function (it) {
+              case 38:
+                context$3$0.prev = 38;
+                context$3$0.t9 = context$3$0["catch"](0);
+
+                console.log(context$3$0.t9, context$3$0.t9.stack, context$3$0.t9[0] ? context$3$0.t9[0].stack : undefined);
+                context$3$0.t9 = (Array.isArray(context$3$0.t9) ? context$3$0.t9 : [context$3$0.t9]).map(function (it) {
                   if (it instanceof APIError) {
                     return it;
                   } else {
@@ -174,17 +180,17 @@ var APIController = (function () {
                     return new APIError(_status, undefined, message);
                   }
                 });
-                response.errors = response.errors.concat(context$3$0.t1);
-
-              case 41:
-                context$3$0.next = 43;
-                return negotiateContentType(request.accepts, response.ext, supportedExt);
+                response.errors = response.errors.concat(context$3$0.t9);
 
               case 43:
+                context$3$0.next = 45;
+                return negotiateContentType(request.accepts, response.ext, supportedExt);
+
+              case 45:
                 response.contentType = context$3$0.sent;
 
                 if (!response.errors.length) {
-                  context$3$0.next = 48;
+                  context$3$0.next = 50;
                   break;
                 }
 
@@ -194,7 +200,7 @@ var APIController = (function () {
                 response.body = new Document(response.errors).get(true);
                 return context$3$0.abrupt("return", response);
 
-              case 48:
+              case 50:
 
                 // apply transforms pre-send
                 response.primary = applyTransform(response.primary, "beforeRender", registry, frameworkReq, frameworkRes);
@@ -207,11 +213,11 @@ var APIController = (function () {
 
                 return context$3$0.abrupt("return", response);
 
-              case 52:
+              case 54:
               case "end":
                 return context$3$0.stop();
             }
-          }, callee$2$0, this, [[0, 36]]);
+          }, callee$2$0, this, [[0, 38]]);
         }));
       }
     }
@@ -251,6 +257,8 @@ function pickStatus(errStatuses) {
 // throw if the body is supposed to be present but isn't (or vice-versa).
 
 // If the request has a body, validate it and parse its resources.
+
+// validate the request resources's type.
 
 // Map label to idOrIds, if applicable.
 // if our new ids are null/undefined or an empty array, we can set

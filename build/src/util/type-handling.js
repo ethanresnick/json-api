@@ -24,6 +24,7 @@ exports.mapObject = mapObject;
  */
 exports.mapResources = mapResources;
 exports.forEachResources = forEachResources;
+exports.groupResourcesByType = groupResourcesByType;
 exports.mapArrayOrVal = mapArrayOrVal;
 exports.forEachArrayOrVal = forEachArrayOrVal;
 Object.defineProperty(exports, "__esModule", {
@@ -88,6 +89,19 @@ function forEachResources(resourceOrCollection, eachFn) {
     return eachFn(resourceOrCollection);
   }
   /*eslint-enable */
+}
+
+function groupResourcesByType(resourceOrCollection) {
+  var resourcesByType = {};
+  if (resourceOrCollection instanceof Collection) {
+    resourceOrCollection.resources.forEach(function (it) {
+      resourcesByType[it.type] = resourcesByType[it.type] || [];
+      resourcesByType[it.type].push(it);
+    });
+  } else {
+    resourcesByType[resourceOrCollection.type] = [resourceOrCollection];
+  }
+  return resourcesByType;
 }
 
 function mapArrayOrVal(arrayOrVal, mapFn) {
