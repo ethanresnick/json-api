@@ -98,7 +98,7 @@ function buildRequestObject(req) {
     it.relationship    = req.params.related || req.params.relationship;
 
     // Handle HTTP/Conneg.
-    it.uri     = req.protocol + "://" + req.get("Host") + req.url;
+    it.uri     = req.protocol + "://" + req.get("Host") + req.originalUrl;
     it.method  = req.method.toLowerCase();
     it.accepts = req.headers.accept;
 
