@@ -532,15 +532,18 @@ export default class MongooseAdapter {
         defaultVal = type.options.default;
       }
 
+      // Add validation info
+      let validationRules = {
+        required: !!type.options.required,
+        oneOf: type.options.enum ? type.enumValues : undefined,
+        max: type.options.max ? type.options.max : undefined
+      };
+
       standardSchema[name] = {
         type: standardType,
         friendlyName: this.toFriendlyName(name),
         default: defaultVal,
-        requirements: {
-          oneOf: type.options.enum ? type.enumValues : undefined,
-          required: !!type.options.required
-        }
-
+        validation: validationRules
       };
     });
 
