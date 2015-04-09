@@ -78,41 +78,55 @@ var APIController = (function () {
                 return requestValidators.checkBodyExistence(request);
 
               case 3:
-                if (!request.hasBody) {
-                  context$3$0.next = 14;
+                if (registry.type(request.type)) {
+                  context$3$0.next = 5;
                   break;
                 }
 
-                context$3$0.next = 6;
-                return requestValidators.checkBodyIsValidJSONAPI(request.body);
+                throw new APIError(404, undefined, "" + request.type + " is not a valid type.");
 
-              case 6:
+              case 5:
+                if (!request.hasBody) {
+                  context$3$0.next = 17;
+                  break;
+                }
+
                 context$3$0.next = 8;
-                return requestValidators.checkContentType(request, supportedExt);
+                return requestValidators.checkBodyIsValidJSONAPI(request.body);
 
               case 8:
                 context$3$0.next = 10;
-                return parseRequestResources(request.body.data, request.aboutLinkObject);
+                return requestValidators.checkContentType(request, supportedExt);
 
               case 10:
+                context$3$0.next = 12;
+                return parseRequestResources(request.body.data, request.aboutLinkObject);
+
+              case 12:
                 parsedResources = context$3$0.sent;
-                context$3$0.next = 13;
-                return validateRequestResources(request.type, parsedResources, registry);
 
-              case 13:
-
-                request.primary = applyTransform(parsedResources, "beforeSave", registry, frameworkReq, frameworkRes);
-
-              case 14:
-                if (!(request.idOrIds && request.allowLabel)) {
-                  context$3$0.next = 21;
+                if (request.aboutLinkObject) {
+                  context$3$0.next = 16;
                   break;
                 }
 
-                context$3$0.next = 17;
-                return labelToIds(request.type, request.idOrIds, registry, frameworkReq);
+                context$3$0.next = 16;
+                return validateRequestResources(request.type, parsedResources, registry);
+
+              case 16:
+
+                request.primary = applyTransform(parsedResources, "beforeSave", registry, frameworkReq, frameworkRes);
 
               case 17:
+                if (!(request.idOrIds && request.allowLabel)) {
+                  context$3$0.next = 24;
+                  break;
+                }
+
+                context$3$0.next = 20;
+                return labelToIds(request.type, request.idOrIds, registry, frameworkReq);
+
+              case 20:
                 mappedLabel = context$3$0.sent;
 
                 // set the idOrIds on the request context
@@ -124,51 +138,51 @@ var APIController = (function () {
                   response.primary = mappedLabel ? new Collection() : null;
                 }
 
-              case 21:
+              case 24:
                 if (!(typeof response.primary === "undefined")) {
-                  context$3$0.next = 36;
+                  context$3$0.next = 39;
                   break;
                 }
 
-                context$3$0.t0 = request.method;
-                context$3$0.next = context$3$0.t0 === "get" ? 25 : context$3$0.t0 === "post" ? 28 : context$3$0.t0 === "patch" ? 31 : context$3$0.t0 === "delete" ? 34 : 36;
+                context$3$0.t10 = request.method;
+                context$3$0.next = context$3$0.t10 === "get" ? 28 : context$3$0.t10 === "post" ? 31 : context$3$0.t10 === "patch" ? 34 : context$3$0.t10 === "delete" ? 37 : 39;
                 break;
-
-              case 25:
-                context$3$0.next = 27;
-                return doGET(request, response, registry);
-
-              case 27:
-                return context$3$0.abrupt("break", 36);
 
               case 28:
                 context$3$0.next = 30;
-                return doPOST(request, response, registry);
+                return doGET(request, response, registry);
 
               case 30:
-                return context$3$0.abrupt("break", 36);
+                return context$3$0.abrupt("break", 39);
 
               case 31:
                 context$3$0.next = 33;
-                return doPATCH(request, response, registry);
+                return doPOST(request, response, registry);
 
               case 33:
-                return context$3$0.abrupt("break", 36);
+                return context$3$0.abrupt("break", 39);
 
               case 34:
                 context$3$0.next = 36;
-                return doDELETE(request, response, registry);
+                return doPATCH(request, response, registry);
 
               case 36:
-                context$3$0.next = 43;
+                return context$3$0.abrupt("break", 39);
+
+              case 37:
+                context$3$0.next = 39;
+                return doDELETE(request, response, registry);
+
+              case 39:
+                context$3$0.next = 45;
                 break;
 
-              case 38:
-                context$3$0.prev = 38;
-                context$3$0.t1 = context$3$0["catch"](0);
+              case 41:
+                context$3$0.prev = 41;
+                context$3$0.t11 = context$3$0["catch"](0);
 
-                console.log(context$3$0.t1, context$3$0.t1.stack, context$3$0.t1[0] ? context$3$0.t1[0].stack : undefined);
-                context$3$0.t1 = (Array.isArray(context$3$0.t1) ? context$3$0.t1 : [context$3$0.t1]).map(function (it) {
+                //console.log(errors, errors.stack, errors[0] ? errors[0].stack : undefined);
+                context$3$0.t11 = (Array.isArray(context$3$0.t11) ? context$3$0.t11 : [context$3$0.t11]).map(function (it) {
                   if (it instanceof APIError) {
                     return it;
                   } else {
@@ -180,17 +194,17 @@ var APIController = (function () {
                     return new APIError(_status, undefined, message);
                   }
                 });
-                response.errors = response.errors.concat(context$3$0.t1);
-
-              case 43:
-                context$3$0.next = 45;
-                return negotiateContentType(request.accepts, response.ext, supportedExt);
+                response.errors = response.errors.concat(context$3$0.t11);
 
               case 45:
+                context$3$0.next = 47;
+                return negotiateContentType(request.accepts, response.ext, supportedExt);
+
+              case 47:
                 response.contentType = context$3$0.sent;
 
                 if (!response.errors.length) {
-                  context$3$0.next = 50;
+                  context$3$0.next = 52;
                   break;
                 }
 
@@ -200,7 +214,7 @@ var APIController = (function () {
                 response.body = new Document(response.errors).get(true);
                 return context$3$0.abrupt("return", response);
 
-              case 50:
+              case 52:
 
                 // apply transforms pre-send
                 response.primary = applyTransform(response.primary, "beforeRender", registry, frameworkReq, frameworkRes);
@@ -213,11 +227,11 @@ var APIController = (function () {
 
                 return context$3$0.abrupt("return", response);
 
-              case 54:
+              case 56:
               case "end":
                 return context$3$0.stop();
             }
-          }, callee$2$0, this, [[0, 38]]);
+          }, callee$2$0, this, [[0, 41]]);
         }));
       }
     }
@@ -256,9 +270,11 @@ function pickStatus(errStatuses) {
 
 // throw if the body is supposed to be present but isn't (or vice-versa).
 
+// If the type requested in the endpoint hasn't been registered, we 404.
+
 // If the request has a body, validate it and parse its resources.
 
-// validate the request resources's type.
+// validate the request's resources.
 
 // Map label to idOrIds, if applicable.
 // if our new ids are null/undefined or an empty array, we can set
