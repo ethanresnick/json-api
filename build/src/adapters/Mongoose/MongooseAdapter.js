@@ -622,15 +622,22 @@ var MongooseAdapter = (function () {
             defaultVal = type.options["default"];
           }
 
+          // Add validation info
+          var validationRules = {
+            required: !!type.options.required,
+            oneOf: type.options["enum"] ? type.enumValues : undefined,
+            max: type.options.max ? type.options.max : undefined
+          };
+
+          type.validators.forEach(function (validator) {
+            _core.Object.assign(validationRules, validator[0].JSONAPIDocumentation);
+          });
+
           standardSchema[name] = {
             type: standardType,
             friendlyName: _this.toFriendlyName(name),
             "default": defaultVal,
-            requirements: {
-              oneOf: type.options["enum"] ? type.enumValues : undefined,
-              required: !!type.options.required
-            }
-
+            validation: validationRules
           };
         });
 

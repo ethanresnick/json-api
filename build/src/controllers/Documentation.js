@@ -127,15 +127,32 @@ var DocumentationController = (function () {
 
         for (var _path in schema) {
           // look up user defined field info on info.fields.
-          var pathInfo = info && info.fields && info.fields[_path];
+          var pathInfo = info && info.fields && info.fields[_path] || {};
 
-          if (pathInfo && pathInfo.description) {
-            schema[_path].description = pathInfo.description;
-          }
+          for (var key in pathInfo) {
+            // allow the user to override auto-generated friendlyName.
+            if (key === "friendlyName") {
+              schema[_path].friendlyName = pathInfo.friendlyName;
+            }
 
-          // but, below, set a default friendly name if none is provided.
-          if (pathInfo && pathInfo.friendlyName) {
-            schema[_path].friendlyName = pathInfo.friendlyName;
+            // note: this line is technically redundant given the next else if, but
+            // it's included to emphasize that the description key has a special
+            // meaning and is, e.g., given special treatment in the default template.
+            else if (key === "description") {
+              schema[_path].description = pathInfo.description;
+            }
+
+            // copy in any other info properties that don't conflict
+            else if (!(key in schema[_path])) {
+              schema[_path][key] = pathInfo[key];
+            }
+
+            // try to merge in info properties. if the key conflicts and doesn't
+            // hold an object into which we can merge, we just give up (i.e. we
+            // don't try anything else after the below).
+            else if (typeof schema[_path][key] === "object" && !Array.isArray(schema[_path][key])) {
+              _core.Object.assign(schema[_path][key], pathInfo[key]);
+            }
           }
 
           // specifically generate targetType from targetModel on relationship fields.

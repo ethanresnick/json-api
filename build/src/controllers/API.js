@@ -144,8 +144,8 @@ var APIController = (function () {
                   break;
                 }
 
-                context$3$0.t10 = request.method;
-                context$3$0.next = context$3$0.t10 === "get" ? 28 : context$3$0.t10 === "post" ? 31 : context$3$0.t10 === "patch" ? 34 : context$3$0.t10 === "delete" ? 37 : 39;
+                context$3$0.t0 = request.method;
+                context$3$0.next = context$3$0.t0 === "get" ? 28 : context$3$0.t0 === "post" ? 31 : context$3$0.t0 === "patch" ? 34 : context$3$0.t0 === "delete" ? 37 : 39;
                 break;
 
               case 28:
@@ -179,10 +179,10 @@ var APIController = (function () {
 
               case 41:
                 context$3$0.prev = 41;
-                context$3$0.t11 = context$3$0["catch"](0);
+                context$3$0.t1 = context$3$0["catch"](0);
 
                 //console.log(errors, errors.stack, errors[0] ? errors[0].stack : undefined);
-                context$3$0.t11 = (Array.isArray(context$3$0.t11) ? context$3$0.t11 : [context$3$0.t11]).map(function (it) {
+                context$3$0.t1 = (Array.isArray(context$3$0.t1) ? context$3$0.t1 : [context$3$0.t1]).map(function (it) {
                   if (it instanceof APIError) {
                     return it;
                   } else {
@@ -194,7 +194,7 @@ var APIController = (function () {
                     return new APIError(_status, undefined, message);
                   }
                 });
-                response.errors = response.errors.concat(context$3$0.t11);
+                response.errors = response.errors.concat(context$3$0.t1);
 
               case 45:
                 context$3$0.next = 47;
