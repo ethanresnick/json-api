@@ -1,5 +1,6 @@
 import APIError from "../../types/APIError";
-import {arrayContains} from "../../util/arrays"
+import {arrayContains} from "../../util/arrays";
+import polyfill from "babel/polyfill"; //needed for string instance methods.
 
 export default function(requestContext, responseContext, registry) {
   let type    = requestContext.type;
