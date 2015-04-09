@@ -539,6 +539,10 @@ export default class MongooseAdapter {
         max: type.options.max ? type.options.max : undefined
       };
 
+      type.validators.forEach((validator) => {
+        Object.assign(validationRules, validator[0].JSONAPIDocumentation);
+      })
+
       standardSchema[name] = {
         type: standardType,
         friendlyName: this.toFriendlyName(name),
