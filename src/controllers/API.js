@@ -45,6 +45,11 @@ class APIController {
         // throw if the body is supposed to be present but isn't (or vice-versa).
         yield requestValidators.checkBodyExistence(request);
 
+        // If the type requested in the endpoint hasn't been registered, we 404.
+        if(!registry.type(request.type)) {
+          throw new APIError(404, undefined, `${request.type} is not a valid type.`);
+        }
+
         // If the request has a body, validate it and parse its resources.
         if(request.hasBody) {
           yield requestValidators.checkBodyIsValidJSONAPI(request.body);
