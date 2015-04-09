@@ -54,8 +54,10 @@ class APIController {
             request.body.data, request.aboutLinkObject
           );
 
-          // validate the request resources's type.
-          yield validateRequestResources(request.type, parsedResources, registry);
+          // validate the request's resources.
+          if(!request.aboutLinkObject) {
+            yield validateRequestResources(request.type, parsedResources, registry);
+          }
 
           request.primary = applyTransform(
             parsedResources, "beforeSave", registry, frameworkReq, frameworkRes
