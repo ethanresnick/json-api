@@ -6,10 +6,11 @@ import {forEachArrayOrVal, objectIsEmpty, mapArrayOrVal, mapResources, groupReso
 import * as util from "./lib"
 import pluralize from "pluralize"
 import Resource from "../../types/Resource"
-import Collection from "../../types/Collection"
-import Linkage from "../../types/Linkage"
-import LinkObject from "../../types/LinkObject"
+import Collection from "../../types/Collection";
+import Linkage from "../../types/Linkage";
+import LinkObject from "../../types/LinkObject";
 import APIError from "../../types/APIError";
+import polyfill from "babel/polyfill";
 
 export default class MongooseAdapter {
   constructor(models, inflector, idGenerator) {
@@ -53,6 +54,14 @@ export default class MongooseAdapter {
     if(Array.isArray(sorts)) {
       sorts = sorts.map((it) => it.startsWith("+") ? it.substr(1) : it);
       queryBuilder.sort(sorts.join(" "));
+    }
+
+    // filter out invalid records with simple fields equality.
+    // note that there's a non-trivial risk of sql-like injection here.
+    // we're mostly protected by the fact that we're treating the filter's
+    // value as a single string, though, and not parsing as JSON.
+    if(typeof filters === "object" && !Array.isArray(filters)) {
+      queryBuilder.where(filters);
     }
 
     // in an ideal world, we'd use mongoose here to filter the fields before

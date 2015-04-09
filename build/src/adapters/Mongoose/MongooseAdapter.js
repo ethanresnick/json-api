@@ -45,6 +45,8 @@ var LinkObject = _interopRequire(require("../../types/LinkObject"));
 
 var APIError = _interopRequire(require("../../types/APIError"));
 
+var polyfill = _interopRequire(require("babel/polyfill"));
+
 var MongooseAdapter = (function () {
   function MongooseAdapter(models, inflector, idGenerator) {
     _classCallCheck(this, MongooseAdapter);
@@ -96,6 +98,14 @@ var MongooseAdapter = (function () {
             return it.startsWith("+") ? it.substr(1) : it;
           });
           queryBuilder.sort(sorts.join(" "));
+        }
+
+        // filter out invalid records with simple fields equality.
+        // note that there's a non-trivial risk of sql-like injection here.
+        // we're mostly protected by the fact that we're treating the filter's
+        // value as a single string, though, and not parsing as JSON.
+        if (typeof filters === "object" && !Array.isArray(filters)) {
+          queryBuilder.where(filters);
         }
 
         // in an ideal world, we'd use mongoose here to filter the fields before

@@ -24,7 +24,10 @@ module.exports = function (requestContext, responseContext, registry) {
   if (!requestContext.aboutLinkObject) {
     fields = parseFields(requestContext.queryParams.fields);
     sorts = parseSorts(requestContext.queryParams.sort);
+    // just support a "simple" filtering strategy for now.
+    filters = requestContext.queryParams.filter && requestContext.queryParams.filter.simple;
     includes = parseCommaSeparatedParam(requestContext.queryParams.include);
+
     if (!includes) {
       includes = registry.defaultIncludes(type);
     }
