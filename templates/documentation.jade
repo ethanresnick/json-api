@@ -59,18 +59,18 @@ html(lang='en')
                 if !modelInfo.parentType || !resourcesMap[modelInfo.parentType].schema[path]
                   tr
                     td
-                      if field.requirements.required
+                      if field.validation.required
                         b(id=fieldId)= path
                       else
                         span(id=fieldId)= path
                     td= field.typeString
                     td
                       != field.description
-                      if (field.default != null && path != 'id') || field.requirements.enumValues != null
+                      if (field.default != null && path != 'id') || field.validation.oneOf != null
                         dl
-                          if field.requirements.enumValues != null
+                          if field.validation.oneOf != null
                             dt Allowed Values
-                            dd= field.requirements.enumValues.join(', ')
+                            dd= field.validation.oneOf.join(', ')
                           if field.default != null && path != 'id'
                             dt Default Value
                             dd= field.default
