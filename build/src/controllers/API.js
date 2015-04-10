@@ -144,8 +144,8 @@ var APIController = (function () {
                   break;
                 }
 
-                context$3$0.t0 = request.method;
-                context$3$0.next = context$3$0.t0 === "get" ? 28 : context$3$0.t0 === "post" ? 31 : context$3$0.t0 === "patch" ? 34 : context$3$0.t0 === "delete" ? 37 : 39;
+                context$3$0.t2 = request.method;
+                context$3$0.next = context$3$0.t2 === "get" ? 28 : context$3$0.t2 === "post" ? 31 : context$3$0.t2 === "patch" ? 34 : context$3$0.t2 === "delete" ? 37 : 39;
                 break;
 
               case 28:
@@ -174,15 +174,14 @@ var APIController = (function () {
                 return doDELETE(request, response, registry);
 
               case 39:
-                context$3$0.next = 45;
+                context$3$0.next = 46;
                 break;
 
               case 41:
                 context$3$0.prev = 41;
-                context$3$0.t1 = context$3$0["catch"](0);
+                context$3$0.t3 = context$3$0["catch"](0);
 
-                //console.log(errors, errors.stack, errors[0] ? errors[0].stack : undefined);
-                context$3$0.t1 = (Array.isArray(context$3$0.t1) ? context$3$0.t1 : [context$3$0.t1]).map(function (it) {
+                context$3$0.t3 = (Array.isArray(context$3$0.t3) ? context$3$0.t3 : [context$3$0.t3]).map(function (it) {
                   if (it instanceof APIError) {
                     return it;
                   } else {
@@ -194,17 +193,17 @@ var APIController = (function () {
                     return new APIError(_status, undefined, message);
                   }
                 });
-                response.errors = response.errors.concat(context$3$0.t1);
+                response.errors = response.errors.concat(context$3$0.t3);
 
-              case 45:
-                context$3$0.next = 47;
+              case 46:
+                context$3$0.next = 48;
                 return negotiateContentType(request.accepts, response.ext, supportedExt);
 
-              case 47:
+              case 48:
                 response.contentType = context$3$0.sent;
 
                 if (!response.errors.length) {
-                  context$3$0.next = 52;
+                  context$3$0.next = 53;
                   break;
                 }
 
@@ -214,7 +213,7 @@ var APIController = (function () {
                 response.body = new Document(response.errors).get(true);
                 return context$3$0.abrupt("return", response);
 
-              case 52:
+              case 53:
 
                 // apply transforms pre-send
                 response.primary = applyTransform(response.primary, "beforeRender", registry, frameworkReq, frameworkRes);
@@ -227,7 +226,7 @@ var APIController = (function () {
 
                 return context$3$0.abrupt("return", response);
 
-              case 56:
+              case 57:
               case "end":
                 return context$3$0.stop();
             }

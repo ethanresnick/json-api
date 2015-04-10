@@ -116,7 +116,7 @@ class APIController {
       // unexpected (and so uncaught and not transformed) in one of prior steps
       // or the user couldn't throw an APIError for compatibility with other code.
       catch (errors) {
-        //console.log(errors, errors.stack, errors[0] ? errors[0].stack : undefined);
+        console.log(errors, errors.stack, errors[0] ? errors[0].stack : undefined);
         errors = (Array.isArray(errors) ? errors : [errors]).map((it) => {
           if(it instanceof APIError) {
             return it;
