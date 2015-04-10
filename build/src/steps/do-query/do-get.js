@@ -8,10 +8,6 @@ var APIError = _interopRequire(require("../../types/APIError"));
 
 var arrayContains = require("../../util/arrays").arrayContains;
 
-var polyfill = _interopRequire(require("babel/polyfill"));
-
-//needed for string instance methods.
-
 module.exports = function (requestContext, responseContext, registry) {
   var type = requestContext.type;
   var adapter = registry.adapter(type);

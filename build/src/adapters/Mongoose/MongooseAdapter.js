@@ -45,8 +45,6 @@ var LinkObject = _interopRequire(require("../../types/LinkObject"));
 
 var APIError = _interopRequire(require("../../types/APIError"));
 
-var polyfill = _interopRequire(require("babel/polyfill"));
-
 var MongooseAdapter = (function () {
   function MongooseAdapter(models, inflector, idGenerator) {
     _classCallCheck(this, MongooseAdapter);

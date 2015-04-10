@@ -1,3 +1,5 @@
+require('babel/polyfill');
+
 module.exports = {
   adapters: {
     Mongoose: require('./build/src/adapters/Mongoose/MongooseAdapter')

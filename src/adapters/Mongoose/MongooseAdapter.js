@@ -10,7 +10,6 @@ import Collection from "../../types/Collection";
 import Linkage from "../../types/Linkage";
 import LinkObject from "../../types/LinkObject";
 import APIError from "../../types/APIError";
-import polyfill from "babel/polyfill";
 
 export default class MongooseAdapter {
   constructor(models, inflector, idGenerator) {
