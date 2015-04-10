@@ -13,6 +13,7 @@
   },
   "main": "index.js",
   "dependencies": {
+    "babel": "4.7.x",
     "babel-runtime": "4.7.x",
     "express": "4.x.x",
     "co": "4.5.x",
@@ -26,7 +27,6 @@
     "negotiator": "0.5.x"
   },
   "devDependencies": {
-    "babel": "4.7.x",
     "babel-eslint": "2.x.x",
     "eslint": "^0.x.x",
     "chai": "~1.9.0",
