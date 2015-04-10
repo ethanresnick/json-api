@@ -451,7 +451,7 @@ export default class MongooseAdapter {
 
         // if it has an ._id key, it's a document.
         if(docOrIdOrNull && docOrIdOrNull._id) {
-          idOrNull = String(doc._id);
+          idOrNull = String(docOrIdOrNull._id);
         }
 
         else {
