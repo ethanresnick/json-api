@@ -43,7 +43,7 @@ Check out the [full, working example repo](http://github.com/ethanresnick/json-a
   // Note: don't do this til after you've registered all your resources.
   var templatePath = path.resolve(__dirname, './public/views/style-docs.jade')
   var DocsController = new API.controllers.Documentation(registry, {name: 'Example API'}, templatePath);
-  
+
   // Set up our controllers
   var APIController = new API.controllers.API(registry);
   var Front = new API.controllers.Front(APIController, DocsController);
@@ -75,4 +75,3 @@ This library gives you a base API controller (shown in the example) and a `Docum
 
 ## Adapters
 An adapter handles all the interaction with the database. It is responsible for turning requests into standard [`Resource`](https://github.com/ethanresnick/json-api/blob/master/src/types/Resource.js) or [`Collection`](https://github.com/ethanresnick/json-api/blob/master/src/types/Collection.js) objects that the rest of the library will use. See the built-in [MongooseAdapter](https://github.com/ethanresnick/json-api/blob/master/src/adapters/Mongoose/MongooseAdapter.js) for an example.
-
