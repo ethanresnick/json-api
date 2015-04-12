@@ -9,7 +9,7 @@ import * as requestValidators from "../steps/http/validate-request";
 import negotiateContentType from "../steps/http/negotiate-content-type";
 
 import labelToIds from "../steps/pre-query/label-to-ids";
-import parseRequestResources from "../steps/pre-query/parse-resources";
+import parseRequestPrimary from "../steps/pre-query/parse-request-primary";
 import validateRequestResources from "../steps/pre-query/validate-resources";
 import applyTransform from "../steps/apply-transform";
 
@@ -55,17 +55,17 @@ class APIController {
           yield requestValidators.checkBodyIsValidJSONAPI(request.body);
           yield requestValidators.checkContentType(request, supportedExt);
 
-          let parsedResources = yield parseRequestResources(
+          let parsedPrimary = yield parseRequestPrimary(
             request.body.data, request.aboutLinkObject
           );
 
           // validate the request's resources.
           if(!request.aboutLinkObject) {
-            yield validateRequestResources(request.type, parsedResources, registry);
+            yield validateRequestResources(request.type, parsedPrimary, registry);
           }
 
           request.primary = applyTransform(
-            parsedResources, "beforeSave", registry, frameworkReq, frameworkRes
+            parsedPrimary, "beforeSave", registry, frameworkReq, frameworkRes
           );
         }
 
