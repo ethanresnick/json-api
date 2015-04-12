@@ -1,7 +1,5 @@
-import mocha from "mocha"
-import sinon from "sinon"
-import chai from "chai"
-import ResourceTypeRegistry from "../src/ResourceTypeRegistry"
+import chai from "chai";
+import ResourceTypeRegistry from "../src/ResourceTypeRegistry";
 
 let expect = chai.expect;
 let registry = {};

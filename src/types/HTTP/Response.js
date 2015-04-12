@@ -1,4 +1,4 @@
-import {ValueObject} from "../../util/type-handling"
+import {ValueObject} from "../../util/type-handling";
 
 let propDesc = {writable: true, enumerable: true};
 

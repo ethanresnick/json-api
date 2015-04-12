@@ -1,8 +1,6 @@
-import LinkObject from "./LinkObject";
 import Linkage from "./Linkage";
 import Resource from "./Resource";
 import Collection from "./Collection";
-import APIError from "./APIError";
 import {objectIsEmpty, mapResources, mapObject} from "../util/type-handling";
 import {arrayUnique} from "../util/arrays";
 import templating from "url-template";

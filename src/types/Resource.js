@@ -1,4 +1,4 @@
-import {deleteNested} from "../util/misc"
+import {deleteNested} from "../util/misc";
 
 export default class Resource {
   constructor(type, id, attrs = {}, links = {}, meta = {}) {

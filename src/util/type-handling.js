@@ -1,4 +1,4 @@
-import Collection from "../types/Collection"
+import Collection from "../types/Collection";
 
 /**
  * Takes in a constructor function that takes no arguments and returns a new one

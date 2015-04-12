@@ -1,5 +1,4 @@
-import Collection from "../../types/Collection"
-import Q from "q"
+import Q from "q";
 
 export default function(type, labelOrId, registry, frameworkReq) {
   return Q.Promise(function(resolve, reject) {

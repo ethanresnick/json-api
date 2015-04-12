@@ -1,5 +1,3 @@
-import mocha from "mocha";
-import sinon from "sinon";
 import chai from "chai";
 import APIError from "../../src/types/APIError";
 

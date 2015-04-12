@@ -1,4 +1,3 @@
-import mocha from "mocha";
 import chai from "chai";
 import parsePrimary from "../../../src/steps/pre-query/parse-request-primary";
 import Resource from "../../../src/types/Resource";

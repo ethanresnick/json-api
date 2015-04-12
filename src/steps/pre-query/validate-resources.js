@@ -2,8 +2,7 @@ import Q from "q";
 import {groupResourcesByType} from "../../util/type-handling";
 import {arrayContains} from "../../util/arrays";
 import {isSubsetOf} from "../../util/misc";
-import Collection from "../../types/Collection";
-import APIError from "../../types/APIError"
+import APIError from "../../types/APIError";
 
 export default function(endpointParentType, resourceOrCollection, registry) {
   return Q.Promise(function(resolve, reject) {

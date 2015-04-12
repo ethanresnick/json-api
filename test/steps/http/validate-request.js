@@ -1,10 +1,6 @@
-import mocha from "mocha"
-import sinon from "sinon"
-import chai from "chai"
-import Q from "q"
-import express from "express"
-import supertest from "supertest"
-import * as requestValidators from "../../../src/steps/http/validate-request"
+import chai from "chai";
+import Q from "q";
+import * as requestValidators from "../../../src/steps/http/validate-request";
 
 let expect = chai.expect;
 

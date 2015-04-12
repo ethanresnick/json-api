@@ -1,9 +1,5 @@
-import mocha from "mocha"
-import sinon from "sinon"
-import chai from "chai"
-import * as utils from "../../src/util/misc"
-import Resource from "../../src/types/Resource"
-import Collection from "../../src/types/Collection";
+import chai from "chai";
+import * as utils from "../../src/util/misc";
 
 let expect = chai.expect;
 

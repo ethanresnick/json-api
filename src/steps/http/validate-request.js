@@ -1,5 +1,5 @@
-import Q from "q"
-import APIError from "../../types/APIError"
+import Q from "q";
+import APIError from "../../types/APIError";
 
 export function checkBodyExistence(requestContext) {
   return Q.Promise(function(resolve, reject) {

@@ -1,8 +1,6 @@
-import mocha from "mocha"
-import sinon from "sinon"
-import chai from "chai"
-import Q from "q"
-import negotiate from "../../../src/steps/http/negotiate-content-type"
+import chai from "chai";
+import Q from "q";
+import negotiate from "../../../src/steps/http/negotiate-content-type";
 
 let expect = chai.expect;
 

@@ -1,5 +1,3 @@
-import mocha from "mocha";
-import sinon from "sinon";
 import chai from "chai";
 import Resource from "../../src/types/Resource";
 import Collection from "../../src/types/Collection";
