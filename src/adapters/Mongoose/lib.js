@@ -1,9 +1,7 @@
 // This file contains utility functions used by the Mongoose adapter that
 // aren't part of the class's public interface. Don't use them in your own
 // code, as their APIs are subject to change.
-import Collection from "../../types/Collection";
 import APIError from "../../types/APIError";
-import {isSubsetOf} from "../../util/misc";
 
 /**
  * Takes any error that resulted from the above operations throws an array of

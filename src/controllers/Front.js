@@ -1,13 +1,8 @@
 import Q from "q";
-import templating from "url-template";
-import jade from "jade";
-import path from "path";
 import contentType from "content-type";
 import getRawBody from "raw-body";
 import API from "./API";
-import Documentation from "./Documentation";
 import Request from "../types/HTTP/Request";
-import ResourceTypeRegistry from "../ResourceTypeRegistry";
 
 /**
  * This controller (or a subclass of it if the user isn't on express) has the

@@ -1,5 +1,4 @@
 import Q from "q";
-import templating from "url-template";
 import jade from "jade";
 import Negotiator from "negotiator";
 import path from "path";

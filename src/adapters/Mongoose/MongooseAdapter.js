@@ -2,10 +2,10 @@ import Q from "q";
 import mongoose from "mongoose";
 import {arrayContains, arrayValuesMatch} from "../../util/arrays";
 import {deleteNested} from "../../util/misc";
-import {forEachArrayOrVal, objectIsEmpty, mapArrayOrVal, mapResources, groupResourcesByType} from "../../util/type-handling"
-import * as util from "./lib"
-import pluralize from "pluralize"
-import Resource from "../../types/Resource"
+import {forEachArrayOrVal, mapResources, groupResourcesByType} from "../../util/type-handling";
+import * as util from "./lib";
+import pluralize from "pluralize";
+import Resource from "../../types/Resource";
 import Collection from "../../types/Collection";
 import Linkage from "../../types/Linkage";
 import LinkObject from "../../types/LinkObject";
@@ -549,7 +549,7 @@ export default class MongooseAdapter {
 
       type.validators.forEach((validator) => {
         Object.assign(validationRules, validator[0].JSONAPIDocumentation);
-      })
+      });
 
       standardSchema[name] = {
         type: standardType,

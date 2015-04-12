@@ -1,7 +1,3 @@
-import Q from "q"
-import mongoose from "mongoose"
-import Document from "./types/Document"
-
 /**
  * To fulfill a JSON API request, you often need to know about all the resources
  * in the system--not just the primary resource associated with the type being

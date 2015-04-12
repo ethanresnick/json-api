@@ -116,8 +116,8 @@ class APIController {
       // unexpected (and so uncaught and not transformed) in one of prior steps
       // or the user couldn't throw an APIError for compatibility with other code.
       catch (errors) {
-        console.log(errors, errors.stack, errors[0] ? errors[0].stack : undefined);
-        errors = (Array.isArray(errors) ? errors : [errors]).map((it) => {
+        let errorsArr = Array.isArray(errors) ? errors : [errors];
+        let apiErrors = errorsArr.map((it) => {
           if(it instanceof APIError) {
             return it;
           }
@@ -131,7 +131,9 @@ class APIController {
             return new APIError(status, undefined, message);
           }
         });
-        response.errors = response.errors.concat(errors);
+        response.errors = response.errors.concat(apiErrors);
+
+        console.log(errorsArr[0], errorsArr[0].stack);
       }
 
       // Negotiate the content type
