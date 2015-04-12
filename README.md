@@ -47,7 +47,7 @@ Check out the [full, working example repo](http://github.com/ethanresnick/json-a
   // Set up our controllers
   var APIController = new API.controllers.API(registry);
   var Front = new API.controllers.Front(APIController, DocsController);
-  var requestHandler = Front.apiRequest.bind(Controller);
+  var requestHandler = Front.apiRequest.bind(Front);
 
   app.get("/:type(people|places)", requestHandler);
   app.get("/:type(people|places)/:id", requestHandler);
