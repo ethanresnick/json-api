@@ -5,7 +5,7 @@ This library creates a [JSON API](http://jsonapi.org/)-compliant REST API from y
 
 It currently integrates with [Express](http://expressjs.com/) apps that use [Mongoose](http://mongoosejs.com/) models, but it can easily be integrated with other frameworks and databases. If you want to see an integration with another stack, just open an issue!
 
-*Heads up:* The JSON-API spec isn't quite at version 1.0 yet, nor does this library yet implement the whole spec. In particular,  some advanced routes do not work and the library's API is subject to change. That said, all the basic CRUD operations are supported and development is progressing very quickly. The goal is to have the entire spec implemented by the time the final JSON API spec is officially released.
+*Heads up:* The JSON-API spec isn't quite at version 1.0 yet, nor does this library yet implement the whole spec. In particular, some advanced routes do not work and the library's API is subject to change. That said, all the basic CRUD operations are supported and development is progressing very quickly. The goal is to have the entire spec implemented by the time the final JSON API spec is officially released.
 
 # Installation
 ```$ npm install json-api```
@@ -49,11 +49,18 @@ Check out the [full, working example repo](http://github.com/ethanresnick/json-a
   var Front = new API.controllers.Front(APIController, DocsController);
   var requestHandler = Front.apiRequest.bind(Front);
 
+  // Add routes for basic list, read, create, update, delete operations
   app.get("/:type(people|places)", requestHandler);
   app.get("/:type(people|places)/:id", requestHandler);
   app.post("/:type(people|places)", requestHandler);
   app.patch("/:type(people|places)/:id", requestHandler);
   app.delete("/:type(people|places)/:id", requestHandler);
+
+  // Add routes for adding to, removing from, or updating resource relationships
+  app.post("/:type(people|places)/:id/links/:relationship", requestHandler);
+  app.patch("/:type(people|places)/:id/links/:relationship", requestHandler);
+  app.delete("/:type(people|places)/:id/links/:relationship", requestHandler);
+
 
   app.listen(3000);
   ```
@@ -64,14 +71,16 @@ The JSON-API spec is built around the idea of typed resource collections. For ex
 
 To use this library, you describe the special behavior (if any) that resources of each type should have, and then register that description with a central `ResourceTypeRegistry`. Then the library takes care of the rest. A resource type description is simply an object with the following properties:
 
-- `urlTemplates`: an object containing the url templates for related to the resource. Currently, the only key supported is "self", which defines the template for building a link to single resources of that type.
+- `urlTemplates`: an object containing url templates used to output the json for resources of the type being described. Currently, the supported keys are: "self", which defines the template used for building [resource urls](http://jsonapi.org/format/#document-structure-resource-urls) of that type, and "relationhsip", which defines the template that will be used for [relationship urls](http://jsonapi.org/format/#fetching-relationships).
 - `adapter`: the [adapter](#adapters) used to find and update these resources. By specifying this for each resource type, different resource types can live in different kinds of databases.
 - <a name="before-render"></a>`beforeRender` (optional): a function called on each resource after it's found by the adapter but before it's sent to the client. This lets you do things like hide fields that some users aren't authorized to see.
 - <a name="before-save"></a>`beforeSave` (optional): a function called on each resource provided by the client (i.e. in a `POST` or `PUT` request) before it's sent to the adapter for saving. You can transform the data here to make it valid.
 - <a name="labels"></a>`labelMappers` (optional): this lets you create urls (or, in REST terminology, resources) that map to different database items over time. For example, you could have a `/events/upcoming` resource or a `/users/me` resource. In those examples, "upcoming" and "me" are called the labels and, in labelMappers, you provide a function that maps each label to the proper database id(s) at any given time. The function can return a Promise if needed.
 
 ## Routing, Authentication & Controllers
-This library gives you a base API controller (shown in the example) and a `Documentation` controller, but it doesn't prescribe how requests get to these controllers. This allows you to use any url scheme, routing layer, or authentication system you already have in place. You just need to make sure `req.params.type` reflects the requested resource type, and `req.params.id` or (if you want to allow labels on a request) `req.params.idOrLabel` reflects the requested id, if any. In the example above, routing is handled with Express's built-in `app[VERB]` methods. If you're looking for something more robust, you might be interested in [Express Simple Router](https://github.com/ethanresnick/express-simple-router). For authentication, check out [Express Simple Firewall](https://github.com/ethanresnick/express-simple-firewall).
+This library gives you a Front controller (shown in the example) that can handle requests for API results or for the documentation. But the library doesn't prescribe how requests get to this controller. This allows you to use any url scheme, routing layer, or authentication system you already have in place. You just need to make sure that: `req.params.type` reflects the requested resource type; `req.params.id` or (if you want to allow labels on a request) `req.params.idOrLabel` reflects the requested id, if any; and `req.params.relationship` reflects the relationship name, in the event that the user is requesting a relationship url.
+
+In the example above, routing is handled with Express's built-in `app[VERB]` methods, and the three parameters are set properly using express's built-in `:param` syntax. If you're looking for something more robust, you might be interested in [Express Simple Router](https://github.com/ethanresnick/express-simple-router). For authentication, check out [Express Simple Firewall](https://github.com/ethanresnick/express-simple-firewall).
 
 ## Adapters
 An adapter handles all the interaction with the database. It is responsible for turning requests into standard [`Resource`](https://github.com/ethanresnick/json-api/blob/master/src/types/Resource.js) or [`Collection`](https://github.com/ethanresnick/json-api/blob/master/src/types/Collection.js) objects that the rest of the library will use. See the built-in [MongooseAdapter](https://github.com/ethanresnick/json-api/blob/master/src/adapters/Mongoose/MongooseAdapter.js) for an example.
