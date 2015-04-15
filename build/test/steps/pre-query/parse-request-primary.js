@@ -2,11 +2,9 @@
 
 var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
 
-var mocha = _interopRequire(require("mocha"));
-
 var chai = _interopRequire(require("chai"));
 
-var parseResources = _interopRequire(require("../../../src/steps/pre-query/parse-resources"));
+var parsePrimary = _interopRequire(require("../../../src/steps/pre-query/parse-request-primary"));
 
 var Resource = _interopRequire(require("../../../src/types/Resource"));
 
@@ -27,7 +25,7 @@ describe("Resource Parser", function () {
 
   describe("Parsing a Collection", function () {
     it("should resolve with a Collection object", function (done) {
-      parseResources([]).then(function (collection) {
+      parsePrimary([]).then(function (collection) {
         expect(collection).to.be["instanceof"](Collection);
         done();
       }, done);
@@ -36,7 +34,7 @@ describe("Resource Parser", function () {
 
   describe("Parsing a single Resource", function () {
     it("should resolve with a resource object", function (done) {
-      parseResources({ type: "tests", id: "1" }).then(function (resource) {
+      parsePrimary({ type: "tests", id: "1" }).then(function (resource) {
         expect(resource).to.be["instanceof"](Resource);
         done();
       }, done);
@@ -45,7 +43,7 @@ describe("Resource Parser", function () {
     it("should load up the id, type, and attributes", function (done) {
       var json = { id: "21", type: "people", name: "bob", isBob: true };
 
-      parseResources(json).then(function (resource) {
+      parsePrimary(json).then(function (resource) {
         expect(resource.id).to.equal("21");
         expect(resource.type).to.equal("people");
         expect(resource.attrs).to.deep.equal({ name: "bob", isBob: true });
@@ -54,7 +52,7 @@ describe("Resource Parser", function () {
     });
 
     it("should reject invalid resources", function (done) {
-      parseResources({ id: "1" }).then(function () {}, function (err) {
+      parsePrimary({ id: "1" }).then(function () {}, function (err) {
         expect(err.detail).to.match(/type.*required/);
         done();
       });
@@ -69,7 +67,7 @@ describe("Resource Parser", function () {
         }
       };
 
-      parseResources(json).then(function (resource) {
+      parsePrimary(json).then(function (resource) {
         expect(resource.links.parents).to.be["instanceof"](LinkObject);
         expect(resource.links.parents.linkage).to.be["instanceof"](Linkage);
         expect(resource.links.parents.linkage.value).to.deep.equal(parents);

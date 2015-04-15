@@ -2,10 +2,6 @@
 
 var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
 
-var mocha = _interopRequire(require("mocha"));
-
-var sinon = _interopRequire(require("sinon"));
-
 var chai = _interopRequire(require("chai"));
 
 var ResourceTypeRegistry = _interopRequire(require("../src/ResourceTypeRegistry"));

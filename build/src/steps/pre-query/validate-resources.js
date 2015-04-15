@@ -12,8 +12,6 @@ var arrayContains = require("../../util/arrays").arrayContains;
 
 var isSubsetOf = require("../../util/misc").isSubsetOf;
 
-var Collection = _interopRequire(require("../../types/Collection"));
-
 var APIError = _interopRequire(require("../../types/APIError"));
 
 module.exports = function (endpointParentType, resourceOrCollection, registry) {

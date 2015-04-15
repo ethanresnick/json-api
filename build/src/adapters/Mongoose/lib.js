@@ -31,11 +31,7 @@ Object.defineProperty(exports, "__esModule", {
 // aren't part of the class's public interface. Don't use them in your own
 // code, as their APIs are subject to change.
 
-var Collection = _interopRequire(require("../../types/Collection"));
-
 var APIError = _interopRequire(require("../../types/APIError"));
-
-var isSubsetOf = require("../../util/misc").isSubsetOf;
 
 function errorHandler(err) {
   var errors = [];

@@ -4,17 +4,9 @@ var _interopRequire = require("babel-runtime/helpers/interop-require")["default"
 
 var _interopRequireWildcard = require("babel-runtime/helpers/interop-require-wildcard")["default"];
 
-var mocha = _interopRequire(require("mocha"));
-
-var sinon = _interopRequire(require("sinon"));
-
 var chai = _interopRequire(require("chai"));
 
 var utils = _interopRequireWildcard(require("../../src/util/misc"));
-
-var Resource = _interopRequire(require("../../src/types/Resource"));
-
-var Collection = _interopRequire(require("../../src/types/Collection"));
 
 var expect = chai.expect;
 

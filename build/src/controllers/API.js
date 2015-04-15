@@ -26,7 +26,7 @@ var negotiateContentType = _interopRequire(require("../steps/http/negotiate-cont
 
 var labelToIds = _interopRequire(require("../steps/pre-query/label-to-ids"));
 
-var parseRequestResources = _interopRequire(require("../steps/pre-query/parse-resources"));
+var parseRequestPrimary = _interopRequire(require("../steps/pre-query/parse-request-primary"));
 
 var validateRequestResources = _interopRequire(require("../steps/pre-query/validate-resources"));
 
@@ -69,7 +69,7 @@ var APIController = (function () {
 
         // Kick off the chain for generating the response.
         return co(_regeneratorRuntime.mark(function callee$2$0() {
-          var parsedResources, mappedLabel, mappedIsEmptyArray;
+          var parsedPrimary, mappedLabel, mappedIsEmptyArray, errorsArr, apiErrors;
           return _regeneratorRuntime.wrap(function callee$2$0$(context$3$0) {
             while (1) switch (context$3$0.prev = context$3$0.next) {
               case 0:
@@ -100,10 +100,10 @@ var APIController = (function () {
 
               case 10:
                 context$3$0.next = 12;
-                return parseRequestResources(request.body.data, request.aboutLinkObject);
+                return parseRequestPrimary(request.body.data, request.aboutLinkObject);
 
               case 12:
-                parsedResources = context$3$0.sent;
+                parsedPrimary = context$3$0.sent;
 
                 if (request.aboutLinkObject) {
                   context$3$0.next = 16;
@@ -111,11 +111,11 @@ var APIController = (function () {
                 }
 
                 context$3$0.next = 16;
-                return validateRequestResources(request.type, parsedResources, registry);
+                return validateRequestResources(request.type, parsedPrimary, registry);
 
               case 16:
 
-                request.primary = applyTransform(parsedResources, "beforeSave", registry, frameworkReq, frameworkRes);
+                request.primary = applyTransform(parsedPrimary, "beforeSave", registry, frameworkReq, frameworkRes);
 
               case 17:
                 if (!(request.idOrIds && request.allowLabel)) {
@@ -144,8 +144,8 @@ var APIController = (function () {
                   break;
                 }
 
-                context$3$0.t2 = request.method;
-                context$3$0.next = context$3$0.t2 === "get" ? 28 : context$3$0.t2 === "post" ? 31 : context$3$0.t2 === "patch" ? 34 : context$3$0.t2 === "delete" ? 37 : 39;
+                context$3$0.t0 = request.method;
+                context$3$0.next = context$3$0.t0 === "get" ? 28 : context$3$0.t0 === "post" ? 31 : context$3$0.t0 === "patch" ? 34 : context$3$0.t0 === "delete" ? 37 : 39;
                 break;
 
               case 28:
@@ -174,14 +174,14 @@ var APIController = (function () {
                 return doDELETE(request, response, registry);
 
               case 39:
-                context$3$0.next = 46;
+                context$3$0.next = 47;
                 break;
 
               case 41:
                 context$3$0.prev = 41;
-                context$3$0.t3 = context$3$0["catch"](0);
-
-                context$3$0.t3 = (Array.isArray(context$3$0.t3) ? context$3$0.t3 : [context$3$0.t3]).map(function (it) {
+                context$3$0.t1 = context$3$0["catch"](0);
+                errorsArr = Array.isArray(context$3$0.t1) ? context$3$0.t1 : [context$3$0.t1];
+                apiErrors = errorsArr.map(function (it) {
                   if (it instanceof APIError) {
                     return it;
                   } else {
@@ -193,17 +193,18 @@ var APIController = (function () {
                     return new APIError(_status, undefined, message);
                   }
                 });
-                response.errors = response.errors.concat(context$3$0.t3);
 
-              case 46:
-                context$3$0.next = 48;
+                response.errors = response.errors.concat(apiErrors);
+
+              case 47:
+                context$3$0.next = 49;
                 return negotiateContentType(request.accepts, response.ext, supportedExt);
 
-              case 48:
+              case 49:
                 response.contentType = context$3$0.sent;
 
                 if (!response.errors.length) {
-                  context$3$0.next = 53;
+                  context$3$0.next = 54;
                   break;
                 }
 
@@ -213,7 +214,7 @@ var APIController = (function () {
                 response.body = new Document(response.errors).get(true);
                 return context$3$0.abrupt("return", response);
 
-              case 53:
+              case 54:
 
                 // apply transforms pre-send
                 response.primary = applyTransform(response.primary, "beforeRender", registry, frameworkReq, frameworkRes);
@@ -226,7 +227,7 @@ var APIController = (function () {
 
                 return context$3$0.abrupt("return", response);
 
-              case 57:
+              case 58:
               case "end":
                 return context$3$0.stop();
             }

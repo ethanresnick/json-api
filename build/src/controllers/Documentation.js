@@ -10,8 +10,6 @@ var _interopRequire = require("babel-runtime/helpers/interop-require")["default"
 
 var Q = _interopRequire(require("q"));
 
-var templating = _interopRequire(require("url-template"));
-
 var jade = _interopRequire(require("jade"));
 
 var Negotiator = _interopRequire(require("negotiator"));

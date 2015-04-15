@@ -15,7 +15,7 @@ var APIError = _interopRequire(require("../../types/APIError"));
 
 function checkBodyExistence(requestContext) {
   return Q.Promise(function (resolve, reject) {
-    var needsBody = ["post", "patch"].indexOf(requestContext.method) !== -1 || requestContext.method === "delete" && requestContext.aboutLinkObject;
+    var needsBody = ["post", "patch"].indexOf(requestContext.method) !== -1 || requestContext.method === "delete" && requestContext.aboutLinkObject || requestContext.method === "delete" && !requestContext.idOrIds && requestContext.ext.indexOf("bulk") !== -1;
 
     if (requestContext.hasBody === needsBody) {
       resolve();

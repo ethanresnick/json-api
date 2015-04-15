@@ -8,23 +8,13 @@ var _interopRequire = require("babel-runtime/helpers/interop-require")["default"
 
 var Q = _interopRequire(require("q"));
 
-var templating = _interopRequire(require("url-template"));
-
-var jade = _interopRequire(require("jade"));
-
-var path = _interopRequire(require("path"));
-
 var contentType = _interopRequire(require("content-type"));
 
 var getRawBody = _interopRequire(require("raw-body"));
 
 var API = _interopRequire(require("./API"));
 
-var Documentation = _interopRequire(require("./Documentation"));
-
 var Request = _interopRequire(require("../types/HTTP/Request"));
-
-var ResourceTypeRegistry = _interopRequire(require("../ResourceTypeRegistry"));
 
 /**
  * This controller (or a subclass of it if the user isn't on express) has the

@@ -2,8 +2,6 @@
 
 var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
 
-var Collection = _interopRequire(require("../../types/Collection"));
-
 var Q = _interopRequire(require("q"));
 
 module.exports = function (type, labelOrId, registry, frameworkReq) {

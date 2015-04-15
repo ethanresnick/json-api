@@ -10,15 +10,11 @@ var _core = require("babel-runtime/core-js")["default"];
 
 var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
 
-var LinkObject = _interopRequire(require("./LinkObject"));
-
 var Linkage = _interopRequire(require("./Linkage"));
 
 var Resource = _interopRequire(require("./Resource"));
 
 var Collection = _interopRequire(require("./Collection"));
-
-var APIError = _interopRequire(require("./APIError"));
 
 var _utilTypeHandling = require("../util/type-handling");
 

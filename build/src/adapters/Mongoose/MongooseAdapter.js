@@ -26,8 +26,6 @@ var deleteNested = require("../../util/misc").deleteNested;
 var _utilTypeHandling = require("../../util/type-handling");
 
 var forEachArrayOrVal = _utilTypeHandling.forEachArrayOrVal;
-var objectIsEmpty = _utilTypeHandling.objectIsEmpty;
-var mapArrayOrVal = _utilTypeHandling.mapArrayOrVal;
 var mapResources = _utilTypeHandling.mapResources;
 var groupResourcesByType = _utilTypeHandling.groupResourcesByType;
 
@@ -526,7 +524,7 @@ var MongooseAdapter = (function () {
 
             // if it has an ._id key, it's a document.
             if (docOrIdOrNull && docOrIdOrNull._id) {
-              idOrNull = String(doc._id);
+              idOrNull = String(docOrIdOrNull._id);
             } else {
               // Even though we did toJSON(), id may be an ObjectId. (lame.)
               idOrNull = docOrIdOrNull ? String(docOrIdOrNull) : null;

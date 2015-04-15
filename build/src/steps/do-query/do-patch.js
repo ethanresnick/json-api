@@ -12,10 +12,6 @@ var Resource = _interopRequire(require("../../types/Resource"));
 
 var Linkage = _interopRequire(require("../../types/Linkage"));
 
-var arrayValuesMatch = require("../../util/arrays").arrayValuesMatch;
-
-var mapResources = require("../../util/type-handling").mapResources;
-
 module.exports = function (requestContext, responseContext, registry) {
   var primary = requestContext.primary;
   var type = requestContext.type;

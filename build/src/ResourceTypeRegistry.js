@@ -1,19 +1,3 @@
-"use strict";
-
-var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default"];
-
-var _createClass = require("babel-runtime/helpers/create-class")["default"];
-
-var _core = require("babel-runtime/core-js")["default"];
-
-var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
-
-var Q = _interopRequire(require("q"));
-
-var mongoose = _interopRequire(require("mongoose"));
-
-var Document = _interopRequire(require("./types/Document"));
-
 /**
  * To fulfill a JSON API request, you often need to know about all the resources
  * in the system--not just the primary resource associated with the type being
@@ -25,6 +9,13 @@ var Document = _interopRequire(require("./types/Document"));
  * the Dispatcher can have access to. Each resource type is registered by its
  * JSON api type and has a number of properties defining it.
  */
+"use strict";
+
+var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default"];
+
+var _createClass = require("babel-runtime/helpers/create-class")["default"];
+
+var _core = require("babel-runtime/core-js")["default"];
 
 var ResourceTypeRegistry = (function () {
   function ResourceTypeRegistry() {
