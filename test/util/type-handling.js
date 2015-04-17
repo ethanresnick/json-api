@@ -37,12 +37,6 @@ describe("Utility methods", () => {
     });
   });
 
-  describe.skip("mapArrayOrVal", () => {
-    it("should call the map function on a single value");
-    it("should call the map function on each value in an array");
-    it("should return the mapped value");
-  });
-
   describe.skip("forEachArrayOrVal", () => {
     it("should call the each function on a single value");
     it("should call the each function on each value in an array");

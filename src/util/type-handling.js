@@ -84,10 +84,6 @@ export function groupResourcesByType(resourceOrCollection) {
   return resourcesByType;
 }
 
-export function mapArrayOrVal(arrayOrVal, mapFn) {
-  return Array.isArray(arrayOrVal) ? arrayOrVal.map(mapFn) : mapFn(arrayOrVal);
-}
-
 export function forEachArrayOrVal(arrayOrVal, eachFn) {
   /*eslint-disable no-unused-expressions */
   Array.isArray(arrayOrVal) ? arrayOrVal.forEach(eachFn) : eachFn(arrayOrVal);
