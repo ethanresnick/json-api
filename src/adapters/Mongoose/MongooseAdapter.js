@@ -564,6 +564,24 @@ export default class MongooseAdapter {
 
   static toFriendlyName(pathOrModelName) {
     const ucFirst = (v) => v.charAt(0).toUpperCase() + v.slice(1);
-    return pathOrModelName.split(".").map(ucFirst).join("").split(/(?=[A-Z])/).join(" ");
+
+    // pascal case is "upper camel case", i.e. "MyName" as opposed to "myName".
+    // this variable holds a normalized, pascal cased version of pathOrModelName,
+    // such that `ModelFormat`, `pathFormat` `nested.path.format` all become
+    // ModelFormat, PathFormat, and NestedPathFormat.
+    const pascalCasedString = pathOrModelName.split(".").map(ucFirst).join("");
+
+    // Now, to handle acronyms like InMLBTeam, we need to define a word as a
+    // capital letter, plus (0 or more capital letters where the capital letter
+    // is not followed by a non-capital letter or 0 or more non capital letters).
+    let matches;
+    const words = [];
+    const wordsRe = /[A-Z]([A-Z]*(?![^A-Z])|[^A-Z]*)/g;
+
+    while((matches = wordsRe.exec(pascalCasedString)) !== null) {
+      words.push(matches[0]);
+    }
+
+    return words.join(" ");
   }
 }

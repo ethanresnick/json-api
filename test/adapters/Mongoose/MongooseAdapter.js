@@ -43,6 +43,24 @@ describe("Mongoose Adapter", () => {
         expect(MongooseAdapter.getModelName("test-models", singularize)).to.equal("TestCustomsingular");
       })
     });
+
+    describe("getFriendlyName", () => {
+      it("should detect camel-cased words, and separate and capitalize each one", () => {
+        expect(MongooseAdapter.toFriendlyName("twitterId")).to.equal("Twitter Id");
+      });
+
+      it("should handle dot-separated, nested paths", () => {
+        expect(MongooseAdapter.toFriendlyName("contact.name")).to.equal("Contact Name");
+      });
+
+      it("should handle acronyms in names", () => {
+        expect(MongooseAdapter.toFriendlyName("inUSA")).to.equal("In USA");
+        expect(MongooseAdapter.toFriendlyName("isMLBTeam")).to.equal("Is MLB Team");
+        expect(MongooseAdapter.toFriendlyName("thisIsATest")).to.equal("This Is A Test");
+        expect(MongooseAdapter.toFriendlyName("ATest")).to.equal("A Test");
+        expect(MongooseAdapter.toFriendlyName("isCaseB")).to.equal("Is Case B");
+      });
+    })
   });
 });
 
