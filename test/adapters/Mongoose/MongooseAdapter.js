@@ -7,7 +7,7 @@ import MongooseAdapter from "../../../src/adapters/Mongoose/MongooseAdapter";
 const expect = chai.expect;
 
 describe("Mongoose Adapter", () => {
-  describe("getType static method", () => {
+  describe("its static methods", () => {
     const typesToModelNames = {
       "teams": "Team",
       "jobs": "Job",
@@ -17,17 +17,35 @@ describe("Mongoose Adapter", () => {
       "team-memberships": "TeamMembership"
     };
 
-    it("should lowercase & pluralize the model name; use dashes in camelCased names", () => {
-      for(let type in typesToModelNames) {
-        expect(MongooseAdapter.getType(typesToModelNames[type])).to.equal(type);
-      }
+    describe("getType", () => {
+      it("should lowercase & pluralize the model name; use dashes in camelCased names", () => {
+        for(let type in typesToModelNames) {
+          expect(MongooseAdapter.getType(typesToModelNames[type])).to.equal(type);
+        }
+      });
+
+      it("should use a custom pluralize if provided", () => {
+        let pluralize = () => "customplural";
+        expect(MongooseAdapter.getType("TestModel", pluralize)).to.equal("customplural");
+      });
     });
 
-    it("should use a custom pluralize if provided", () => {
-      let plural = () => "customplural";
-      expect(MongooseAdapter.getType("TestModel", plural)).to.equal("customplural");
+    describe("getModelName", () => {
+      it("should reverse getType", () => {
+        for(let type in typesToModelNames) {
+          let modelName = typesToModelNames[type];
+          expect(MongooseAdapter.getModelName(type)).to.equal(modelName);
+        }
+      });
+
+      it("should use a custom singularizer if provided", () => {
+        let singularize = () => "customsingular";
+        expect(MongooseAdapter.getModelName("test-models", singularize)).to.equal("TestCustomsingular");
+      })
     });
   });
+});
+
 
   /*
   describe("docToResource", () => {
@@ -58,16 +76,3 @@ describe("Mongoose Adapter", () => {
       expect(resource.id).to.equal("blah2");
     });
   });*/
-});
-
-/*
-
-
-    describe("getModelName", ->
-      it2("should reverse getType", ->
-        for type, modelName of typesToModelNames
-          expect(MongooseAdapter.getModelName(type)).to.equal(modelName)
-      )
-    )
-  )
-}); */
