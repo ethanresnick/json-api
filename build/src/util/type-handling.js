@@ -25,7 +25,6 @@ exports.mapObject = mapObject;
 exports.mapResources = mapResources;
 exports.forEachResources = forEachResources;
 exports.groupResourcesByType = groupResourcesByType;
-exports.mapArrayOrVal = mapArrayOrVal;
 exports.forEachArrayOrVal = forEachArrayOrVal;
 Object.defineProperty(exports, "__esModule", {
   value: true
@@ -102,10 +101,6 @@ function groupResourcesByType(resourceOrCollection) {
     resourcesByType[resourceOrCollection.type] = [resourceOrCollection];
   }
   return resourcesByType;
-}
-
-function mapArrayOrVal(arrayOrVal, mapFn) {
-  return Array.isArray(arrayOrVal) ? arrayOrVal.map(mapFn) : mapFn(arrayOrVal);
 }
 
 function forEachArrayOrVal(arrayOrVal, eachFn) {
