@@ -28,22 +28,29 @@
   },
   "devDependencies": {
     "babel-eslint": "2.x.x",
+    "chai": "^1.9.2",
     "eslint": "^0.x.x",
-    "chai": "~1.9.0",
     "gulp": "^3.8.6",
-    "mocha": "~1.20.0",
-    "supertest": "^0.13.0",
-    "sinon": "1.10.2"
+    "mocha": "2.2.x",
+    "sinon": "1.10.2",
+    "supertest": "^0.13.0"
   },
   "peerDependencies": {
     "mongoose": ">= 3.6 < 4"
   },
   "scripts": {
     "prepublish": "make compile",
-    "test": "mocha $(find ./build/test -name \"*.js\")"
+    "test": "./node_modules/mocha/bin/mocha $(find ./build/test -name \"*.js\")"
   },
   "bugs": {
     "url": "https://github.com/ethanresnick/json-api/issues"
   },
-  "keywords": ["json-api", "jsonapi", "api", "hypermedia", "rest", "restful"]
+  "keywords": [
+    "json-api",
+    "jsonapi",
+    "api",
+    "hypermedia",
+    "rest",
+    "restful"
+  ]
 }
