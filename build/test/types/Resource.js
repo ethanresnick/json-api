@@ -42,7 +42,7 @@ describe("Resource type", function () {
     it("should allow construction with no or valid id", function () {
       // valid/no ids should construct w/o error
       /*eslint-disable no-unused-vars */
-      var noId = new Resource("type", null, {});
+      var noId = new Resource("type", undefined, {});
       var validId = new Resource("aoin", "39.20nA_-xgGr", {});
       /*eslint-enable */
     });

@@ -27,7 +27,7 @@ describe("Resource type", () => {
     it("should allow construction with no or valid id", () => {
       // valid/no ids should construct w/o error
       /*eslint-disable no-unused-vars */
-      let noId    = new Resource("type", null, {});
+      let noId    = new Resource("type", undefined, {});
       let validId = new Resource("aoin", "39.20nA_-xgGr", {});
       /*eslint-enable */
     });

@@ -31,6 +31,7 @@
     "chai": "^1.9.2",
     "eslint": "^0.x.x",
     "gulp": "^3.8.6",
+    "istanbul": "0.3.x",
     "mocha": "2.2.x",
     "sinon": "1.10.2",
     "supertest": "^0.13.0"
@@ -40,7 +41,8 @@
   },
   "scripts": {
     "prepublish": "make compile",
-    "test": "./node_modules/mocha/bin/mocha $(find ./build/test -name \"*.js\")"
+    "cover": "istanbul cover -x **/lib/** ./node_modules/mocha/bin/_mocha -- $(find ./build/test -name \"*.js\") > /dev/null",
+    "test": "./node_modules/mocha/bin/_mocha $(find ./build/test -name \"*.js\")"
   },
   "bugs": {
     "url": "https://github.com/ethanresnick/json-api/issues"
