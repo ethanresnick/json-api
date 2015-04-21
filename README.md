@@ -41,8 +41,7 @@ Check out the [full, working example repo](http://github.com/ethanresnick/json-a
 
   // Initialize the automatic documentation.
   // Note: don't do this til after you've registered all your resources.
-  var templatePath = path.resolve(__dirname, './public/views/style-docs.jade')
-  var DocsController = new API.controllers.Documentation(registry, {name: 'Example API'}, templatePath);
+  var DocsController = new API.controllers.Documentation(registry, {name: 'Example API'});
 
   // Set up our controllers
   var APIController = new API.controllers.API(registry);
