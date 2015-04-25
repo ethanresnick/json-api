@@ -28,6 +28,8 @@ var labelToIds = _interopRequire(require("../steps/pre-query/label-to-ids"));
 
 var parseRequestPrimary = _interopRequire(require("../steps/pre-query/parse-request-primary"));
 
+var validateRequestDocument = _interopRequire(require("../steps/pre-query/validate-document"));
+
 var validateRequestResources = _interopRequire(require("../steps/pre-query/validate-resources"));
 
 var applyTransform = _interopRequire(require("../steps/apply-transform"));
@@ -92,7 +94,7 @@ var APIController = (function () {
                 }
 
                 context$3$0.next = 8;
-                return requestValidators.checkBodyIsValidJSONAPI(request.body);
+                return validateRequestDocument(request.body);
 
               case 8:
                 context$3$0.next = 10;

@@ -10,6 +10,7 @@ import negotiateContentType from "../steps/http/negotiate-content-type";
 
 import labelToIds from "../steps/pre-query/label-to-ids";
 import parseRequestPrimary from "../steps/pre-query/parse-request-primary";
+import validateRequestDocument from "../steps/pre-query/validate-document";
 import validateRequestResources from "../steps/pre-query/validate-resources";
 import applyTransform from "../steps/apply-transform";
 
@@ -52,7 +53,7 @@ class APIController {
 
         // If the request has a body, validate it and parse its resources.
         if(request.hasBody) {
-          yield requestValidators.checkBodyIsValidJSONAPI(request.body);
+          yield validateRequestDocument(request.body);
           yield requestValidators.checkContentType(request, supportedExt);
 
           let parsedPrimary = yield parseRequestPrimary(

@@ -3,7 +3,6 @@
 var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
 
 exports.checkBodyExistence = checkBodyExistence;
-exports.checkBodyIsValidJSONAPI = checkBodyIsValidJSONAPI;
 exports.checkContentType = checkContentType;
 Object.defineProperty(exports, "__esModule", {
   value: true
@@ -23,17 +22,6 @@ function checkBodyExistence(requestContext) {
       reject(new APIError(400, undefined, "This request needs a body, but didn't have one."));
     } else {
       reject(new APIError(400, undefined, "This request should not have a body, but does."));
-    }
-  });
-}
-
-function checkBodyIsValidJSONAPI(body) {
-  return Q.Promise(function (resolve, reject) {
-    var ownProp = Object.prototype.hasOwnProperty;
-    if (typeof body !== "object" || !ownProp.call(body, "data")) {
-      reject(new APIError(400, null, "Request body is not a valid JSON API document."));
-    } else {
-      resolve();
     }
   });
 }

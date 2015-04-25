@@ -42,24 +42,6 @@ describe("Request Validation functions", () => {
     });
   });
 
-  describe("checkBodyIsValidJSONAPI", () => {
-    it("should fulfill when the input is an object with data", (done) => {
-      requestValidators.checkBodyIsValidJSONAPI({"data": null}).then(done);
-    });
-
-    it("should reject the promise for all other inputs", (done) => {
-      requestValidators.checkBodyIsValidJSONAPI([]).then(
-        () => { done(new Error("Should reject array bodies.")); },
-        () => {
-          requestValidators.checkBodyIsValidJSONAPI("string").then(
-            () => { done(new Error("Should reject string bodies.")); },
-            () => { done(); }
-          );
-        }
-      );
-    });
-  });
-
   describe("checkContentType", () => {
     let invalidMock = {contentType: "application/json", ext: []};
     let validMock   = {contentType: "application/vnd.api+json", ext: []};

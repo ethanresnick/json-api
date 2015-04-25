@@ -56,24 +56,6 @@ describe("Request Validation functions", function () {
     });
   });
 
-  describe("checkBodyIsValidJSONAPI", function () {
-    it("should fulfill when the input is an object with data", function (done) {
-      requestValidators.checkBodyIsValidJSONAPI({ data: null }).then(done);
-    });
-
-    it("should reject the promise for all other inputs", function (done) {
-      requestValidators.checkBodyIsValidJSONAPI([]).then(function () {
-        done(new Error("Should reject array bodies."));
-      }, function () {
-        requestValidators.checkBodyIsValidJSONAPI("string").then(function () {
-          done(new Error("Should reject string bodies."));
-        }, function () {
-          done();
-        });
-      });
-    });
-  });
-
   describe("checkContentType", function () {
     var invalidMock = { contentType: "application/json", ext: [] };
     var validMock = { contentType: "application/vnd.api+json", ext: [] };

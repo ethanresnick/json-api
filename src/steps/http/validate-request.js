@@ -24,18 +24,6 @@ export function checkBodyExistence(requestContext) {
   });
 }
 
-export function checkBodyIsValidJSONAPI(body) {
-  return Q.Promise(function(resolve, reject) {
-    let ownProp = Object.prototype.hasOwnProperty;
-    if(typeof body !== "object" || !ownProp.call(body, "data")) {
-      reject(new APIError(400, null, "Request body is not a valid JSON API document."));
-    }
-    else {
-      resolve();
-    }
-  });
-}
-
 export function checkContentType(requestContext, supportedExt) {
   // From the spec: The value of the ext media type parameter... MUST
   // be limited to a subset of the extensions supported by the server.
