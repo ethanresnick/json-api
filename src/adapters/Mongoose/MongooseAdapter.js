@@ -389,6 +389,7 @@ export default class MongooseAdapter {
   static docToResource(doc, pluralizer = pluralize.plural, fields) {
     let type = this.getType(doc.constructor.modelName, pluralizer);
     let refPaths = util.getReferencePaths(doc.constructor);
+    let schemaOptions = doc.constructor.schema.options;
 
     // Get and clean up attributes
     // Note: we can't use the depopulate attribute because it doesn't just
@@ -397,13 +398,18 @@ export default class MongooseAdapter {
     // That's stupid, and it breaks our include handling.
     // Also, starting in 4.0, we won't need the delete versionKey line:
     // https://github.com/Automattic/mongoose/issues/2675
-    let attrs = doc.toJSON();
-    let schemaOptions = doc.constructor.schema.options;
+    let attrs = doc.toJSON({virtuals: true});
+    delete attrs.id; // from the id virtual.
     delete attrs["_id"];
     delete attrs[schemaOptions.versionKey];
     delete attrs[schemaOptions.discriminatorKey];
 
     // Delete attributes that aren't in the included fields.
+    // TODO: Some virtuals could be expensive to compute, so, if field
+    // restrictions are in use, we shouldn't set {virtuals: true} above and,
+    // instead, we should read only the virtuals that are needed (by searching
+    // the schema to identify the virtual paths and then checking those against
+    // fields) and add them to newAttrs.
     if(fields && fields[type]) {
       let newAttrs = {};
       fields[type].forEach((field) => {
