@@ -75,9 +75,11 @@ var Document = (function () {
           });
         } else if (this.primaryOrErrors instanceof Linkage) {
           doc.data = linkageToJSON(this.primaryOrErrors);
+        } else if (this.primaryOrErrors === null) {
+          doc.data = this.primaryOrErrors;
         }
 
-        // it's either resource, a collection, linkage or errors...
+        // it's either resource, a collection, linkage, null, or errors...
         else {
           doc.errors = this.primaryOrErrors.map(errorToJSON);
         }
