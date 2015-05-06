@@ -48,7 +48,7 @@ function resourceFromJSON(json) {
   var meta = json.meta;delete json.meta;
 
   // attrs are all the fields that are left.
-  var attrs = json;
+  var attrs = json.attributes;
 
   //build LinkObjects
   for (var key in links) {

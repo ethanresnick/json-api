@@ -128,9 +128,10 @@ function linkObjectToJSON(linkObject, urlTemplates, templateData) {
 }
 
 function resourceToJSON(resource, urlTemplates) {
-  var json = resource.attrs;
+  var json = {};
   json.id = resource.id;
   json.type = resource.type;
+  json.attributes = resource.attrs;
 
   if (resource.meta && !objectIsEmpty(resource.meta)) {
     json.meta = resource.meta;
