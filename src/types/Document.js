@@ -47,7 +47,11 @@ export default class Document {
       doc.data = linkageToJSON(this.primaryOrErrors);
     }
 
-    // it's either resource, a collection, linkage or errors...
+    else if(this.primaryOrErrors === null) {
+      doc.data = this.primaryOrErrors;
+    }
+
+    // it's either resource, a collection, linkage, null, or errors...
     else {
       doc.errors = this.primaryOrErrors.map(errorToJSON);
     }
