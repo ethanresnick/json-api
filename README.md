@@ -72,10 +72,16 @@ To use this library, you describe the special behavior (if any) that resources o
 
 - `urlTemplates`: an object containing url templates used to output the json for resources of the type being described. Currently, the supported keys are: "self", which defines the template used for building [resource urls](http://jsonapi.org/format/#document-structure-resource-urls) of that type, and "relationhsip", which defines the template that will be used for [relationship urls](http://jsonapi.org/format/#fetching-relationships).
 - `adapter`: the [adapter](#adapters) used to find and update these resources. By specifying this for each resource type, different resource types can live in different kinds of databases.
+
 - <a name="before-render"></a>`beforeRender` (optional): a function called on each resource after it's found by the adapter but before it's sent to the client. This lets you do things like hide fields that some users aren't authorized to see.
+
 - <a name="before-save"></a>`beforeSave` (optional): a function called on each resource provided by the client (i.e. in a `POST` or `PUT` request) before it's sent to the adapter for saving. You can transform the data here to make it valid.
+
 - <a name="labels"></a>`labelMappers` (optional): this lets you create urls (or, in REST terminology, resources) that map to different database items over time. For example, you could have a `/events/upcoming` resource or a `/users/me` resource. In those examples, "upcoming" and "me" are called the labels and, in labelMappers, you provide a function that maps each label to the proper database id(s) at any given time. The function can return a Promise if needed.
+
 - <a name="parentType"></a>`parentType` (optional): this allows you to designate one resource type being a sub-type of another (its `parentType`). This is often used when you have two resource types that live in the same database table/collection, and their type is determined with a discriminator key. See the [`schools` type](https://github.com/ethanresnick/json-api-example/blob/master/src/resource-descriptions/schools.js#L2) in the example repository.
+
+-  <a name="info"></a>`info` (optional): this allows you to provide extra information about the resource that will be included in the documentation. Available properties are `"description"` (a string describing what resources of this type are) and `"fields"`. `"fields"` holds an object in which you can describe each field in the resource (e.g. listing validation rules). See the [example implemenation](https://github.com/ethanresnick/json-api-example/blob/master/src/resource-descriptions/schools.js) for more details.
 
 ## Routing, Authentication & Controllers
 This library gives you a Front controller (shown in the example) that can handle requests for API results or for the documentation. But the library doesn't prescribe how requests get to this controller. This allows you to use any url scheme, routing layer, or authentication system you already have in place. You just need to make sure that: `req.params.type` reflects the requested resource type; `req.params.id` or (if you want to allow labels on a request) `req.params.idOrLabel` reflects the requested id, if any; and `req.params.relationship` reflects the relationship name, in the event that the user is requesting a relationship url.
