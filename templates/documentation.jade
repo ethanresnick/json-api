@@ -53,8 +53,9 @@ html(lang='en')
               //move id to the top for display
               - var orderedFields = Object.keys(modelInfo.schema)
               - var idIndex = orderedFields.indexOf('id');
-              - orderedFields.splice(idIndex, 1)
-              - orderedFields = ['id'].concat(orderedFields)
+              if idIndex !== -1
+                - orderedFields.splice(idIndex, 1)
+                - orderedFields = ['id'].concat(orderedFields)
 
               each path in orderedFields
                 - var field = modelInfo.schema[path]
