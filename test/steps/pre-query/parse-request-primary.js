@@ -36,7 +36,10 @@ describe("Resource Parser", () => {
     });
 
     it("should load up the id, type, and attributes", (done) => {
-      let json = {"id": "21", "type": "people", "name": "bob", "isBob": true};
+      let json = {
+        "id": "21", "type": "people",
+        "attributes": {"name": "bob", "isBob": true}
+      };
 
       parsePrimary(json).then((resource) => {
         expect(resource.id).to.equal("21");
