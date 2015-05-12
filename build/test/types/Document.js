@@ -24,7 +24,7 @@ describe("Document class", function () {
 
     it("should key primary data under data, with each resource's type, id", function () {
       expect(singleResourceDocJSON.data).to.deep.equal({
-        id: "31", type: "people", name: "mark"
+        id: "31", type: "people", attributes: { name: "mark" }
       });
     });
 
@@ -33,7 +33,7 @@ describe("Document class", function () {
     });
 
     it("should represent includes as an array under `included`", function () {
-      expect(new Document(people, new Collection([person2])).get().included).to.deep.equal([{ id: "32", type: "people", name: "ethan" }]);
+      expect(new Document(people, new Collection([person2])).get().included).to.deep.equal([{ id: "32", type: "people", attributes: { name: "ethan" } }]);
     });
 
     it("Should include a top-level self links", function () {

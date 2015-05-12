@@ -41,7 +41,10 @@ describe("Resource Parser", function () {
     });
 
     it("should load up the id, type, and attributes", function (done) {
-      var json = { id: "21", type: "people", name: "bob", isBob: true };
+      var json = {
+        id: "21", type: "people",
+        attributes: { name: "bob", isBob: true }
+      };
 
       parsePrimary(json).then(function (resource) {
         expect(resource.id).to.equal("21");
