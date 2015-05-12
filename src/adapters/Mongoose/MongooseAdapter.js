@@ -502,6 +502,7 @@ export default class MongooseAdapter {
     const schemaOptions = model.schema.options;
     const versionKey = schemaOptions.versionKey;
     const discriminatorKey = schemaOptions.discriminatorKey;
+    const virtuals = model.schema.virtuals;
     const standardSchema = {};
 
     // valid types are String, Array[String], Number, Array[Number], Boolean,
@@ -564,6 +565,22 @@ export default class MongooseAdapter {
         validation: validationRules
       };
     });
+
+    for(let virtual in virtuals) {
+      // skip the id virtual, since we properly handled _id above.
+      if(virtual === "id") {
+        continue;
+      }
+
+      // for virtual properties, we can't infer type or validation rules at all,
+      // so we add them with just a friendly name and leave the rest undefined.
+      // The user is expected to override/set this in a resource type description.
+      standardSchema[virtual] = {
+        friendlyName: this.toFriendlyName(virtual),
+        type: {},
+        validation: {}
+      };
+    }
 
     return standardSchema;
   }
