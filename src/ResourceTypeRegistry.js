@@ -1,4 +1,13 @@
 /**
+ * A private array of properties that will be used by the class below to
+ * automatically generate simple getter setters for each property, all
+ * following same format. Those getters/setters will take the resource type
+ * whose property is being retrieved/set, and the value to set it to, if any.
+ */
+const autoGetterSetterProps = ["adapter", "beforeSave", "beforeRender",
+  "labelMappers", "defaultIncludes", "info", "parentType"];
+
+/**
  * To fulfill a JSON API request, you often need to know about all the resources
  * in the system--not just the primary resource associated with the type being
  * requested. For example, if the request is for a User, you might need to
@@ -28,8 +37,7 @@ export default class ResourceTypeRegistry {
       this._resourceTypes[type] = {};
 
       // Set all the properties for the type that the description provides.
-      ["adapter", "beforeSave", "beforeRender", "labelMappers",
-      "urlTemplates", "defaultIncludes", "info", "parentType"].forEach((k) => {
+      autoGetterSetterProps.concat(["urlTemplates"]).forEach((k) => {
         if(Object.prototype.hasOwnProperty.call(description, k)) {
           this[k](type, description[k]);
         }
@@ -65,13 +73,9 @@ export default class ResourceTypeRegistry {
   }
 }
 
-ResourceTypeRegistry.prototype.adapter = makeGetterSetter("adapter");
-ResourceTypeRegistry.prototype.beforeSave = makeGetterSetter("beforeSave");
-ResourceTypeRegistry.prototype.beforeRender = makeGetterSetter("beforeRender");
-ResourceTypeRegistry.prototype.labelMappers = makeGetterSetter("labelMappers");
-ResourceTypeRegistry.prototype.defaultIncludes = makeGetterSetter("defaultIncludes");
-ResourceTypeRegistry.prototype.info = makeGetterSetter("info");
-ResourceTypeRegistry.prototype.parentType = makeGetterSetter("parentType");
+autoGetterSetterProps.forEach((propName) => {
+  ResourceTypeRegistry.prototype[propName] = makeGetterSetter(propName);
+});
 
 
 function makeGetterSetter(attrName) {
