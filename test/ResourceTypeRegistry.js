@@ -68,6 +68,12 @@ describe("ResourceTypeRegistry", function() {
     );
   });
 
+  describe("parentType", () => {
+    it("should be a getter/setter for a type for a type's parentType",
+      makeGetterSetterTest(() => "my-parents", "mytypes", "parentType")
+    );
+  });
+
   describe("urlTemplates", () => {
     it("should be a getter/setter for a type's urlTemplates",
       makeGetterSetterTest(
