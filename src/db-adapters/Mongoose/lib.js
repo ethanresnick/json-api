@@ -66,8 +66,8 @@ export function getReferencedModelName(model, path) {
 export function resourceToDocObject(resource) {
   let res = Object.assign({}, resource.attrs);
   let getId = (it) => it.id;
-  for(let key in resource.links) {
-    let linkage = resource.links[key].linkage.value;
+  for(let key in resource.relationships) {
+    let linkage = resource.relationships[key].linkage.value;
 
     // handle linkage when set explicitly for empty relationships
     if(linkage === null || (Array.isArray(linkage) && linkage.length === 0)) {

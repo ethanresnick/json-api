@@ -46,15 +46,18 @@ export default function(requestContext, responseContext, registry) {
       // it here is more accurate than using adapter.getRelationshipNames,
       // since we're allowing for paths that can optionally hold linkage,
       // which getRelationshipNames doesn't return.
-      if(resource.links && !resource.links[requestContext.relationship]) {
+      let relationship = resource.relationships &&
+        resource.relationships[requestContext.relationship];
+
+      if(!relationship) {
         let title = "Invalid relationship name.";
         let detail = `${requestContext.relationship} is not a valid ` +
-                     `relationship name on resources of type "${type}"`;
+                     `relationship name on resources of type '${type}'`;
 
         throw new APIError(404, undefined, title, detail);
       }
 
-      responseContext.primary = resource.links[requestContext.relationship].linkage;
+      responseContext.primary = relationship.linkage;
     });
   }
 

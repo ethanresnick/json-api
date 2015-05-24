@@ -435,7 +435,7 @@ export default class MongooseAdapter {
       let jsonValAtPath = pathParts.reduce(getProp, attrs);
       let referencedType = this.getReferencedType(doc.constructor, path);
 
-      // delete the attribute, since we're moving it to links
+      // delete the attribute, since we're moving it to relationships
       deleteNested(path, attrs);
 
       // Now, since the value wasn't excluded, we need to build its
