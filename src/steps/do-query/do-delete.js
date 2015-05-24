@@ -6,7 +6,7 @@ export default function(request, response, registry) {
   let type    = request.type;
   let adapter = registry.dbAdapter(type);
 
-  if(request.aboutLinkObject) {
+  if(request.aboutRelationship) {
     if(Array.isArray(request.idOrIds)) {
       throw new APIError(
         400, undefined,

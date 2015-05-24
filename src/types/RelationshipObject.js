@@ -1,4 +1,4 @@
-export default class LinkObject {
+export default class RelationshipObject {
   constructor(linkage, relatedURI, selfURI) {
     [this.linkage, this.relatedURI, this.selfURI] = [linkage, relatedURI, selfURI];
   }

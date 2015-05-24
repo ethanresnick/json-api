@@ -1,7 +1,7 @@
 import Q from "q";
 import APIError from "../../types/APIError";
 import Resource from "../../types/Resource";
-import LinkObject from "../../types/LinkObject";
+import RelationshipObject from "../../types/RelationshipObject";
 import Linkage from "../../types/Linkage";
 import Collection from "../../types/Collection";
 
@@ -28,8 +28,8 @@ export default function(data, parseAsLinkage) {
   });
 }
 
-function linkObjectFromJSON(json) {
-  return new LinkObject(linkageFromJSON(json.linkage));
+function relationshipObjectFromJSON(json) {
+  return new RelationshipObject(linkageFromJSON(json.linkage));
 }
 
 function linkageFromJSON(json) {
@@ -37,19 +37,12 @@ function linkageFromJSON(json) {
 }
 
 function resourceFromJSON(json) {
-  // save and then remove the non-attrs
-  let id    = json.id; delete json.id;
-  let type  = json.type; delete json.type;
-  let links = json.links || {}; delete json.links;
-  let meta  = json.meta; delete json.meta;
+  let relationships = json.relationships || {};
 
-  // attrs are all the fields that are left.
-  let attrs = json.attributes;
-
-  //build LinkObjects
-  for(let key in links) {
-    links[key] = linkObjectFromJSON(links[key]);
+  //build RelationshipObjects
+  for(let key in relationships) {
+    relationships[key] = relationshipObjectFromJSON(relationships[key]);
   }
 
-  return new Resource(type, id, attrs, links, meta);
+  return new Resource(json.type, json.id, json.attributes, relationships, json.meta);
 }

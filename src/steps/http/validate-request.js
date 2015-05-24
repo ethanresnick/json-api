@@ -5,7 +5,7 @@ export function checkBodyExistence(requestContext) {
   return Q.Promise(function(resolve, reject) {
     let needsBody =
       ["post", "patch"].indexOf(requestContext.method) !== -1 ||
-      (requestContext.method === "delete" && requestContext.aboutLinkObject) ||
+      (requestContext.method === "delete" && requestContext.aboutRelationship) ||
       (requestContext.method === "delete" && !requestContext.idOrIds && requestContext.ext.indexOf("bulk") !== -1);
 
     if(requestContext.hasBody === needsBody) {

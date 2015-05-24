@@ -8,7 +8,7 @@ import pluralize from "pluralize";
 import Resource from "../../types/Resource";
 import Collection from "../../types/Collection";
 import Linkage from "../../types/Linkage";
-import LinkObject from "../../types/LinkObject";
+import RelationshipObject from "../../types/RelationshipObject";
 import APIError from "../../types/APIError";
 
 export default class MongooseAdapter {
@@ -420,8 +420,8 @@ export default class MongooseAdapter {
       attrs = newAttrs;
     }
 
-    // Build Links
-    let links = {};
+    // Build relationships
+    let relationships = {};
     let getProp = (obj, part) => obj[part];
 
     refPaths.forEach((path) => {
@@ -438,12 +438,12 @@ export default class MongooseAdapter {
       // delete the attribute, since we're moving it to links
       deleteNested(path, attrs);
 
-      // Now, since the value wasn't excluded, we need to build its LinkObject.
-      // Note: the value could still be null or an empty array. And, because of
-      // of population, it could be a single document or array of documents,
-      // in addition to a single/array of ids. So, as is customary, we'll start
-      // by coercing it to an array no matter what, tracking whether to make it
-      // a non-array at the end, to simplify our code.
+      // Now, since the value wasn't excluded, we need to build its
+      // RelationshipObject. Note: the value could still be null or an empty
+      // array. And, because of of population, it could be a single document or
+      // array of documents, in addition to a single/array of ids. So, as is
+      // customary, we'll start by coercing it to an array no matter what,
+      // tracking whether to make it a non-array at the end, to simplify our code.
       let isToOneRelationship = false;
 
       if(!Array.isArray(jsonValAtPath)) {
@@ -470,11 +470,11 @@ export default class MongooseAdapter {
 
       // go back from an array if neccessary and save.
       linkage = new Linkage(isToOneRelationship ? linkage[0] : linkage);
-      links[path] = new LinkObject(linkage);
+      relationships[path] = new RelationshipObject(linkage);
     });
 
     // finally, create the resource.
-    return new Resource(type, doc.id, attrs, links);
+    return new Resource(type, doc.id, attrs, relationships);
   }
 
   static getModelName(type, singularizer = pluralize.singular) {
@@ -519,7 +519,7 @@ export default class MongooseAdapter {
       const refModelName = util.getReferencedModelName(model, path);
 
       return {
-        name: refModelName ? "Link" : baseType,
+        name: refModelName ? "Relationship" : baseType,
         isArray: holdsArray,
         targetModel: refModelName
       };

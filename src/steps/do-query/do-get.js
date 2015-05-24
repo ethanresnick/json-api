@@ -7,7 +7,7 @@ export default function(requestContext, responseContext, registry) {
   let fields, sorts, includes, filters;
 
   // Handle fields, sorts, includes and filters.
-  if(!requestContext.aboutLinkObject) {
+  if(!requestContext.aboutRelationship) {
     fields = parseFields(requestContext.queryParams.fields);
     sorts  = parseSorts(requestContext.queryParams.sort);
     // just support a "simple" filtering strategy for now.

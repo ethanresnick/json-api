@@ -57,11 +57,11 @@ class APIController {
           yield requestValidators.checkContentType(request, supportedExt);
 
           let parsedPrimary = yield parseRequestPrimary(
-            request.body.data, request.aboutLinkObject
+            request.body.data, request.aboutRelationship
           );
 
           // validate the request's resources.
-          if(!request.aboutLinkObject) {
+          if(!request.aboutRelationship) {
             yield validateRequestResources(request.type, parsedPrimary, registry);
           }
 

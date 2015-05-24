@@ -48,11 +48,12 @@ class Request {
     // "author" part in the example /people/1/author request noted above.
     this.relationship = null;
 
-    // Whether the target of the request is a link object, as opposed to a
-    // resource object or collection. This affects how incoming data is parsed.
-    // Note: the body of the request will be Linkage rather than LinkObjects, in
-    // the same way that POSTs targeting a collection include a single resource.
-    this.aboutLinkObject = false;
+    // Whether the target of the request is a relationship (object), as opposed
+    // to a resource object or collection. This effects how incoming data is
+    // parsed. Note: the body of the request will be Linkage rather than
+    // RelationshipObjects, in the same way that POSTs targeting a collection
+    // include a single resource.
+    this.aboutRelationship = false;
 
     // Any primary data included in the request's body.
     // Necessary for creating and updating our resources.

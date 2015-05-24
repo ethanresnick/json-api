@@ -70,9 +70,9 @@ function linkageToJSON(linkage) {
   return linkage.value;
 }
 
-function linkObjectToJSON(linkObject, urlTemplates, templateData) {
+function relationshipObjectToJSON(linkObject, urlTemplates, templateData) {
   let result = {
-    "linkage": linkageToJSON(linkObject.linkage)
+    "data": linkageToJSON(linkObject.linkage)
   };
 
   // Add urls that we can.
@@ -113,11 +113,17 @@ function resourceToJSON(resource, urlTemplates) {
     if(selfTemplate) {
       json.links.self = selfTemplate.expand(templateData);
     }
-    for(let path in resource.links) {
+  }
+
+  if(!objectIsEmpty(resource.relationships)) {
+    json.relationships = {};
+
+    for(let path in resource.relationships) {
       let linkTemplateData = {"ownerType": json.type, "ownerId": json.id, "path": path};
-      json.links[path] = linkObjectToJSON(resource.links[path], urlTemplates, linkTemplateData);
+      json.relationships[path] = relationshipObjectToJSON(resource.relationships[path], urlTemplates, linkTemplateData);
     }
   }
+
 
   return json;
 }

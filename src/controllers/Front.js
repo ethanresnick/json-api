@@ -85,12 +85,12 @@ function buildRequestObject(req) {
     let it = new Request();
 
     // Handle route & query params
-    it.queryParams     = req.query;
-    it.allowLabel      = !!(req.params.idOrLabel && !req.params.id);
-    it.idOrIds         = req.params.id || req.params.idOrLabel;
-    it.type            = req.params.type;
-    it.aboutLinkObject = !!req.params.relationship;
-    it.relationship    = req.params.related || req.params.relationship;
+    it.queryParams       = req.query;
+    it.allowLabel        = !!(req.params.idOrLabel && !req.params.id);
+    it.idOrIds           = req.params.id || req.params.idOrLabel;
+    it.type              = req.params.type;
+    it.aboutRelationship = !!req.params.relationship;
+    it.relationship      = req.params.related || req.params.relationship;
 
     // Handle HTTP/Conneg.
     it.uri     = req.protocol + "://" + req.get("Host") + req.originalUrl;
