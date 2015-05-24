@@ -4,7 +4,7 @@
  * following same format. Those getters/setters will take the resource type
  * whose property is being retrieved/set, and the value to set it to, if any.
  */
-const autoGetterSetterProps = ["adapter", "beforeSave", "beforeRender",
+const autoGetterSetterProps = ["dbAdapter", "beforeSave", "beforeRender",
   "labelMappers", "defaultIncludes", "info", "parentType"];
 
 /**

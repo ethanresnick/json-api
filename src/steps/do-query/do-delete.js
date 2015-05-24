@@ -4,7 +4,7 @@ import {mapResources} from "../../util/type-handling";
 
 export default function(request, response, registry) {
   let type    = request.type;
-  let adapter = registry.adapter(type);
+  let adapter = registry.dbAdapter(type);
 
   if(request.aboutLinkObject) {
     if(Array.isArray(request.idOrIds)) {

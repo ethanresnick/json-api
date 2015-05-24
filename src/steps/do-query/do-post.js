@@ -7,7 +7,7 @@ import {forEachResources} from "../../util/type-handling";
 export default function(requestContext, responseContext, registry) {
   let primary = requestContext.primary;
   let type    = requestContext.type;
-  let adapter = registry.adapter(type);
+  let adapter = registry.dbAdapter(type);
 
   // We're going to do an adapter.create, below, EXCEPT if we're adding to
   // an existing toMany relationship, which uses a different adapter method.

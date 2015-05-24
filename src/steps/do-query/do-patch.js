@@ -6,7 +6,7 @@ import Linkage from "../../types/Linkage";
 export default function(requestContext, responseContext, registry) {
   const primary = requestContext.primary;
   const type    = requestContext.type;
-  const adapter = registry.adapter(type);
+  const adapter = registry.dbAdapter(type);
   let changedResourceOrCollection;
 
   if(primary instanceof Collection) {

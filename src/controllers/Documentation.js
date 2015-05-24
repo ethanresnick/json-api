@@ -88,7 +88,7 @@ export default class DocumentationController {
   // Clients can extend this if, say, the adapter can't infer
   // as much info about the models' structure as they would like.
   getTypeInfo(type) {
-    const adapter   = this.registry.adapter(type);
+    const adapter   = this.registry.dbAdapter(type);
     const modelName = adapter.constructor.getModelName(type);
     const model     = adapter.getModel(modelName);
 

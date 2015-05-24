@@ -2,7 +2,7 @@ import Q from "q";
 
 export default function(type, labelOrId, registry, frameworkReq) {
   return Q.Promise(function(resolve, reject) {
-    let adapter      = registry.adapter(type);
+    let adapter      = registry.dbAdapter(type);
     let model        = adapter.getModel(adapter.constructor.getModelName(type));
     let labelMappers = registry.labelMappers(type);
     let labelMapper  = labelMappers && labelMappers[labelOrId];

@@ -3,7 +3,7 @@ import {arrayContains} from "../../util/arrays";
 
 export default function(requestContext, responseContext, registry) {
   let type    = requestContext.type;
-  let adapter = registry.adapter(type);
+  let adapter = registry.dbAdapter(type);
   let fields, sorts, includes, filters;
 
   // Handle fields, sorts, includes and filters.
