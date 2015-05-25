@@ -1,31 +1,34 @@
 import Q from "q";
 import contentType from "content-type";
 import getRawBody from "raw-body";
-import API from "./API";
+import API from "../controllers/API";
 import Request from "../types/HTTP/Request";
 
 /**
- * This controller (or a subclass of it if the user isn't on express) has the
- * job of converting the framework's req, res objects into framework-neutral
- * Request and Response objects, which it then provides to our other controllers
- * (API and Documentation) that do the real work. They generate a Response
- * object, so they're totally shielded from the framework's details, and then
- * this controller turns that into a true response.
+ * This controller receives requests directly from express and sends responses
+ * direclty through it, but it converts incoming requests to, and generates
+ * responses, from Request and Response objects that are defined by this
+ * framework in a way that's not particular to express. This controller thereby
+ * acts as a translation-layer between express and the rest of this json-api
+ * framework.
+ *
+ * @params config An object with a "tunnel" boolean indicating whether to turn
+ * on support for request tunneling.
  */
-export default class FrontController {
-  constructor(apiController, docsController) {
+export default class ExpressStrategy {
+  constructor(apiController, docsController, options = {tunnel: false}) {
     this.api = apiController;
     this.docs = docsController;
+    this.config = options;
   }
 
   // For requests like GET /:type, GET /:type/:id/:relationship,
-  // POST /:type with or without ext=bulk, PATCH /:type/:id,
-  // PATCH /:type with ext=bulk, DELETE /:type/:idOrLabel,
-  // DELETE /:type; ext=bulk, GET /:type/:id/links/:relationship,
+  // POST /:type PATCH /:type/:id, PATCH /:type, DELETE /:type/:idOrLabel,
+  // DELETE /:type, GET /:type/:id/links/:relationship,
   // PATCH /:type/:id/links/:relationship, POST /:type/:id/links/:relationship,
   // and DELETE /:type/:id/links/:relationship.
   apiRequest(req, res, next) {
-    buildRequestObject(req).then((requestObject) => {
+    buildRequestObject(req, this.config.tunnel).then((requestObject) => {
       this.api.handle(requestObject, req, res).then((responseObject) => {
         this.sendResources(responseObject, res);
       });
@@ -36,7 +39,7 @@ export default class FrontController {
 
   // For requests for the documentation.
   docsRequest(req, res, next) {
-    buildRequestObject(req).then((requestObject) => {
+    buildRequestObject(req, this.config.tunnel).then((requestObject) => {
       this.docs.handle(requestObject).then((responseObject) => {
         this.sendResources(responseObject, res);
       });
@@ -77,10 +80,17 @@ export default class FrontController {
       );
     });
   }
+
+  /**
+   * @TODO Uses this ExpressStrategy to create an express app with
+   * preconfigured routes that can be mounted as a subapp.
+   */
+  toApp(typesToExcludedMethods) {
+  }
 }
 
 
-function buildRequestObject(req) {
+function buildRequestObject(req, allowTunneling) {
   return Q.Promise(function(resolve, reject) {
     let it = new Request();
 
@@ -96,6 +106,13 @@ function buildRequestObject(req) {
     it.uri     = req.protocol + "://" + req.get("Host") + req.originalUrl;
     it.method  = req.method.toLowerCase();
     it.accepts = req.headers.accept;
+
+    // Support Verb tunneling, but only for PATCH and only if user turns it on.
+    // Turning on any tunneling automatically could be a security issue.
+    let requestedMethod = req.headers['X-HTTP-Method-Override'].toLowerCase();
+    if(allowTunneling && it.method === "post" && requestedMethod === "patch") {
+      it.method = "patch";
+    }
 
     it.hasBody = hasBody(req);
 
