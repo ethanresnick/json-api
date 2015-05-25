@@ -1,4 +1,5 @@
-import {deleteNested} from "../util/misc";
+import {deleteNested, isPlainObject} from "../util/misc";
+import {arrayValuesMatch} from "../util/arrays";
 
 export default class Resource {
   constructor(type, id, attrs = {}, relationships = {}, meta = {}) {
@@ -36,7 +37,7 @@ export default class Resource {
   }
 
   set attrs(attrs) {
-    validateFieldGroup(attrs);
+    validateFieldGroup(attrs, this._relationships, true);
     this._attrs = attrs;
   }
 
@@ -45,7 +46,7 @@ export default class Resource {
   }
 
   set relationships(relationships) {
-    validateFieldGroup(relationships);
+    validateFieldGroup(relationships, this._attrs);
     this._relationships = relationships;
   }
 
@@ -64,20 +65,51 @@ export default class Resource {
 
 /**
  * Checks that a group of fields (i.e. the attributes or the relationships
- * objects) are provided as objects and that they don't contain `type` and `id`
- * members. Note: this doesn't check that attributes and relationships don't
- * contain the same keys as one another, since it only operates on one group
- * at a time.
+ * objects) are provided as objects and that they don't contain `type` and
+ * `id` members. Also checks that attributes and relationships don't contain
+ * the same keys as one another, and it checks that complex attributes don't
+ * contain "relationships" or "links" members.
  *
- * @throws {Error} If the group isn't an object or it has `type` or `id` keys.
- * @returns void
+ * @param {Object} group The an object of fields (attributes or relationships)
+ *    that the user is trying to add to the Resource.
+ * @param {Object} otherFields The other fields that will still exist on the
+ *    Resource. The new fields are checked against these other fields for
+ *    naming conflicts.
+ * @param {Boolean} isAttributes Whether the `group` points to the attributes
+ *    of the resource. Triggers complex attribute validation.
+ * @return {undefined}
+ * @throws {Error} If the field group is invalid given the other fields.
  */
-function validateFieldGroup(group) {
-  if(typeof group !== "object" || Array.isArray(group)) {
+function validateFieldGroup(group, otherFields, isAttributes) {
+  if(!isPlainObject(group)) {
     throw new Error("Attributes and relationships must be provided as an object.");
   }
 
   if(typeof group.id !== "undefined" || typeof group.type !== "undefined") {
     throw new Error("`type` and `id` cannot be used as attribute or relationship names.");
+  }
+
+  for(let field in group) {
+    if(isAttributes) {
+      validateComplexAttribute(group[field]);
+    }
+
+    if(otherFields !== undefined && typeof otherFields[field] !== "undefined") {
+      throw new Error("A resource can't have an attribute and a relationship with the same name.");
+    }
+  }
+}
+
+function validateComplexAttribute(attrOrAttrPart) {
+  if(isPlainObject(attrOrAttrPart)) {
+    if(typeof attrOrAttrPart.relationships !== "undefined" || typeof attrOrAttrPart.links !== "undefined") {
+      throw new Error('Complex attributes may not have "relationships" or "links" keys.');
+    }
+    for(let key in attrOrAttrPart) {
+      validateComplexAttribute(attrOrAttrPart[key]);
+    }
+  }
+  else if(Array.isArray(attrOrAttrPart)) {
+    attrOrAttrPart.forEach(validateComplexAttribute);
   }
 }

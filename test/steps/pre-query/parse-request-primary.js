@@ -61,14 +61,13 @@ describe("Resource Parser", () => {
         {"type": "people", "id": "1"}, {"type": "people", "id": "2"}
       ];
       const json = {
-        "id": "3", "type": "people", "name": "Ethan",
+        "id": "3", "type": "people",
         "relationships": {
           "parents": { "data": parents }
         }
       };
 
       parsePrimary(json).then((resource) => {
-        console.log('here,', resource)
         expect(resource.relationships.parents).to.be.instanceof(RelationshipObject);
         expect(resource.relationships.parents.linkage).to.be.instanceof(Linkage);
         expect(resource.relationships.parents.linkage.value).to.deep.equal(parents);

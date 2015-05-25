@@ -51,13 +51,33 @@ describe("Resource type", () => {
 
     it("should reject reserved keys as attrs", () => {
       //expect(() => new Resource("type", "id", {"links": "bleh"})).to.throw(/cannot be used as attribute/);
-      expect(() => new Resource("type", "id", {"id": "bleh"})).to.throw(/cannot be used as attribute/);
-      expect(() => new Resource("type", "id", {"type": "bleh"})).to.throw(/cannot be used as attribute/);
+      expect(() =>
+        new Resource("type", "id", {"id": "bleh"})
+      ).to.throw(/cannot be used as attribute/);
+
+      expect(() =>
+        new Resource("type", "id", {"type": "bleh"})
+      ).to.throw(/cannot be used as attribute/);
     });
 
-    it.skip("should reject reserved keys as attrs even in nested objects", () => {
-      expect(()=> new Resource("type", "id", {"valid": {"links": "bb"}})).to.throw(/invalid attribute name/);
-      expect(()=> new Resource("type", "id", {"valid": {"relationships": "bb"}})).to.throw(/invalid attribute name/);
+    it("should reject use of same name for an attribute and a relationship", () => {
+      expect(() =>
+        new Resource("type", "id", {"test": true}, {"test": false})
+      ).to.throw(/relationship.+same name/);
+    });
+
+    it("should reject reserved complex attribute keys at all levels", () => {
+      expect(() =>
+        new Resource("type", "id", {"valid": {"links": "bb"}})
+      ).to.throw(/Complex attributes may not/);
+
+      expect(() =>
+        new Resource("type", "id", {"valid": {"relationships": "bb"}})
+      ).to.throw(/Complex attributes may not/);
+
+      expect(() =>
+        new Resource("type", "id", {"valid": ["a", "b", {"links": true}]})
+      ).to.throw(/Complex attributes may not/);
     });
   });
 });

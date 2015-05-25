@@ -15,6 +15,7 @@ export default function(data, parseAsLinkage) {
       else if(Array.isArray(data)) {
         resolve(new Collection(data.map(resourceFromJSON)));
       }
+
       else {
         resolve(resourceFromJSON(data));
       }
