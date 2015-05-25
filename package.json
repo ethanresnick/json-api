@@ -15,6 +15,7 @@
   "dependencies": {
     "babel": "4.7.x",
     "babel-runtime": "4.7.x",
+    "dasherize": "ethanresnick/dasherize",
     "express": "4.x.x",
     "co": "4.5.x",
     "flat": "^1.2.1",
