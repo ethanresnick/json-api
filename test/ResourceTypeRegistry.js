@@ -26,7 +26,7 @@ describe("ResourceTypeRegistry", function() {
 
   describe("type", () => {
     let description = {
-      adapter: {},
+      dbAdapter: {},
       beforeSave: () => {},
       beforeRender: () => {},
       info: {},
@@ -39,8 +39,8 @@ describe("ResourceTypeRegistry", function() {
   });
 
   describe("adapter", () => {
-    it("should be a getter/setter for a type's adapter",
-      makeGetterSetterTest({"a": "new model"}, "mytypes", "adapter")
+    it("should be a getter/setter for a type's db adapter",
+      makeGetterSetterTest({"a": "new model"}, "mytypes", "dbAdapter")
     );
   });
 

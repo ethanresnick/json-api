@@ -50,14 +50,14 @@ describe("Resource type", () => {
     });
 
     it("should reject reserved keys as attrs", () => {
-      expect(() => new Resource("type", "id", {"links": "bleh"})).to.throw(/invalid attribute name/);
-      expect(() => new Resource("type", "id", {"meta": true})).to.throw(/invalid attribute name/);
-      expect(() => new Resource("type", "id", {"id": "bleh"})).to.throw(/invalid attribute name/);
-      expect(() => new Resource("type", "id", {"type": "bleh"})).to.throw(/invalid attribute name/);
+      //expect(() => new Resource("type", "id", {"links": "bleh"})).to.throw(/cannot be used as attribute/);
+      expect(() => new Resource("type", "id", {"id": "bleh"})).to.throw(/cannot be used as attribute/);
+      expect(() => new Resource("type", "id", {"type": "bleh"})).to.throw(/cannot be used as attribute/);
     });
 
     it.skip("should reject reserved keys as attrs even in nested objects", () => {
-      expect(()=> new Resource("type", "id", {"valid": {"id": "bb"}})).to.throw(/invalid attribute name/);
+      expect(()=> new Resource("type", "id", {"valid": {"links": "bb"}})).to.throw(/invalid attribute name/);
+      expect(()=> new Resource("type", "id", {"valid": {"relationships": "bb"}})).to.throw(/invalid attribute name/);
     });
   });
 });
