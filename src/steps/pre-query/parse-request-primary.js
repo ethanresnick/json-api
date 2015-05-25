@@ -29,7 +29,7 @@ export default function(data, parseAsLinkage) {
 }
 
 function relationshipObjectFromJSON(json) {
-  return new RelationshipObject(linkageFromJSON(json.linkage));
+  return new RelationshipObject(linkageFromJSON(json.data));
 }
 
 function linkageFromJSON(json) {
