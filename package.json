@@ -13,7 +13,7 @@
   },
   "main": "index.js",
   "dependencies": {
-    "babel": "4.7.x",
+    "babel": "5.4.x",
     "babel-runtime": "4.7.x",
     "dasherize": "ethanresnick/dasherize",
     "express": "4.x.x",
@@ -28,7 +28,7 @@
     "negotiator": "0.5.x"
   },
   "devDependencies": {
-    "babel-eslint": "2.x.x",
+    "babel-eslint": "3.x.x",
     "chai": "^1.9.2",
     "eslint": "^0.x.x",
     "gulp": "^3.8.6",

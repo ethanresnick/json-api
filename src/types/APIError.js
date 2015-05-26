@@ -3,6 +3,8 @@ let nonEnumerable = {writable: true, enumerable: false};
 export default class APIError extends Error {
   /*eslint-disable no-unused-vars */
   constructor(status, code, title, detail, links, paths) {
+    super();
+
     // Hack around lack of proxy support and default non-enumerability
     // of class accessor properties, while still giving us validation.
     Object.defineProperty(this, "_status", nonEnumerable);
