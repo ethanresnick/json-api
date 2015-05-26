@@ -1,69 +1,38 @@
-Great to have you here. Here are a few ways you can help make this project better!
+Thanks for helping to improve this project! It’s great to have you here.
 
-## Learn & listen
+Here are a few things to know as you contribute.
 
-This section includes ways to get started with your open source project. Include links to documentation and to different communication channels: 
+## Asking questions and getting help
+The best place to ask your question is in a new issue. You can open one [here](https://github.com/ethanresnick/json-api/issues/new)!
 
-* Mailing list: 
-* IRC channel:  
-* Blog:         
-* Anything else:  
+## Reporting bugs or requesting features
+You can also report bugs or ask for features by [opening an issue](https://github.com/ethanresnick/json-api/issues/new). Before you do, though, _please search the archive to make sure your issue hasn’t already been reported_.
 
-## Adding new features
+When you submit an issue, help provide the following to help me address it:
 
-This section includes advice on how to build new features for the project & what kind of process it includes. 
+### For bug/error reports
+- Steps to reproduce the error.
+- A stack trace for the error being thrown, if any.
+- The version of node and of the json-api library that you’re using.
+- Suggestions for a fix. If you can’t fix the bug yourself, perhaps you can point to what might be causing the problem (i.e. the line of code or commit).
 
-* This is how we like people to add new features:         
-* Here are some specifics on the coding style we prefer:   
-* This is how you send your pull request:                  
-* You should include the following tests:                  
-* These are the updates we hope you make to the changelog: 
+### For feature requests
+- Explain the need you have for the feature and why it can’t be handled with the existing functionality.
 
-Don’t get discouraged! We estimate that the response time from the
-maintainers is around: 
+## Contributing code
 
-# Bug triage
+1. **Forking and Submitting PRs.** After you [fork the repository](https://help.github.com/articles/fork-a-repo/), please make your changes in a [new branch](https://help.github.com/articles/creating-a-pull-request/) and then submit a pull request. This is standard procedure and can all be done through the github website.
 
-This sections explains how bug triaging is done for your project. Help beginners by including examples to good bug reports and providing them questions they should look to answer. 
+2. **Compiling.** This library is written in ES6 (the newest version of Javascript), so it needs to be "compiled" to an earlier version of Javascript to run on Node. This can be done with the `make compile-dev-src` and `make compile-dev-test` commands, which watch the `/src` and `/test` folders respectively and recompile changed files to `/build`. There's also `make compile`, which recompiles the whole repository.
 
-* You can help report bugs by filing them here: 
-* You can look through the existing bugs here: 
+3. **Running tests.** Just run `make test`. The tests are always runs using the files in `/build`, so make sure you've compiled your code. If you're running the tests repeatedly as you develop, the `make compile-dev-src` and `make compile-dev-test` commands mentioned above can really help.
 
-* Look at existing bugs and help us understand if
-** The bug is reproducible? Is it reproducible in other environments (browsers)? What are the steps to reproduce? 
+4. **Code style.** Once you’ve written your code, make sure that it complies with this repository’s style guidelines by running `make lint` from the project’s root directory and fixing any errors that show up.
 
-* You can close fixed bugs by testing old tickets to see if they are
-happening
-* You can update our change log here
-* You can remove duplicate bug reports
+5. **Before you submit.** Before submitting your PR, make sure that all the tests still pass and that you've added tests (in the `/test` directory) to cover your new code. To keep this library reliable, I generally don't accept pull requests with missing or broken tests.
 
-# Translations
+# Documentation, etc.
 
-This section includes any instructions or translation needs your project has. 
+This library is currently documented primarily in the Readme. The [example API](https://github.com/ethanresnick/json-api-example) project can also serve as a useful reference, as can the comments in the code, which are generally thorough.
 
-* You can help us translate our project here: 
-
-# Documentation
-
-This section includes any help you need with the documentation and where it can be found. Code needs explanation, and sometimes those who know the code well have trouble explaining it to someone just getting into it. 
-
-* Help us with documentation here
-
-# Community 
-This section includes ideas on how non-developers can help with the project. Here's a few examples:
-
-* You can help us answer questions our users have here: 
-* You can help build and design our website here:
-* You can help write blog posts about the project by: 
-* You can help with newsletters and internal communications by: 
-
-* Create an example of the project in real world by building something or
-showing what others have built. 
-* Write about other people’s projects based on this project. Show how
-it’s used in daily life. Take screenshots and make videos!
-
-
-# Your first bugfix
-This section should help a person get started with their very first bug fix and thinking through the problem.
-
-* If you have further questions, contact: 
+Help with documentation—or anything else that makes this project easier to use—is always appreciated! Feel free to discuss/submit improvements in an issue or pull request.
