@@ -1,5 +1,4 @@
 import {deleteNested, isPlainObject} from "../util/misc";
-import {arrayValuesMatch} from "../util/arrays";
 
 export default class Resource {
   constructor(type, id, attrs = {}, relationships = {}, meta = {}) {
@@ -29,7 +28,7 @@ export default class Resource {
   }
 
   equals(otherResource) {
-    return this.id === otherResource.id && this.type == otherResource.type;
+    return this.id === otherResource.id && this.type === otherResource.type;
   }
 
   get attrs() {

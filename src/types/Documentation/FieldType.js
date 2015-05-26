@@ -8,6 +8,6 @@ export default class FieldType {
   }
 
   toString() {
-    return (this.isArray ? 'Array[' : '') + this.baseType + (this.isArray ? ']' : '');
+    return (this.isArray ? "Array[" : "") + this.baseType + (this.isArray ? "]" : "");
   }
 }

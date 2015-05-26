@@ -1,6 +1,5 @@
 import Q from "q";
 import {groupResourcesByType} from "../../util/type-handling";
-import {arrayContains} from "../../util/arrays";
 import {isSubsetOf} from "../../util/misc";
 import APIError from "../../types/APIError";
 
@@ -27,12 +26,14 @@ export default function(endpointParentType, resourceOrCollection, registry) {
       for(let type in resourcesByType) {
         let resources = resourcesByType[type];
         let relationshipNames = adapter.getRelationshipNames(type);
+
+        /*eslint-disable no-loop-func */
         let invalid = resources.some((resource) => {
-          let attrNames = Object.keys(resource.attrs);
           return relationshipNames.some((relationshipName) => {
-            return arrayContains(attrNames, relationshipName);
+            return typeof resource.attrs[relationshipName] !== "undefined";
           });
         });
+        /*eslint-enable no-loop-func */
 
         if(invalid) {
           let title = "Relationship fields must be specified under the links key.";

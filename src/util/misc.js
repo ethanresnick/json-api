@@ -35,6 +35,6 @@ export function isSubsetOf(setArr, potentialSubsetArr) {
   return potentialSubsetArr.every((it) =>  set.has(it) === true);
 }
 
-export function isPlainObject(obj){
+export function isPlainObject(obj) {
   return typeof obj === "object" && !(Array.isArray(obj) || obj === null);
-};
+}

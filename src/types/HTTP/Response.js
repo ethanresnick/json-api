@@ -42,4 +42,4 @@ class Response {
   }
 }
 
-export default ValueObject(Response);
+export default ValueObject(Response); // eslint-disable-line new-cap

@@ -41,7 +41,7 @@ describe("Mongoose Adapter", () => {
       it("should use a custom singularizer if provided", () => {
         let singularize = () => "customsingular";
         expect(MongooseAdapter.getModelName("test-models", singularize)).to.equal("TestCustomsingular");
-      })
+      });
     });
 
     describe("getFriendlyName", () => {
@@ -60,7 +60,7 @@ describe("Mongoose Adapter", () => {
         expect(MongooseAdapter.toFriendlyName("ATest")).to.equal("A Test");
         expect(MongooseAdapter.toFriendlyName("isCaseB")).to.equal("Is Case B");
       });
-    })
+    });
   });
 });
 

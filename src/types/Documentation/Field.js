@@ -1,5 +1,3 @@
-import FieldType from "./FieldType";
-
 export default class Field {
   constructor(name, type, validation = {}, friendlyName, defaultVal) {
     // call the property kind to
