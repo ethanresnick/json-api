@@ -251,11 +251,11 @@ export default class MongooseAdapter {
         const newModelName = this.constructor.getModelName(newResource.type, singular);
         if(currentModelName !== newModelName) {
           const newDoc = currDoc.toObject();
-          const newModel = this.getModel(newModelName);
+          const NewModelConstructor = this.getModel(newModelName);
           newDoc[currDoc.constructor.schema.options.discriminatorKey] = newModelName;
 
           // replace the currDoc with our new creation.
-          currDoc = new newModel(newDoc);
+          currDoc = new NewModelConstructor(newDoc);
           currDoc.isNew = false;
         }
 
@@ -403,7 +403,7 @@ export default class MongooseAdapter {
     // https://github.com/Automattic/mongoose/issues/2675
     let attrs = doc.toJSON({virtuals: true});
     delete attrs.id; // from the id virtual.
-    delete attrs["_id"];
+    delete attrs._id;
     delete attrs[schemaOptions.versionKey];
     delete attrs[schemaOptions.discriminatorKey];
 
@@ -482,7 +482,7 @@ export default class MongooseAdapter {
 
   static getModelName(type, singularizer = pluralize.singular) {
     let words = type.split("-");
-    words[words.length-1] = singularizer(words[words.length-1]);
+    words[words.length - 1] = singularizer(words[words.length - 1]);
     return words.map((it) => it.charAt(0).toUpperCase() + it.slice(1)).join("");
   }
 
