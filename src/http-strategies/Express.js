@@ -109,7 +109,7 @@ function buildRequestObject(req, allowTunneling) {
 
     // Support Verb tunneling, but only for PATCH and only if user turns it on.
     // Turning on any tunneling automatically could be a security issue.
-    let requestedMethod = req.headers["X-HTTP-Method-Override"].toLowerCase();
+    let requestedMethod = (req.headers["X-HTTP-Method-Override"] || "").toLowerCase();
     if(allowTunneling && it.method === "post" && requestedMethod === "patch") {
       it.method = "patch";
     }
