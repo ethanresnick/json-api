@@ -1,5 +1,5 @@
 export function arrayUnique(array) {
-  return array.filter((a, b, c) => c.indexOf(a, b+1) < 0);
+  return array.filter((a, b, c) => c.indexOf(a, b + 1) < 0);
 }
 
 export function arrayValuesMatch(array1, array2) {

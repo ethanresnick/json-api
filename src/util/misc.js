@@ -6,7 +6,7 @@
 export function deleteNested(path, object) {
   try {
     let pathParts = path.split(".");
-    let lastPartIndex = pathParts.length-1;
+    let lastPartIndex = pathParts.length - 1;
     let lastPart = pathParts[lastPartIndex];
     let containingParts = pathParts.slice(0, lastPartIndex);
     let container = containingParts.reduce(((obj, part) => obj[part]), object);
@@ -32,7 +32,7 @@ export function deleteNested(path, object) {
 export function isSubsetOf(setArr, potentialSubsetArr) {
   const set = new Set(setArr);
 
-  return potentialSubsetArr.every((it) =>  set.has(it) === true);
+  return potentialSubsetArr.every((it) => set.has(it) === true);
 }
 
 export function isPlainObject(obj) {
