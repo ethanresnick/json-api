@@ -173,16 +173,17 @@ class APIController {
 
   static responseFromExternalError(request, error) {
     let response = new Response();
+    response.status = error.status || error.statusCode || 400;
+    response.body  = (new Document([APIError.fromError(error)])).get(true);
+
     return negotiateContentType(request.accepts, [], supportedExt)
       .then((contentType) => {
         response.contentType = contentType;
-        response.status = error.status || error.statusCode || 400;
-        response.body  = (new Document([APIError.fromError(error)])).get(true);
-
         return response;
       }, () => {
-        // even if we had an error, return the response.
-        // it just won't have a content-type.
+        // if we couldn't find any acceptable content-type,
+        // just ignore the accept header, as http allows.
+        response.contentType = "application/vnd.api+json";
         return response;
       }
     );
