@@ -555,7 +555,7 @@ export default class MongooseAdapter {
       };
 
       type.validators.forEach((validator) => {
-        Object.assign(validationRules, validator[0].JSONAPIDocumentation);
+        Object.assign(validationRules, validator.JSONAPIDocumentation);
       });
 
       schemaFields.push(new FieldDocumentation(

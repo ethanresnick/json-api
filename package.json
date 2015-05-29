@@ -34,11 +34,12 @@
     "gulp": "^3.8.6",
     "istanbul": "0.3.x",
     "mocha": "2.2.x",
+    "mongoose": "4.0.x",
     "sinon": "1.10.2",
     "supertest": "^0.13.0"
   },
   "peerDependencies": {
-    "mongoose": ">= 3.6 < 4"
+    "mongoose": "4.0.x"
   },
   "scripts": {
     "prepublish": "make compile",
