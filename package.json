@@ -20,6 +20,7 @@
     "co": "4.5.x",
     "flat": "^1.2.1",
     "jade": "1.5.x",
+    "negotiator": "ethanresnick/negotiator#full-parse-access",
     "pluralize": "0.0.11",
     "q": "^1.0.1",
     "url-template": "^2.0.4",
