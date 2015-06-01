@@ -14,3 +14,8 @@ beforeEach((done) => {
     }).done();
   });
 });*/
+
+// Trigger other tests
+import contentNegotiation from "./content-negotiation";
+import fetchCollection from "./fetch-collection";
+import createResource from "./create-resource";
