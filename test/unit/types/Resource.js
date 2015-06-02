@@ -1,7 +1,5 @@
-import chai from "chai";
-import Resource from "../../src/types/Resource";
-
-let expect = chai.expect;
+import {expect} from "chai";
+import Resource from "../../../src/types/Resource";
 
 describe("Resource type", () => {
   describe("validation", () => {
@@ -38,10 +36,11 @@ describe("Resource type", () => {
     });
 
     it("should reject non-object attrs", () => {
+      // allow construction with no/empty attributes, though
       let valid  = new Resource("type", "id");
-      /*eslint-disable no-unused-vars */
-      let valid2 = new Resource("pyt", "id", {});
-      /*eslint-enable */
+      let valid2 = new Resource("pyt", "id", {}); //eslint-disable-line no-unused-vars
+
+      // just don't allow setting attributes to a non-object.
       expect(() => new Resource("type", "id", ["attrs"])).to.throw(/must.*object/);
       expect(() => new Resource("type", "id", "atts")).to.throw(/must.*object/);
       expect(() => valid.attrs = "").to.throw(/must.*object/);
@@ -50,7 +49,6 @@ describe("Resource type", () => {
     });
 
     it("should reject reserved keys as attrs", () => {
-      //expect(() => new Resource("type", "id", {"links": "bleh"})).to.throw(/cannot be used as attribute/);
       expect(() =>
         new Resource("type", "id", {"id": "bleh"})
       ).to.throw(/cannot be used as attribute/);
