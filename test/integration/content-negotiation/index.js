@@ -1,4 +1,3 @@
-import mocha from "mocha";
 import {expect} from "chai";
 import AgentPromise from "../../app/agent";
 import {VALID_ORG_RESOURCE_NO_ID} from "../fixtures/creation";
@@ -14,7 +13,7 @@ AgentPromise.then((Agent) => {
         .type("application/vnd.api+json;ext=blah")
         .send({"data": VALID_ORG_RESOURCE_NO_ID})
         .promise()
-        .then((res) => {
+        .then(() => {
           done(new Error("Should not run!"));
         }, (err) => {
           expect(err.status).to.equal(415);
@@ -42,8 +41,8 @@ AgentPromise.then((Agent) => {
       Agent.request("GET", "/organizations/unknown-id")
         .accept("text/html")
         .promise()
-        .then((res) => {
-          done(new Error("Should not run, since this request should be a 404"))
+        .then(() => {
+          done(new Error("Should not run, since this request should be a 404"));
         }, (err) => {
           expect(err.response.headers["content-type"]).to.equal("application/vnd.api+json");
           done();

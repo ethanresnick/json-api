@@ -1,9 +1,9 @@
 import chai from "chai";
-import parsePrimary from "../../../src/steps/pre-query/parse-request-primary";
-import Resource from "../../../src/types/Resource";
-import Collection from "../../../src/types/Collection";
-import Linkage from "../../../src/types/Linkage";
-import RelationshipObject from "../../../src/types/RelationshipObject";
+import parsePrimary from "../../../../src/steps/pre-query/parse-request-primary";
+import Resource from "../../../../src/types/Resource";
+import Collection from "../../../../src/types/Collection";
+import Linkage from "../../../../src/types/Linkage";
+import RelationshipObject from "../../../../src/types/RelationshipObject";
 
 const expect = chai.expect;
 

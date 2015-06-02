@@ -1,7 +1,7 @@
-"use strict";
-var mongoose   = require('mongoose')
-  , ObjectId   = mongoose.Schema.Types.ObjectId
-  , utils      = require('../lib/utils');
+import mongoose from "mongoose";
+import utils from "../lib/utils";
+
+const ObjectId = mongoose.Schema.Types.ObjectId;
 
 function OrganizationSchema() {
   mongoose.Schema.apply(this, arguments);
@@ -13,13 +13,13 @@ function OrganizationSchema() {
     description: {
       type: String
     },
-    liaisons: [{ref:'Person', type: ObjectId}]
+    liaisons: [{ref: "Person", type: ObjectId}]
   });
 }
 
 utils.inherit(OrganizationSchema, mongoose.Schema);
 
-var schema = new OrganizationSchema();
-var model = mongoose.model('Organization', schema);
+const schema = new OrganizationSchema();
+const model = mongoose.model("Organization", schema);
 
-module.exports = {'model': model, schema: OrganizationSchema};
+export default {"model": model, schema: OrganizationSchema};

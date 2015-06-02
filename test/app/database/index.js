@@ -1,21 +1,21 @@
 import Q from "q";
 import mongoose from "mongoose";
 import fixtures from "node-mongoose-fixtures";
+import OrganizationModelSchema from "./models/organization";
 
 const ObjectId = mongoose.Types.ObjectId;
-const govtId = ObjectId("54419d550a5069a2129ef254")
+const govtId = ObjectId("54419d550a5069a2129ef254");
 const smithId = ObjectId("53f54dd98d1e62ff12539db2");
 const doeId = ObjectId("53f54dd98d1e62ff12539db3");
 
-var OrganizationModelSchema = require('./models/organization')
-  , OrganizationModel       = OrganizationModelSchema.model
-  , OrganizationSchema      = OrganizationModelSchema.schema;
+const OrganizationModel = OrganizationModelSchema.model;
+const OrganizationSchema = OrganizationModelSchema.schema;
 
-var models = {
-  Person: require('./models/person'),
+const models = {
+  Person: require("./models/person"),
   Organization: OrganizationModel,
-  School: require('./models/school')(OrganizationModel, OrganizationSchema)
-}
+  School: require("./models/school")(OrganizationModel, OrganizationSchema)
+};
 
 fixtures.save("all", {
   Person: [
@@ -52,5 +52,5 @@ export default Q.ninvoke(mongoose, "connect", "mongodb://localhost/integation-te
           return Q.nfcall(fixtures, "all");
         });
       }
-    }
+    };
   });

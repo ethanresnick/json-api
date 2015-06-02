@@ -1,8 +1,5 @@
-import mocha from "mocha";
 import {expect} from "chai";
 import AgentPromise from "../../app/agent";
-import {VALID_ORG_RESOURCE_NO_ID} from "../fixtures/creation";
-import {VALID_ORG_STATE_GOVT_PATCH} from "../fixtures/updates";
 
 describe("", (describeDone) => {
   AgentPromise.then((Agent) => {
@@ -32,7 +29,7 @@ describe("", (describeDone) => {
                 expect(res.body.links.self).to.match(/\:\d{1,5}\/organizations/);
                 done();
               });
-            })
+            });
 
             describe("Resource Objects/Primary Data", () => {
               // "A logical collection of resources MUST be represented as

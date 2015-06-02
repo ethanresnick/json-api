@@ -1,15 +1,12 @@
-'use strict';
-var mongoose   = require('mongoose');
-  
-module.exports = function(Organization, OrganizationSchema) {
-  //School extends Organization, 
+export default function(Organization, OrganizationSchema) {
+  //School extends Organization,
   //adding the following properties
-  var schema = new OrganizationSchema({
+  const schema = new OrganizationSchema({
     isCollege: Boolean
   });
 
   schema.statics.findCollegeIds = function() {
-    return this.find({isCollege: true}, '_id').lean().exec()
+    return this.find({isCollege: true}, "_id").lean().exec()
       .then(function(members) {
         if(!members.length) {
           return undefined;
@@ -23,5 +20,5 @@ module.exports = function(Organization, OrganizationSchema) {
       });
   };
 
-  return Organization.discriminator('School', schema);
-};
+  return Organization.discriminator("School", schema);
+}

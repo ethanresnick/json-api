@@ -1,7 +1,5 @@
-import chai from "chai";
-import APIError from "../../src/types/APIError";
-
-let expect = chai.expect;
+import {expect} from "chai";
+import APIError from "../../../src/types/APIError";
 
 describe("Error Objects", () => {
   describe("validation", () => {

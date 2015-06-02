@@ -13,7 +13,7 @@ describe("negotiateContentType", () => {
       expect(err.status).to.equal("406");
       done();
     }).done();
-  })
+  });
 
   it("should allow parameterized json api media ranges as long as not all are parameterized", (done) => {
     let accept = 'application/vnd.api+json; ext="ext2",application/vnd.api+json';
@@ -28,7 +28,7 @@ describe("negotiateContentType", () => {
   });
 
   it("should resolve with a non-json-api type when its the highest priority + supported by the endpoint", (done) => {
-    let accept = 'text/html,application/vnd.api+json;q=0.5,application/json';
+    let accept = "text/html,application/vnd.api+json;q=0.5,application/json";
     negotiate(accept, ["application/vnd.api+json", "text/html"]).then((contentType) => {
       if(contentType === "text/html") {
         done();
@@ -40,7 +40,7 @@ describe("negotiateContentType", () => {
   });
 
   it("should resolve with json-api type if that's the highest priority, even if the endpoint supports an alternative", (done) => {
-    let accept = 'application/vnd.api+json,application/json,text/*';
+    let accept = "application/vnd.api+json,application/json,text/*";
     negotiate(accept, ["application/vnd.api+json", "text/html"]).then((contentType) => {
       if(contentType === "application/vnd.api+json") {
         done();

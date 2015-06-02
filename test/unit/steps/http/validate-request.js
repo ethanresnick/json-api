@@ -1,8 +1,6 @@
-import chai from "chai";
+import {expect} from "chai";
 import Q from "q";
-import * as requestValidators from "../../../src/steps/http/validate-request";
-
-let expect = chai.expect;
+import * as requestValidators from "../../../../src/steps/http/validate-request";
 
 describe("Request Validation functions", () => {
   describe("checkBodyExistence", () => {
@@ -39,40 +37,6 @@ describe("Request Validation functions", () => {
     it("should resolve the promise when body is expectedly absent", (done) => {
       let contextMock = {hasBody: false, needsBody: false};
       requestValidators.checkBodyExistence(contextMock).then(done);
-    });
-  });
-
-  describe("checkContentType", () => {
-    let invalidMock = {contentType: "application/json", ext: []};
-    let validMock   = {contentType: "application/vnd.api+json", ext: []};
-
-    it("should return a promise", () => {
-      expect(Q.isPromise(requestValidators.checkContentType(validMock))).to.be.true;
-    });
-
-    it("should fail resquests with invalid content types with a 415", (done) => {
-      requestValidators.checkContentType(invalidMock, [])
-        .then(
-          () => { done(new Error("This shouldn't run!")); },
-          (err) => { if(err.status==="415") { done(); } }
-        );
-    });
-
-    it("should allow requests with no extensions", (done) => {
-      requestValidators.checkContentType(validMock, ["ext1", "ext2"]).then(done);
-    });
-
-    it("should allow requests with supported extensions", (done) => {
-      let contextMock = {contentType: "application/vnd.api+json", ext: ["bulk"]};
-      requestValidators.checkContentType(contextMock, ["bulk"]).then(done);
-    });
-
-    it("should reject requests for unsupported extensions with a 415", (done) => {
-      let contextMock = {contentType: "application/vnd.api+json", ext: ["bulk"]};
-      requestValidators.checkContentType(contextMock, ["ext1", "ext2"]).then(
-        () => { done(new Error("This shouldn't run!")); },
-        (err) => { if(err.status==="415") { done(); } }
-      );
     });
   });
 });

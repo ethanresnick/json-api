@@ -1,7 +1,6 @@
-import mocha from "mocha";
 import {expect} from "chai";
 import AgentPromise from "../../app/agent";
-import {VALID_ORG_RESOURCE_NO_ID, ORG_RESOURCE_CLIENT_ID, VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER} from "../fixtures/creation";
+import {ORG_RESOURCE_CLIENT_ID, VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER} from "../fixtures/creation";
 
 describe("", (describeDone) => {
   AgentPromise.then((Agent) => {

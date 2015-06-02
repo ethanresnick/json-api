@@ -2,7 +2,6 @@ import Q from "q";
 import contentTypeParser from "content-type";
 import APIError from "../../../types/APIError";
 import {objectIsEmpty} from "../../../util/type-handling";
-import {arrayValuesMatch} from "../../../util/arrays";
 
 export default function validateContentType(requestContext, supportedExt) {
   return Q.Promise(function(resolve, reject) {
