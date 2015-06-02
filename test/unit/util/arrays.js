@@ -1,7 +1,5 @@
-import chai from "chai";
-import * as utils from "../../src/util/arrays";
-
-let expect = chai.expect;
+import {expect} from "chai";
+import * as utils from "../../../src/util/arrays";
 
 describe("Utility methods", () => {
   describe("arrayUnique", () => {

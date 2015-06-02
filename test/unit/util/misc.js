@@ -1,7 +1,5 @@
-import chai from "chai";
-import * as utils from "../../src/util/misc";
-
-let expect = chai.expect;
+import {expect} from "chai";
+import * as utils from "../../../src/util/misc";
 
 describe("Utility methods", () => {
   describe("deleteNested", () => {

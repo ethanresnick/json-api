@@ -1,5 +1,5 @@
 import chai from "chai";
-import ResourceTypeRegistry from "../src/ResourceTypeRegistry";
+import ResourceTypeRegistry from "../../src/ResourceTypeRegistry";
 
 let expect = chai.expect;
 let registry = {};

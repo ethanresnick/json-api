@@ -1,10 +1,8 @@
-import chai from "chai";
+import {expect} from "chai";
 import sinon from "sinon";
-import Resource from "../../../src/types/Resource";
-import Collection from "../../../src/types/Collection";
-import MongooseAdapter from "../../../src/adapters/Mongoose/MongooseAdapter";
-
-const expect = chai.expect;
+import Resource from "../../../../src/types/Resource";
+import Collection from "../../../../src/types/Collection";
+import MongooseAdapter from "../../../../src/db-adapters/Mongoose/MongooseAdapter";
 
 describe("Mongoose Adapter", () => {
   describe("its static methods", () => {
