@@ -1,7 +1,7 @@
 import mocha from "mocha";
 import {expect} from "chai";
 import AgentPromise from "../../app/agent";
-import {VALID_ORG_RESOURCE_NO_ID, VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER} from "../fixtures/creation";
+import {VALID_ORG_RESOURCE_NO_ID, ORG_RESOURCE_CLIENT_ID, VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER} from "../fixtures/creation";
 
 describe("", (describeDone) => {
   AgentPromise.then((Agent) => {
@@ -12,7 +12,7 @@ describe("", (describeDone) => {
       .then((res) => {
         const createdResource = res.body.data;
 
-        describe("Creating Resource", () => {
+        describe("Creating a Valid Resource (With an Extra Member)", () => {
           describe("HTTP", () => {
             it("should return 201", (done) => {
               expect(res.status).to.equal(201);
@@ -66,6 +66,34 @@ describe("", (describeDone) => {
       }, describeDone);
   }).catch(describeDone);
 });
+
+describe("", (describeDone) => {
+  AgentPromise.then((Agent) => {
+    Agent.request("POST", "/organizations")
+      .type("application/vnd.api+json")
+      .send({"data": ORG_RESOURCE_CLIENT_ID})
+      .promise()
+      .then(() => { throw new Error("Should not run!"); }, (err) => {
+        describe("Creating a Resource With A Client-Id", () => {
+          describe("HTTP", () => {
+            it("should return 403", (done) => {
+              expect(err.response.status).to.equal(403);
+              done();
+            });
+          });
+
+          describe("Document Structure", () => {
+            it("should contain an error", (done) => {
+              expect(err.response.body.errors).to.be.an.object;
+              done();
+            });
+          });
+        });
+        describeDone();
+      }, describeDone);
+  }).catch(describeDone);
+});
+
     // "[S]erver implementations MUST ignore
     //  [members] not recognized by this specification."
     /*it("must ignore unrecognized request object members", (done) => {
