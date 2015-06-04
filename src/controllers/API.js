@@ -127,20 +127,7 @@ class APIController {
       // or the user couldn't throw an APIError for compatibility with other code.
       catch (errors) {
         let errorsArr = Array.isArray(errors) ? errors : [errors];
-        let apiErrors = errorsArr.map((it) => {
-          if(it instanceof APIError) {
-            return it;
-          }
-          else {
-            const status = it.status || it.statusCode || 500;
-            // if the user can't throw an APIError instance but wants to signal
-            // that their specific error message should be used, let them do so.
-            const message = it.isJSONAPIDisplayReady ? it.message :
-              "An unknown error occurred while trying to process this request.";
-
-            return new APIError(status, undefined, message);
-          }
-        });
+        let apiErrors = errorsArr.map(APIError.fromError);
 
         // Leave the error response's content type as JSON if we negotiated
         // for that, but otherwise force it to JSON API, since that's the only
@@ -157,9 +144,7 @@ class APIController {
       // If we have errors, which could have come from prior steps not just
       // throwing, return here and don't bother with transforms.
       if(response.errors.length) {
-        response.status = pickStatus(response.errors.map(
-          (v) => Number(v.status)
-        ));
+        response.status = pickStatus(response.errors.map((v) => Number(v.status)));
         response.body = new Document(response.errors).get(true);
         return response;
       }
@@ -186,8 +171,9 @@ class APIController {
 
   static responseFromExternalError(request, error) {
     let response = new Response();
-    response.status = error.status || error.statusCode || 400;
-    response.body  = (new Document([APIError.fromError(error)])).get(true);
+    response.errors = [APIError.fromError(error)];
+    response.status = pickStatus(response.errors.map((v) => Number(v.status)));
+    response.body = new Document(response.errors).get(true);
 
     return negotiateContentType(request.accepts, ["application/vnd.api+json"])
       .then((contentType) => {

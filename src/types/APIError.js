@@ -48,11 +48,20 @@ export default class APIError extends Error {
    * all kinds of crap).
    */
   static fromError(err) {
+    if(err instanceof APIError) {
+      return err;
+    }
+
+    const title = err.title
+      || (it.isJSONAPIDisplayReady && err.message)
+      || "An unknown error occurred while trying to process this request.";
+
+    // most of the args below will probably be null/undefined, but that's fine.
     return new APIError(
       err.status || err.statusCode || 500,
-      err.code,     // most of the parameters below
-      err.title,    // will probably be null/undefined,
-      err.message,  // but that's fine.
+      err.code,
+      title,
+      err.message || err.details,
       err.links,
       err.paths
     );
