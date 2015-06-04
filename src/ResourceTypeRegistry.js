@@ -58,12 +58,14 @@ export default class ResourceTypeRegistry {
 
     switch(arguments.length) {
       case 1:
-        return this._resourceTypes[type].urlTemplates;
+        return this._resourceTypes[type].urlTemplates
+          ? Object.assign({}, this._resourceTypes[type].urlTemplates)
+          : this._resourceTypes[type].urlTemplates;
 
       case 0:
         let templates = {};
-        for(let type in this._resourceTypes) {
-          templates[type] = Object.assign({}, this._resourceTypes[type].urlTemplates || {});
+        for(let currType in this._resourceTypes) {
+          templates[currType] = this.urlTemplates(currType);
         }
         return templates;
 
