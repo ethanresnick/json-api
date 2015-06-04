@@ -128,18 +128,17 @@ function buildRequestObject(req, allowTunneling) {
     if(allowTunneling && it.method === "post" && requestedMethod === "patch") {
       it.method = "patch";
     }
+    else if(requestedMethod) {
+      reject(new Error(`Cannot tunnel to the method "${requestedMethod}".`));
+    }
 
     it.hasBody = hasBody(req);
 
     if(it.hasBody) {
+      it.contentType  = req.headers["content-type"];
       let typeParsed = contentType.parse(req);
+
       let bodyParserOptions = {};
-
-      it.contentType  = typeParsed.type;
-      if(typeParsed.parameters.ext) {
-        it.ext = typeParsed.parameters.ext.split(",");
-      }
-
       bodyParserOptions.encoding = typeParsed.parameters.charset || "utf8";
       bodyParserOptions.limit = "1mb";
       if(req.headers["content-length"] && !isNaN(req.headers["content-length"])) {
