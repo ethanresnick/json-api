@@ -16,15 +16,6 @@ var _appDatabase = require("../app/database");
 
 var _appDatabase2 = _interopRequireDefault(_appDatabase);
 
-/*
-beforeEach((done) => {
-  Db.then((module) => {
-    module.fixturesReset().then((data) => {
-      done();
-    }).done();
-  });
-});*/
-
 // Trigger other tests
 
 var _contentNegotiation = require("./content-negotiation");
@@ -42,3 +33,11 @@ var _createResource2 = _interopRequireDefault(_createResource);
 process.env.TESTING = true;
 
 _q2["default"].longStackSupport = true;
+
+before(function (done) {
+  _appDatabase2["default"].then(function (module) {
+    module.fixturesReset().then(function (data) {
+      done();
+    }).done();
+  });
+});
