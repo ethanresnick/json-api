@@ -25,10 +25,10 @@ Check out the [full, working example repo](http://github.com/ethanresnick/json-a
   };
 
   var registry = new API.ResourceTypeRegistry();
-  var adapter = new API.adapters.Mongoose(models);
+  var adapter = new API.dbAdapters.Mongoose(models);
 
   registry.type("people", {
-    adapter: adapter,
+    dbAdapter: adapter,
     urlTemplates: {
       "self": "/people/{id}"
     }
@@ -45,7 +45,7 @@ Check out the [full, working example repo](http://github.com/ethanresnick/json-a
 
   // Set up our controllers
   var APIController = new API.controllers.API(registry);
-  var Front = new API.controllers.Front(APIController, DocsController);
+  var Front = new API.httpStrategies.Express(APIController, DocsController);
   var requestHandler = Front.apiRequest.bind(Front);
 
   // Add routes for basic list, read, create, update, delete operations
@@ -56,9 +56,9 @@ Check out the [full, working example repo](http://github.com/ethanresnick/json-a
   app.delete("/:type(people|places)/:id", requestHandler);
 
   // Add routes for adding to, removing from, or updating resource relationships
-  app.post("/:type(people|places)/:id/links/:relationship", requestHandler);
-  app.patch("/:type(people|places)/:id/links/:relationship", requestHandler);
-  app.delete("/:type(people|places)/:id/links/:relationship", requestHandler);
+  app.post("/:type(people|places)/:id/relationships/:relationship", requestHandler);
+  app.patch("/:type(people|places)/:id/relationships/:relationship", requestHandler);
+  app.delete("/:type(people|places)/:id/relationships/:relationship", requestHandler);
 
 
   app.listen(3000);
