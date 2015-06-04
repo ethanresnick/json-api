@@ -1,13 +1,16 @@
 "use strict";
 
-var _core = require("babel-runtime/core-js")["default"];
+var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
+
+var _Number$isNaN = require("babel-runtime/core-js/number/is-nan")["default"];
+
+_Object$defineProperty(exports, "__esModule", {
+  value: true
+});
 
 exports.arrayUnique = arrayUnique;
 exports.arrayValuesMatch = arrayValuesMatch;
 exports.arrayContains = arrayContains;
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
 
 function arrayUnique(array) {
   return array.filter(function (a, b, c) {
@@ -20,9 +23,9 @@ function arrayValuesMatch(array1, array2) {
 }
 
 function arrayContains(arr, value) {
-  if (!_core.Number.isNaN(value)) {
+  if (!_Number$isNaN(value)) {
     return arr.indexOf(value) !== -1;
   } else {
-    return arr.some(_core.Number.isNaN) === true;
+    return arr.some(_Number$isNaN) === true;
   }
 }

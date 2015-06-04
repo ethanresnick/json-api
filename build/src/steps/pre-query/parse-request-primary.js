@@ -1,59 +1,71 @@
 "use strict";
 
-var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
+var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
 
-var Q = _interopRequire(require("q"));
+var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
 
-var APIError = _interopRequire(require("../../types/APIError"));
+_Object$defineProperty(exports, "__esModule", {
+  value: true
+});
 
-var Resource = _interopRequire(require("../../types/Resource"));
+var _q = require("q");
 
-var LinkObject = _interopRequire(require("../../types/LinkObject"));
+var _q2 = _interopRequireDefault(_q);
 
-var Linkage = _interopRequire(require("../../types/Linkage"));
+var _typesAPIError = require("../../types/APIError");
 
-var Collection = _interopRequire(require("../../types/Collection"));
+var _typesAPIError2 = _interopRequireDefault(_typesAPIError);
 
-module.exports = function (data, parseAsLinkage) {
-  return Q.Promise(function (resolve, reject) {
+var _typesResource = require("../../types/Resource");
+
+var _typesResource2 = _interopRequireDefault(_typesResource);
+
+var _typesRelationshipObject = require("../../types/RelationshipObject");
+
+var _typesRelationshipObject2 = _interopRequireDefault(_typesRelationshipObject);
+
+var _typesLinkage = require("../../types/Linkage");
+
+var _typesLinkage2 = _interopRequireDefault(_typesLinkage);
+
+var _typesCollection = require("../../types/Collection");
+
+var _typesCollection2 = _interopRequireDefault(_typesCollection);
+
+exports["default"] = function (data, parseAsLinkage) {
+  return _q2["default"].Promise(function (resolve, reject) {
     try {
       if (parseAsLinkage) {
         resolve(linkageFromJSON(data));
       } else if (Array.isArray(data)) {
-        resolve(new Collection(data.map(resourceFromJSON)));
+        resolve(new _typesCollection2["default"](data.map(resourceFromJSON)));
       } else {
         resolve(resourceFromJSON(data));
       }
     } catch (error) {
       var title = "The resources you provided could not be parsed.";
       var details = "The precise error was: \"" + error.message + "\".";
-      reject(new APIError(400, undefined, title, details));
+      reject(new _typesAPIError2["default"](400, undefined, title, details));
     }
   });
 };
 
-function linkObjectFromJSON(json) {
-  return new LinkObject(linkageFromJSON(json.linkage));
+function relationshipObjectFromJSON(json) {
+  return new _typesRelationshipObject2["default"](linkageFromJSON(json.data));
 }
 
 function linkageFromJSON(json) {
-  return new Linkage(json);
+  return new _typesLinkage2["default"](json);
 }
 
 function resourceFromJSON(json) {
-  // save and then remove the non-attrs
-  var id = json.id;delete json.id;
-  var type = json.type;delete json.type;
-  var links = json.links || {};delete json.links;
-  var meta = json.meta;delete json.meta;
+  var relationships = json.relationships || {};
 
-  // attrs are all the fields that are left.
-  var attrs = json.attributes;
-
-  //build LinkObjects
-  for (var key in links) {
-    links[key] = linkObjectFromJSON(links[key]);
+  //build RelationshipObjects
+  for (var key in relationships) {
+    relationships[key] = relationshipObjectFromJSON(relationships[key]);
   }
 
-  return new Resource(type, id, attrs, links, meta);
+  return new _typesResource2["default"](json.type, json.id, json.attributes, relationships, json.meta);
 }
+module.exports = exports["default"];

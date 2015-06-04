@@ -2,7 +2,13 @@
 
 var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default"];
 
-var ValueObject = require("../../util/type-handling").ValueObject;
+var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
+
+_Object$defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _utilTypeHandling = require("../../util/type-handling");
 
 var Request = function Request() {
   _classCallCheck(this, Request);
@@ -17,7 +23,7 @@ var Request = function Request() {
 
   // The json of the body. Have to use Object.defineProperty to default
   // it to undefined while still allowing us to change it post seal().
-  Object.defineProperty(this, "body", { writable: true, enumerable: true });
+  _Object$defineProperty(this, "body", { writable: true, enumerable: true });
 
   // The HTTP method for the request.
   this.method = null;
@@ -53,11 +59,12 @@ var Request = function Request() {
   // "author" part in the example /people/1/author request noted above.
   this.relationship = null;
 
-  // Whether the target of the request is a link object, as opposed to a
-  // resource object or collection. This affects how incoming data is parsed.
-  // Note: the body of the request will be Linkage rather than LinkObjects, in
-  // the same way that POSTs targeting a collection include a single resource.
-  this.aboutLinkObject = false;
+  // Whether the target of the request is a relationship (object), as opposed
+  // to a resource object or collection. This effects how incoming data is
+  // parsed. Note: the body of the request will be Linkage rather than
+  // RelationshipObjects, in the same way that POSTs targeting a collection
+  // include a single resource.
+  this.aboutRelationship = false;
 
   // Any primary data included in the request's body.
   // Necessary for creating and updating our resources.
@@ -67,4 +74,6 @@ var Request = function Request() {
   this.queryParams = {};
 };
 
-module.exports = ValueObject(Request);
+exports["default"] = (0, _utilTypeHandling.ValueObject)(Request);
+// eslint-disable-line new-cap
+module.exports = exports["default"];

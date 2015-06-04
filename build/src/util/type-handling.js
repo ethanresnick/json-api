@@ -1,4 +1,28 @@
+"use strict";
 
+var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
+
+var _Object$seal = require("babel-runtime/core-js/object/seal")["default"];
+
+var _Object$assign = require("babel-runtime/core-js/object/assign")["default"];
+
+var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
+
+_Object$defineProperty(exports, "__esModule", {
+  value: true
+});
+
+exports.ValueObject = ValueObject;
+exports.objectIsEmpty = objectIsEmpty;
+exports.mapObject = mapObject;
+exports.mapResources = mapResources;
+exports.forEachResources = forEachResources;
+exports.groupResourcesByType = groupResourcesByType;
+exports.forEachArrayOrVal = forEachArrayOrVal;
+
+var _typesCollection = require("../types/Collection");
+
+var _typesCollection2 = _interopRequireDefault(_typesCollection);
 
 /**
  * Takes in a constructor function that takes no arguments and returns a new one
@@ -7,30 +31,6 @@
  * input constructor function immediately post-creation. Then the object will be
  * sealed so that no properties can be added or deleted--a nice sanity check.
  */
-"use strict";
-
-var _core = require("babel-runtime/core-js")["default"];
-
-var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
-
-exports.ValueObject = ValueObject;
-exports.objectIsEmpty = objectIsEmpty;
-exports.mapObject = mapObject;
-
-/**
- * If `resourceOrCollection` is a collection, it applies `mapFn` to each of
- * its resources; otherwise, if `resourceOrCollection` is a single resource,
- * it applies `mapFn` just to that resource. This abstracts a common pattern.
- */
-exports.mapResources = mapResources;
-exports.forEachResources = forEachResources;
-exports.groupResourcesByType = groupResourcesByType;
-exports.forEachArrayOrVal = forEachArrayOrVal;
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var Collection = _interopRequire(require("../types/Collection"));
 
 function ValueObject(ConstructorFn) {
   return function (initialValues) {
@@ -48,22 +48,20 @@ function ValueObject(ConstructorFn) {
 
     // Object.seal prevents any other properties from being added to the object.
     // Every property an object needs should be set by the original constructor.
-    return _core.Object.seal(obj);
+    return _Object$seal(obj);
   };
 }
 
 function objectIsEmpty(obj) {
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   for (var key in obj) {
-    if (hasOwnProperty.call(obj, key)) {
-      return false;
-    }
+    if (hasOwnProperty.call(obj, key)) return false;
   }
   return true;
 }
 
 function mapObject(obj, mapFn) {
-  var mappedObj = _core.Object.assign({}, obj);
+  var mappedObj = _Object$assign({}, obj);
 
   for (var key in mappedObj) {
     mappedObj[key] = mapFn(obj[key]);
@@ -72,8 +70,14 @@ function mapObject(obj, mapFn) {
   return mappedObj;
 }
 
+/**
+ * If `resourceOrCollection` is a collection, it applies `mapFn` to each of
+ * its resources; otherwise, if `resourceOrCollection` is a single resource,
+ * it applies `mapFn` just to that resource. This abstracts a common pattern.
+ */
+
 function mapResources(resourceOrCollection, mapFn) {
-  if (resourceOrCollection instanceof Collection) {
+  if (resourceOrCollection instanceof _typesCollection2["default"]) {
     return resourceOrCollection.resources.map(mapFn);
   } else {
     return mapFn(resourceOrCollection);
@@ -82,7 +86,7 @@ function mapResources(resourceOrCollection, mapFn) {
 
 function forEachResources(resourceOrCollection, eachFn) {
   /*eslint-disable no-unused-expressions */
-  if (resourceOrCollection instanceof Collection) {
+  if (resourceOrCollection instanceof _typesCollection2["default"]) {
     resourceOrCollection.resources.forEach(eachFn);
   } else {
     return eachFn(resourceOrCollection);
@@ -92,7 +96,7 @@ function forEachResources(resourceOrCollection, eachFn) {
 
 function groupResourcesByType(resourceOrCollection) {
   var resourcesByType = {};
-  if (resourceOrCollection instanceof Collection) {
+  if (resourceOrCollection instanceof _typesCollection2["default"]) {
     resourceOrCollection.resources.forEach(function (it) {
       resourcesByType[it.type] = resourcesByType[it.type] || [];
       resourcesByType[it.type].push(it);

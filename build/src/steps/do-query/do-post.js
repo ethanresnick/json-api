@@ -1,29 +1,43 @@
 "use strict";
 
-var _core = require("babel-runtime/core-js")["default"];
+var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
 
-var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
+var _Object$assign = require("babel-runtime/core-js/object/assign")["default"];
 
-var APIError = _interopRequire(require("../../types/APIError"));
+var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
 
-var Resource = _interopRequire(require("../../types/Resource"));
+_Object$defineProperty(exports, "__esModule", {
+  value: true
+});
 
-var Linkage = _interopRequire(require("../../types/Linkage"));
+var _typesAPIError = require("../../types/APIError");
 
-var templating = _interopRequire(require("url-template"));
+var _typesAPIError2 = _interopRequireDefault(_typesAPIError);
 
-var forEachResources = require("../../util/type-handling").forEachResources;
+var _typesResource = require("../../types/Resource");
 
-module.exports = function (requestContext, responseContext, registry) {
+var _typesResource2 = _interopRequireDefault(_typesResource);
+
+var _typesLinkage = require("../../types/Linkage");
+
+var _typesLinkage2 = _interopRequireDefault(_typesLinkage);
+
+var _urlTemplate = require("url-template");
+
+var _urlTemplate2 = _interopRequireDefault(_urlTemplate);
+
+var _utilTypeHandling = require("../../util/type-handling");
+
+exports["default"] = function (requestContext, responseContext, registry) {
   var primary = requestContext.primary;
   var type = requestContext.type;
-  var adapter = registry.adapter(type);
+  var adapter = registry.dbAdapter(type);
 
   // We're going to do an adapter.create, below, EXCEPT if we're adding to
   // an existing toMany relationship, which uses a different adapter method.
-  if (primary instanceof Linkage) {
+  if (primary instanceof _typesLinkage2["default"]) {
     if (!Array.isArray(primary.value)) {
-      throw new APIError(400, undefined, "To add to a to-many relationship, you must POST an array of linkage objects.");
+      throw new _typesAPIError2["default"](400, undefined, "To add to a to-many relationship, you must POST an array of linkage objects.");
     }
 
     return adapter.addToRelationship(type, requestContext.idOrIds, requestContext.relationship, primary).then(function () {
@@ -32,8 +46,8 @@ module.exports = function (requestContext, responseContext, registry) {
   } else {
     var _ret = (function () {
       var noClientIds = "Client-generated ids are not supported.";
-      forEachResources(primary, function (it) {
-        if (it.id) throw new APIError(403, undefined, noClientIds);
+      (0, _utilTypeHandling.forEachResources)(primary, function (it) {
+        if (it.id) throw new _typesAPIError2["default"](403, undefined, noClientIds);
       });
 
       return {
@@ -42,12 +56,12 @@ module.exports = function (requestContext, responseContext, registry) {
           responseContext.status = 201;
 
           // We can only generate a Location url for a single resource.
-          if (created instanceof Resource) {
+          if (created instanceof _typesResource2["default"]) {
             var templates = registry.urlTemplates(created.type);
             var template = templates && templates.self;
             if (template) {
-              var templateData = _core.Object.assign({ id: created.id }, created.attrs);
-              responseContext.location = templating.parse(template).expand(templateData);
+              var templateData = _Object$assign({ "id": created.id }, created.attrs);
+              responseContext.location = _urlTemplate2["default"].parse(template).expand(templateData);
             }
           }
         })
@@ -57,3 +71,5 @@ module.exports = function (requestContext, responseContext, registry) {
     if (typeof _ret === "object") return _ret.v;
   }
 };
+
+module.exports = exports["default"];

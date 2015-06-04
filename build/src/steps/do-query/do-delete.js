@@ -1,35 +1,45 @@
 "use strict";
 
-var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
+var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
 
-var APIError = _interopRequire(require("../../types/APIError"));
+var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
 
-var Collection = _interopRequire(require("../../types/Collection"));
+_Object$defineProperty(exports, "__esModule", {
+  value: true
+});
 
-var mapResources = require("../../util/type-handling").mapResources;
+var _typesAPIError = require("../../types/APIError");
 
-module.exports = function (request, response, registry) {
+var _typesAPIError2 = _interopRequireDefault(_typesAPIError);
+
+var _typesCollection = require("../../types/Collection");
+
+var _typesCollection2 = _interopRequireDefault(_typesCollection);
+
+var _utilTypeHandling = require("../../util/type-handling");
+
+exports["default"] = function (request, response, registry) {
   var type = request.type;
-  var adapter = registry.adapter(type);
+  var adapter = registry.dbAdapter(type);
 
-  if (request.aboutLinkObject) {
+  if (request.aboutRelationship) {
     if (Array.isArray(request.idOrIds)) {
-      throw new APIError(400, undefined, "You can only remove resources from the linkage of one resource at a time.");
+      throw new _typesAPIError2["default"](400, undefined, "You can only remove resources from the linkage of one resource at a time.");
     }
     return adapter.removeFromRelationship(type, request.idOrIds, request.relationship, request.primary).then(function () {
       response.status = 204;
     });
   } else if (!request.idOrIds && request.ext.indexOf("bulk") !== -1) {
-    if (!(request.primary instanceof Collection)) {
+    if (!(request.primary instanceof _typesCollection2["default"])) {
       var title = "You must provide an array of objects to do a bulk delete.";
-      throw new APIError(400, undefined, title);
+      throw new _typesAPIError2["default"](400, undefined, title);
     }
 
     if (!request.primary.resources.every(function (it) {
       return typeof it.id !== "undefined";
     })) {
       var title = "Every object provided for a bulk delete must contain a `type` and `id`.";
-      throw new APIError(400, undefined, title);
+      throw new _typesAPIError2["default"](400, undefined, title);
     }
 
     var ids = request.primary.resources.map(function (it) {
@@ -44,3 +54,5 @@ module.exports = function (request, response, registry) {
     });
   }
 };
+
+module.exports = exports["default"];

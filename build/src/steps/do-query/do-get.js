@@ -2,22 +2,30 @@
 
 var _slicedToArray = require("babel-runtime/helpers/sliced-to-array")["default"];
 
-var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
+var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
 
-var APIError = _interopRequire(require("../../types/APIError"));
+var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
 
-var arrayContains = require("../../util/arrays").arrayContains;
+_Object$defineProperty(exports, "__esModule", {
+  value: true
+});
 
-module.exports = function (requestContext, responseContext, registry) {
+var _typesAPIError = require("../../types/APIError");
+
+var _typesAPIError2 = _interopRequireDefault(_typesAPIError);
+
+var _utilArrays = require("../../util/arrays");
+
+exports["default"] = function (requestContext, responseContext, registry) {
   var type = requestContext.type;
-  var adapter = registry.adapter(type);
+  var adapter = registry.dbAdapter(type);
   var fields = undefined,
       sorts = undefined,
       includes = undefined,
       filters = undefined;
 
   // Handle fields, sorts, includes and filters.
-  if (!requestContext.aboutLinkObject) {
+  if (!requestContext.aboutRelationship) {
     fields = parseFields(requestContext.queryParams.fields);
     sorts = parseSorts(requestContext.queryParams.sort);
     // just support a "simple" filtering strategy for now.
@@ -29,12 +37,10 @@ module.exports = function (requestContext, responseContext, registry) {
     }
 
     return adapter.find(type, requestContext.idOrIds, fields, sorts, filters, includes).then(function (resources) {
-      var _ref = resources;
+      var _resources = _slicedToArray(resources, 2);
 
-      var _ref2 = _slicedToArray(_ref, 2);
-
-      responseContext.primary = _ref2[0];
-      responseContext.included = _ref2[1];
+      responseContext.primary = _resources[0];
+      responseContext.included = _resources[1];
     });
   }
 
@@ -47,7 +53,7 @@ module.exports = function (requestContext, responseContext, registry) {
   // - sorts don't apply beacuse that's only for resource collections.
   else {
     if (Array.isArray(requestContext.idOrIds)) {
-      throw new APIError(400, undefined, "You can only request the linkage for one resource at a time.");
+      throw new _typesAPIError2["default"](400, undefined, "You can only request the linkage for one resource at a time.");
     }
 
     return adapter.find(type, requestContext.idOrIds).spread(function (resource) {
@@ -55,14 +61,16 @@ module.exports = function (requestContext, responseContext, registry) {
       // it here is more accurate than using adapter.getRelationshipNames,
       // since we're allowing for paths that can optionally hold linkage,
       // which getRelationshipNames doesn't return.
-      if (resource.links && !resource.links[requestContext.relationship]) {
-        var title = "Invalid relationship name.";
-        var detail = "" + requestContext.relationship + " is not a valid " + ("relationship name on resources of type \"" + type + "\"");
+      var relationship = resource.relationships && resource.relationships[requestContext.relationship];
 
-        throw new APIError(404, undefined, title, detail);
+      if (!relationship) {
+        var title = "Invalid relationship name.";
+        var detail = "" + requestContext.relationship + " is not a valid " + ("relationship name on resources of type '" + type + "'");
+
+        throw new _typesAPIError2["default"](404, undefined, title, detail);
       }
 
-      responseContext.primary = resource.links[requestContext.relationship].linkage;
+      responseContext.primary = relationship.linkage;
     });
   }
 };
@@ -76,7 +84,7 @@ function parseSorts(sortParam) {
       return !(it.startsWith("+") || it.startsWith("-"));
     });
     if (invalidSorts.length) {
-      throw new APIError(400, null, "All sort parameters must start with a + or a -.", "The following sort parameters were invalid: " + invalidSorts.join(", ") + ".");
+      throw new _typesAPIError2["default"](400, null, "All sort parameters must start with a + or a -.", "The following sort parameters were invalid: " + invalidSorts.join(", ") + ".");
     }
     return sorts;
   }
@@ -86,8 +94,8 @@ function parseFields(fieldsParam) {
   var fields = undefined;
   if (typeof fieldsParam === "object") {
     fields = {};
-    var isField = function (it) {
-      return !arrayContains(["id", "type", "meta"], it);
+    var isField = function isField(it) {
+      return !(0, _utilArrays.arrayContains)(["id", "type", "meta"], it);
     };
 
     for (var type in fieldsParam) {
@@ -104,3 +112,4 @@ function parseFields(fieldsParam) {
 function parseCommaSeparatedParam(it) {
   return it ? it.split(",").map(decodeURIComponent) : undefined;
 }
+module.exports = exports["default"];

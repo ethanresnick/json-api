@@ -5,18 +5,17 @@
  */
 "use strict";
 
-var _core = require("babel-runtime/core-js")["default"];
+var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
 
-exports.deleteNested = deleteNested;
+var _Set = require("babel-runtime/core-js/set")["default"];
 
-/**
- * Returns whether one array's items are a subset of those in the other.
- * Both array's elements are assumed to be unique.
- */
-exports.isSubsetOf = isSubsetOf;
-Object.defineProperty(exports, "__esModule", {
+_Object$defineProperty(exports, "__esModule", {
   value: true
 });
+
+exports.deleteNested = deleteNested;
+exports.isSubsetOf = isSubsetOf;
+exports.isPlainObject = isPlainObject;
 
 function deleteNested(path, object) {
   try {
@@ -39,10 +38,19 @@ function deleteNested(path, object) {
   }
 }
 
+/**
+ * Returns whether one array's items are a subset of those in the other.
+ * Both array's elements are assumed to be unique.
+ */
+
 function isSubsetOf(setArr, potentialSubsetArr) {
-  var set = new _core.Set(setArr);
+  var set = new _Set(setArr);
 
   return potentialSubsetArr.every(function (it) {
     return set.has(it) === true;
   });
+}
+
+function isPlainObject(obj) {
+  return typeof obj === "object" && !(Array.isArray(obj) || obj === null);
 }

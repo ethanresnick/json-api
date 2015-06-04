@@ -1,26 +1,38 @@
 "use strict";
 
-var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
+var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
 
-var Q = _interopRequire(require("q"));
+var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
 
-var groupResourcesByType = require("../../util/type-handling").groupResourcesByType;
+_Object$defineProperty(exports, "__esModule", {
+  value: true
+});
 
-var arrayContains = require("../../util/arrays").arrayContains;
+var _q = require("q");
 
-var isSubsetOf = require("../../util/misc").isSubsetOf;
+var _q2 = _interopRequireDefault(_q);
 
-var APIError = _interopRequire(require("../../types/APIError"));
+var _utilTypeHandling = require("../../util/type-handling");
 
-module.exports = function (body) {
-  return Q.Promise(function (resolve, reject) {
+var _utilArrays = require("../../util/arrays");
+
+var _utilMisc = require("../../util/misc");
+
+var _typesAPIError = require("../../types/APIError");
+
+var _typesAPIError2 = _interopRequireDefault(_typesAPIError);
+
+exports["default"] = function (body) {
+  return _q2["default"].Promise(function (resolve, reject) {
     var ownProp = Object.prototype.hasOwnProperty;
     var errMessage = "Request body is not a valid JSON API document.";
 
     if (typeof body !== "object" || !ownProp.call(body, "data")) {
-      reject(new APIError(400, null, errMessage));
+      reject(new _typesAPIError2["default"](400, null, errMessage));
     } else {
       resolve();
     }
   });
 };
+
+module.exports = exports["default"];

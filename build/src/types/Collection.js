@@ -1,8 +1,14 @@
 "use strict";
 
+var _createClass = require("babel-runtime/helpers/create-class")["default"];
+
 var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default"];
 
-var _createClass = require("babel-runtime/helpers/create-class")["default"];
+var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
+
+_Object$defineProperty(exports, "__esModule", {
+  value: true
+});
 
 var Collection = (function () {
   function Collection() {
@@ -13,29 +19,29 @@ var Collection = (function () {
     this.resources = resources;
   }
 
-  _createClass(Collection, {
-    ids: {
-      get: function () {
-        return this.resources.map(function (it) {
-          return it.id;
-        });
-      }
-    },
-    types: {
-      get: function () {
-        return this.resources.map(function (it) {
-          return it.type;
-        });
-      }
-    },
-    add: {
-      value: function add(resource) {
-        this.resources.push(resource);
-      }
+  _createClass(Collection, [{
+    key: "ids",
+    get: function () {
+      return this.resources.map(function (it) {
+        return it.id;
+      });
     }
-  });
+  }, {
+    key: "types",
+    get: function () {
+      return this.resources.map(function (it) {
+        return it.type;
+      });
+    }
+  }, {
+    key: "add",
+    value: function add(resource) {
+      this.resources.push(resource);
+    }
+  }]);
 
   return Collection;
 })();
 
-module.exports = Collection;
+exports["default"] = Collection;
+module.exports = exports["default"];

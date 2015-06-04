@@ -1,48 +1,90 @@
 "use strict";
 
+var _createClass = require("babel-runtime/helpers/create-class")["default"];
+
 var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default"];
 
-var _createClass = require("babel-runtime/helpers/create-class")["default"];
+var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
 
 var _regeneratorRuntime = require("babel-runtime/regenerator")["default"];
 
-var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
+var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
 
 var _interopRequireWildcard = require("babel-runtime/helpers/interop-require-wildcard")["default"];
 
-var co = _interopRequire(require("co"));
+_Object$defineProperty(exports, "__esModule", {
+  value: true
+});
 
-var Response = _interopRequire(require("../types/HTTP/Response"));
+var _co = require("co");
 
-var Document = _interopRequire(require("../types/Document"));
+var _co2 = _interopRequireDefault(_co);
 
-var Collection = _interopRequire(require("../types/Collection"));
+var _typesHTTPResponse = require("../types/HTTP/Response");
 
-var APIError = _interopRequire(require("../types/APIError"));
+var _typesHTTPResponse2 = _interopRequireDefault(_typesHTTPResponse);
 
-var requestValidators = _interopRequireWildcard(require("../steps/http/validate-request"));
+var _typesDocument = require("../types/Document");
 
-var negotiateContentType = _interopRequire(require("../steps/http/negotiate-content-type"));
+var _typesDocument2 = _interopRequireDefault(_typesDocument);
 
-var labelToIds = _interopRequire(require("../steps/pre-query/label-to-ids"));
+var _typesCollection = require("../types/Collection");
 
-var parseRequestPrimary = _interopRequire(require("../steps/pre-query/parse-request-primary"));
+var _typesCollection2 = _interopRequireDefault(_typesCollection);
 
-var validateRequestDocument = _interopRequire(require("../steps/pre-query/validate-document"));
+var _typesAPIError = require("../types/APIError");
 
-var validateRequestResources = _interopRequire(require("../steps/pre-query/validate-resources"));
+var _typesAPIError2 = _interopRequireDefault(_typesAPIError);
 
-var applyTransform = _interopRequire(require("../steps/apply-transform"));
+var _stepsHttpValidateRequest = require("../steps/http/validate-request");
 
-var doGET = _interopRequire(require("../steps/do-query/do-get"));
+var requestValidators = _interopRequireWildcard(_stepsHttpValidateRequest);
 
-var doPOST = _interopRequire(require("../steps/do-query/do-post"));
+var _stepsHttpContentNegotiationNegotiateContentType = require("../steps/http/content-negotiation/negotiate-content-type");
 
-var doPATCH = _interopRequire(require("../steps/do-query/do-patch"));
+var _stepsHttpContentNegotiationNegotiateContentType2 = _interopRequireDefault(_stepsHttpContentNegotiationNegotiateContentType);
 
-var doDELETE = _interopRequire(require("../steps/do-query/do-delete"));
+var _stepsHttpContentNegotiationValidateContentType = require("../steps/http/content-negotiation/validate-content-type");
 
-var supportedExt = ["bulk"];
+var _stepsHttpContentNegotiationValidateContentType2 = _interopRequireDefault(_stepsHttpContentNegotiationValidateContentType);
+
+var _stepsPreQueryLabelToIds = require("../steps/pre-query/label-to-ids");
+
+var _stepsPreQueryLabelToIds2 = _interopRequireDefault(_stepsPreQueryLabelToIds);
+
+var _stepsPreQueryParseRequestPrimary = require("../steps/pre-query/parse-request-primary");
+
+var _stepsPreQueryParseRequestPrimary2 = _interopRequireDefault(_stepsPreQueryParseRequestPrimary);
+
+var _stepsPreQueryValidateDocument = require("../steps/pre-query/validate-document");
+
+var _stepsPreQueryValidateDocument2 = _interopRequireDefault(_stepsPreQueryValidateDocument);
+
+var _stepsPreQueryValidateResources = require("../steps/pre-query/validate-resources");
+
+var _stepsPreQueryValidateResources2 = _interopRequireDefault(_stepsPreQueryValidateResources);
+
+var _stepsApplyTransform = require("../steps/apply-transform");
+
+var _stepsApplyTransform2 = _interopRequireDefault(_stepsApplyTransform);
+
+var _stepsDoQueryDoGet = require("../steps/do-query/do-get");
+
+var _stepsDoQueryDoGet2 = _interopRequireDefault(_stepsDoQueryDoGet);
+
+var _stepsDoQueryDoPost = require("../steps/do-query/do-post");
+
+var _stepsDoQueryDoPost2 = _interopRequireDefault(_stepsDoQueryDoPost);
+
+var _stepsDoQueryDoPatch = require("../steps/do-query/do-patch");
+
+var _stepsDoQueryDoPatch2 = _interopRequireDefault(_stepsDoQueryDoPatch);
+
+var _stepsDoQueryDoDelete = require("../steps/do-query/do-delete");
+
+var _stepsDoQueryDoDelete2 = _interopRequireDefault(_stepsDoQueryDoDelete);
+
+var supportedExt = [];
 
 var APIController = (function () {
   function APIController(registry) {
@@ -51,217 +93,216 @@ var APIController = (function () {
     this.registry = registry;
   }
 
-  _createClass(APIController, {
-    handle: {
+  _createClass(APIController, [{
+    key: "handle",
 
-      /**
-       * @param {Request} request The Request thic controller will use to generate
-       *    the Response.
-       * @param {Object} frameworkReq This should be the request object generated by
-       *    the framework that you're using. But, really, it can be absolutely
-       *    anything, as this controller won't use it for anything except passing it
-       *    to user-provided functions that it calls (like transforms and id mappers).
-       * @param {Object} frameworkRes Theoretically, the response objcet generated
-       *     by your http framework but, like with frameworkReq, it can be anything.
-       */
+    /**
+     * @param {Request} request The Request this controller will use to generate
+     *    the Response.
+     * @param {Object} frameworkReq This should be the request object generated by
+     *    the framework that you're using. But, really, it can be absolutely
+     *    anything, as this controller won't use it for anything except passing it
+     *    to user-provided functions that it calls (like transforms and id mappers).
+     * @param {Object} frameworkRes Theoretically, the response objcet generated
+     *     by your http framework but, like with frameworkReq, it can be anything.
+     */
+    value: function handle(request, frameworkReq, frameworkRes) {
+      var response = new _typesHTTPResponse2["default"]();
+      var registry = this.registry;
 
-      value: function handle(request, frameworkReq, frameworkRes) {
-        var response = new Response();
-        var registry = this.registry;
+      // Kick off the chain for generating the response.
+      return (0, _co2["default"])(_regeneratorRuntime.mark(function callee$2$0() {
+        var parsedPrimary, mappedLabel, mappedIsEmptyArray, errorsArr, apiErrors;
+        return _regeneratorRuntime.wrap(function callee$2$0$(context$3$0) {
+          while (1) switch (context$3$0.prev = context$3$0.next) {
+            case 0:
+              context$3$0.prev = 0;
+              context$3$0.next = 3;
+              return requestValidators.checkBodyExistence(request);
 
-        // Kick off the chain for generating the response.
-        return co(_regeneratorRuntime.mark(function callee$2$0() {
-          var parsedPrimary, mappedLabel, mappedIsEmptyArray, errorsArr, apiErrors;
-          return _regeneratorRuntime.wrap(function callee$2$0$(context$3$0) {
-            while (1) switch (context$3$0.prev = context$3$0.next) {
-              case 0:
-                context$3$0.prev = 0;
-                context$3$0.next = 3;
-                return requestValidators.checkBodyExistence(request);
+            case 3:
+              context$3$0.next = 5;
+              return (0, _stepsHttpContentNegotiationNegotiateContentType2["default"])(request.accepts, ["application/vnd.api+json"]);
 
-              case 3:
-                if (registry.type(request.type)) {
-                  context$3$0.next = 5;
-                  break;
-                }
+            case 5:
+              response.contentType = context$3$0.sent;
 
-                throw new APIError(404, undefined, "" + request.type + " is not a valid type.");
-
-              case 5:
-                if (!request.hasBody) {
-                  context$3$0.next = 17;
-                  break;
-                }
-
+              if (registry.type(request.type)) {
                 context$3$0.next = 8;
-                return validateRequestDocument(request.body);
+                break;
+              }
 
-              case 8:
-                context$3$0.next = 10;
-                return requestValidators.checkContentType(request, supportedExt);
+              throw new _typesAPIError2["default"](404, undefined, "" + request.type + " is not a valid type.");
 
-              case 10:
-                context$3$0.next = 12;
-                return parseRequestPrimary(request.body.data, request.aboutLinkObject);
-
-              case 12:
-                parsedPrimary = context$3$0.sent;
-
-                if (request.aboutLinkObject) {
-                  context$3$0.next = 16;
-                  break;
-                }
-
-                context$3$0.next = 16;
-                return validateRequestResources(request.type, parsedPrimary, registry);
-
-              case 16:
-
-                request.primary = applyTransform(parsedPrimary, "beforeSave", registry, frameworkReq, frameworkRes);
-
-              case 17:
-                if (!(request.idOrIds && request.allowLabel)) {
-                  context$3$0.next = 24;
-                  break;
-                }
-
+            case 8:
+              if (!request.hasBody) {
                 context$3$0.next = 20;
-                return labelToIds(request.type, request.idOrIds, registry, frameworkReq);
-
-              case 20:
-                mappedLabel = context$3$0.sent;
-
-                // set the idOrIds on the request context
-                request.idOrIds = mappedLabel;
-
-                mappedIsEmptyArray = Array.isArray(mappedLabel) && !mappedLabel.length;
-
-                if (mappedLabel === null || mappedLabel === undefined || mappedIsEmptyArray) {
-                  response.primary = mappedLabel ? new Collection() : null;
-                }
-
-              case 24:
-                if (!(typeof response.primary === "undefined")) {
-                  context$3$0.next = 39;
-                  break;
-                }
-
-                context$3$0.t0 = request.method;
-                context$3$0.next = context$3$0.t0 === "get" ? 28 : context$3$0.t0 === "post" ? 31 : context$3$0.t0 === "patch" ? 34 : context$3$0.t0 === "delete" ? 37 : 39;
                 break;
+              }
 
-              case 28:
-                context$3$0.next = 30;
-                return doGET(request, response, registry);
+              context$3$0.next = 11;
+              return (0, _stepsHttpContentNegotiationValidateContentType2["default"])(request, supportedExt);
 
-              case 30:
-                return context$3$0.abrupt("break", 39);
+            case 11:
+              context$3$0.next = 13;
+              return (0, _stepsPreQueryValidateDocument2["default"])(request.body);
 
-              case 31:
-                context$3$0.next = 33;
-                return doPOST(request, response, registry);
+            case 13:
+              context$3$0.next = 15;
+              return (0, _stepsPreQueryParseRequestPrimary2["default"])(request.body.data, request.aboutRelationship);
 
-              case 33:
-                return context$3$0.abrupt("break", 39);
+            case 15:
+              parsedPrimary = context$3$0.sent;
 
-              case 34:
-                context$3$0.next = 36;
-                return doPATCH(request, response, registry);
-
-              case 36:
-                return context$3$0.abrupt("break", 39);
-
-              case 37:
-                context$3$0.next = 39;
-                return doDELETE(request, response, registry);
-
-              case 39:
-                context$3$0.next = 47;
+              if (request.aboutRelationship) {
+                context$3$0.next = 19;
                 break;
+              }
 
-              case 41:
-                context$3$0.prev = 41;
-                context$3$0.t1 = context$3$0["catch"](0);
-                errorsArr = Array.isArray(context$3$0.t1) ? context$3$0.t1 : [context$3$0.t1];
-                apiErrors = errorsArr.map(function (it) {
-                  if (it instanceof APIError) {
-                    return it;
-                  } else {
-                    var _status = it.status || it.statusCode || 500;
-                    // if the user can't throw an APIError instance but wants to signal
-                    // that their specific error message should be used, let them do so.
-                    var message = it.isJSONAPIDisplayReady ? it.message : "An unknown error occurred while trying to process this request.";
+              context$3$0.next = 19;
+              return (0, _stepsPreQueryValidateResources2["default"])(request.type, parsedPrimary, registry);
 
-                    return new APIError(_status, undefined, message);
-                  }
-                });
+            case 19:
 
-                response.errors = response.errors.concat(apiErrors);
+              request.primary = (0, _stepsApplyTransform2["default"])(parsedPrimary, "beforeSave", registry, frameworkReq, frameworkRes);
 
-              case 47:
-                context$3$0.next = 49;
-                return negotiateContentType(request.accepts, response.ext, supportedExt);
+            case 20:
+              if (!(request.idOrIds && request.allowLabel)) {
+                context$3$0.next = 27;
+                break;
+              }
 
-              case 49:
-                response.contentType = context$3$0.sent;
+              context$3$0.next = 23;
+              return (0, _stepsPreQueryLabelToIds2["default"])(request.type, request.idOrIds, registry, frameworkReq);
 
-                if (!response.errors.length) {
-                  context$3$0.next = 54;
-                  break;
-                }
+            case 23:
+              mappedLabel = context$3$0.sent;
 
-                response.status = pickStatus(response.errors.map(function (v) {
-                  return Number(v.status);
-                }));
-                response.body = new Document(response.errors).get(true);
-                return context$3$0.abrupt("return", response);
+              // set the idOrIds on the request context
+              request.idOrIds = mappedLabel;
 
-              case 54:
+              mappedIsEmptyArray = Array.isArray(mappedLabel) && !mappedLabel.length;
 
-                // apply transforms pre-send
-                response.primary = applyTransform(response.primary, "beforeRender", registry, frameworkReq, frameworkRes);
+              if (mappedLabel === null || mappedLabel === undefined || mappedIsEmptyArray) {
+                response.primary = mappedLabel ? new _typesCollection2["default"]() : null;
+              }
 
-                response.included = applyTransform(response.included, "beforeRender", registry, frameworkReq, frameworkRes);
+            case 27:
+              if (!(typeof response.primary === "undefined")) {
+                context$3$0.next = 42;
+                break;
+              }
 
-                if (response.status !== 204) {
-                  response.body = new Document(response.primary, response.included, undefined, registry.urlTemplates(), request.uri).get(true);
-                }
+              context$3$0.t0 = request.method;
+              context$3$0.next = context$3$0.t0 === "get" ? 31 : context$3$0.t0 === "post" ? 34 : context$3$0.t0 === "patch" ? 37 : context$3$0.t0 === "delete" ? 40 : 42;
+              break;
 
-                return context$3$0.abrupt("return", response);
+            case 31:
+              context$3$0.next = 33;
+              return (0, _stepsDoQueryDoGet2["default"])(request, response, registry);
 
-              case 58:
-              case "end":
-                return context$3$0.stop();
-            }
-          }, callee$2$0, this, [[0, 41]]);
-        }));
-      }
+            case 33:
+              return context$3$0.abrupt("break", 42);
+
+            case 34:
+              context$3$0.next = 36;
+              return (0, _stepsDoQueryDoPost2["default"])(request, response, registry);
+
+            case 36:
+              return context$3$0.abrupt("break", 42);
+
+            case 37:
+              context$3$0.next = 39;
+              return (0, _stepsDoQueryDoPatch2["default"])(request, response, registry);
+
+            case 39:
+              return context$3$0.abrupt("break", 42);
+
+            case 40:
+              context$3$0.next = 42;
+              return (0, _stepsDoQueryDoDelete2["default"])(request, response, registry);
+
+            case 42:
+              context$3$0.next = 50;
+              break;
+
+            case 44:
+              context$3$0.prev = 44;
+              context$3$0.t1 = context$3$0["catch"](0);
+              errorsArr = Array.isArray(context$3$0.t1) ? context$3$0.t1 : [context$3$0.t1];
+              apiErrors = errorsArr.map(_typesAPIError2["default"].fromError);
+
+              // Leave the error response's content type as JSON if we negotiated
+              // for that, but otherwise force it to JSON API, since that's the only
+              // other error format we know how to generate.
+              if (response.contentType !== "application/json") {
+                response.contentType = "application/vnd.api+json";
+              }
+
+              // Set the other key fields on the response
+              response.errors = response.errors.concat(apiErrors);
+              //console.log("API CONTROLLER ERRORS", errorsArr[0], errorsArr[0].stack);
+
+            case 50:
+              if (!response.errors.length) {
+                context$3$0.next = 54;
+                break;
+              }
+
+              response.status = pickStatus(response.errors.map(function (v) {
+                return Number(v.status);
+              }));
+              response.body = new _typesDocument2["default"](response.errors).get(true);
+              return context$3$0.abrupt("return", response);
+
+            case 54:
+
+              // apply transforms pre-send
+              response.primary = (0, _stepsApplyTransform2["default"])(response.primary, "beforeRender", registry, frameworkReq, frameworkRes);
+
+              response.included = (0, _stepsApplyTransform2["default"])(response.included, "beforeRender", registry, frameworkReq, frameworkRes);
+
+              if (response.status !== 204) {
+                response.body = new _typesDocument2["default"](response.primary, response.included, undefined, registry.urlTemplates(), request.uri).get(true);
+              }
+
+              return context$3$0.abrupt("return", response);
+
+            case 58:
+            case "end":
+              return context$3$0.stop();
+          }
+        }, callee$2$0, this, [[0, 44]]);
+      }));
     }
-  }, {
-    responseFromExternalError: {
-      value: function responseFromExternalError(request, error) {
-        var response = new Response();
-        return negotiateContentType(request.accepts, [], supportedExt).then(function (contentType) {
-          response.contentType = contentType;
-          response.status = error.status || error.statusCode || 400;
-          response.body = new Document([APIError.fromError(error)]).get(true);
+  }], [{
+    key: "responseFromExternalError",
+    value: function responseFromExternalError(request, error) {
+      var response = new _typesHTTPResponse2["default"]();
+      response.errors = [_typesAPIError2["default"].fromError(error)];
+      response.status = pickStatus(response.errors.map(function (v) {
+        return Number(v.status);
+      }));
+      response.body = new _typesDocument2["default"](response.errors).get(true);
 
-          return response;
-        }, function () {
-          // even if we had an error, return the response.
-          // it just won't have a content-type.
-          return response;
-        });
-      }
+      return (0, _stepsHttpContentNegotiationNegotiateContentType2["default"])(request.accepts, ["application/vnd.api+json"]).then(function (contentType) {
+        response.contentType = contentType === "application/json" ? contentType : "application/vnd.api+json";
+        return response;
+      }, function () {
+        // if we couldn't find any acceptable content-type,
+        // just ignore the accept header, as http allows.
+        response.contentType = "application/vnd.api+json";
+        return response;
+      });
     }
-  });
+  }]);
 
   return APIController;
 })();
 
 APIController.supportedExt = supportedExt;
 
-module.exports = APIController;
+exports["default"] = APIController;
 
 /**
  * Returns the status code that best represents a set of error statuses.
@@ -269,8 +310,13 @@ module.exports = APIController;
 function pickStatus(errStatuses) {
   return errStatuses[0];
 }
+module.exports = exports["default"];
 
 // throw if the body is supposed to be present but isn't (or vice-versa).
+
+// Try to negotiate the content type (may fail, and we may need to
+// deviate from the negotiated value if we have to return an error
+// body, rather than our expected response).
 
 // If the type requested in the endpoint hasn't been registered, we 404.
 
@@ -292,6 +338,5 @@ function pickStatus(errStatuses) {
 // unexpected (and so uncaught and not transformed) in one of prior steps
 // or the user couldn't throw an APIError for compatibility with other code.
 
-// Negotiate the content type
-
-// If we have errors, return here and don't bother with transforms.
+// If we have errors, which could have come from prior steps not just
+// throwing, return here and don't bother with transforms.

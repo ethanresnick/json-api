@@ -2,7 +2,13 @@
 
 var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default"];
 
-var ValueObject = require("../../util/type-handling").ValueObject;
+var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
+
+_Object$defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _utilTypeHandling = require("../../util/type-handling");
 
 var propDesc = { writable: true, enumerable: true };
 
@@ -34,16 +40,18 @@ var Response = function Response() {
   // The response's primary data. Have to use
   // Object.defineProperty to default it to undefined
   // while allowing us to set it post seal().
-  Object.defineProperty(this, "primary", propDesc);
+  _Object$defineProperty(this, "primary", propDesc);
 
   // The response's included resources.
-  Object.defineProperty(this, "included", propDesc);
+  _Object$defineProperty(this, "included", propDesc);
 
   // The response document's top-level links.
-  Object.defineProperty(this, "links", propDesc);
+  _Object$defineProperty(this, "links", propDesc);
 
   // The response document's top-level meta information.
-  Object.defineProperty(this, "meta", propDesc);
+  _Object$defineProperty(this, "meta", propDesc);
 };
 
-module.exports = ValueObject(Response);
+exports["default"] = (0, _utilTypeHandling.ValueObject)(Response);
+// eslint-disable-line new-cap
+module.exports = exports["default"];

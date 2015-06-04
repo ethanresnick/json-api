@@ -1,4 +1,28 @@
 /**
+ * A private array of properties that will be used by the class below to
+ * automatically generate simple getter setters for each property, all
+ * following same format. Those getters/setters will take the resource type
+ * whose property is being retrieved/set, and the value to set it to, if any.
+ */
+"use strict";
+
+var _createClass = require("babel-runtime/helpers/create-class")["default"];
+
+var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default"];
+
+var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
+
+var _Object$assign = require("babel-runtime/core-js/object/assign")["default"];
+
+var _Object$keys = require("babel-runtime/core-js/object/keys")["default"];
+
+_Object$defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var autoGetterSetterProps = ["dbAdapter", "beforeSave", "beforeRender", "labelMappers", "defaultIncludes", "info", "parentType"];
+
+/**
  * To fulfill a JSON API request, you often need to know about all the resources
  * in the system--not just the primary resource associated with the type being
  * requested. For example, if the request is for a User, you might need to
@@ -9,13 +33,6 @@
  * the Dispatcher can have access to. Each resource type is registered by its
  * JSON api type and has a number of properties defining it.
  */
-"use strict";
-
-var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default"];
-
-var _createClass = require("babel-runtime/helpers/create-class")["default"];
-
-var _core = require("babel-runtime/core-js")["default"];
 
 var ResourceTypeRegistry = (function () {
   function ResourceTypeRegistry() {
@@ -31,85 +48,69 @@ var ResourceTypeRegistry = (function () {
     });
   }
 
-  _createClass(ResourceTypeRegistry, {
-    type: {
-      value: (function (_type) {
-        var _typeWrapper = function type(_x, _x2) {
-          return _type.apply(this, arguments);
-        };
+  _createClass(ResourceTypeRegistry, [{
+    key: "type",
+    value: function type(_type, description) {
+      var _this2 = this;
 
-        _typeWrapper.toString = function () {
-          return _type.toString();
-        };
-
-        return _typeWrapper;
-      })(function (type, description) {
-        var _this = this;
-
-        // create a one-argument version that takes the
-        // type as a key on the description object.
-        if (typeof type === "object" && typeof description === "undefined") {
-          description = type;
-          type = type.type;
-          delete description.type;
-        }
-
-        if (description) {
-          this._resourceTypes[type] = {};
-
-          // Set all the properties for the type that the description provides.
-          ["adapter", "beforeSave", "beforeRender", "labelMappers", "urlTemplates", "defaultIncludes", "info", "parentType"].forEach(function (k) {
-            if (Object.prototype.hasOwnProperty.call(description, k)) {
-              _this[k](type, description[k]);
-            }
-          });
-        } else if (this._resourceTypes[type]) {
-          return _core.Object.assign({}, this._resourceTypes[type]);
-        }
-      })
-    },
-    types: {
-      value: function types() {
-        return _core.Object.keys(this._resourceTypes);
+      // create a one-argument version that takes the
+      // type as a key on the description object.
+      if (typeof _type === "object" && typeof description === "undefined") {
+        description = _type;
+        _type = _type.type;
+        delete description.type;
       }
-    },
-    urlTemplates: {
 
-      //calling the arg "templatesToSet" to avoid conflict with templates var below
+      if (description) {
+        this._resourceTypes[_type] = {};
 
-      value: function urlTemplates(type, templatesToSet) {
-        this._resourceTypes[type] = this._resourceTypes[type] || {};
-
-        switch (arguments.length) {
-          case 1:
-            return this._resourceTypes[type].urlTemplates;
-
-          case 0:
-            var templates = {};
-            for (var _type2 in this._resourceTypes) {
-              templates[_type2] = _core.Object.assign({}, this._resourceTypes[_type2].urlTemplates || {});
-            }
-            return templates;
-
-          default:
-            this._resourceTypes[type].urlTemplates = templatesToSet;
-        }
+        // Set all the properties for the type that the description provides.
+        autoGetterSetterProps.concat(["urlTemplates"]).forEach(function (k) {
+          if (Object.prototype.hasOwnProperty.call(description, k)) {
+            _this2[k](_type, description[k]);
+          }
+        });
+      } else if (this._resourceTypes[_type]) {
+        return _Object$assign({}, this._resourceTypes[_type]);
       }
     }
-  });
+  }, {
+    key: "types",
+    value: function types() {
+      return _Object$keys(this._resourceTypes);
+    }
+  }, {
+    key: "urlTemplates",
+
+    //calling the arg "templatesToSet" to avoid conflict with templates var below
+    value: function urlTemplates(type, templatesToSet) {
+      this._resourceTypes[type] = this._resourceTypes[type] || {};
+
+      switch (arguments.length) {
+        case 1:
+          return this._resourceTypes[type].urlTemplates ? _Object$assign({}, this._resourceTypes[type].urlTemplates) : this._resourceTypes[type].urlTemplates;
+
+        case 0:
+          var templates = {};
+          for (var currType in this._resourceTypes) {
+            templates[currType] = this.urlTemplates(currType);
+          }
+          return templates;
+
+        default:
+          this._resourceTypes[type].urlTemplates = templatesToSet;
+      }
+    }
+  }]);
 
   return ResourceTypeRegistry;
 })();
 
-module.exports = ResourceTypeRegistry;
+exports["default"] = ResourceTypeRegistry;
 
-ResourceTypeRegistry.prototype.adapter = makeGetterSetter("adapter");
-ResourceTypeRegistry.prototype.beforeSave = makeGetterSetter("beforeSave");
-ResourceTypeRegistry.prototype.beforeRender = makeGetterSetter("beforeRender");
-ResourceTypeRegistry.prototype.labelMappers = makeGetterSetter("labelMappers");
-ResourceTypeRegistry.prototype.defaultIncludes = makeGetterSetter("defaultIncludes");
-ResourceTypeRegistry.prototype.info = makeGetterSetter("info");
-ResourceTypeRegistry.prototype.parentType = makeGetterSetter("parentType");
+autoGetterSetterProps.forEach(function (propName) {
+  ResourceTypeRegistry.prototype[propName] = makeGetterSetter(propName);
+});
 
 function makeGetterSetter(attrName) {
   return function (type, optValue) {
@@ -122,3 +123,4 @@ function makeGetterSetter(attrName) {
     }
   };
 }
+module.exports = exports["default"];

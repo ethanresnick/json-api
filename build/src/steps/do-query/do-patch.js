@@ -2,43 +2,59 @@
 
 var _defineProperty = require("babel-runtime/helpers/define-property")["default"];
 
-var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
+var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
 
-var APIError = _interopRequire(require("../../types/APIError"));
+var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
 
-var Collection = _interopRequire(require("../../types/Collection"));
+_Object$defineProperty(exports, "__esModule", {
+  value: true
+});
 
-var Resource = _interopRequire(require("../../types/Resource"));
+var _typesAPIError = require("../../types/APIError");
 
-var Linkage = _interopRequire(require("../../types/Linkage"));
+var _typesAPIError2 = _interopRequireDefault(_typesAPIError);
 
-module.exports = function (requestContext, responseContext, registry) {
+var _typesCollection = require("../../types/Collection");
+
+var _typesCollection2 = _interopRequireDefault(_typesCollection);
+
+var _typesResource = require("../../types/Resource");
+
+var _typesResource2 = _interopRequireDefault(_typesResource);
+
+var _typesLinkage = require("../../types/Linkage");
+
+var _typesLinkage2 = _interopRequireDefault(_typesLinkage);
+
+exports["default"] = function (requestContext, responseContext, registry) {
   var primary = requestContext.primary;
   var type = requestContext.type;
-  var adapter = registry.adapter(type);
+  var adapter = registry.dbAdapter(type);
   var changedResourceOrCollection = undefined;
 
-  if (primary instanceof Collection) {
+  if (primary instanceof _typesCollection2["default"]) {
     if (requestContext.idOrIds && !Array.isArray(requestContext.idOrIds)) {
       var title = "You can't replace a single resource with a collection.";
-      throw new APIError(400, undefined, title);
+      throw new _typesAPIError2["default"](400, undefined, title);
     }
 
     changedResourceOrCollection = primary;
-  } else if (primary instanceof Resource) {
+  } else if (primary instanceof _typesResource2["default"]) {
     if (!requestContext.idOrIds) {
       var title = "You must provide an array of resources to do a bulk update.";
-      throw new APIError(400, undefined, title);
+      throw new _typesAPIError2["default"](400, undefined, title);
     } else if (requestContext.idOrIds !== primary.id) {
       var title = "The id of the resource you provided doesn't match that in the URL.";
-      throw new APIError(400, undefined, title);
+      throw new _typesAPIError2["default"](400, undefined, title);
     }
     changedResourceOrCollection = primary;
-  } else if (primary instanceof Linkage) {
-    changedResourceOrCollection = new Resource(requestContext.type, requestContext.idOrIds, _defineProperty({}, requestContext.relationship, requestContext.primary));
+  } else if (primary instanceof _typesLinkage2["default"]) {
+    changedResourceOrCollection = new _typesResource2["default"](requestContext.type, requestContext.idOrIds, _defineProperty({}, requestContext.relationship, requestContext.primary));
   }
 
   return adapter.update(type, changedResourceOrCollection).then(function (resources) {
     responseContext.primary = resources;
   });
 };
+
+module.exports = exports["default"];

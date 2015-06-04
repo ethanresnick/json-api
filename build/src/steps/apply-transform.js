@@ -1,19 +1,29 @@
 "use strict";
 
-var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
+var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
 
-var Resource = _interopRequire(require("../types/Resource"));
+var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
 
-var Collection = _interopRequire(require("../types/Collection"));
+_Object$defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _typesResource = require("../types/Resource");
+
+var _typesResource2 = _interopRequireDefault(_typesResource);
+
+var _typesCollection = require("../types/Collection");
+
+var _typesCollection2 = _interopRequireDefault(_typesCollection);
 
 /**
  * @param toTransform Could be a single resource, a collection, a link object, or null.
  */
 
-module.exports = function (toTransform, mode, registry, frameworkReq, frameworkRes) {
-  if (toTransform instanceof Resource) {
+exports["default"] = function (toTransform, mode, registry, frameworkReq, frameworkRes) {
+  if (toTransform instanceof _typesResource2["default"]) {
     return transform(toTransform, frameworkReq, frameworkRes, mode, registry);
-  } else if (toTransform instanceof Collection) {
+  } else if (toTransform instanceof _typesCollection2["default"]) {
     // below, allow the user to return undefined to remove a vlaue.
     var newResources = toTransform.resources.map(function (it) {
       return transform(it, frameworkReq, frameworkRes, mode, registry);
@@ -21,7 +31,7 @@ module.exports = function (toTransform, mode, registry, frameworkReq, frameworkR
       return it !== undefined;
     });
 
-    return new Collection(newResources);
+    return new _typesCollection2["default"](newResources);
   }
 
   // We only transform resources or collections.
@@ -38,7 +48,7 @@ function transform(resource, req, res, transformMode, registry) {
   // is no parentType or the parentType doesn't define an appropriate
   // transformer. Otherwise, it'll return the result of calling
   // the parentType's transformer with the provided arguments.
-  var superFn = function (resource, req, res) {
+  var superFn = function superFn(resource, req, res) {
     var parentType = registry.parentType(resource.type);
 
     if (!parentType || !registry[transformMode](parentType)) {
@@ -50,3 +60,4 @@ function transform(resource, req, res, transformMode, registry) {
 
   return transformFn ? transformFn(resource, req, res, superFn) : resource;
 }
+module.exports = exports["default"];

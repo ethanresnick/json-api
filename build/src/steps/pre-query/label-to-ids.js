@@ -1,19 +1,27 @@
 "use strict";
 
-var _interopRequire = require("babel-runtime/helpers/interop-require")["default"];
+var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
 
-var Q = _interopRequire(require("q"));
+var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
 
-module.exports = function (type, labelOrId, registry, frameworkReq) {
-  return Q.Promise(function (resolve, reject) {
-    var adapter = registry.adapter(type);
+_Object$defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _q = require("q");
+
+var _q2 = _interopRequireDefault(_q);
+
+exports["default"] = function (type, labelOrId, registry, frameworkReq) {
+  return _q2["default"].Promise(function (resolve, reject) {
+    var adapter = registry.dbAdapter(type);
     var model = adapter.getModel(adapter.constructor.getModelName(type));
     var labelMappers = registry.labelMappers(type);
     var labelMapper = labelMappers && labelMappers[labelOrId];
 
     // reolve with the mapped label
     if (typeof labelMapper === "function") {
-      Q(labelMapper(model, frameworkReq)).then(resolve);
+      (0, _q2["default"])(labelMapper(model, frameworkReq)).then(resolve);
     }
 
     // or, if we couldn't find a label mapper, that means
@@ -23,3 +31,5 @@ module.exports = function (type, labelOrId, registry, frameworkReq) {
     }
   });
 };
+
+module.exports = exports["default"];
