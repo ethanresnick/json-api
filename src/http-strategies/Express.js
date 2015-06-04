@@ -12,14 +12,29 @@ import Request from "../types/HTTP/Request";
  * acts as a translation-layer between express and the rest of this json-api
  * framework.
  *
- * @params config An object with a "tunnel" boolean indicating whether to turn
- * on support for request tunneling.
+ * @param {Object} options A set of configuration options.
+ *
+ * @param {boolean} options.tunnel Whether to turn on PATCH tunneling. See:
+ *    http://jsonapi.org/recommendations/#patchless-clients
+ *
+ * @param {boolean} options.handleContentNegotiation If the JSON API library
+ *    can't produce a representation for the response that the client can
+ *    `Accept`, should it return 406 or should it hand the request back to
+ *    Express (i.e. call next()) so that subsequent handlers can attempt to
+ *    find an alternate representation? By defualt, it does the former. But you
+ *    can set this option to false to have this code just pass on to express.
  */
 export default class ExpressStrategy {
-  constructor(apiController, docsController, options = {tunnel: false}) {
+  constructor(apiController, docsController, options) {
+    const defaultOptions = {
+      tunnel: false,
+      handleContentNegotiation: true
+    };
+
     this.api = apiController;
     this.docs = docsController;
-    this.config = options;
+    this.config = Object.assign(defaultOptions, options); // apply options
+
   }
 
   // For requests like GET /:type, GET /:type/:id/:relationship,
@@ -30,25 +45,25 @@ export default class ExpressStrategy {
   apiRequest(req, res, next) {
     buildRequestObject(req, this.config.tunnel).then((requestObject) => {
       this.api.handle(requestObject, req, res).then((responseObject) => {
-        this.sendResources(responseObject, res);
+        this.sendResources(responseObject, res, next);
       });
     }, (err) => {
       res.status(err.status).send(err.message);
-    });
+    }).done();
   }
 
   // For requests for the documentation.
   docsRequest(req, res, next) {
     buildRequestObject(req, this.config.tunnel).then((requestObject) => {
       this.docs.handle(requestObject).then((responseObject) => {
-        this.sendResources(responseObject, res);
+        this.sendResources(responseObject, res, next);
       });
-    });
+    }).done();
   }
 
-  sendResources(responseObject, res) {
+  sendResources(responseObject, res, next) {
     if(!responseObject.contentType) {
-      res.status(406).send();
+      this.config.handleContentNegotiation ? res.status(406).send() : next();
     }
     else {
       res.set("Content-Type", responseObject.contentType);
@@ -76,7 +91,7 @@ export default class ExpressStrategy {
   sendError(error, req, res) {
     buildRequestObject(req).then((requestObject) => {
       API.responseFromExternalError(requestObject, error, this.api.registry).then(
-        (responseObject) => this.sendResources(responseObject, res)
+        (responseObject) => this.sendResources(responseObject, res, () => {})
       );
     });
   }
