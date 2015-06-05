@@ -16,20 +16,6 @@ var _appDatabase = require("../app/database");
 
 var _appDatabase2 = _interopRequireDefault(_appDatabase);
 
-// Trigger other tests
-
-var _contentNegotiation = require("./content-negotiation");
-
-var _contentNegotiation2 = _interopRequireDefault(_contentNegotiation);
-
-var _fetchCollection = require("./fetch-collection");
-
-var _fetchCollection2 = _interopRequireDefault(_fetchCollection);
-
-var _createResource = require("./create-resource");
-
-var _createResource2 = _interopRequireDefault(_createResource);
-
 process.env.TESTING = true;
 
 _q2["default"].longStackSupport = true;
@@ -37,6 +23,14 @@ _q2["default"].longStackSupport = true;
 before(function (done) {
   _appDatabase2["default"].then(function (module) {
     module.fixturesReset().then(function (data) {
+      // Trigger other tests.
+      // Note: we must load these after the fixtures finish, since even
+      // _describing_ the require()d tests needs the fixtures: the App
+      // requests come before describe the describe calls, and those
+      // requests will fail if the fixtures aren't in place.
+      require("./content-negotiation");
+      require("./fetch-collection");
+      require("./create-resource");
       done();
     }).done();
   });
