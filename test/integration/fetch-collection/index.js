@@ -42,14 +42,13 @@ describe("", (describeDone) => {
               // "Unless otherwise noted, objects defined by this
               //  specification MUST NOT contain any additional members."
               it("should not contain extra members", (done) => {
-                const allowedKeys = ["type", "id", "attributes", "relationships", "links", "meta"];
-                allowedKeys.forEach((key) => {
-                  console.log(res.body.data);
-                  delete res.body.data[0][key];
-                });
-                const unallowedKeys =  Object.keys(res.body.data[0]);
+                const isAllowedKey = (key) =>
+                  ["type", "id", "attributes", "relationships", "links", "meta"].indexOf(key) !== -1;
 
-                expect(unallowedKeys.length).to.equal(0);
+                if(!Object.keys(res.body.data[0]).every(isAllowedKey)) {
+                  throw new Error("Invalid Key!");
+                }
+
                 done();
               });
             });
