@@ -5,12 +5,12 @@ This library creates a [JSON API](http://jsonapi.org/)-compliant REST API from y
 
 It currently integrates with [Express](http://expressjs.com/) apps that use [Mongoose](http://mongoosejs.com/) models, but it can easily be integrated with other frameworks and databases. If you want to see an integration with another stack, just open an issue!
 
-*Heads up:* The JSON-API spec isn't quite at version 1.0 yet, nor does this library yet implement the whole spec. In particular, some advanced routes do not work and the library's API is subject to change. That said, all the basic CRUD operations are supported and development is progressing very quickly. The goal is to have the entire spec implemented by the time the final JSON API spec is officially released.
+This library implements all the required portions of the 1.0 spec, which is more than enough for basic CRUD. It does not yet implement some of the smaller, optional pieces, like pagination and related resource URIs.
 
 # Installation
 ```$ npm install json-api```
 
-*On Versioning*: After the JSON API spec is finalized, this library's major version will be bumped to 3.0.0 and it will use semantic versioning going forward. Until then, the 2.x versions should be considered like this library's second "major version zero"—which is needed only because the 1.0 version of this library was stable and used in production for a while.
+*On Versioning*: This library's major version will soon be bumped to 3.0.0, and it will use semantic versioning after that. The 2.x branch does not use semantic versioning. However, even on 2.x versions, "patch updates" (i.e. changes the version's third integer) will always be backwards-compatible. Changes to the the minor version (i.e. the second integer) on the 2.x branch may not be.
 
 # Example API
 Check out the [full, working example repo](http://github.com/ethanresnick/json-api-example) for all the details on building an API with this library. Or, take a look at the basic example below:
