@@ -50,6 +50,7 @@ describe("", function (describeDone) {
             it("should not contain extra members", function (done) {
               var allowedKeys = ["type", "id", "attributes", "relationships", "links", "meta"];
               allowedKeys.forEach(function (key) {
+                console.log(res.body.data);
                 delete res.body.data[0][key];
               });
               var unallowedKeys = _Object$keys(res.body.data[0]);

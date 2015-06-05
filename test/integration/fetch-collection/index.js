@@ -43,7 +43,10 @@ describe("", (describeDone) => {
               //  specification MUST NOT contain any additional members."
               it("should not contain extra members", (done) => {
                 const allowedKeys = ["type", "id", "attributes", "relationships", "links", "meta"];
-                allowedKeys.forEach((key) => { delete res.body.data[0][key]; });
+                allowedKeys.forEach((key) => {
+                  console.log(res.body.data);
+                  delete res.body.data[0][key];
+                });
                 const unallowedKeys =  Object.keys(res.body.data[0]);
 
                 expect(unallowedKeys.length).to.equal(0);
