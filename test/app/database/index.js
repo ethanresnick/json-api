@@ -35,7 +35,7 @@ fixtures.save("all", {
  * Export a promise for an object that can get the models and load
  * and reset the fixtures.
  */
-export default Q.ninvoke(mongoose, "connect", "mongodb://localhost/integation-test")
+export default Q.ninvoke(mongoose, "connect", "mongodb://localhost/integration-test")
   .then(function() {
     return {
       models() {

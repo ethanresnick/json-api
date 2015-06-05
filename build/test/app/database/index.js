@@ -48,7 +48,7 @@ _nodeMongooseFixtures2["default"].save("all", {
  * Export a promise for an object that can get the models and load
  * and reset the fixtures.
  */
-exports["default"] = _q2["default"].ninvoke(_mongoose2["default"], "connect", "mongodb://localhost/integation-test").then(function () {
+exports["default"] = _q2["default"].ninvoke(_mongoose2["default"], "connect", "mongodb://localhost/integration-test").then(function () {
   return {
     models: function models() {
       return _models;
