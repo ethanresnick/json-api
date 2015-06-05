@@ -41,7 +41,7 @@ describe("", function (describeDone) {
             // "A logical collection of resources MUST be represented as
             //  an array, even if it only contains one item or is empty."
             it("should be an array under data", function (done) {
-              (0, _chai.expect)(res.body).to.be.an.array;
+              (0, _chai.expect)(res.body.data).to.be.an.array;
               done();
             });
 

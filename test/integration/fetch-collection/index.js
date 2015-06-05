@@ -35,7 +35,7 @@ describe("", (describeDone) => {
               // "A logical collection of resources MUST be represented as
               //  an array, even if it only contains one item or is empty."
               it("should be an array under data", (done) => {
-                expect(res.body).to.be.an.array;
+                expect(res.body.data).to.be.an.array;
                 done();
               });
 
