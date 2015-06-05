@@ -20,6 +20,14 @@ var _nodeMongooseFixtures = require("node-mongoose-fixtures");
 
 var _nodeMongooseFixtures2 = _interopRequireDefault(_nodeMongooseFixtures);
 
+var _modelsPerson = require("./models/person");
+
+var _modelsPerson2 = _interopRequireDefault(_modelsPerson);
+
+var _modelsSchool = require("./models/school");
+
+var _modelsSchool2 = _interopRequireDefault(_modelsSchool);
+
 var _modelsOrganization = require("./models/organization");
 
 var _modelsOrganization2 = _interopRequireDefault(_modelsOrganization);
@@ -33,9 +41,9 @@ var OrganizationModel = _modelsOrganization2["default"].model;
 var OrganizationSchema = _modelsOrganization2["default"].schema;
 
 var _models = {
-  Person: require("./models/person"),
+  Person: _modelsPerson2["default"],
   Organization: OrganizationModel,
-  School: require("./models/school")(OrganizationModel, OrganizationSchema)
+  School: (0, _modelsSchool2["default"])(OrganizationModel, OrganizationSchema)
 };
 
 _nodeMongooseFixtures2["default"].save("all", {

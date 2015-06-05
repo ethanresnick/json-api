@@ -1,6 +1,9 @@
 import Q from "q";
 import mongoose from "mongoose";
 import fixtures from "node-mongoose-fixtures";
+
+import PersonModel from "./models/person";
+import SchoolModelConstructor from "./models/school";
 import OrganizationModelSchema from "./models/organization";
 
 const ObjectId = mongoose.Types.ObjectId;
@@ -12,9 +15,9 @@ const OrganizationModel = OrganizationModelSchema.model;
 const OrganizationSchema = OrganizationModelSchema.schema;
 
 const models = {
-  Person: require("./models/person"),
+  Person: PersonModel,
   Organization: OrganizationModel,
-  School: require("./models/school")(OrganizationModel, OrganizationSchema)
+  School: SchoolModelConstructor(OrganizationModel, OrganizationSchema)
 };
 
 fixtures.save("all", {
