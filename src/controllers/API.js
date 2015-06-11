@@ -177,7 +177,7 @@ class APIController {
 
     return negotiateContentType(request.accepts, ["application/vnd.api+json"])
       .then((contentType) => {
-        response.contentType = (contentType === "application/json")
+        response.contentType = (contentType.toLowerCase() === "application/json")
           ? contentType : "application/vnd.api+json";
         return response;
       }, () => {

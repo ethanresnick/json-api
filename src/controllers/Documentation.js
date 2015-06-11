@@ -37,7 +37,7 @@ export default class DocumentationController {
     // set content type as negotiated
     response.contentType = contentType;
 
-    if(contentType === "text/html") {
+    if(contentType.toLowerCase() === "text/html") {
       response.body = jade.renderFile(this.template, this.templateData);
     }
 

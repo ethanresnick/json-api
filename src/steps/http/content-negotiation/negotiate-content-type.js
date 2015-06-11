@@ -35,7 +35,9 @@ export default function(acceptHeader, availableBaseTypes) {
     const preferredType = negotiator.mediaType(syntheticAvailableBaseTypes);
 
     // Find all the Accept clauses that specifically reference json api.
-    const jsonApiRanges = acceptables.filter((it) => it.type === "application/vnd.api+json");
+    const jsonApiRanges = acceptables.filter((it) =>
+      it.type.toLowerCase() === "application/vnd.api+json"
+    );
 
     // If we do have JSON API in the Accept header and all instances
     // are parameterized, this is explicitly a 406.
@@ -45,7 +47,7 @@ export default function(acceptHeader, availableBaseTypes) {
 
     // For everything but the JSON API media type, trust
     // negotiator to handle things correctly.
-    else if(preferredType !== "application/vnd.api+json") {
+    else if(preferredType.toLowerCase() !== "application/vnd.api+json") {
       resolve(preferredType);
     }
 
