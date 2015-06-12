@@ -474,10 +474,10 @@ var MongooseAdapter = (function () {
     key: "docToResource",
 
     // Useful to have this as static for calling as a utility outside this class.
-    value: function docToResource(doc, _x, fields) {
+    value: function docToResource(doc, pluralizer, fields) {
       var _this5 = this;
 
-      var pluralizer = arguments[1] === undefined ? _pluralize2["default"].plural : arguments[1];
+      if (pluralizer === undefined) pluralizer = _pluralize2["default"].plural;
 
       var type = this.getType(doc.constructor.modelName, pluralizer);
       var refPaths = util.getReferencePaths(doc.constructor);

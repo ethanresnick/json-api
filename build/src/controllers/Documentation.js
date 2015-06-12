@@ -84,7 +84,7 @@ var DocumentationController = (function () {
       // set content type as negotiated
       response.contentType = contentType;
 
-      if (contentType === "text/html") {
+      if (contentType.toLowerCase() === "text/html") {
         response.body = _jade2["default"].renderFile(this.template, this.templateData);
       } else {
         // Create a collection of "jsonapi-descriptions" from the templateData

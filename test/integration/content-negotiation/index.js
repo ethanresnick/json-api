@@ -27,11 +27,13 @@ AgentPromise.then((Agent) => {
     //  header Content-Type: application/vnd.api+json without any media type
     //  parameters."
     it.skip("must prefer sending JSON API media type, if its acceptable", (done) => {
-      Agent.request("GET", "/organizations")
+      Agent.request("POST", "/organizations")
         .accept("application/vnd.api+json, application/json")
+        .send({"data": VALID_ORG_RESOURCE_NO_ID})
+        .type("application/vnd.api+json")
         .promise()
         .then((res) => {
-          expect(res.status).to.equal(200);
+          expect(res.status).to.equal(201);
           expect(res.headers["content-type"]).to.equal("application/vnd.api+json");
           done();
         }, done).catch(done);

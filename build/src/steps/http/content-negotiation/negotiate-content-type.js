@@ -56,7 +56,7 @@ exports["default"] = function (acceptHeader, availableBaseTypes) {
 
     // Find all the Accept clauses that specifically reference json api.
     var jsonApiRanges = acceptables.filter(function (it) {
-      return it.type === "application/vnd.api+json";
+      return it.type.toLowerCase() === "application/vnd.api+json";
     });
 
     // If we do have JSON API in the Accept header and all instances
@@ -67,7 +67,7 @@ exports["default"] = function (acceptHeader, availableBaseTypes) {
 
     // For everything but the JSON API media type, trust
     // negotiator to handle things correctly.
-    else if (preferredType !== "application/vnd.api+json") {
+    else if (preferredType.toLowerCase() !== "application/vnd.api+json") {
       resolve(preferredType);
     }
 

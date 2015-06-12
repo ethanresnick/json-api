@@ -8,8 +8,8 @@ _Object$defineProperty(exports, "__esModule", {
   value: true
 });
 
-var Field = function Field(name, type, _x, friendlyName, defaultVal) {
-  var validation = arguments[2] === undefined ? {} : arguments[2];
+var Field = function Field(name, type, validation, friendlyName, defaultVal) {
+  if (validation === undefined) validation = {};
 
   _classCallCheck(this, Field);
 

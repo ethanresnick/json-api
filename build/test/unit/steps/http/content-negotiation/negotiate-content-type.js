@@ -17,6 +17,14 @@ describe("negotiateContentType", function () {
     (0, _chai.expect)(_q2["default"].isPromise((0, _srcStepsHttpContentNegotiationNegotiateContentType2["default"])())).to.be["true"];
   });
 
+  it("should use JSON API if clients correctly request it", function (done) {
+    var accept = "application/vnd.api+json";
+    (0, _srcStepsHttpContentNegotiationNegotiateContentType2["default"])(accept, ["application/vnd.api+json"]).then(function (contentType) {
+      (0, _chai.expect)(contentType).to.equal("application/vnd.api+json");
+      done();
+    }, done).done();
+  });
+
   it("should 406 if all json api parameter instances are parameterized, even if there's a valid alternative", function (done) {
     var accept = "application/vnd.api+json; ext=\"ext2\", application/json";
     (0, _srcStepsHttpContentNegotiationNegotiateContentType2["default"])(accept, ["application/vnd.api+json"]).then(done, function (err) {

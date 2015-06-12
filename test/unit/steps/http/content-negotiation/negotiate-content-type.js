@@ -7,6 +7,14 @@ describe("negotiateContentType", () => {
     expect(Q.isPromise(negotiate())).to.be.true;
   });
 
+  it("should use JSON API if clients correctly request it", (done) => {
+    let accept = 'application/vnd.api+json';
+    negotiate(accept, ["application/vnd.api+json"]).then((contentType) => {
+      expect(contentType).to.equal("application/vnd.api+json");
+      done();
+    }, done).done();
+  });
+
   it("should 406 if all json api parameter instances are parameterized, even if there's a valid alternative", (done) => {
     let accept = 'application/vnd.api+json; ext="ext2", application/json';
     negotiate(accept, ["application/vnd.api+json"]).then(done, (err) => {

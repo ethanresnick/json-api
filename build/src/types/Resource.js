@@ -29,6 +29,25 @@ var Resource = (function () {
   }
 
   _createClass(Resource, [{
+    key: "equals",
+    value: function equals(otherResource) {
+      return this.id === otherResource.id && this.type === otherResource.type;
+    }
+  }, {
+    key: "removeAttr",
+    value: function removeAttr(attrPath) {
+      if (this._attrs) {
+        (0, _utilMisc.deleteNested)(attrPath, this._attrs);
+      }
+    }
+  }, {
+    key: "removeRelationship",
+    value: function removeRelationship(relationshipPath) {
+      if (this._relationships) {
+        (0, _utilMisc.deleteNested)(relationshipPath, this._relationships);
+      }
+    }
+  }, {
     key: "id",
     get: function () {
       return this._id;
@@ -50,11 +69,6 @@ var Resource = (function () {
       this._type = String(type);
     }
   }, {
-    key: "equals",
-    value: function equals(otherResource) {
-      return this.id === otherResource.id && this.type === otherResource.type;
-    }
-  }, {
     key: "attrs",
     get: function () {
       return this._attrs;
@@ -71,20 +85,6 @@ var Resource = (function () {
     set: function (relationships) {
       validateFieldGroup(relationships, this._attrs);
       this._relationships = relationships;
-    }
-  }, {
-    key: "removeAttr",
-    value: function removeAttr(attrPath) {
-      if (this._attrs) {
-        (0, _utilMisc.deleteNested)(attrPath, this._attrs);
-      }
-    }
-  }, {
-    key: "removeRelationship",
-    value: function removeRelationship(relationshipPath) {
-      if (this._relationships) {
-        (0, _utilMisc.deleteNested)(relationshipPath, this._relationships);
-      }
     }
   }]);
 

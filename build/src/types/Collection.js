@@ -20,6 +20,11 @@ var Collection = (function () {
   }
 
   _createClass(Collection, [{
+    key: "add",
+    value: function add(resource) {
+      this.resources.push(resource);
+    }
+  }, {
     key: "ids",
     get: function () {
       return this.resources.map(function (it) {
@@ -32,11 +37,6 @@ var Collection = (function () {
       return this.resources.map(function (it) {
         return it.type;
       });
-    }
-  }, {
-    key: "add",
-    value: function add(resource) {
-      this.resources.push(resource);
     }
   }]);
 

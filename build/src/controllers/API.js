@@ -286,7 +286,7 @@ var APIController = (function () {
       response.body = new _typesDocument2["default"](response.errors).get(true);
 
       return (0, _stepsHttpContentNegotiationNegotiateContentType2["default"])(request.accepts, ["application/vnd.api+json"]).then(function (contentType) {
-        response.contentType = contentType === "application/json" ? contentType : "application/vnd.api+json";
+        response.contentType = contentType.toLowerCase() === "application/json" ? contentType : "application/vnd.api+json";
         return response;
       }, function () {
         // if we couldn't find any acceptable content-type,
