@@ -31,7 +31,7 @@ _appAgent2["default"].then(function (Agent) {
     // "Servers MUST send all JSON API data in response documents with the
     //  header Content-Type: application/vnd.api+json without any media type
     //  parameters."
-    it.skip("must prefer sending JSON API media type, if its acceptable", function (done) {
+    it("must prefer sending JSON API media type, if its acceptable", function (done) {
       Agent.request("POST", "/organizations").accept("application/vnd.api+json, application/json").send({ "data": _fixturesCreation.VALID_ORG_RESOURCE_NO_ID }).type("application/vnd.api+json").promise().then(function (res) {
         (0, _chai.expect)(res.status).to.equal(201);
         (0, _chai.expect)(res.headers["content-type"]).to.equal("application/vnd.api+json");
