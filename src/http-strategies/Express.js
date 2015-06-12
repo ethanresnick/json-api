@@ -74,7 +74,7 @@ export default class ExpressStrategy {
       }
 
       if(responseObject.body !== null) {
-        res.send(responseObject.body).end();
+        res.send(new Buffer(responseObject.body)).end();
       }
       else {
         res.end();

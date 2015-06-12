@@ -26,7 +26,7 @@ AgentPromise.then((Agent) => {
     // "Servers MUST send all JSON API data in response documents with the
     //  header Content-Type: application/vnd.api+json without any media type
     //  parameters."
-    it.skip("must prefer sending JSON API media type, if its acceptable", (done) => {
+    it("must prefer sending JSON API media type, if its acceptable", (done) => {
       Agent.request("POST", "/organizations")
         .accept("application/vnd.api+json, application/json")
         .send({"data": VALID_ORG_RESOURCE_NO_ID})
