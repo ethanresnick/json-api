@@ -54,7 +54,6 @@ export default class MongooseAdapter {
 
     // do sorting
     if(Array.isArray(sorts)) {
-      sorts = sorts.map((it) => it.startsWith("+") ? it.substr(1) : it);
       queryBuilder.sort(sorts.join(" "));
     }
 

@@ -9,7 +9,7 @@ export default function(requestContext, responseContext, registry) {
   // Handle fields, sorts, includes and filters.
   if(!requestContext.aboutRelationship) {
     fields = parseFields(requestContext.queryParams.fields);
-    sorts  = parseSorts(requestContext.queryParams.sort);
+    sorts  = parseCommaSeparatedParam(requestContext.queryParams.sort);
     // just support a "simple" filtering strategy for now.
     filters = requestContext.queryParams.filter &&
                 requestContext.queryParams.filter.simple;
@@ -61,24 +61,6 @@ export default function(requestContext, responseContext, registry) {
     });
   }
 
-}
-
-function parseSorts(sortParam) {
-  if(!sortParam) {
-    return undefined;
-  }
-  else {
-    let sorts = parseCommaSeparatedParam(sortParam);
-    let invalidSorts = sorts.filter((it) => !(it.startsWith("+") || it.startsWith("-")));
-    if(invalidSorts.length) {
-      throw new APIError(
-        400, null,
-        "All sort parameters must start with a + or a -.",
-        `The following sort parameters were invalid: ${invalidSorts.join(", ")}.`
-      );
-    }
-    return sorts;
-  }
 }
 
 function parseFields(fieldsParam) {
