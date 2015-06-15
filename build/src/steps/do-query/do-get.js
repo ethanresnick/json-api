@@ -27,7 +27,7 @@ exports["default"] = function (requestContext, responseContext, registry) {
   // Handle fields, sorts, includes and filters.
   if (!requestContext.aboutRelationship) {
     fields = parseFields(requestContext.queryParams.fields);
-    sorts = parseSorts(requestContext.queryParams.sort);
+    sorts = parseCommaSeparatedParam(requestContext.queryParams.sort);
     // just support a "simple" filtering strategy for now.
     filters = requestContext.queryParams.filter && requestContext.queryParams.filter.simple;
     includes = parseCommaSeparatedParam(requestContext.queryParams.include);
@@ -75,35 +75,17 @@ exports["default"] = function (requestContext, responseContext, registry) {
   }
 };
 
-function parseSorts(sortParam) {
-  if (!sortParam) {
-    return undefined;
-  } else {
-    var sorts = parseCommaSeparatedParam(sortParam);
-    var invalidSorts = sorts.filter(function (it) {
-      return !(it.startsWith("+") || it.startsWith("-"));
-    });
-    if (invalidSorts.length) {
-      throw new _typesAPIError2["default"](400, null, "All sort parameters must start with a + or a -.", "The following sort parameters were invalid: " + invalidSorts.join(", ") + ".");
-    }
-    return sorts;
-  }
-}
-
 function parseFields(fieldsParam) {
   var fields = undefined;
   if (typeof fieldsParam === "object") {
     fields = {};
     var isField = function isField(it) {
-      return !(0, _utilArrays.arrayContains)(["id", "type", "meta"], it);
+      return !(0, _utilArrays.arrayContains)(["id", "type"], it);
     };
 
     for (var type in fieldsParam) {
-      var provided = parseCommaSeparatedParam(fieldsParam[type]);
-      //this check handles query strings like fields[people]=
-      if (provided) {
-        fields[type] = provided.filter(isField);
-      }
+      var provided = parseCommaSeparatedParam(fieldsParam[type]) || [];
+      fields[type] = provided.filter(isField);
     }
   }
   return fields;

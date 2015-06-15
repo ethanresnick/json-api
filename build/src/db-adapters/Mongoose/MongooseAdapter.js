@@ -120,9 +120,6 @@ var MongooseAdapter = (function () {
 
       // do sorting
       if (Array.isArray(sorts)) {
-        sorts = sorts.map(function (it) {
-          return it.startsWith("+") ? it.substr(1) : it;
-        });
         queryBuilder.sort(sorts.join(" "));
       }
 
