@@ -67,14 +67,11 @@ function parseFields(fieldsParam) {
   let fields;
   if(typeof fieldsParam === "object") {
     fields = {};
-    let isField = (it) => !arrayContains(["id", "type", "meta"], it);
+    let isField = (it) => !arrayContains(["id", "type"], it);
 
     for(let type in fieldsParam) {
-      let provided = parseCommaSeparatedParam(fieldsParam[type]);
-      //this check handles query strings like fields[people]=
-      if(provided) {
-        fields[type] = provided.filter(isField);
-      }
+      let provided = parseCommaSeparatedParam(fieldsParam[type]) || [];
+      fields[type] = provided.filter(isField);
     }
   }
   return fields;
