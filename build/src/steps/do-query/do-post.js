@@ -61,7 +61,7 @@ exports["default"] = function (requestContext, responseContext, registry) {
             var template = templates && templates.self;
             if (template) {
               var templateData = _Object$assign({ "id": created.id }, created.attrs);
-              responseContext.location = _urlTemplate2["default"].parse(template).expand(templateData);
+              responseContext.headers.location = _urlTemplate2["default"].parse(template).expand(templateData);
             }
           }
         })

@@ -127,55 +127,59 @@ var APIController = (function () {
             case 5:
               response.contentType = context$3$0.sent;
 
+              // No matter what, though, we're varying on Accept. See:
+              // https://github.com/ethanresnick/json-api/issues/22
+              response.headers.vary = "Accept";
+
               if (registry.type(request.type)) {
-                context$3$0.next = 8;
+                context$3$0.next = 9;
                 break;
               }
 
               throw new _typesAPIError2["default"](404, undefined, "" + request.type + " is not a valid type.");
 
-            case 8:
+            case 9:
               if (!request.hasBody) {
+                context$3$0.next = 21;
+                break;
+              }
+
+              context$3$0.next = 12;
+              return (0, _stepsHttpContentNegotiationValidateContentType2["default"])(request, supportedExt);
+
+            case 12:
+              context$3$0.next = 14;
+              return (0, _stepsPreQueryValidateDocument2["default"])(request.body);
+
+            case 14:
+              context$3$0.next = 16;
+              return (0, _stepsPreQueryParseRequestPrimary2["default"])(request.body.data, request.aboutRelationship);
+
+            case 16:
+              parsedPrimary = context$3$0.sent;
+
+              if (request.aboutRelationship) {
                 context$3$0.next = 20;
                 break;
               }
 
-              context$3$0.next = 11;
-              return (0, _stepsHttpContentNegotiationValidateContentType2["default"])(request, supportedExt);
-
-            case 11:
-              context$3$0.next = 13;
-              return (0, _stepsPreQueryValidateDocument2["default"])(request.body);
-
-            case 13:
-              context$3$0.next = 15;
-              return (0, _stepsPreQueryParseRequestPrimary2["default"])(request.body.data, request.aboutRelationship);
-
-            case 15:
-              parsedPrimary = context$3$0.sent;
-
-              if (request.aboutRelationship) {
-                context$3$0.next = 19;
-                break;
-              }
-
-              context$3$0.next = 19;
+              context$3$0.next = 20;
               return (0, _stepsPreQueryValidateResources2["default"])(request.type, parsedPrimary, registry);
 
-            case 19:
+            case 20:
 
               request.primary = (0, _stepsApplyTransform2["default"])(parsedPrimary, "beforeSave", registry, frameworkReq, frameworkRes);
 
-            case 20:
+            case 21:
               if (!(request.idOrIds && request.allowLabel)) {
-                context$3$0.next = 27;
+                context$3$0.next = 28;
                 break;
               }
 
-              context$3$0.next = 23;
+              context$3$0.next = 24;
               return (0, _stepsPreQueryLabelToIds2["default"])(request.type, request.idOrIds, registry, frameworkReq);
 
-            case 23:
+            case 24:
               mappedLabel = context$3$0.sent;
 
               // set the idOrIds on the request context
@@ -187,47 +191,47 @@ var APIController = (function () {
                 response.primary = mappedLabel ? new _typesCollection2["default"]() : null;
               }
 
-            case 27:
+            case 28:
               if (!(typeof response.primary === "undefined")) {
-                context$3$0.next = 42;
+                context$3$0.next = 43;
                 break;
               }
 
               context$3$0.t0 = request.method;
-              context$3$0.next = context$3$0.t0 === "get" ? 31 : context$3$0.t0 === "post" ? 34 : context$3$0.t0 === "patch" ? 37 : context$3$0.t0 === "delete" ? 40 : 42;
+              context$3$0.next = context$3$0.t0 === "get" ? 32 : context$3$0.t0 === "post" ? 35 : context$3$0.t0 === "patch" ? 38 : context$3$0.t0 === "delete" ? 41 : 43;
               break;
 
-            case 31:
-              context$3$0.next = 33;
+            case 32:
+              context$3$0.next = 34;
               return (0, _stepsDoQueryDoGet2["default"])(request, response, registry);
 
-            case 33:
-              return context$3$0.abrupt("break", 42);
-
             case 34:
-              context$3$0.next = 36;
+              return context$3$0.abrupt("break", 43);
+
+            case 35:
+              context$3$0.next = 37;
               return (0, _stepsDoQueryDoPost2["default"])(request, response, registry);
 
-            case 36:
-              return context$3$0.abrupt("break", 42);
-
             case 37:
-              context$3$0.next = 39;
+              return context$3$0.abrupt("break", 43);
+
+            case 38:
+              context$3$0.next = 40;
               return (0, _stepsDoQueryDoPatch2["default"])(request, response, registry);
 
-            case 39:
-              return context$3$0.abrupt("break", 42);
-
             case 40:
-              context$3$0.next = 42;
+              return context$3$0.abrupt("break", 43);
+
+            case 41:
+              context$3$0.next = 43;
               return (0, _stepsDoQueryDoDelete2["default"])(request, response, registry);
 
-            case 42:
-              context$3$0.next = 50;
+            case 43:
+              context$3$0.next = 51;
               break;
 
-            case 44:
-              context$3$0.prev = 44;
+            case 45:
+              context$3$0.prev = 45;
               context$3$0.t1 = context$3$0["catch"](0);
               errorsArr = Array.isArray(context$3$0.t1) ? context$3$0.t1 : [context$3$0.t1];
               apiErrors = errorsArr.map(_typesAPIError2["default"].fromError);
@@ -243,9 +247,9 @@ var APIController = (function () {
               response.errors = response.errors.concat(apiErrors);
               //console.log("API CONTROLLER ERRORS", errorsArr[0], errorsArr[0].stack);
 
-            case 50:
+            case 51:
               if (!response.errors.length) {
-                context$3$0.next = 54;
+                context$3$0.next = 55;
                 break;
               }
 
@@ -255,7 +259,7 @@ var APIController = (function () {
               response.body = new _typesDocument2["default"](response.errors).get(true);
               return context$3$0.abrupt("return", response);
 
-            case 54:
+            case 55:
 
               // apply transforms pre-send
               response.primary = (0, _stepsApplyTransform2["default"])(response.primary, "beforeRender", registry, frameworkReq, frameworkRes);
@@ -268,11 +272,11 @@ var APIController = (function () {
 
               return context$3$0.abrupt("return", response);
 
-            case 58:
+            case 59:
             case "end":
               return context$3$0.stop();
           }
-        }, callee$2$0, this, [[0, 44]]);
+        }, callee$2$0, this, [[0, 45]]);
       }));
     }
   }], [{
@@ -317,7 +321,6 @@ module.exports = exports["default"];
 // Try to negotiate the content type (may fail, and we may need to
 // deviate from the negotiated value if we have to return an error
 // body, rather than our expected response).
-
 // If the type requested in the endpoint hasn't been registered, we 404.
 
 // If the request has a body, validate it and parse its resources.

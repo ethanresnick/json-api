@@ -18,6 +18,10 @@ var _q = require("q");
 
 var _q2 = _interopRequireDefault(_q);
 
+var _vary = require("vary");
+
+var _vary2 = _interopRequireDefault(_vary);
+
 var _contentType = require("content-type");
 
 var _contentType2 = _interopRequireDefault(_contentType);
@@ -104,14 +108,18 @@ var ExpressStrategy = (function () {
   }, {
     key: "sendResources",
     value: function sendResources(responseObject, res, next) {
+      if (responseObject.headers.vary) {
+        (0, _vary2["default"])(res, responseObject.headers.vary);
+      }
+
       if (!responseObject.contentType) {
         this.config.handleContentNegotiation ? res.status(406).send() : next();
       } else {
         res.set("Content-Type", responseObject.contentType);
         res.status(responseObject.status || 200);
 
-        if (responseObject.location) {
-          res.set("Location", responseObject.location);
+        if (responseObject.headers.location) {
+          res.set("Location", responseObject.headers.location);
         }
 
         if (responseObject.body !== null) {
