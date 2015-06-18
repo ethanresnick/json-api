@@ -43,7 +43,7 @@ export default function(requestContext, responseContext, registry) {
         let template = templates && templates.self;
         if(template) {
           let templateData = Object.assign({"id": created.id}, created.attrs);
-          responseContext.location = templating.parse(template).expand(templateData);
+          responseContext.headers.location = templating.parse(template).expand(templateData);
         }
       }
     });

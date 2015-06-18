@@ -24,7 +24,8 @@
     "pluralize": "0.0.11",
     "q": "^1.0.1",
     "raw-body": "1.3.x",
-    "url-template": "^2.0.4"
+    "url-template": "^2.0.4",
+    "vary": "^1.0.0"
   },
   "devDependencies": {
     "babel-eslint": "3.x.x",

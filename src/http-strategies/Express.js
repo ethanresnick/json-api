@@ -1,4 +1,5 @@
 import Q from "q";
+import vary from "vary";
 import contentType from "content-type";
 import getRawBody from "raw-body";
 import API from "../controllers/API";
@@ -62,6 +63,10 @@ export default class ExpressStrategy {
   }
 
   sendResources(responseObject, res, next) {
+    if(responseObject.headers.vary) {
+      vary(res, responseObject.headers.vary);
+    }
+
     if(!responseObject.contentType) {
       this.config.handleContentNegotiation ? res.status(406).send() : next();
     }
@@ -69,8 +74,8 @@ export default class ExpressStrategy {
       res.set("Content-Type", responseObject.contentType);
       res.status(responseObject.status || 200);
 
-      if(responseObject.location) {
-        res.set("Location", responseObject.location);
+      if(responseObject.headers.location) {
+        res.set("Location", responseObject.headers.location);
       }
 
       if(responseObject.body !== null) {
