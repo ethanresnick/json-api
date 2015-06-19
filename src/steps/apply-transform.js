@@ -1,5 +1,6 @@
 import Resource from "../types/Resource";
 import Collection from "../types/Collection";
+import { Promise } from "q";
 
 /**
  * @param toTransform Could be a single resource, a collection, a link object, or null.
@@ -11,16 +12,16 @@ export default function(toTransform, mode, registry, frameworkReq, frameworkRes)
 
   else if (toTransform instanceof Collection) {
     // below, allow the user to return undefined to remove a vlaue.
-    let newResources = toTransform.resources.map((it) =>
+    return Promise.all(toTransform.resources.map((it) =>
       transform(it, frameworkReq, frameworkRes, mode, registry)
-    ).filter((it) => it !== undefined);
-
-    return new Collection(newResources);
+    ).filter((it) => it !== undefined)).then((newResources) => {
+      return new Collection(newResources);
+    });
   }
 
   // We only transform resources or collections.
   else {
-    return toTransform;
+    return Promise.resolve(toTransform);
   }
 }
 
@@ -43,5 +44,11 @@ function transform(resource, req, res, transformMode, registry) {
     }
   };
 
-  return transformFn ? transformFn(resource, req, res, superFn) : resource;
+  if (!transformFn) {
+    return Promise.resolve(resource);
+  }
+
+  // Allow user to return a Promise or a value
+  let transformed = transformFn(resource, req, res, superFn);
+  return Promise.resolve(transformed);
 }

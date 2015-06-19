@@ -1,3 +1,5 @@
+import { Promise } from "q";
+
 module.exports = {
   parentType: "organizations",
   urlTemplates: {
@@ -19,5 +21,12 @@ module.exports = {
         "description": "Whether the school is a college, by the U.S. meaning."
       }
     }
+  },
+
+  beforeSave: function(resource) {
+    return new Promise((resolve, reject) => {
+      resource.attrs.description = "Modified in a Promise";
+      resolve(resource);
+    });
   }
 };

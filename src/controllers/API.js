@@ -78,7 +78,7 @@ class APIController {
             yield validateRequestResources(request.type, parsedPrimary, registry);
           }
 
-          request.primary = applyTransform(
+          request.primary = yield applyTransform(
             parsedPrimary, "beforeSave", registry, frameworkReq, frameworkRes
           );
         }
@@ -154,11 +154,11 @@ class APIController {
       }
 
       // apply transforms pre-send
-      response.primary = applyTransform(
+      response.primary = yield applyTransform(
         response.primary, "beforeRender", registry, frameworkReq, frameworkRes
       );
 
-      response.included = applyTransform(
+      response.included = yield applyTransform(
         response.included, "beforeRender", registry, frameworkReq, frameworkRes
       );
 
