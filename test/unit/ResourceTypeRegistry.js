@@ -24,6 +24,23 @@ describe("ResourceTypeRegistry", function() {
     registry = new ResourceTypeRegistry();
   });
 
+  describe("constructor", () => {
+    it("should register resource descriptions provided in first parameter", () => {
+      registry = new ResourceTypeRegistry([{
+        type: "someType",
+        info: "provided to constructor"
+      }]);
+      expect(registry.type("someType")).to.be.an.object;
+      expect(registry.type("someType").info).to.equal("provided to constructor");
+    });
+
+    it("should save the second paramter as _resourceDefaults property", () => {
+      let defaults = { info: "provided to defaults" };
+      registry = new ResourceTypeRegistry([], defaults);
+      expect(registry._resourceDefaults).to.equal(defaults);
+    });
+  });
+
   describe("type", () => {
     let description = {
       dbAdapter: {},
@@ -36,6 +53,24 @@ describe("ResourceTypeRegistry", function() {
     it("should be a getter/setter for a type",
       makeGetterSetterTest(description, "mytypes", "type", true)
     );
+
+    it("should merge descriptionDefaults into resource description", () => {
+      registry = new ResourceTypeRegistry([], {
+        info: "provided as default"
+      });
+
+      registry.type("someType", {});
+      expect(registry.type("someType").info).to.equal("provided as default");
+    });
+
+    it("should give the description precedence over the provided default", () => {
+      registry = new ResourceTypeRegistry([], {
+        info: "provided as default"
+      });
+
+      registry.type("someType", { info: "overriding the default" });
+      expect(registry.type("someType").info).to.equal("overriding the default");
+    });
   });
 
   describe("adapter", () => {
