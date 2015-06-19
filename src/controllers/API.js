@@ -55,6 +55,10 @@ class APIController {
           request.accepts, ["application/vnd.api+json"]
         );
 
+        // No matter what, though, we're varying on Accept. See:
+        // https://github.com/ethanresnick/json-api/issues/22
+        response.headers.vary = "Accept";
+
         // If the type requested in the endpoint hasn't been registered, we 404.
         if(!registry.type(request.type)) {
           throw new APIError(404, undefined, `${request.type} is not a valid type.`);

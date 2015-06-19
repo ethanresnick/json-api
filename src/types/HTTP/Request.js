@@ -20,7 +20,7 @@ class Request {
     // The URI (or IRI) being requested.
     this.uri = null;
 
-    // The request's Content-Type, *excluding* media-type parameters.
+    // The request's Content-Type.
     this.contentType = null;
 
     // The request's Accept header.

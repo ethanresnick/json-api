@@ -34,8 +34,9 @@ export default class DocumentationController {
     let negotiator = new Negotiator({headers: {accept: request.accepts}});
     let contentType = negotiator.mediaType(["text/html", "application/vnd.api+json"]);
 
-    // set content type as negotiated
+    // set content type as negotiated & vary on accept.
     response.contentType = contentType;
+    response.headers.vary = "Accept";
 
     if(contentType.toLowerCase() === "text/html") {
       response.body = jade.renderFile(this.template, this.templateData);

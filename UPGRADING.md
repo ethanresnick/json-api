@@ -1,5 +1,12 @@
-# v2.2.11 -> v2.3 (Not Semver)
-## Breaking Changes
+# v2.4 -> 2.5 Breaking Changes (Not Semver until 3.0)
+- The `location` property on the `Response` class is now at
+  `response.headers.location` instead of `response.location`.
+
+# v2.3 -> 2.4 Breaking Changes (Not Semver until 3.0)
+- Sort fields (in the `sort` query parameter) no longer need to be prefixed by
+  a "+" to trigger ascending order, per JSON API 1.0.
+
+# v2.2.11 -> v2.3 Breaking Changes (Not Semver until 3.0)
 - Mongoose 4 is now required.
 - The MongooseAdapter is now at a different export path:
   `require("json-api").dbAdapters.MongooseAdapter`.

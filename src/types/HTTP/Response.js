@@ -16,8 +16,11 @@ class Response {
     // The response's content type.
     this.contentType = null;
 
-    // The response's location header
-    this.location = null;
+    // Other headers in the response.
+    this.headers = {
+      location: null,
+      vary: null
+    };
 
     // The response's status.
     this.status = null;
