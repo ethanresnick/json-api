@@ -19,8 +19,9 @@ const autoGetterSetterProps = ["dbAdapter", "beforeSave", "beforeRender",
  * JSON api type and has a number of properties defining it.
  */
 export default class ResourceTypeRegistry {
-  constructor(typeDescriptions = []) {
+  constructor(typeDescriptions = [], resourceDefaults = {}) {
     this._resourceTypes = {};
+    this._resourceDefaults = resourceDefaults;
     typeDescriptions.forEach((it) => { this.type(it); });
   }
 
@@ -35,6 +36,9 @@ export default class ResourceTypeRegistry {
 
     if(description) {
       this._resourceTypes[type] = {};
+
+      // Merge description defaults into provided description
+      description = Object.assign({}, this._resourceDefaults, description);
 
       // Set all the properties for the type that the description provides.
       autoGetterSetterProps.concat(["urlTemplates"]).forEach((k) => {
