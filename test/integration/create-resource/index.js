@@ -1,6 +1,10 @@
 import {expect} from "chai";
 import AgentPromise from "../../app/agent";
-import {ORG_RESOURCE_CLIENT_ID, VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER} from "../fixtures/creation";
+import {
+  ORG_RESOURCE_CLIENT_ID,
+  VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER,
+  VALID_SCHOOL_RESOURCE_NO_ID
+} from "../fixtures/creation";
 
 describe("", (describeDone) => {
   AgentPromise.then((Agent) => {
@@ -41,6 +45,26 @@ describe("", (describeDone) => {
 
             describe("Links", () => {
 
+            });
+            
+            describe("Transforms", () => {
+              describe("beforeSave", () => {
+                it("should execute beforeSave hook", (done) => {
+                  expect(createdResource.attributes.description).to.equal("Added a description in beforeSave");
+                  done();
+                });
+
+                it("should allow beforeSave to return a Promise", (done) => {
+                  Agent.request("POST", "/schools")
+                    .type("application/vnd.api+json")
+                    .send({"data": VALID_SCHOOL_RESOURCE_NO_ID})
+                    .promise()
+                    .then((res) => {
+                      expect(res.body.data.attributes.description).to.equal("Modified in a Promise");
+                      done();
+                    }, done).catch(done);
+                });
+              });
             });
 
             describe("The Created Resource", () => {
