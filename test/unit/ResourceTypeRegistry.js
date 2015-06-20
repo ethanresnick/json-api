@@ -33,12 +33,6 @@ describe("ResourceTypeRegistry", function() {
       expect(registry.type("someType")).to.be.an.object;
       expect(registry.type("someType").info).to.equal("provided to constructor");
     });
-
-    it("should save the second paramter as _resourceDefaults property", () => {
-      let defaults = { info: "provided to defaults" };
-      registry = new ResourceTypeRegistry([], defaults);
-      expect(registry._resourceDefaults).to.equal(defaults);
-    });
   });
 
   describe("type", () => {

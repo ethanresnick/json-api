@@ -1,3 +1,5 @@
+import merge from "lodash/object/merge";
+
 /**
  * A private array of properties that will be used by the class below to
  * automatically generate simple getter setters for each property, all
@@ -6,6 +8,17 @@
  */
 const autoGetterSetterProps = ["dbAdapter", "beforeSave", "beforeRender",
   "labelMappers", "defaultIncludes", "info", "parentType"];
+
+/**
+ * Global defaults for resource descriptions, to be merged into defaults
+ * provided to the ResourceTypeRegistry, which are in turn merged into defaults
+ * provided in each resource type descriptions.
+ */
+const globalResourceDefaults = {
+  behaviors: {
+    dasherizeOutput: { enabled: true }
+  }
+};
 
 /**
  * To fulfill a JSON API request, you often need to know about all the resources
@@ -21,7 +34,7 @@ const autoGetterSetterProps = ["dbAdapter", "beforeSave", "beforeRender",
 export default class ResourceTypeRegistry {
   constructor(typeDescriptions = [], resourceDefaults = {}) {
     this._resourceTypes = {};
-    this._resourceDefaults = resourceDefaults;
+    this._descriptionDefaults = merge({}, resourceDefaults, globalResourceDefaults);
     typeDescriptions.forEach((it) => { this.type(it); });
   }
 
@@ -38,7 +51,7 @@ export default class ResourceTypeRegistry {
       this._resourceTypes[type] = {};
 
       // Merge description defaults into provided description
-      description = Object.assign({}, this._resourceDefaults, description);
+      description = merge({}, this._descriptionDefaults, description);
 
       // Set all the properties for the type that the description provides.
       autoGetterSetterProps.concat(["urlTemplates"]).forEach((k) => {
