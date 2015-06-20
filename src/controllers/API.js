@@ -3,6 +3,7 @@ import co from "co";
 import Response from "../types/HTTP/Response";
 import Document from "../types/Document";
 import Collection from "../types/Collection";
+import Resource from "../types/Resource";
 import APIError from "../types/APIError";
 
 import * as requestValidators from "../steps/http/validate-request";
@@ -15,6 +16,7 @@ import parseRequestPrimary from "../steps/pre-query/parse-request-primary";
 import validateRequestDocument from "../steps/pre-query/validate-document";
 import validateRequestResources from "../steps/pre-query/validate-resources";
 import applyTransform from "../steps/apply-transform";
+import * as formatters from "../steps/format-json";
 
 import doGET from "../steps/do-query/do-get";
 import doPOST from "../steps/do-query/do-post";
@@ -151,6 +153,21 @@ class APIController {
         response.status = pickStatus(response.errors.map((v) => Number(v.status)));
         response.body = new Document(response.errors).get(true);
         return response;
+      }
+
+      // Dasherize if enabled
+      if (response.primary instanceof Collection) {
+        response.primary.resources = response.primary.resources.map(r => {
+          if (registry.behaviors(r.type).dasherizeOutput.enabled) {
+            return formatters.dasherizeResource(r);
+          }
+          return r;
+        });
+      }
+      else if (response.primary instanceof Resource) {
+        if (registry.behaviors(response.primary.type).dasherizeOutput.enabled) {
+          response.primary = formatters.dasherizeResource(response.primary);
+        }
       }
 
       // apply transforms pre-send
