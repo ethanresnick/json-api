@@ -5,7 +5,18 @@
  * whose property is being retrieved/set, and the value to set it to, if any.
  */
 const autoGetterSetterProps = ["dbAdapter", "beforeSave", "beforeRender",
-  "labelMappers", "defaultIncludes", "info", "parentType"];
+  "labelMappers", "defaultIncludes", "info", "parentType", "behaviors"];
+
+/**
+ * Global defaults for resource descriptions, to be merged into defaults
+ * provided to the ResourceTypeRegistry, which are in turn merged into defaults
+ * provided in each resource type descriptionsl
+ */
+const globalResourceDefaults = {
+  behaviors: {
+    dasherizeOutput: { enabled: true }
+  }
+};
 
 /**
  * To fulfill a JSON API request, you often need to know about all the resources
@@ -19,7 +30,7 @@ const autoGetterSetterProps = ["dbAdapter", "beforeSave", "beforeRender",
  * JSON api type and has a number of properties defining it.
  */
 export default class ResourceTypeRegistry {
-  constructor(typeDescriptions = [], resourceDefaults = {}) {
+  constructor(typeDescriptions = [], resourceDefaults = globalResourceDefaults) {
     this._resourceTypes = {};
     this._resourceDefaults = resourceDefaults;
     typeDescriptions.forEach((it) => { this.type(it); });

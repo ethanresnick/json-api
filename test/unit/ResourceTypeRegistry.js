@@ -46,6 +46,7 @@ describe("ResourceTypeRegistry", function() {
       dbAdapter: {},
       beforeSave: () => {},
       beforeRender: () => {},
+      behaviors: { dasherizeOutput: { enabled: true } },
       info: {},
       urlTemplates: {"path": "test template"}
     };
