@@ -80,6 +80,18 @@ class APIController {
             yield validateRequestResources(request.type, parsedPrimary, registry);
           }
 
+          if (parsedPrimary instanceof Collection) {
+            response.primary.resources = response.primary.resources.map(r => {
+              if (registry.behaviors(r.type).dasherizeOutput.enabled) {
+                return formatters.camelizeResource(r);
+              }
+              return r;
+            });
+          }
+          else if (parsedPrimary instanceof Resource) {
+            parsedPrimary = formatters.camelizeResource(parsedPrimary);
+          }
+
           request.primary = yield applyTransform(
             parsedPrimary, "beforeSave", registry, frameworkReq, frameworkRes
           );
