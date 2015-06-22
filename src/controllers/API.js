@@ -167,6 +167,15 @@ class APIController {
         return response;
       }
 
+      // apply transforms pre-send
+      response.primary = yield applyTransform(
+        response.primary, "beforeRender", registry, frameworkReq, frameworkRes
+      );
+
+      response.included = yield applyTransform(
+        response.included, "beforeRender", registry, frameworkReq, frameworkRes
+      );
+
       // Dasherize if enabled
       if (response.primary instanceof Collection) {
         response.primary.resources = response.primary.resources.map(r => {
@@ -181,15 +190,6 @@ class APIController {
           response.primary = formatters.dasherizeResource(response.primary);
         }
       }
-
-      // apply transforms pre-send
-      response.primary = yield applyTransform(
-        response.primary, "beforeRender", registry, frameworkReq, frameworkRes
-      );
-
-      response.included = yield applyTransform(
-        response.included, "beforeRender", registry, frameworkReq, frameworkRes
-      );
 
       if(response.status !== 204) {
         response.body = new Document(
