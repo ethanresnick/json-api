@@ -80,17 +80,8 @@ class APIController {
             yield validateRequestResources(request.type, parsedPrimary, registry);
           }
 
-          if (parsedPrimary instanceof Collection) {
-            response.primary.resources = response.primary.resources.map(r => {
-              if (registry.behaviors(r.type).dasherizeOutput.enabled) {
-                return formatters.camelizeResource(r);
-              }
-              return r;
-            });
-          }
-          else if (parsedPrimary instanceof Resource) {
-            parsedPrimary = formatters.camelizeResource(parsedPrimary);
-          }
+          // Camelize incoming request
+          parsedPrimary = formatters.camelizeResourceOrCollection(parsedPrimary, registry);
 
           request.primary = yield applyTransform(
             parsedPrimary, "beforeSave", registry, frameworkReq, frameworkRes
@@ -176,20 +167,8 @@ class APIController {
         response.included, "beforeRender", registry, frameworkReq, frameworkRes
       );
 
-      // Dasherize if enabled
-      if (response.primary instanceof Collection) {
-        response.primary.resources = response.primary.resources.map(r => {
-          if (registry.behaviors(r.type).dasherizeOutput.enabled) {
-            return formatters.dasherizeResource(r);
-          }
-          return r;
-        });
-      }
-      else if (response.primary instanceof Resource) {
-        if (registry.behaviors(response.primary.type).dasherizeOutput.enabled) {
-          response.primary = formatters.dasherizeResource(response.primary);
-        }
-      }
+      // Dasherize ougoing response
+      response.primary = formatters.dasherizeResourceOrCollection(response.primary, registry);
 
       if(response.status !== 204) {
         response.body = new Document(
