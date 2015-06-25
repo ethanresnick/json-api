@@ -168,7 +168,10 @@ class APIController {
       );
 
       // Dasherize ougoing response
-      response.primary = formatters.dasherizeResourceOrCollection(response.primary, registry);
+      // (DELETE responses don't have primary data)
+      if (response.primary) {
+        response.primary = formatters.dasherizeResourceOrCollection(response.primary, registry);
+      }
 
       if(response.status !== 204) {
         response.body = new Document(
