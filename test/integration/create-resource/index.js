@@ -98,7 +98,7 @@ describe("", () => {
 
           describe("Document Structure", () => {
             it("should contain an error", () => {
-              expect(err.response.body.errors).to.be.an("object");
+              expect(err.response.body.errors).to.be.an("array");
             });
           });
         });

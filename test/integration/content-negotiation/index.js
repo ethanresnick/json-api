@@ -17,7 +17,7 @@ AgentPromise.then((Agent) => {
           done(new Error("Should not run!"));
         }, (err) => {
           expect(err.status).to.equal(415);
-          expect(err.response.body.errors).to.be.an("object");
+          expect(err.response.body.errors).to.be.an("array");
           expect(err.response.body.errors[0].title).to.equal("Invalid Media Type Parameter(s)");
           done();
         }).catch(done);

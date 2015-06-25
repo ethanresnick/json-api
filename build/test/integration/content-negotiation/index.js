@@ -22,7 +22,7 @@ _appAgent2["default"].then(function (Agent) {
         done(new Error("Should not run!"));
       }, function (err) {
         (0, _chai.expect)(err.status).to.equal(415);
-        (0, _chai.expect)(err.response.body.errors).to.be.an("object");
+        (0, _chai.expect)(err.response.body.errors).to.be.an("array");
         (0, _chai.expect)(err.response.body.errors[0].title).to.equal("Invalid Media Type Parameter(s)");
         done();
       })["catch"](done);

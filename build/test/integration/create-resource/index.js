@@ -90,7 +90,7 @@ describe("", function () {
 
         describe("Document Structure", function () {
           it("should contain an error", function () {
-            (0, _chai.expect)(err.response.body.errors).to.be.an("object");
+            (0, _chai.expect)(err.response.body.errors).to.be.an("array");
           });
         });
       });
