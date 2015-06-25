@@ -78,15 +78,18 @@ function relationshipObjectToJSON(linkObject, urlTemplates, templateData) {
   // Add urls that we can.
   if(urlTemplates[templateData.ownerType]) {
     let relatedUrlTemplate = urlTemplates[templateData.ownerType].related;
-
-    if(relatedUrlTemplate) {
-      result.related = relatedUrlTemplate.expand(templateData);
-    }
-
     let selfUrlTemplate = urlTemplates[templateData.ownerType].relationship;
 
+    if(relatedUrlTemplate || selfUrlTemplate) {
+      result.links = {};
+    }
+
+    if(relatedUrlTemplate) {
+      result.links.related = relatedUrlTemplate.expand(templateData);
+    }
+
     if(selfUrlTemplate) {
-      result.self = selfUrlTemplate.expand(templateData);
+      result.links.self = selfUrlTemplate.expand(templateData);
     }
   }
 

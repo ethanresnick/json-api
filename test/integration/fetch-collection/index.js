@@ -51,6 +51,21 @@ describe("", (describeDone) => {
 
                 done();
               });
+
+              it("should contain links under each relationship", (done) => {
+                let liaisonRelationships = res.body.data.map(it => it.relationships.liaisons);
+                liaisonRelationships.forEach((it) => {
+                  // Every liaison should have a links object,
+                  // and self and related must not be outside of links.
+                  expect(it.links).to.be.an("object");
+                  expect(it.self).to.be.undefined;
+                  expect(it.related).to.be.undefined;
+
+                  expect(it.links.self).to.be.a("string");
+                  expect(it.data).to.not.be.undefined; //can be null, though
+                });
+                done();
+              });
             });
           });
         });
