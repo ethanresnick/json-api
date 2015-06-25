@@ -63,6 +63,4 @@ AgentPromise.then((Agent) => {
         }, done).catch(done);
     });
   });
-}, (err) => {
-  console.log("couldn't make agent!", err.stack);
-});
+}).done();

@@ -81,7 +81,7 @@ describe("", function (describeDone) {
       });
       describeDone();
     }, describeDone);
-  })["catch"](describeDone);
+  }).done();
 });
 
 describe("", function (describeDone) {
@@ -106,7 +106,7 @@ describe("", function (describeDone) {
       });
       describeDone();
     }, describeDone);
-  })["catch"](describeDone);
+  }).done();
 });
 
 // "[S]erver implementations MUST ignore

@@ -56,4 +56,4 @@ _appAgent2["default"].then(function (Agent) {
       }, done)["catch"](done);
     });
   });
-}, function (err) {});
+}).done();

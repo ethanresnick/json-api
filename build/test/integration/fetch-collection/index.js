@@ -79,7 +79,7 @@ describe("", function (describeDone) {
         });
       });
       describeDone();
-    }, describeDone)["catch"](describeDone);
+    }, describeDone).done();
   });
 });
 // "[S]erver implementations MUST ignore

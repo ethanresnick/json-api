@@ -87,7 +87,7 @@ describe("", (describeDone) => {
         });
         describeDone();
       }, describeDone);
-  }).catch(describeDone);
+  }).done();
 });
 
 describe("", (describeDone) => {
@@ -114,7 +114,7 @@ describe("", (describeDone) => {
         });
         describeDone();
       }, describeDone);
-  }).catch(describeDone);
+  }).done();
 });
 
     // "[S]erver implementations MUST ignore
