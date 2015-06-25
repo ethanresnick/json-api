@@ -1,10 +1,8 @@
 "use strict";
 
-var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
-
 var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
 
-_Object$defineProperty(exports, "__esModule", {
+Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
@@ -16,6 +14,8 @@ var _typesCollection = require("../types/Collection");
 
 var _typesCollection2 = _interopRequireDefault(_typesCollection);
 
+var _q = require("q");
+
 /**
  * @param toTransform Could be a single resource, a collection, a link object, or null.
  */
@@ -25,18 +25,18 @@ exports["default"] = function (toTransform, mode, registry, frameworkReq, framew
     return transform(toTransform, frameworkReq, frameworkRes, mode, registry);
   } else if (toTransform instanceof _typesCollection2["default"]) {
     // below, allow the user to return undefined to remove a vlaue.
-    var newResources = toTransform.resources.map(function (it) {
+    return _q.Promise.all(toTransform.resources.map(function (it) {
       return transform(it, frameworkReq, frameworkRes, mode, registry);
     }).filter(function (it) {
       return it !== undefined;
+    })).then(function (newResources) {
+      return new _typesCollection2["default"](newResources);
     });
-
-    return new _typesCollection2["default"](newResources);
   }
 
   // We only transform resources or collections.
   else {
-    return toTransform;
+    return _q.Promise.resolve(toTransform);
   }
 };
 
@@ -58,6 +58,12 @@ function transform(resource, req, res, transformMode, registry) {
     }
   };
 
-  return transformFn ? transformFn(resource, req, res, superFn) : resource;
+  if (!transformFn) {
+    return _q.Promise.resolve(resource);
+  }
+
+  // Allow user to return a Promise or a value
+  var transformed = transformFn(resource, req, res, superFn);
+  return _q.Promise.resolve(transformed);
 }
 module.exports = exports["default"];

@@ -1,17 +1,14 @@
 "use strict";
 
-var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
-
 var _Object$seal = require("babel-runtime/core-js/object/seal")["default"];
 
 var _Object$assign = require("babel-runtime/core-js/object/assign")["default"];
 
 var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
 
-_Object$defineProperty(exports, "__esModule", {
+Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
 exports.ValueObject = ValueObject;
 exports.objectIsEmpty = objectIsEmpty;
 exports.mapObject = mapObject;

@@ -6,8 +6,6 @@ var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default
 
 var _defineProperty = require("babel-runtime/helpers/define-property")["default"];
 
-var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
-
 var _Object$keys = require("babel-runtime/core-js/object/keys")["default"];
 
 var _Object$assign = require("babel-runtime/core-js/object/assign")["default"];
@@ -16,7 +14,7 @@ var _interopRequireDefault = require("babel-runtime/helpers/interop-require-defa
 
 var _interopRequireWildcard = require("babel-runtime/helpers/interop-require-wildcard")["default"];
 
-_Object$defineProperty(exports, "__esModule", {
+Object.defineProperty(exports, "__esModule", {
   value: true
 });
 

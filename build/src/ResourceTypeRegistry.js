@@ -10,16 +10,13 @@ var _createClass = require("babel-runtime/helpers/create-class")["default"];
 
 var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default"];
 
-var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
-
 var _Object$assign = require("babel-runtime/core-js/object/assign")["default"];
 
 var _Object$keys = require("babel-runtime/core-js/object/keys")["default"];
 
-_Object$defineProperty(exports, "__esModule", {
+Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
 var autoGetterSetterProps = ["dbAdapter", "beforeSave", "beforeRender", "labelMappers", "defaultIncludes", "info", "parentType"];
 
 /**

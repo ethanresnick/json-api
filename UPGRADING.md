@@ -1,3 +1,6 @@
+# v2.5 -> 2.6 Breaking Changes (Not Semver until 3.0)
+- In relationship objects, `self` and `related` links now properly show up under the links key. Closes #36.
+
 # v2.4 -> 2.5 Breaking Changes (Not Semver until 3.0)
 - The `location` property on the `Response` class is now at
   `response.headers.location` instead of `response.location`.

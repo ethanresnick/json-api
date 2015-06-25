@@ -4,9 +4,7 @@ var _createClass = require("babel-runtime/helpers/create-class")["default"];
 
 var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default"];
 
-var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
-
-_Object$defineProperty(exports, "__esModule", {
+Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
@@ -49,19 +47,19 @@ var Resource = (function () {
     }
   }, {
     key: "id",
-    get: function () {
+    get: function get() {
       return this._id;
     },
-    set: function (id) {
+    set: function set(id) {
       // allow empty id for the case of a new resource POST.
       this._id = id ? String(id) : undefined;
     }
   }, {
     key: "type",
-    get: function () {
+    get: function get() {
       return this._type;
     },
-    set: function (type) {
+    set: function set(type) {
       if (!type) {
         throw new Error("type is required");
       }
@@ -70,19 +68,19 @@ var Resource = (function () {
     }
   }, {
     key: "attrs",
-    get: function () {
+    get: function get() {
       return this._attrs;
     },
-    set: function (attrs) {
+    set: function set(attrs) {
       validateFieldGroup(attrs, this._relationships, true);
       this._attrs = attrs;
     }
   }, {
     key: "relationships",
-    get: function () {
+    get: function get() {
       return this._relationships;
     },
-    set: function (relationships) {
+    set: function set(relationships) {
       validateFieldGroup(relationships, this._attrs);
       this._relationships = relationships;
     }

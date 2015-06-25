@@ -4,13 +4,11 @@ var _createClass = require("babel-runtime/helpers/create-class")["default"];
 
 var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default"];
 
-var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
-
 var _Object$assign = require("babel-runtime/core-js/object/assign")["default"];
 
 var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
 
-_Object$defineProperty(exports, "__esModule", {
+Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
@@ -116,15 +114,18 @@ function relationshipObjectToJSON(linkObject, urlTemplates, templateData) {
   // Add urls that we can.
   if (urlTemplates[templateData.ownerType]) {
     var relatedUrlTemplate = urlTemplates[templateData.ownerType].related;
-
-    if (relatedUrlTemplate) {
-      result.related = relatedUrlTemplate.expand(templateData);
-    }
-
     var selfUrlTemplate = urlTemplates[templateData.ownerType].relationship;
 
+    if (relatedUrlTemplate || selfUrlTemplate) {
+      result.links = {};
+    }
+
+    if (relatedUrlTemplate) {
+      result.links.related = relatedUrlTemplate.expand(templateData);
+    }
+
     if (selfUrlTemplate) {
-      result.self = selfUrlTemplate.expand(templateData);
+      result.links.self = selfUrlTemplate.expand(templateData);
     }
   }
 

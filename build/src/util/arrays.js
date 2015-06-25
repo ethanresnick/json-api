@@ -1,13 +1,10 @@
 "use strict";
 
-var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
-
 var _Number$isNaN = require("babel-runtime/core-js/number/is-nan")["default"];
 
-_Object$defineProperty(exports, "__esModule", {
+Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
 exports.arrayUnique = arrayUnique;
 exports.arrayValuesMatch = arrayValuesMatch;
 exports.arrayContains = arrayContains;

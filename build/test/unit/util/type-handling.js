@@ -1,7 +1,5 @@
 "use strict";
 
-var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
-
 var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
 
 var _interopRequireWildcard = require("babel-runtime/helpers/interop-require-wildcard")["default"];
@@ -77,7 +75,7 @@ describe("Utility methods", function () {
       /*eslint-disable new-cap */
       var WrappedConstructor = utils.ValueObject(function () {
         this.allowedProp = null;
-        _Object$defineProperty(this, "otherValidProp", { writable: true, enumerable: true });
+        Object.defineProperty(this, "otherValidProp", { writable: true, enumerable: true });
       });
       /*eslint-enable */
 

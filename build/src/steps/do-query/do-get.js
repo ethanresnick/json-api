@@ -2,11 +2,9 @@
 
 var _slicedToArray = require("babel-runtime/helpers/sliced-to-array")["default"];
 
-var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
-
 var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
 
-_Object$defineProperty(exports, "__esModule", {
+Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
@@ -65,7 +63,7 @@ exports["default"] = function (requestContext, responseContext, registry) {
 
       if (!relationship) {
         var title = "Invalid relationship name.";
-        var detail = "" + requestContext.relationship + " is not a valid " + ("relationship name on resources of type '" + type + "'");
+        var detail = requestContext.relationship + " is not a valid " + ("relationship name on resources of type '" + type + "'");
 
         throw new _typesAPIError2["default"](404, undefined, title, detail);
       }

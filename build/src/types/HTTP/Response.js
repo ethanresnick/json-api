@@ -2,9 +2,7 @@
 
 var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default"];
 
-var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
-
-_Object$defineProperty(exports, "__esModule", {
+Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
@@ -43,16 +41,16 @@ var Response = function Response() {
   // The response's primary data. Have to use
   // Object.defineProperty to default it to undefined
   // while allowing us to set it post seal().
-  _Object$defineProperty(this, "primary", propDesc);
+  Object.defineProperty(this, "primary", propDesc);
 
   // The response's included resources.
-  _Object$defineProperty(this, "included", propDesc);
+  Object.defineProperty(this, "included", propDesc);
 
   // The response document's top-level links.
-  _Object$defineProperty(this, "links", propDesc);
+  Object.defineProperty(this, "links", propDesc);
 
   // The response document's top-level meta information.
-  _Object$defineProperty(this, "meta", propDesc);
+  Object.defineProperty(this, "meta", propDesc);
 };
 
 exports["default"] = (0, _utilTypeHandling.ValueObject)(Response);

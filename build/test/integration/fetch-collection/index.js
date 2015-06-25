@@ -58,6 +58,23 @@ describe("", function (describeDone) {
 
               done();
             });
+
+            it("should contain links under each relationship", function (done) {
+              var liaisonRelationships = res.body.data.map(function (it) {
+                return it.relationships.liaisons;
+              });
+              liaisonRelationships.forEach(function (it) {
+                // Every liaison should have a links object,
+                // and self and related must not be outside of links.
+                (0, _chai.expect)(it.links).to.be.an("object");
+                (0, _chai.expect)(it.self).to.be.undefined;
+                (0, _chai.expect)(it.related).to.be.undefined;
+
+                (0, _chai.expect)(it.links.self).to.be.a("string");
+                (0, _chai.expect)(it.data).to.not.be.undefined; //can be null, though
+              });
+              done();
+            });
           });
         });
       });

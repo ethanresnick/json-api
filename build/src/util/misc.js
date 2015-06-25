@@ -5,14 +5,11 @@
  */
 "use strict";
 
-var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
-
 var _Set = require("babel-runtime/core-js/set")["default"];
 
-_Object$defineProperty(exports, "__esModule", {
+Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
 exports.deleteNested = deleteNested;
 exports.isSubsetOf = isSubsetOf;
 exports.isPlainObject = isPlainObject;

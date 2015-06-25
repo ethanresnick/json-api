@@ -45,6 +45,22 @@ describe("", function (describeDone) {
 
           describe("Links", function () {});
 
+          describe("Transforms", function () {
+            describe("beforeSave", function () {
+              it("should execute beforeSave hook", function (done) {
+                (0, _chai.expect)(createdResource.attributes.description).to.equal("Added a description in beforeSave");
+                done();
+              });
+
+              it("should allow beforeSave to return a Promise", function (done) {
+                Agent.request("POST", "/schools").type("application/vnd.api+json").send({ "data": _fixturesCreation.VALID_SCHOOL_RESOURCE_NO_ID }).promise().then(function (res) {
+                  (0, _chai.expect)(res.body.data.attributes.description).to.equal("Modified in a Promise");
+                  done();
+                }, done)["catch"](done);
+              });
+            });
+          });
+
           describe("The Created Resource", function () {
             it("should return the created resource", function (done) {
               (0, _chai.expect)(createdResource).to.be.an.object;

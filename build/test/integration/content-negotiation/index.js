@@ -56,4 +56,6 @@ _appAgent2["default"].then(function (Agent) {
       }, done)["catch"](done);
     });
   });
-}, function (err) {});
+}, function (err) {
+  console.log("couldn't make agent!", err.stack);
+});

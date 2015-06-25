@@ -2,9 +2,7 @@
 
 var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default"];
 
-var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
-
-_Object$defineProperty(exports, "__esModule", {
+Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
@@ -23,7 +21,7 @@ var Request = function Request() {
 
   // The json of the body. Have to use Object.defineProperty to default
   // it to undefined while still allowing us to change it post seal().
-  _Object$defineProperty(this, "body", { writable: true, enumerable: true });
+  Object.defineProperty(this, "body", { writable: true, enumerable: true });
 
   // The HTTP method for the request.
   this.method = null;

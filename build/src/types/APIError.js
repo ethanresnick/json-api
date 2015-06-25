@@ -10,14 +10,11 @@ var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default
 
 var _slicedToArray = require("babel-runtime/helpers/sliced-to-array")["default"];
 
-var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
-
 var _Array$from3 = require("babel-runtime/core-js/array/from")["default"];
 
-_Object$defineProperty(exports, "__esModule", {
+Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
 var nonEnumerable = { writable: true, enumerable: false };
 
 var APIError = (function (_Error) {
@@ -32,9 +29,9 @@ var APIError = (function (_Error) {
 
     // Hack around lack of proxy support and default non-enumerability
     // of class accessor properties, while still giving us validation.
-    _Object$defineProperty(this, "_status", nonEnumerable);
-    _Object$defineProperty(this, "_code", nonEnumerable);
-    _Object$defineProperty(this, "status", {
+    Object.defineProperty(this, "_status", nonEnumerable);
+    Object.defineProperty(this, "_code", nonEnumerable);
+    Object.defineProperty(this, "status", {
       enumerable: true,
       get: function get() {
         return _this._status;
@@ -47,7 +44,7 @@ var APIError = (function (_Error) {
         }
       }
     });
-    _Object$defineProperty(this, "code", {
+    Object.defineProperty(this, "code", {
       enumerable: true,
       get: function get() {
         return _this._code;

@@ -1,5 +1,7 @@
 "use strict";
 
+var _q = require("q");
+
 module.exports = {
   parentType: "organizations",
   urlTemplates: {
@@ -21,5 +23,12 @@ module.exports = {
         "description": "Whether the school is a college, by the U.S. meaning."
       }
     }
+  },
+
+  beforeSave: function beforeSave(resource) {
+    return new _q.Promise(function (resolve, reject) {
+      resource.attrs.description = "Modified in a Promise";
+      resolve(resource);
+    });
   }
 };
