@@ -1,0 +1,9 @@
+# Save as .codeclimate.yml (note leading .) in project root directory
+languages:
+  JavaScript: true
+engines:
+  eslint:
+    enabled: true
+exclude_paths:
+- "build/*"
+- "lib/*"
