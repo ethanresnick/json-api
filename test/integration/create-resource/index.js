@@ -33,7 +33,7 @@ describe("", (describeDone) => {
             // "A JSON object MUST be at the root of every
             // JSON API request and response containing data."
             it("should have an object/document at the top level", (done) => {
-              expect(res.body).to.be.an.object;
+              expect(res.body).to.be.an("object");
               done();
             });
 
@@ -46,7 +46,7 @@ describe("", (describeDone) => {
             describe("Links", () => {
 
             });
-            
+
             describe("Transforms", () => {
               describe("beforeSave", () => {
                 it("should execute beforeSave hook", (done) => {
@@ -69,11 +69,11 @@ describe("", (describeDone) => {
 
             describe("The Created Resource", () => {
               it("should return the created resource", (done) => {
-                expect(createdResource).to.be.an.object;
+                expect(createdResource).to.be.an("object");
                 expect(createdResource.type).to.equal("organizations");
-                expect(createdResource.attributes).to.be.an.object;
-                expect(createdResource.relationships).to.be.an.object;
-                expect(createdResource.relationships.liaisons).to.be.an.object;
+                expect(createdResource.attributes).to.be.an("object");
+                expect(createdResource.relationships).to.be.an("object");
+                expect(createdResource.relationships.liaisons).to.be.an("object");
                 done();
               });
 
@@ -107,7 +107,7 @@ describe("", (describeDone) => {
 
           describe("Document Structure", () => {
             it("should contain an error", (done) => {
-              expect(err.response.body.errors).to.be.an.object;
+              expect(err.response.body.errors).to.be.an("object");
               done();
             });
           });

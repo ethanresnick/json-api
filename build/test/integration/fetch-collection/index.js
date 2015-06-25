@@ -25,13 +25,13 @@ describe("", function (describeDone) {
           // "A JSON object MUST be at the root of every
           // JSON API request and response containing data."
           it("should have an object/document at the top level", function (done) {
-            (0, _chai.expect)(res.body).to.be.an.object;
+            (0, _chai.expect)(res.body).to.be.an("object");
             done();
           });
 
           describe("Links", function () {
             it("should contain a self link to the collection", function (done) {
-              (0, _chai.expect)(res.body.links).to.be.an.object;
+              (0, _chai.expect)(res.body.links).to.be.an("object");
               (0, _chai.expect)(res.body.links.self).to.match(/\:\d{1,5}\/organizations/);
               done();
             });
@@ -41,7 +41,7 @@ describe("", function (describeDone) {
             // "A logical collection of resources MUST be represented as
             //  an array, even if it only contains one item or is empty."
             it("should be an array under data", function (done) {
-              (0, _chai.expect)(res.body.data).to.be.an.array;
+              (0, _chai.expect)(res.body.data).to.be.an("array");
               done();
             });
 

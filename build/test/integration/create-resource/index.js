@@ -33,7 +33,7 @@ describe("", function (describeDone) {
           // "A JSON object MUST be at the root of every
           // JSON API request and response containing data."
           it("should have an object/document at the top level", function (done) {
-            (0, _chai.expect)(res.body).to.be.an.object;
+            (0, _chai.expect)(res.body).to.be.an("object");
             done();
           });
 
@@ -63,11 +63,11 @@ describe("", function (describeDone) {
 
           describe("The Created Resource", function () {
             it("should return the created resource", function (done) {
-              (0, _chai.expect)(createdResource).to.be.an.object;
+              (0, _chai.expect)(createdResource).to.be.an("object");
               (0, _chai.expect)(createdResource.type).to.equal("organizations");
-              (0, _chai.expect)(createdResource.attributes).to.be.an.object;
-              (0, _chai.expect)(createdResource.relationships).to.be.an.object;
-              (0, _chai.expect)(createdResource.relationships.liaisons).to.be.an.object;
+              (0, _chai.expect)(createdResource.attributes).to.be.an("object");
+              (0, _chai.expect)(createdResource.relationships).to.be.an("object");
+              (0, _chai.expect)(createdResource.relationships.liaisons).to.be.an("object");
               done();
             });
 
@@ -99,7 +99,7 @@ describe("", function (describeDone) {
 
         describe("Document Structure", function () {
           it("should contain an error", function (done) {
-            (0, _chai.expect)(err.response.body.errors).to.be.an.object;
+            (0, _chai.expect)(err.response.body.errors).to.be.an("object");
             done();
           });
         });

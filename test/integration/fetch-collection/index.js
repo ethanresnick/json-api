@@ -19,13 +19,13 @@ describe("", (describeDone) => {
             // "A JSON object MUST be at the root of every
             // JSON API request and response containing data."
             it("should have an object/document at the top level", (done) => {
-              expect(res.body).to.be.an.object;
+              expect(res.body).to.be.an("object");
               done();
             });
 
             describe("Links", () => {
               it("should contain a self link to the collection", (done) => {
-                expect(res.body.links).to.be.an.object;
+                expect(res.body.links).to.be.an("object");
                 expect(res.body.links.self).to.match(/\:\d{1,5}\/organizations/);
                 done();
               });
@@ -35,7 +35,7 @@ describe("", (describeDone) => {
               // "A logical collection of resources MUST be represented as
               //  an array, even if it only contains one item or is empty."
               it("should be an array under data", (done) => {
-                expect(res.body.data).to.be.an.array;
+                expect(res.body.data).to.be.an("array");
                 done();
               });
 
