@@ -1,7 +1,7 @@
 import {expect} from "chai";
 import AgentPromise from "../../app/agent";
 
-describe("", (describeDone) => {
+describe("", () => {
   AgentPromise.then((Agent) => {
     Agent.request("GET", "/organizations")
       .accept("application/vnd.api+json")
@@ -9,50 +9,44 @@ describe("", (describeDone) => {
       .then((res) => {
         describe("Fetching Collection", () => {
           describe("Status Code", () => {
-            it("should be 200", (done) => {
+            it("should be 200", () => {
               expect(res.status).to.equal(200);
-              done();
             });
           });
 
           describe("Document Structure", () => {
             // "A JSON object MUST be at the root of every
             // JSON API request and response containing data."
-            it("should have an object/document at the top level", (done) => {
+            it("should have an object/document at the top level", () => {
               expect(res.body).to.be.an("object");
-              done();
             });
 
             describe("Links", () => {
-              it("should contain a self link to the collection", (done) => {
+              it("should contain a self link to the collection", () => {
                 expect(res.body.links).to.be.an("object");
                 expect(res.body.links.self).to.match(/\:\d{1,5}\/organizations/);
-                done();
               });
             });
 
             describe("Resource Objects/Primary Data", () => {
               // "A logical collection of resources MUST be represented as
               //  an array, even if it only contains one item or is empty."
-              it("should be an array under data", (done) => {
+              it("should be an array under data", () => {
                 expect(res.body.data).to.be.an("array");
-                done();
               });
 
               // "Unless otherwise noted, objects defined by this
               //  specification MUST NOT contain any additional members."
-              it("should not contain extra members", (done) => {
+              it("should not contain extra members", () => {
                 const isAllowedKey = (key) =>
                   ["type", "id", "attributes", "relationships", "links", "meta"].indexOf(key) !== -1;
 
                 if(!Object.keys(res.body.data[0]).every(isAllowedKey)) {
                   throw new Error("Invalid Key!");
                 }
-
-                done();
               });
 
-              it("should contain links under each relationship", (done) => {
+              it("should contain links under each relationship", () => {
                 let liaisonRelationships = res.body.data.map(it => it.relationships.liaisons);
                 liaisonRelationships.forEach((it) => {
                   // Every liaison should have a links object,
@@ -64,14 +58,12 @@ describe("", (describeDone) => {
                   expect(it.links.self).to.be.a("string");
                   expect(it.data).to.not.be.undefined; //can be null, though
                 });
-                done();
               });
             });
           });
         });
-        describeDone();
-      }, describeDone).done();
-  });
+      }).done();
+  }).done();
 });
     // "[S]erver implementations MUST ignore
     //  [members] not recognized by this specification."

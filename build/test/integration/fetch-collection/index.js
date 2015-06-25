@@ -10,44 +10,40 @@ var _appAgent = require("../../app/agent");
 
 var _appAgent2 = _interopRequireDefault(_appAgent);
 
-describe("", function (describeDone) {
+describe("", function () {
   _appAgent2["default"].then(function (Agent) {
     Agent.request("GET", "/organizations").accept("application/vnd.api+json").promise().then(function (res) {
       describe("Fetching Collection", function () {
         describe("Status Code", function () {
-          it("should be 200", function (done) {
+          it("should be 200", function () {
             (0, _chai.expect)(res.status).to.equal(200);
-            done();
           });
         });
 
         describe("Document Structure", function () {
           // "A JSON object MUST be at the root of every
           // JSON API request and response containing data."
-          it("should have an object/document at the top level", function (done) {
+          it("should have an object/document at the top level", function () {
             (0, _chai.expect)(res.body).to.be.an("object");
-            done();
           });
 
           describe("Links", function () {
-            it("should contain a self link to the collection", function (done) {
+            it("should contain a self link to the collection", function () {
               (0, _chai.expect)(res.body.links).to.be.an("object");
               (0, _chai.expect)(res.body.links.self).to.match(/\:\d{1,5}\/organizations/);
-              done();
             });
           });
 
           describe("Resource Objects/Primary Data", function () {
             // "A logical collection of resources MUST be represented as
             //  an array, even if it only contains one item or is empty."
-            it("should be an array under data", function (done) {
+            it("should be an array under data", function () {
               (0, _chai.expect)(res.body.data).to.be.an("array");
-              done();
             });
 
             // "Unless otherwise noted, objects defined by this
             //  specification MUST NOT contain any additional members."
-            it("should not contain extra members", function (done) {
+            it("should not contain extra members", function () {
               var isAllowedKey = function isAllowedKey(key) {
                 return ["type", "id", "attributes", "relationships", "links", "meta"].indexOf(key) !== -1;
               };
@@ -55,11 +51,9 @@ describe("", function (describeDone) {
               if (!_Object$keys(res.body.data[0]).every(isAllowedKey)) {
                 throw new Error("Invalid Key!");
               }
-
-              done();
             });
 
-            it("should contain links under each relationship", function (done) {
+            it("should contain links under each relationship", function () {
               var liaisonRelationships = res.body.data.map(function (it) {
                 return it.relationships.liaisons;
               });
@@ -73,14 +67,12 @@ describe("", function (describeDone) {
                 (0, _chai.expect)(it.links.self).to.be.a("string");
                 (0, _chai.expect)(it.data).to.not.be.undefined; //can be null, though
               });
-              done();
             });
           });
         });
       });
-      describeDone();
-    }, describeDone).done();
-  });
+    }).done();
+  }).done();
 });
 // "[S]erver implementations MUST ignore
 //  [members] not recognized by this specification."

@@ -6,7 +6,7 @@ import {
   VALID_SCHOOL_RESOURCE_NO_ID
 } from "../fixtures/creation";
 
-describe("", (describeDone) => {
+describe("", () => {
   AgentPromise.then((Agent) => {
     Agent.request("POST", "/organizations")
       .type("application/vnd.api+json")
@@ -17,30 +17,26 @@ describe("", (describeDone) => {
 
         describe("Creating a Valid Resource (With an Extra Member)", () => {
           describe("HTTP", () => {
-            it("should return 201", (done) => {
+            it("should return 201", () => {
               expect(res.status).to.equal(201);
-              done();
             });
 
-            it("should include a valid Location header", (done) => {
+            it("should include a valid Location header", () => {
               expect(res.headers.location).to.match(/\/organizations\/[a-z0-9]+/);
               expect(createdResource.links.self).to.equal(res.headers.location);
-              done();
             });
           });
 
           describe("Document Structure", () => {
             // "A JSON object MUST be at the root of every
             // JSON API request and response containing data."
-            it("should have an object/document at the top level", (done) => {
+            it("should have an object/document at the top level", () => {
               expect(res.body).to.be.an("object");
-              done();
             });
 
-            it("should ignore extra document object members", (done) => {
+            it("should ignore extra document object members", () => {
               expect(res.status).to.be.within(200, 299);
               expect(res.body.extra).to.be.undefined;
-              done();
             });
 
             describe("Links", () => {
@@ -49,9 +45,8 @@ describe("", (describeDone) => {
 
             describe("Transforms", () => {
               describe("beforeSave", () => {
-                it("should execute beforeSave hook", (done) => {
+                it("should execute beforeSave hook", () => {
                   expect(createdResource.attributes.description).to.equal("Added a description in beforeSave");
-                  done();
                 });
 
                 it("should allow beforeSave to return a Promise", (done) => {
@@ -68,29 +63,26 @@ describe("", (describeDone) => {
             });
 
             describe("The Created Resource", () => {
-              it("should return the created resource", (done) => {
+              it("should return the created resource", () => {
                 expect(createdResource).to.be.an("object");
                 expect(createdResource.type).to.equal("organizations");
                 expect(createdResource.attributes).to.be.an("object");
                 expect(createdResource.relationships).to.be.an("object");
                 expect(createdResource.relationships.liaisons).to.be.an("object");
-                done();
               });
 
-              it("should ignore extra resource object members", (done) => {
+              it("should ignore extra resource object members", () => {
                 expect(res.body.data.extraMember).to.be.undefined;
                 expect(res.body.data.attributes.extraMember).to.be.undefined;
-                done();
               });
             });
           });
         });
-        describeDone();
-      }, describeDone);
+      }).done();
   }).done();
 });
 
-describe("", (describeDone) => {
+describe("", () => {
   AgentPromise.then((Agent) => {
     Agent.request("POST", "/organizations")
       .type("application/vnd.api+json")
@@ -99,21 +91,18 @@ describe("", (describeDone) => {
       .then(() => { throw new Error("Should not run!"); }, (err) => {
         describe("Creating a Resource With A Client-Id", () => {
           describe("HTTP", () => {
-            it("should return 403", (done) => {
+            it("should return 403", () => {
               expect(err.response.status).to.equal(403);
-              done();
             });
           });
 
           describe("Document Structure", () => {
-            it("should contain an error", (done) => {
+            it("should contain an error", () => {
               expect(err.response.body.errors).to.be.an("object");
-              done();
             });
           });
         });
-        describeDone();
-      }, describeDone);
+      }).done();
   }).done();
 });
 

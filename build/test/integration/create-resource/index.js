@@ -10,46 +10,41 @@ var _appAgent2 = _interopRequireDefault(_appAgent);
 
 var _fixturesCreation = require("../fixtures/creation");
 
-describe("", function (describeDone) {
+describe("", function () {
   _appAgent2["default"].then(function (Agent) {
     Agent.request("POST", "/organizations").type("application/vnd.api+json").send({ "data": _fixturesCreation.VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER, "extra": false }).promise().then(function (res) {
       var createdResource = res.body.data;
 
       describe("Creating a Valid Resource (With an Extra Member)", function () {
         describe("HTTP", function () {
-          it("should return 201", function (done) {
+          it("should return 201", function () {
             (0, _chai.expect)(res.status).to.equal(201);
-            done();
           });
 
-          it("should include a valid Location header", function (done) {
+          it("should include a valid Location header", function () {
             (0, _chai.expect)(res.headers.location).to.match(/\/organizations\/[a-z0-9]+/);
             (0, _chai.expect)(createdResource.links.self).to.equal(res.headers.location);
-            done();
           });
         });
 
         describe("Document Structure", function () {
           // "A JSON object MUST be at the root of every
           // JSON API request and response containing data."
-          it("should have an object/document at the top level", function (done) {
+          it("should have an object/document at the top level", function () {
             (0, _chai.expect)(res.body).to.be.an("object");
-            done();
           });
 
-          it("should ignore extra document object members", function (done) {
+          it("should ignore extra document object members", function () {
             (0, _chai.expect)(res.status).to.be.within(200, 299);
             (0, _chai.expect)(res.body.extra).to.be.undefined;
-            done();
           });
 
           describe("Links", function () {});
 
           describe("Transforms", function () {
             describe("beforeSave", function () {
-              it("should execute beforeSave hook", function (done) {
+              it("should execute beforeSave hook", function () {
                 (0, _chai.expect)(createdResource.attributes.description).to.equal("Added a description in beforeSave");
-                done();
               });
 
               it("should allow beforeSave to return a Promise", function (done) {
@@ -62,50 +57,44 @@ describe("", function (describeDone) {
           });
 
           describe("The Created Resource", function () {
-            it("should return the created resource", function (done) {
+            it("should return the created resource", function () {
               (0, _chai.expect)(createdResource).to.be.an("object");
               (0, _chai.expect)(createdResource.type).to.equal("organizations");
               (0, _chai.expect)(createdResource.attributes).to.be.an("object");
               (0, _chai.expect)(createdResource.relationships).to.be.an("object");
               (0, _chai.expect)(createdResource.relationships.liaisons).to.be.an("object");
-              done();
             });
 
-            it("should ignore extra resource object members", function (done) {
+            it("should ignore extra resource object members", function () {
               (0, _chai.expect)(res.body.data.extraMember).to.be.undefined;
               (0, _chai.expect)(res.body.data.attributes.extraMember).to.be.undefined;
-              done();
             });
           });
         });
       });
-      describeDone();
-    }, describeDone);
+    }).done();
   }).done();
 });
 
-describe("", function (describeDone) {
+describe("", function () {
   _appAgent2["default"].then(function (Agent) {
     Agent.request("POST", "/organizations").type("application/vnd.api+json").send({ "data": _fixturesCreation.ORG_RESOURCE_CLIENT_ID }).promise().then(function () {
       throw new Error("Should not run!");
     }, function (err) {
       describe("Creating a Resource With A Client-Id", function () {
         describe("HTTP", function () {
-          it("should return 403", function (done) {
+          it("should return 403", function () {
             (0, _chai.expect)(err.response.status).to.equal(403);
-            done();
           });
         });
 
         describe("Document Structure", function () {
-          it("should contain an error", function (done) {
+          it("should contain an error", function () {
             (0, _chai.expect)(err.response.body.errors).to.be.an("object");
-            done();
           });
         });
       });
-      describeDone();
-    }, describeDone);
+    }).done();
   }).done();
 });
 
