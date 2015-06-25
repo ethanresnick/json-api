@@ -5,9 +5,9 @@ import doGet from "../../../../src/steps/do-query/do-get";
 class TestAdapter {
   static getReferencedType(model, path) {
     if (path === "some-relationship") {
-      return "dasherizeOffType";
+      return "dasherize-off-type";
     }
-    return "dasherizeOnType";
+    return "dasherize-on-type";
   }
   find(type, idOrIds, fields, sorts, filters, includes) {
     return {
@@ -25,8 +25,8 @@ describe("GET requests", () => {
 
   before(() => {
     registry = new ResourceTypeRegistry();
-    registry.type("dasherizeOnType", { dbAdapter: dbAdapter });
-    registry.type("dasherizeOffType", {
+    registry.type("dasherize-on-type", { dbAdapter: dbAdapter });
+    registry.type("dasherize-off-type", {
       dbAdapter: dbAdapter,
       behaviors: {
         dasherizeOutput: { enabled: false }
@@ -37,25 +37,25 @@ describe("GET requests", () => {
   describe("parsing query params", () => {
     it("should camelize fields param according to type behavior", () => {
       let request = {
-        type: "dasherizeOnType",
+        type: "dasherize-on-type",
         queryParams: {
           fields: {
-            dasherizeOnType: "a-dasherized-field",
-            dasherizeOffType: "another-dasherized-field"
+            "dasherize-on-type": "a-dasherized-field",
+            "dasherize-off-type": "another-dasherized-field"
           }
         }
       };
 
       let passedToAdapter = doGet(request, {}, registry);
       expect(passedToAdapter.fields).to.deep.equal({
-        dasherizeOnType: ["aDasherizedField"],
-        dasherizeOffType: ["another-dasherized-field"]
+        "dasherize-on-type": ["aDasherizedField"],
+        "dasherize-off-type": ["another-dasherized-field"]
       });
     });
 
     it("should camelize sort param according to type behavior", () => {
       let request = {
-        type: "dasherizeOnType",
+        type: "dasherize-on-type",
         queryParams: {
           sort: "ascending-field,-descending-field"
         }
@@ -67,7 +67,7 @@ describe("GET requests", () => {
 
     it("should camelize dot-separated sort path according to type behavior", () => {
       let request = {
-        type: "dasherizeOnType",
+        type: "dasherize-on-type",
         queryParams: {
           sort: "some-relationship.dont-transform-this-one"
         }
@@ -79,7 +79,7 @@ describe("GET requests", () => {
 
     it("should camelize include param according to type behavior", () => {
       let request = {
-        type: "dasherizeOnType",
+        type: "dasherize-on-type",
         queryParams: {
           include: "dasherized-path.to-include,another-path"
         }
@@ -91,7 +91,7 @@ describe("GET requests", () => {
 
     it("should camelize filter param according to type behavior", () => {
       let request = {
-        type: "dasherizeOnType",
+        type: "dasherize-on-type",
         queryParams: {
           filter: {
             simple: {
