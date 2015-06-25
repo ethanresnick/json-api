@@ -72,6 +72,48 @@ describe("", function () {
         });
       });
     }).done();
+
+    Agent.request("GET", "/people?sort=gender").accept("application/vnd.api+json").promise().then(function (res) {
+      describe("Fetching Ascending Gendered Collection", function () {
+        it("should have Jane above John", function () {
+          var johnJaneList = res.body.data.map(function (it) {
+            return it.attributes.name;
+          }).filter(function (it) {
+            return ["John Smith", "Jane Doe"].indexOf(it) > -1;
+          });
+          (0, _chai.expect)(johnJaneList[0]).to.equal("Jane Doe");
+          (0, _chai.expect)(johnJaneList[1]).to.equal("John Smith");
+        });
+      });
+    }).done();
+
+    Agent.request("GET", "/people?sort=-name").accept("application/vnd.api+json").promise().then(function (res) {
+      describe("Fetching Descended Sorted Name Collection", function () {
+        it("Should have John above Jane", function () {
+          var johnJaneList = res.body.data.map(function (it) {
+            return it.attributes.name;
+          }).filter(function (it) {
+            return ["John", "Jane"].indexOf(it.substring(0, 4)) > -1;
+          });
+          (0, _chai.expect)(johnJaneList[0]).to.equal("John Smith");
+          (0, _chai.expect)(johnJaneList[1]).to.equal("Jane Doe");
+        });
+      });
+    }).done();
+  }).done();
+});
+
+describe("", function () {
+  _appAgent2["default"].then(function (Agent) {
+    Agent.request("GET", "/people?sort=-gender,name").accept("application/vnd.api+json").promise().then(function (res) {
+      describe("Fetching Multi-Sorted Collection", function () {
+        it("Should have John above Jane", function () {
+          (0, _chai.expect)(res.body.data.map(function (it) {
+            return it.attributes.name;
+          })).to.deep.equal(["Doug Wilson", "John Smith", "Jane Doe"]);
+        });
+      });
+    }).done();
   }).done();
 });
 // "[S]erver implementations MUST ignore

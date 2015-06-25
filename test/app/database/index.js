@@ -23,7 +23,8 @@ const models = {
 fixtures.save("all", {
   Person: [
     { name: "John Smith", email: "jsmith@gmail.com", gender: "male", _id: smithId },
-    { name: "Jane Doe", gender: "female", _id: doeId }
+    { name: "Jane Doe", gender: "female", _id: doeId },
+    { name: "Doug Wilson", gender: "male" }
   ],
   Organization: [
     {name: "State Government", description: "Representing the good people.", liaisons: [doeId, smithId], _id: govtId}

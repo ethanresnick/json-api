@@ -45,7 +45,7 @@ var _models = {
 };
 
 _nodeMongooseFixtures2["default"].save("all", {
-  Person: [{ name: "John Smith", email: "jsmith@gmail.com", gender: "male", _id: smithId }, { name: "Jane Doe", gender: "female", _id: doeId }],
+  Person: [{ name: "John Smith", email: "jsmith@gmail.com", gender: "male", _id: smithId }, { name: "Jane Doe", gender: "female", _id: doeId }, { name: "Doug Wilson", gender: "male" }],
   Organization: [{ name: "State Government", description: "Representing the good people.", liaisons: [doeId, smithId], _id: govtId }],
   School: [{ name: "City College", description: "Just your average local college.", liaisons: [smithId] }, { name: "State College", description: "Just your average state college." }]
 });
