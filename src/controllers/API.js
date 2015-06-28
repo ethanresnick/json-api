@@ -75,13 +75,13 @@ class APIController {
             request.body.data, request.aboutRelationship
           );
 
+          // Camelize incoming request
+          parsedPrimary = formatters.camelizeResourceOrCollection(parsedPrimary, registry);
+
           // validate the request's resources.
           if(!request.aboutRelationship) {
             yield validateRequestResources(request.type, parsedPrimary, registry);
           }
-
-          // Camelize incoming request
-          parsedPrimary = formatters.camelizeResourceOrCollection(parsedPrimary, registry);
 
           request.primary = yield applyTransform(
             parsedPrimary, "beforeSave", registry, frameworkReq, frameworkRes
