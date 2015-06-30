@@ -53,7 +53,7 @@ export default class APIError extends Error {
     }
 
     const title = err.title
-      || (it.isJSONAPIDisplayReady && err.message)
+      || (err.isJSONAPIDisplayReady && err.message)
       || "An unknown error occurred while trying to process this request.";
 
     // most of the args below will probably be null/undefined, but that's fine.
