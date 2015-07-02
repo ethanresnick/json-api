@@ -91,7 +91,7 @@ var APIError = (function (_Error) {
         return err;
       }
 
-      var title = err.title || it.isJSONAPIDisplayReady && err.message || "An unknown error occurred while trying to process this request.";
+      var title = err.title || err.isJSONAPIDisplayReady && err.message || "An unknown error occurred while trying to process this request.";
 
       // most of the args below will probably be null/undefined, but that's fine.
       return new APIError(err.status || err.statusCode || 500, err.code, title, err.message || err.details, err.links, err.paths);

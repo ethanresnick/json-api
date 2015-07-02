@@ -412,6 +412,13 @@ var MongooseAdapter = (function () {
   }, {
     key: "getModel",
     value: function getModel(modelName) {
+      if (!this.models[modelName]) {
+        // don't use an APIError here, since we don't want to
+        // show this internals-specific method to the user.
+        var err = new Error("The model \"" + modelName + "\" has not been registered with the MongooseAdapter.");
+        err.status = 404;
+        throw err;
+      }
       return this.models[modelName];
     }
   }, {
