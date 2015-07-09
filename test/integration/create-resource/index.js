@@ -41,13 +41,18 @@ describe("", () => {
               expect(res.body.extra).to.be.undefined;
             });
 
+            let record;
             it("should camelize attributes", (done) => {
               mongoose.models.Organization.findById(createdId, (err, org) => {
-                console.log(org.dateEstablished);
+                record = org;
                 expect(err).to.be.null;
                 expect(org.dateEstablished).to.be.a("date");
                 done();
               });
+            });
+
+            it("should camelize with respect to dasherization exceptions", () => {
+              expect(record.dateOfIPO).to.be.a("date");
             });
 
             describe("Links", () => {
