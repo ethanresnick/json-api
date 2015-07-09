@@ -41,11 +41,6 @@ export default class APIError extends Error {
   /**
    * Creates a JSON-API Compliant Error Object from a JS Error object
    *
-   * Note: the spec allows error objects to have arbitrary properties
-   * beyond the ones for which it defines a meaning (ie. id, href, code,
-   * status, path, etc.), but this function strips out all such properties
-   * in order to offer a neater result (as JS error objects often contain
-   * all kinds of crap).
    */
   static fromError(err) {
     if(err instanceof APIError) {
