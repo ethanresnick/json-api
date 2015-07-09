@@ -22,11 +22,18 @@ describe("Error Objects", function () {
   });
 
   describe("the fromError helper", function () {
-    it("should use the error's statusCode val as status if status not defined", function () {
-      var er = _srcTypesAPIError2["default"].fromError({ "statusCode": 300 });
+    it("should use the error's statusCode val as status iff status not defined", function () {
+      var er = _srcTypesAPIError2["default"].fromError({
+        "statusCode": 300,
+        "isJSONAPIDisplayReady": true
+      });
       (0, _chai.expect)(er.status === "300").to.be["true"];
 
-      er = _srcTypesAPIError2["default"].fromError({ "status": 200, "statusCode": 300 });
+      er = _srcTypesAPIError2["default"].fromError({
+        "status": 200,
+        "statusCode": 300,
+        "isJSONAPIDisplayReady": true
+      });
       (0, _chai.expect)(er.status === "200").to.be["true"];
     });
 
