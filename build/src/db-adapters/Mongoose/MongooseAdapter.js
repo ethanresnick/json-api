@@ -575,7 +575,7 @@ var MongooseAdapter = (function () {
   }, {
     key: "getModelName",
     value: function getModelName(type) {
-      var singularizer = arguments[1] === undefined ? _pluralize2["default"].singular : arguments[1];
+      var singularizer = arguments.length <= 1 || arguments[1] === undefined ? _pluralize2["default"].singular : arguments[1];
 
       var words = type.split("-");
       words[words.length - 1] = singularizer(words[words.length - 1]);
@@ -588,14 +588,14 @@ var MongooseAdapter = (function () {
 
     // Get the json api type name for a model.
     value: function getType(modelName) {
-      var pluralizer = arguments[1] === undefined ? _pluralize2["default"].plural : arguments[1];
+      var pluralizer = arguments.length <= 1 || arguments[1] === undefined ? _pluralize2["default"].plural : arguments[1];
 
       return pluralizer(modelName.replace(/([A-Z])/g, "-$1").slice(1).toLowerCase());
     }
   }, {
     key: "getReferencedType",
     value: function getReferencedType(model, path) {
-      var pluralizer = arguments[2] === undefined ? _pluralize2["default"].plural : arguments[2];
+      var pluralizer = arguments.length <= 2 || arguments[2] === undefined ? _pluralize2["default"].plural : arguments[2];
 
       return this.getType(util.getReferencedModelName(model, path), pluralizer);
     }
@@ -604,7 +604,7 @@ var MongooseAdapter = (function () {
     value: function getChildTypes(model) {
       var _this6 = this;
 
-      var pluralizer = arguments[1] === undefined ? _pluralize2["default"].plural : arguments[1];
+      var pluralizer = arguments.length <= 1 || arguments[1] === undefined ? _pluralize2["default"].plural : arguments[1];
 
       if (!model.discriminators) return [];
 
@@ -617,7 +617,7 @@ var MongooseAdapter = (function () {
     value: function getStandardizedSchema(model) {
       var _this7 = this;
 
-      var pluralizer = arguments[1] === undefined ? _pluralize2["default"].plural : arguments[1];
+      var pluralizer = arguments.length <= 1 || arguments[1] === undefined ? _pluralize2["default"].plural : arguments[1];
 
       var schemaOptions = model.schema.options;
       var versionKey = schemaOptions.versionKey;

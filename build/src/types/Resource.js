@@ -12,9 +12,9 @@ var _utilMisc = require("../util/misc");
 
 var Resource = (function () {
   function Resource(type, id) {
-    var attrs = arguments[2] === undefined ? {} : arguments[2];
-    var relationships = arguments[3] === undefined ? {} : arguments[3];
-    var meta = arguments[4] === undefined ? {} : arguments[4];
+    var attrs = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+    var relationships = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
+    var meta = arguments.length <= 4 || arguments[4] === undefined ? {} : arguments[4];
 
     _classCallCheck(this, Resource);
 

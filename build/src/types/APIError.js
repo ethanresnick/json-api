@@ -1,8 +1,8 @@
 "use strict";
 
-var _inherits = require("babel-runtime/helpers/inherits")["default"];
-
 var _get = require("babel-runtime/helpers/get")["default"];
+
+var _inherits = require("babel-runtime/helpers/inherits")["default"];
 
 var _createClass = require("babel-runtime/helpers/create-class")["default"];
 

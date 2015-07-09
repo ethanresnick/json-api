@@ -10,7 +10,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var Collection = (function () {
   function Collection() {
-    var resources = arguments[0] === undefined ? [] : arguments[0];
+    var resources = arguments.length <= 0 || arguments[0] === undefined ? [] : arguments[0];
 
     _classCallCheck(this, Collection);
 
