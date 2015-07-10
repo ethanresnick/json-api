@@ -135,7 +135,9 @@ function buildRequestObject(req, allowTunneling) {
       it.method = "patch";
     }
     else if(requestedMethod) {
-      reject(new Error(`Cannot tunnel to the method "${requestedMethod}".`));
+      reject(
+        new APIError(400, undefined, `Cannot tunnel to the method "${requestedMethod}".`)
+      );
     }
 
     it.hasBody = hasBody(req);
