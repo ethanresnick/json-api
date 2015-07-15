@@ -57,7 +57,7 @@ export default class APIError extends Error {
         err.status || err.statusCode || 500,
         err.code,
         err.title || fallbackTitle,
-        err.details || err.message,
+        err.details || (err.message ? err.message : undefined),
         err.links,
         err.paths
       );
