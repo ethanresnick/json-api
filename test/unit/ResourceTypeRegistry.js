@@ -110,6 +110,24 @@ describe("ResourceTypeRegistry", function() {
     );
   });
 
+  describe("behaviors", () => {
+    it("should update _inverseExceptions when updating behaviors", () => {
+      registry.type("someType", {});
+      registry.behaviors("someType", {
+        dasherizeOutput: {
+          enabled: true,
+          exceptions: {
+            "imageURL": "image-url"
+          }
+        }
+      });
+
+      expect(registry.behaviors("someType").dasherizeOutput._inverseExceptions).to.deep.equal({
+        "image-url": "imageURL"
+      });
+    });
+  });
+
   describe("urlTemplates", () => {
     it("should be a getter/setter for a type's urlTemplates",
       makeGetterSetterTest(

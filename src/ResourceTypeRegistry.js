@@ -8,7 +8,7 @@ import { invertObject } from "./util/misc";
  * whose property is being retrieved/set, and the value to set it to, if any.
  */
 const autoGetterSetterProps = ["dbAdapter", "beforeSave", "beforeRender",
-  "labelMappers", "defaultIncludes", "info", "parentType", "behaviors"];
+  "labelMappers", "defaultIncludes", "info", "parentType"];
 
 /**
  * Global defaults for resource descriptions, to be merged into defaults
@@ -65,7 +65,7 @@ export default class ResourceTypeRegistry {
       );
 
       // Set all the properties for the type that the description provides.
-      autoGetterSetterProps.concat(["urlTemplates"]).forEach((k) => {
+      autoGetterSetterProps.concat(["urlTemplates", "behaviors"]).forEach((k) => {
         if(Object.prototype.hasOwnProperty.call(description, k)) {
           this[k](type, description[k]);
         }
@@ -99,6 +99,21 @@ export default class ResourceTypeRegistry {
 
       default:
         this._resourceTypes[type].urlTemplates = templatesToSet;
+    }
+  }
+
+  behaviors(type, behaviorsToSet) {
+    this._resourceTypes[type] = this._resourceTypes[type] || {};
+    if (behaviorsToSet) {
+      let behaviors = merge({}, this._resourceDefaults.behaviors, behaviorsToSet);
+      behaviors.dasherizeOutput._inverseExceptions = invertObject(
+        behaviors.dasherizeOutput.exceptions
+      );
+      this._resourceTypes[type].behaviors = behaviors;
+    }
+
+    else {
+      return this._resourceTypes[type].behaviors;
     }
   }
 }
