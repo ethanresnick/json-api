@@ -4,8 +4,9 @@ import Resource from "../../types/Resource";
 import RelationshipObject from "../../types/RelationshipObject";
 import Linkage from "../../types/Linkage";
 import Collection from "../../types/Collection";
+import * as formatters from "../format-json";
 
-export default function(data, parseAsLinkage) {
+export default function(data, registry, parseAsLinkage) {
   return Q.Promise(function(resolve, reject) {
     try {
       if(parseAsLinkage) {
@@ -13,11 +14,11 @@ export default function(data, parseAsLinkage) {
       }
 
       else if(Array.isArray(data)) {
-        resolve(new Collection(data.map(resourceFromJSON)));
+        resolve(new Collection(data.map(it => resourceFromJSON(it, registry))));
       }
 
       else {
-        resolve(resourceFromJSON(data));
+        resolve(resourceFromJSON(data, registry));
       }
     }
 
@@ -37,12 +38,18 @@ function linkageFromJSON(json) {
   return new Linkage(json);
 }
 
-function resourceFromJSON(json) {
+function resourceFromJSON(json, registry) {
   let relationships = json.relationships || {};
 
   //build RelationshipObjects
   for(let key in relationships) {
     relationships[key] = relationshipObjectFromJSON(relationships[key]);
+  }
+
+  // Camelize incoming JSON
+  let dasherizeOutput = json.type ? registry.behaviors(json.type).dasherizeOutput : {};
+  if (dasherizeOutput.enabled) {
+    formatters.camelizeKeys(json, dasherizeOutput._inverseExceptions);
   }
 
   return new Resource(json.type, json.id, json.attributes, relationships, json.meta);

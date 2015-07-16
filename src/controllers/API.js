@@ -16,7 +16,6 @@ import parseRequestPrimary from "../steps/pre-query/parse-request-primary";
 import validateRequestDocument from "../steps/pre-query/validate-document";
 import validateRequestResources from "../steps/pre-query/validate-resources";
 import applyTransform from "../steps/apply-transform";
-import * as formatters from "../steps/format-json";
 
 import doGET from "../steps/do-query/do-get";
 import doPOST from "../steps/do-query/do-post";
@@ -72,11 +71,8 @@ class APIController {
           yield validateRequestDocument(request.body);
 
           let parsedPrimary = yield parseRequestPrimary(
-            request.body.data, request.aboutRelationship
+            request.body.data, registry, request.aboutRelationship
           );
-
-          // Camelize incoming request
-          parsedPrimary = formatters.camelizeResourceOrCollection(parsedPrimary, registry);
 
           // validate the request's resources.
           if(!request.aboutRelationship) {
@@ -167,16 +163,10 @@ class APIController {
         response.included, "beforeRender", registry, frameworkReq, frameworkRes
       );
 
-      // Dasherize ougoing response
-      // (DELETE responses don't have primary data)
-      if (response.primary) {
-        response.primary = formatters.dasherizeResourceOrCollection(response.primary, registry);
-      }
-
       if(response.status !== 204) {
         response.body = new Document(
           response.primary, response.included,
-          undefined, registry.urlTemplates(), request.uri
+          undefined, registry, request.uri
         ).get(true);
       }
 

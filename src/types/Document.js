@@ -4,10 +4,12 @@ import Collection from "./Collection";
 import {objectIsEmpty, mapResources, mapObject} from "../util/type-handling";
 import {arrayUnique} from "../util/arrays";
 import templating from "url-template";
+import * as formatters from "../steps/format-json";
 
 export default class Document {
-  constructor(primaryOrErrors, included, meta, urlTemplates, reqURI) {
-    [this.primaryOrErrors, this.included, this.reqURI] = [primaryOrErrors, included, reqURI];
+  constructor(primaryOrErrors, included, meta, registry, reqURI) {
+    [this.primaryOrErrors, this.included, this.registry, this.reqURI] = [primaryOrErrors, included, registry, reqURI];
+    let urlTemplates = registry ? registry.urlTemplates() : {};
 
     // validate meta
     if(meta !== undefined) {
@@ -20,7 +22,7 @@ export default class Document {
     }
 
     // parse all the templates once on construction.
-    this.urlTemplates = mapObject(urlTemplates || {}, (templatesForType) => {
+    this.urlTemplates = mapObject(urlTemplates, (templatesForType) => {
       return mapObject(templatesForType, templating.parse.bind(templating));
     });
 
@@ -39,7 +41,7 @@ export default class Document {
 
     if(this.primaryOrErrors instanceof Collection || this.primaryOrErrors instanceof Resource) {
       doc.data = mapResources(this.primaryOrErrors, (resource) => {
-        return resourceToJSON(resource, this.urlTemplates);
+        return resourceToJSON(resource, this.urlTemplates, this.registry);
       });
     }
 
@@ -58,7 +60,7 @@ export default class Document {
 
     if(this.included && this.included instanceof Collection) {
       doc.included = arrayUnique(this.included.resources).map((resource) => {
-        return resourceToJSON(resource, this.urlTemplates);
+        return resourceToJSON(resource, this.urlTemplates, this.registry);
       });
     }
 
@@ -96,11 +98,16 @@ function relationshipObjectToJSON(linkObject, urlTemplates, templateData) {
   return result;
 }
 
-function resourceToJSON(resource, urlTemplates) {
+function resourceToJSON(resource, urlTemplates, registry) {
   let json = {};
   json.id = resource.id;
   json.type = resource.type;
   json.attributes = resource.attrs;
+
+  let dasherizeOutput = registry.behaviors(resource.type).dasherizeOutput;
+  if (dasherizeOutput.enabled) {
+    json = formatters.dasherizeKeys(json, dasherizeOutput.exceptions);
+  }
 
   if(resource.meta && !objectIsEmpty(resource.meta)) {
     json.meta = resource.meta;
