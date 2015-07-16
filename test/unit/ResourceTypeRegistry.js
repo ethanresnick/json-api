@@ -104,6 +104,9 @@ describe("ResourceTypeRegistry", function() {
     );
   });
 
+  describe("behaviors", () => {
+  });
+
   describe("urlTemplates", () => {
     it("should be a getter/setter for a type's urlTemplates",
       makeGetterSetterTest(

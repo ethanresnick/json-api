@@ -25,11 +25,11 @@ const globalResourceDefaults = {
  * in the system--not just the primary resource associated with the type being
  * requested. For example, if the request is for a User, you might need to
  * include related Projects, so the code handling the users request needs access
- * to the Project resource's beforeSave and afterQuery methods. Similarly, it
+ * to the Project resource's beforeSave and beforeRender methods. Similarly, it
  * would need access to url templates that point at relationships on the Project
  * resources. Etc. So we handle this by introducing a ResourceTypeRegistry that
- * the Dispatcher can have access to. Each resource type is registered by its
- * JSON api type and has a number of properties defining it.
+ * the Controller can have access to. Each resource type is registered by its
+ * JSON API type and has a number of properties defining it.
  */
 export default class ResourceTypeRegistry {
   constructor(typeDescriptions = [], descriptionDefaults = {}) {
@@ -54,7 +54,7 @@ export default class ResourceTypeRegistry {
       description = merge({}, this._descriptionDefaults, description);
 
       // Set all the properties for the type that the description provides.
-      autoGetterSetterProps.concat(["urlTemplates"]).forEach((k) => {
+      autoGetterSetterProps.concat(["urlTemplates", "behaviors"]).forEach((k) => {
         if(Object.prototype.hasOwnProperty.call(description, k)) {
           this[k](type, description[k]);
         }
@@ -88,6 +88,19 @@ export default class ResourceTypeRegistry {
 
       default:
         this._resourceTypes[type].urlTemplates = templatesToSet;
+    }
+  }
+
+  behaviors(type, behaviorsToSet, doMerge = true) {
+    this._resourceTypes[type] = this._resourceTypes[type] || {};
+    if (behaviorsToSet) {
+      this._resourceTypes[type].behaviors = doMerge ?
+        merge({}, this._descriptionDefaults.behaviors, behaviorsToSet) :
+        behaviors;
+    }
+
+    else {
+      return this._resourceTypes[type].behaviors;
     }
   }
 }
