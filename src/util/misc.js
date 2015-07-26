@@ -42,11 +42,13 @@ export function isPlainObject(obj) {
 export function invertObject(obj) {
   let inverted = {};
   for (let key in obj) {
-    let value = obj[key];
-    if (typeof value !== "string") {
-      throw new Error("Only flat objects with string values can be inverted.");
+    if (obj.hasOwnProperty(key)) {
+      let value = obj[key];
+      if (typeof value !== "string") {
+        throw new Error("Only flat objects with string values can be inverted.");
+      }
+      inverted[obj[key]] = key;
     }
-    inverted[obj[key]] = key;
   }
   return inverted;
 }
