@@ -17,9 +17,8 @@ describe("Fetching Collection", () => {
   });
 
   describe("Status Code", () => {
-    it("should be 200", (done) => {
+    it("should be 200", () => {
       expect(res.status).to.equal(200);
-      done();
     });
   });
 
@@ -42,22 +41,19 @@ describe("Fetching Collection", () => {
     describe("Resource Objects/Primary Data", () => {
       // "A logical collection of resources MUST be represented as
       //  an array, even if it only contains one item or is empty."
-      it("should be an array under data", (done) => {
-        expect(res.body.data).to.be.an.array;
-        done();
+      it("should be an array under data", () => {
+        expect(res.body.data).to.be.an("array");
       });
 
       // "Unless otherwise noted, objects defined by this
       //  specification MUST NOT contain any additional members."
-      it("should not contain extra members", (done) => {
+      it("should not contain extra members", () => {
         const isAllowedKey = (key) =>
           ["type", "id", "attributes", "relationships", "links", "meta"].indexOf(key) !== -1;
 
         if(!Object.keys(res.body.data[0]).every(isAllowedKey)) {
           throw new Error("Invalid Key!");
         }
-
-        done();
       });
 
       // Member names SHOULD contain only the characters
