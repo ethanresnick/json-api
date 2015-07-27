@@ -1,5 +1,8 @@
+# v2.6 -> 2.7 Breaking Changes (Not Semver until 3.0)
+- Some error objects in 4xx and 5xx responses may be different, as we now expose fewer error details by default (for security reasons). See [the relevant commit](https://github.com/ethanresnick/json-api/commit/f1477c78aa58a1e7d2cb1ffc7922e0e050f4d1df) for more information.
+
 # v2.5 -> 2.6 Breaking Changes (Not Semver until 3.0)
-- In relationship objects, `self` and `related` links now properly show up under the links key. Closes #36.
+- In relationship objects, `self` and `related` links now properly show up under the `links` key. Closes [#36](https://github.com/ethanresnick/json-api/issues/36).
 
 # v2.4 -> 2.5 Breaking Changes (Not Semver until 3.0)
 - The `location` property on the `Response` class is now at

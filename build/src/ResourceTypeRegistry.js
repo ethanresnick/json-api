@@ -35,7 +35,7 @@ var ResourceTypeRegistry = (function () {
   function ResourceTypeRegistry() {
     var _this = this;
 
-    var typeDescriptions = arguments[0] === undefined ? [] : arguments[0];
+    var typeDescriptions = arguments.length <= 0 || arguments[0] === undefined ? [] : arguments[0];
 
     _classCallCheck(this, ResourceTypeRegistry);
 

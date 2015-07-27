@@ -14,7 +14,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var FieldType = (function () {
   function FieldType(baseType) {
-    var isArray = arguments[1] === undefined ? false : arguments[1];
+    var isArray = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
 
     _classCallCheck(this, FieldType);
 

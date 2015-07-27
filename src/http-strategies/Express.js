@@ -3,6 +3,7 @@ import vary from "vary";
 import contentType from "content-type";
 import getRawBody from "raw-body";
 import API from "../controllers/API";
+import APIError from "../types/APIError";
 import Request from "../types/HTTP/Request";
 
 /**
@@ -134,7 +135,9 @@ function buildRequestObject(req, allowTunneling) {
       it.method = "patch";
     }
     else if(requestedMethod) {
-      reject(new Error(`Cannot tunnel to the method "${requestedMethod}".`));
+      reject(
+        new APIError(400, undefined, `Cannot tunnel to the method "${requestedMethod}".`)
+      );
     }
 
     it.hasBody = hasBody(req);
@@ -158,9 +161,9 @@ function buildRequestObject(req, allowTunneling) {
             resolve(it);
           }
           catch (error) {
-            let parseErr = new Error("Request contains invalid JSON.");
-            parseErr.status = error.statusCode = 400;
-            reject(parseErr);
+            reject(
+              new APIError(400, undefined, "Request contains invalid JSON.")
+            );
           }
         }
       });
