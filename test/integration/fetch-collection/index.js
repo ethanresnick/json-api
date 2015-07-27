@@ -1,117 +1,134 @@
 import {expect} from "chai";
 import AgentPromise from "../../app/agent";
 
-describe("", () => {
-  AgentPromise.then((Agent) => {
-    Agent.request("GET", "/organizations")
-      .accept("application/vnd.api+json")
-      .promise()
-      .then((res) => {
-        describe("Fetching Collection", () => {
-          describe("Status Code", () => {
-            it("should be 200", () => {
-              expect(res.status).to.equal(200);
-            });
-          });
+describe("Fetching Collection", () => {
+  let res, Agent;
 
-          describe("Document Structure", () => {
-            // "A JSON object MUST be at the root of every
-            // JSON API request and response containing data."
-            it("should have an object/document at the top level", () => {
-              expect(res.body).to.be.an("object");
-            });
+  before(done => {
+    AgentPromise.then(A => {
+      Agent = A;
+      return Agent.request("GET", "/organizations")
+        .accept("application/vnd.api+json")
+        .promise();
+    }, done).then(response => {
+      res = response;
+      done();
+    }, done).catch(done);
+  });
 
-            describe("Links", () => {
-              it("should contain a self link to the collection", () => {
-                expect(res.body.links).to.be.an("object");
-                expect(res.body.links.self).to.match(/\:\d{1,5}\/organizations/);
-              });
-            });
+  describe("Status Code", () => {
+    it("should be 200", () => {
+      expect(res.status).to.equal(200);
+    });
+  });
 
-            describe("Resource Objects/Primary Data", () => {
-              // "A logical collection of resources MUST be represented as
-              //  an array, even if it only contains one item or is empty."
-              it("should be an array under data", () => {
-                expect(res.body.data).to.be.an("array");
-              });
+  describe("Document Structure", () => {
+    // "A JSON object MUST be at the root of every
+    // JSON API request and response containing data."
+    it("should have an object/document at the top level", (done) => {
+      expect(res.body).to.be.an.object;
+      done();
+    });
 
-              // "Unless otherwise noted, objects defined by this
-              //  specification MUST NOT contain any additional members."
-              it("should not contain extra members", () => {
-                const isAllowedKey = (key) =>
-                  ["type", "id", "attributes", "relationships", "links", "meta"].indexOf(key) !== -1;
+    describe("Links", () => {
+      it("should contain a self link to the collection", (done) => {
+        expect(res.body.links).to.be.an.object;
+        expect(res.body.links.self).to.match(/\:\d{1,5}\/organizations/);
+        done();
+      });
+    });
 
-                if(!Object.keys(res.body.data[0]).every(isAllowedKey)) {
-                  throw new Error("Invalid Key!");
-                }
-              });
+    describe("Resource Objects/Primary Data", () => {
+      // "A logical collection of resources MUST be represented as
+      //  an array, even if it only contains one item or is empty."
+      it("should be an array under data", () => {
+        expect(res.body.data).to.be.an("array");
+      });
 
-              it("should contain links under each relationship", () => {
-                let liaisonRelationships = res.body.data.map(it => it.relationships.liaisons);
-                liaisonRelationships.forEach((it) => {
-                  // Every liaison should have a links object,
-                  // and self and related must not be outside of links.
-                  expect(it.links).to.be.an("object");
-                  expect(it.self).to.be.undefined;
-                  expect(it.related).to.be.undefined;
+      // "Unless otherwise noted, objects defined by this
+      //  specification MUST NOT contain any additional members."
+      it("should not contain extra members", () => {
+        const isAllowedKey = (key) =>
+          ["type", "id", "attributes", "relationships", "links", "meta"].indexOf(key) !== -1;
 
-                  expect(it.links.self).to.be.a("string");
-                  expect(it.data).to.not.be.undefined; //can be null, though
-                });
-              });
-            });
-          });
+        if(!Object.keys(res.body.data[0]).every(isAllowedKey)) {
+          throw new Error("Invalid Key!");
+        }
+      });
+
+      // Member names SHOULD contain only the characters
+      // "a-z" (U+0061 to U+007A), "0-9" (U+0030 to U+0039),
+      // and the hyphen minus (U+002D HYPHEN-MINUS, "-") as
+      // seperator between multiple words.
+      it("should dasherize member names by default", () => {
+        expect(res.body.data[0].attributes.hasOwnProperty("date-established")).to.be.true;
+      });
+
+      it("should allow dasherization exceptions", () => {
+        expect(res.body.data[0].attributes.hasOwnProperty("date-of-hippo")).to.be.true;
+      });
+    });
+
+    describe("Fetching Ascending Gendered Collection", () => {
+      before(done => {
+        Agent.request("GET", "/people?sort=gender")
+          .accept("application/vnd.api+json")
+          .promise()
+          .then(r => {
+            res = r;
+            done();
+          }).catch(done);
+      });
+
+      it("should have Jane above John", () => {
+        let johnJaneList = res.body.data.map((it) => it.attributes.name).filter((it) => {
+          return ["John Smith", "Jane Doe"].indexOf(it) > -1;
         });
-      }).done();
+        expect(johnJaneList[0]).to.equal("Jane Doe");
+        expect(johnJaneList[1]).to.equal("John Smith");
+      });
+    });
 
-    Agent.request("GET", "/people?sort=gender")
-      .accept("application/vnd.api+json")
-      .promise()
-      .then((res) => {
-        describe("Fetching Ascending Gendered Collection", () => {
-          it("should have Jane above John", () => {
-            let johnJaneList = res.body.data.map((it) => it.attributes.name).filter((it) => {
-              return ["John Smith", "Jane Doe"].indexOf(it) > -1
-            });
-            expect(johnJaneList[0]).to.equal("Jane Doe");
-            expect(johnJaneList[1]).to.equal("John Smith");
-          });
-        })
-      }).done();
+    describe("Fetching Descended Sorted Name Collection", () => {
+      before(done => {
+        Agent.request("GET", "/people?sort=-name")
+          .accept("application/vnd.api+json")
+          .promise()
+          .then(r => {
+            res = r;
+            done();
+          }).catch(done);
+      });
 
-    Agent.request("GET", "/people?sort=-name")
-      .accept("application/vnd.api+json")
-      .promise()
-      .then((res) => {
-        describe("Fetching Descended Sorted Name Collection", () => {
-          it("Should have John above Jane", () => {
-            let johnJaneList = res.body.data.map((it) => it.attributes.name).filter((it) => {
-              return ["John", "Jane"].indexOf(it.substring(0, 4)) > -1
-            });
-            expect(johnJaneList[0]).to.equal("John Smith");
-            expect(johnJaneList[1]).to.equal("Jane Doe");
-          });
+      it("Should have John above Jane", () => {
+        let johnJaneList = res.body.data.map((it) => it.attributes.name).filter((it) => {
+          return ["John", "Jane"].indexOf(it.substring(0, 4)) > -1;
         });
-      }).done();
-  }).done();
+        expect(johnJaneList[0]).to.equal("John Smith");
+        expect(johnJaneList[1]).to.equal("Jane Doe");
+      });
+    });
+  });
+
+  describe("Fetching Multi-Sorted Collection", () => {
+    before(done => {
+      Agent.request("GET", "/people?sort=-gender,name")
+        .accept("application/vnd.api+json")
+        .promise()
+        .then(r => {
+          res = r;
+          done();
+        }).catch(done);
+    });
+
+    it("Should have John above Jane", () => {
+      expect(res.body.data.map((it) => it.attributes.name)).to.deep.equal([
+        "Doug Wilson", "John Smith", "Jane Doe"
+      ]);
+    });
+  });
 });
 
-describe("", () => {
-  AgentPromise.then((Agent) => {
-    Agent.request("GET", "/people?sort=-gender,name")
-      .accept("application/vnd.api+json")
-      .promise()
-      .then((res) => {
-        describe("Fetching Multi-Sorted Collection", () => {
-          it("Should have John above Jane", () => {
-            expect(res.body.data.map((it) => it.attributes.name)).to.deep.equal([
-              "Doug Wilson", "John Smith", "Jane Doe"
-            ]);
-          });
-        });
-      }).done();
-  }).done();
-});
     // "[S]erver implementations MUST ignore
     //  [members] not recognized by this specification."
     /*it("must ignore unrecognized request object members", (done) => {

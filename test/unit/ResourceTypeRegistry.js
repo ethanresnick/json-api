@@ -24,18 +24,33 @@ describe("ResourceTypeRegistry", function() {
     registry = new ResourceTypeRegistry();
   });
 
-  describe("type", () => {
-    let description = {
-      dbAdapter: {},
-      beforeSave: () => {},
-      beforeRender: () => {},
-      info: {},
-      urlTemplates: {"path": "test template"}
-    };
+  describe("constructor", () => {
+    it("should register resource descriptions provided in first parameter", () => {
+      registry = new ResourceTypeRegistry([{
+        type: "someType",
+        info: "provided to constructor"
+      }]);
+      expect(registry.type("someType")).to.be.an.object;
+      expect(registry.type("someType").info).to.equal("provided to constructor");
+    });
 
-    it("should be a getter/setter for a type",
-      makeGetterSetterTest(description, "mytypes", "type", true)
-    );
+    it("should merge global defaults into the second paramter and save as _descriptionDefaults property", () => {
+      let defaults = { info: "provided to defaults" };
+      registry = new ResourceTypeRegistry([], defaults);
+      expect(registry._descriptionDefaults.info).to.equal("provided to defaults");
+    });
+  });
+
+  describe("type", () => {
+
+    it("should give the description precedence over the provided default", () => {
+      registry = new ResourceTypeRegistry([], {
+        info: "provided as default"
+      });
+
+      registry.type("someType", { info: "overriding the default" });
+      expect(registry.type("someType").info).to.equal("overriding the default");
+    });
   });
 
   describe("adapter", () => {
@@ -72,6 +87,24 @@ describe("ResourceTypeRegistry", function() {
     it("should be a getter/setter for a type for a type's parentType",
       makeGetterSetterTest(() => "my-parents", "mytypes", "parentType")
     );
+  });
+
+  describe("behaviors", () => {
+    it("should update _inverseExceptions when updating behaviors", () => {
+      registry.type("someType", {});
+      registry.behaviors("someType", {
+        dasherizeOutput: {
+          enabled: true,
+          exceptions: {
+            "imageURL": "image-url"
+          }
+        }
+      });
+
+      expect(registry.behaviors("someType").dasherizeOutput._inverseExceptions).to.deep.equal({
+        "image-url": "imageURL"
+      });
+    });
   });
 
   describe("urlTemplates", () => {

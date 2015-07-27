@@ -13,6 +13,12 @@ function OrganizationSchema() {
     description: {
       type: String
     },
+    dateEstablished: {
+      type: Date
+    },
+    dateOfIPO: {
+      type: Date
+    },
     liaisons: [{ref: "Person", type: ObjectId}]
   });
 }

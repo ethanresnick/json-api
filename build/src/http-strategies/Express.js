@@ -32,9 +32,11 @@ var _controllersAPI = require("../controllers/API");
 
 var _controllersAPI2 = _interopRequireDefault(_controllersAPI);
 
-var _typesHTTPRequest = require("../types/HTTP/Request");
+var _typesAPIError = require("../types/APIError");
 
-var _typesHTTPRequest2 = _interopRequireDefault(_typesHTTPRequest);
+var _typesAPIError2 = _interopRequireDefault(_typesAPIError);
+
+var _typesHTTPRequest = require("../types/HTTP/Request");
 
 /**
  * This controller receives requests directly from express and sends responses
@@ -57,6 +59,8 @@ var _typesHTTPRequest2 = _interopRequireDefault(_typesHTTPRequest);
  *    can set this option to false to have this code just pass on to express.
  */
 
+var _typesHTTPRequest2 = _interopRequireDefault(_typesHTTPRequest);
+
 var ExpressStrategy = (function () {
   function ExpressStrategy(apiController, docsController, options) {
     _classCallCheck(this, ExpressStrategy);
@@ -71,14 +75,14 @@ var ExpressStrategy = (function () {
     this.config = _Object$assign(defaultOptions, options); // apply options
   }
 
+  // For requests like GET /:type, GET /:type/:id/:relationship,
+  // POST /:type PATCH /:type/:id, PATCH /:type, DELETE /:type/:idOrLabel,
+  // DELETE /:type, GET /:type/:id/links/:relationship,
+  // PATCH /:type/:id/links/:relationship, POST /:type/:id/links/:relationship,
+  // and DELETE /:type/:id/links/:relationship.
+
   _createClass(ExpressStrategy, [{
     key: "apiRequest",
-
-    // For requests like GET /:type, GET /:type/:id/:relationship,
-    // POST /:type PATCH /:type/:id, PATCH /:type, DELETE /:type/:idOrLabel,
-    // DELETE /:type, GET /:type/:id/links/:relationship,
-    // PATCH /:type/:id/links/:relationship, POST /:type/:id/links/:relationship,
-    // and DELETE /:type/:id/links/:relationship.
     value: function apiRequest(req, res, next) {
       var _this = this;
 
@@ -90,10 +94,10 @@ var ExpressStrategy = (function () {
         res.status(err.status).send(err.message);
       }).done();
     }
-  }, {
-    key: "docsRequest",
 
     // For requests for the documentation.
+  }, {
+    key: "docsRequest",
     value: function docsRequest(req, res, next) {
       var _this2 = this;
 
@@ -127,8 +131,6 @@ var ExpressStrategy = (function () {
         }
       }
     }
-  }, {
-    key: "sendError",
 
     /**
      * A user of this library may wish to send an error response for an exception
@@ -136,6 +138,8 @@ var ExpressStrategy = (function () {
      * main spec's scope (e.g. an authentication error). So, the controller
      * exposes this method which allows them to do that.
      */
+  }, {
+    key: "sendError",
     value: function sendError(error, req, res) {
       var _this3 = this;
 
@@ -145,13 +149,13 @@ var ExpressStrategy = (function () {
         });
       });
     }
-  }, {
-    key: "toApp",
 
     /**
      * @TODO Uses this ExpressStrategy to create an express app with
      * preconfigured routes that can be mounted as a subapp.
      */
+  }, {
+    key: "toApp",
     value: function toApp(typesToExcludedMethods) {}
   }]);
 
@@ -183,7 +187,7 @@ function buildRequestObject(req, allowTunneling) {
     if (allowTunneling && it.method === "post" && requestedMethod === "patch") {
       it.method = "patch";
     } else if (requestedMethod) {
-      reject(new Error("Cannot tunnel to the method \"" + requestedMethod + "\"."));
+      reject(new _typesAPIError2["default"](400, undefined, "Cannot tunnel to the method \"" + requestedMethod + "\"."));
     }
 
     it.hasBody = hasBody(req);
@@ -207,9 +211,7 @@ function buildRequestObject(req, allowTunneling) {
             it.body = JSON.parse(string);
             resolve(it);
           } catch (error) {
-            var parseErr = new Error("Request contains invalid JSON.");
-            parseErr.status = error.statusCode = 400;
-            reject(err);
+            reject(new _typesAPIError2["default"](400, undefined, "Request contains invalid JSON."));
           }
         }
       });

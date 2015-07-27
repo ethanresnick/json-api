@@ -1,5 +1,6 @@
 import APIError from "../../types/APIError";
 import {arrayContains} from "../../util/arrays";
+import camelize from "../../util/camelize";
 
 export default function(requestContext, responseContext, registry) {
   let type    = requestContext.type;
@@ -8,12 +9,12 @@ export default function(requestContext, responseContext, registry) {
 
   // Handle fields, sorts, includes and filters.
   if(!requestContext.aboutRelationship) {
-    fields = parseFields(requestContext.queryParams.fields);
-    sorts  = parseCommaSeparatedParam(requestContext.queryParams.sort);
+    fields = parseFields(requestContext.queryParams.fields, registry);
+    sorts  = parseCommaSeparatedParam(requestContext.queryParams.sort, type, registry);
     // just support a "simple" filtering strategy for now.
     filters = requestContext.queryParams.filter &&
-                requestContext.queryParams.filter.simple;
-    includes = parseCommaSeparatedParam(requestContext.queryParams.include);
+              transformFilters(requestContext.queryParams.filter.simple, type, registry);
+    includes = parseCommaSeparatedParam(requestContext.queryParams.include, type, registry);
 
     if(!includes) {
       includes = registry.defaultIncludes(type);
@@ -63,20 +64,56 @@ export default function(requestContext, responseContext, registry) {
 
 }
 
-function parseFields(fieldsParam) {
+function parseFields(fieldsParam, registry) {
   let fields;
   if(typeof fieldsParam === "object") {
     fields = {};
     let isField = (it) => !arrayContains(["id", "type"], it);
 
     for(let type in fieldsParam) {
-      let provided = parseCommaSeparatedParam(fieldsParam[type]) || [];
+      let provided = parseCommaSeparatedParam(fieldsParam[type], type, registry) || [];
       fields[type] = provided.filter(isField);
     }
   }
   return fields;
 }
 
-function parseCommaSeparatedParam(it) {
-  return it ? it.split(",").map(decodeURIComponent) : undefined;
+function parseCommaSeparatedParam(it, type, registry) {
+  return it ? it.split(",").map(f => {
+    return transformDotSeparatedPath(f, type, registry);
+  }) : undefined;
+}
+
+function transformDotSeparatedPath(it, type, registry) {
+  let parts = it.split(".");
+  let types = [type];
+  parts.forEach((p, index) => {
+    if (index < parts.length - 1) {
+      types.push(registry.dbAdapter(types[index]).constructor.getReferencedType(types[index], p));
+    }
+  });
+
+  return parts.map((part, index) => {
+    if (shouldCamelizeType(types[index], registry)) {
+      return camelize(decodeURIComponent(part));
+    }
+    return decodeURIComponent(part);
+  }).join(".");
+}
+
+function transformFilters(it, type, registry) {
+  if (shouldCamelizeType(type, registry)) {
+    for (let key in it) {
+      let camelizedKey = camelize(key);
+      if (camelizedKey !== key) {
+        it[camelizedKey] = it[key];
+        delete it[key];
+      }
+    }
+  }
+  return it;
+}
+
+function shouldCamelizeType(type, registry) {
+  return registry.behaviors(type).dasherizeOutput.enabled;
 }

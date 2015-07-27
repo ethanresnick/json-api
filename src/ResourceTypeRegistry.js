@@ -1,3 +1,6 @@
+import merge from "lodash/object/merge";
+import { invertObject } from "./util/misc";
+
 /**
  * A private array of properties that will be used by the class below to
  * automatically generate simple getter setters for each property, all
@@ -6,6 +9,22 @@
  */
 const autoGetterSetterProps = ["dbAdapter", "beforeSave", "beforeRender",
   "labelMappers", "defaultIncludes", "info", "parentType"];
+
+/**
+ * Global defaults for resource descriptions, to be merged into defaults
+ * provided to the ResourceTypeRegistry, which are in turn merged into defaults
+ * provided in each resource type descriptionsl
+ */
+const globalResourceDefaults = {
+  behaviors: {
+    dasherizeOutput: {
+      enabled: true,
+      exceptions: {
+        // modelKey: json-key
+      }
+    }
+  }
+};
 
 /**
  * To fulfill a JSON API request, you often need to know about all the resources
@@ -19,8 +38,9 @@ const autoGetterSetterProps = ["dbAdapter", "beforeSave", "beforeRender",
  * JSON api type and has a number of properties defining it.
  */
 export default class ResourceTypeRegistry {
-  constructor(typeDescriptions = []) {
+  constructor(typeDescriptions = [], resourceDefaults = {}) {
     this._resourceTypes = {};
+    this._descriptionDefaults = merge({}, resourceDefaults, globalResourceDefaults);
     typeDescriptions.forEach((it) => { this.type(it); });
   }
 
@@ -36,8 +56,16 @@ export default class ResourceTypeRegistry {
     if(description) {
       this._resourceTypes[type] = {};
 
+      // Merge description defaults into provided description
+      description = merge({}, this._descriptionDefaults, description);
+
+      // Make inverse lookup object for exceptions
+      description.behaviors.dasherizeOutput._inverseExceptions = invertObject(
+        description.behaviors.dasherizeOutput.exceptions
+      );
+
       // Set all the properties for the type that the description provides.
-      autoGetterSetterProps.concat(["urlTemplates"]).forEach((k) => {
+      autoGetterSetterProps.concat(["urlTemplates", "behaviors"]).forEach((k) => {
         if(Object.prototype.hasOwnProperty.call(description, k)) {
           this[k](type, description[k]);
         }
@@ -71,6 +99,21 @@ export default class ResourceTypeRegistry {
 
       default:
         this._resourceTypes[type].urlTemplates = templatesToSet;
+    }
+  }
+
+  behaviors(type, behaviorsToSet) {
+    this._resourceTypes[type] = this._resourceTypes[type] || {};
+    if (behaviorsToSet) {
+      let behaviors = merge({}, this._descriptionDefaults.behaviors, behaviorsToSet);
+      behaviors.dasherizeOutput._inverseExceptions = invertObject(
+        behaviors.dasherizeOutput.exceptions
+      );
+      this._resourceTypes[type].behaviors = behaviors;
+    }
+
+    else {
+      return this._resourceTypes[type].behaviors;
     }
   }
 }

@@ -3,6 +3,7 @@ import co from "co";
 import Response from "../types/HTTP/Response";
 import Document from "../types/Document";
 import Collection from "../types/Collection";
+import Resource from "../types/Resource";
 import APIError from "../types/APIError";
 
 import * as requestValidators from "../steps/http/validate-request";
@@ -70,7 +71,7 @@ class APIController {
           yield validateRequestDocument(request.body);
 
           let parsedPrimary = yield parseRequestPrimary(
-            request.body.data, request.aboutRelationship
+            request.body.data, registry, request.aboutRelationship
           );
 
           // validate the request's resources.
@@ -165,7 +166,7 @@ class APIController {
       if(response.status !== 204) {
         response.body = new Document(
           response.primary, response.included,
-          undefined, registry.urlTemplates(), request.uri
+          undefined, registry, request.uri
         ).get(true);
       }
 

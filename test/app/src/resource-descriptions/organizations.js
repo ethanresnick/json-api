@@ -6,5 +6,13 @@ module.exports = {
   beforeSave: function(resource) {
     resource.attrs.description = "Added a description in beforeSave";
     return resource;
+  },
+  behaviors: {
+    dasherizeOutput: {
+      enabled: true,
+      exceptions: {
+        dateOfIPO: "date-of-hippo" // ridiculous contrived example for tests
+      }
+    }
   }
 };

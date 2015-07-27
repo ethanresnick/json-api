@@ -1,7 +1,9 @@
 export const VALID_ORG_RESOURCE_NO_ID = {
   "type": "organizations",
   "attributes": {
-    "name": "Test Organization"
+    "name": "Test Organization",
+    "date-established": "2015-06-22T10:52:53-07:00",
+    "date-of-hippo": "2015-09-22T00:00:00-07:00"
   },
   "relationships": {
     "liaisons": {
