@@ -43,6 +43,7 @@ describe("ResourceTypeRegistry", function() {
 
       registry.type("someType", {});
       expect(registry.type("someType").info).to.equal("provided as default");
+      expect(registry.type("someType").behaviors).to.be.an("object");
     });
 
     it("should give the description precedence over the provided default", () => {
