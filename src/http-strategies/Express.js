@@ -160,7 +160,7 @@ function buildRequestObject(req, allowTunneling) {
           catch (error) {
             let parseErr = new Error("Request contains invalid JSON.");
             parseErr.status = error.statusCode = 400;
-            reject(err);
+            reject(parseErr);
           }
         }
       });
