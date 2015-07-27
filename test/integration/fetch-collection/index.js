@@ -67,6 +67,10 @@ describe("Fetching Collection", () => {
       it("should dasherize member names by default", () => {
         expect(res.body.data[0].attributes.hasOwnProperty("date-established")).to.be.true;
       });
+
+      it("should allow dasherization exceptions", () => {
+        expect(res.body.data[0].attributes.hasOwnProperty("date-of-hippo")).to.be.true;
+      });
     });
 
     describe("Fetching Ascending Gendered Collection", () => {

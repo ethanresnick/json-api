@@ -1,3 +1,6 @@
+import merge from "lodash/object/merge";
+import { invertObject } from "./util/misc";
+
 /**
  * A private array of properties that will be used by the class below to
  * automatically generate simple getter setters for each property, all
@@ -14,7 +17,12 @@ const autoGetterSetterProps = ["dbAdapter", "beforeSave", "beforeRender",
  */
 const globalResourceDefaults = {
   behaviors: {
-    dasherizeOutput: { enabled: true }
+    dasherizeOutput: {
+      enabled: true,
+      exceptions: {
+        // modelKey: json-key
+      }
+    }
   }
 };
 
@@ -30,9 +38,9 @@ const globalResourceDefaults = {
  * JSON api type and has a number of properties defining it.
  */
 export default class ResourceTypeRegistry {
-  constructor(typeDescriptions = [], resourceDefaults = globalResourceDefaults) {
+  constructor(typeDescriptions = [], resourceDefaults = {}) {
     this._resourceTypes = {};
-    this._resourceDefaults = resourceDefaults;
+    this._resourceDefaults = merge({}, resourceDefaults, globalResourceDefaults);
     typeDescriptions.forEach((it) => { this.type(it); });
   }
 
@@ -49,7 +57,12 @@ export default class ResourceTypeRegistry {
       this._resourceTypes[type] = {};
 
       // Merge description defaults into provided description
-      description = Object.assign({}, this._resourceDefaults, description);
+      description = merge({}, this._resourceDefaults, description);
+
+      // Make inverse lookup object for exceptions
+      description.behaviors.dasherizeOutput._inverseExceptions = invertObject(
+        description.behaviors.dasherizeOutput.exceptions
+      );
 
       // Set all the properties for the type that the description provides.
       autoGetterSetterProps.concat(["urlTemplates"]).forEach((k) => {

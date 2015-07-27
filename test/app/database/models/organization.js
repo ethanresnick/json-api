@@ -16,6 +16,9 @@ function OrganizationSchema() {
     dateEstablished: {
       type: Date
     },
+    dateOfIPO: {
+      type: Date
+    },
     liaisons: [{ref: "Person", type: ObjectId}]
   });
 }

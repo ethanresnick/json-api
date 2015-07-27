@@ -49,4 +49,16 @@ describe("Utility methods", () => {
       expect(utils.isSubsetOf(["false"], [0])).to.be.false;
     });
   });
+
+  describe("invertObject", () => {
+    it("should invert an flat, string-valued object", () => {
+      expect(utils.invertObject({
+        roses: "red",
+        violets: "blue"
+      })).to.deep.equal({
+        red: "roses",
+        blue: "violets"
+      });
+    });
+  });
 });

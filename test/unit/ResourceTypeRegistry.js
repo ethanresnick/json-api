@@ -34,10 +34,10 @@ describe("ResourceTypeRegistry", function() {
       expect(registry.type("someType").info).to.equal("provided to constructor");
     });
 
-    it("should save the second paramter as _resourceDefaults property", () => {
+    it("should merge global defaults into the second paramter and save as _resourceDefaults property", () => {
       let defaults = { info: "provided to defaults" };
       registry = new ResourceTypeRegistry([], defaults);
-      expect(registry._resourceDefaults).to.equal(defaults);
+      expect(registry._resourceDefaults.info).to.equal("provided to defaults");
     });
   });
 
@@ -46,7 +46,7 @@ describe("ResourceTypeRegistry", function() {
       dbAdapter: {},
       beforeSave: () => {},
       beforeRender: () => {},
-      behaviors: { dasherizeOutput: { enabled: true } },
+      behaviors: { dasherizeOutput: { enabled: true, exceptions: {}, _inverseExceptions: {} } },
       info: {},
       urlTemplates: {"path": "test template"}
     };

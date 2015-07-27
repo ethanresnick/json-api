@@ -38,3 +38,15 @@ export function isSubsetOf(setArr, potentialSubsetArr) {
 export function isPlainObject(obj) {
   return typeof obj === "object" && !(Array.isArray(obj) || obj === null);
 }
+
+export function invertObject(obj) {
+  let inverted = {};
+  for (let key in obj) {
+    let value = obj[key];
+    if (typeof value !== "string") {
+      throw new Error("Only flat objects with string values can be inverted.");
+    }
+    inverted[obj[key]] = key;
+  }
+  return inverted;
+}
