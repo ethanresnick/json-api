@@ -40,7 +40,7 @@ const globalResourceDefaults = {
 export default class ResourceTypeRegistry {
   constructor(typeDescriptions = [], resourceDefaults = {}) {
     this._resourceTypes = {};
-    this._resourceDefaults = merge({}, resourceDefaults, globalResourceDefaults);
+    this._descriptionDefaults = merge({}, resourceDefaults, globalResourceDefaults);
     typeDescriptions.forEach((it) => { this.type(it); });
   }
 
@@ -57,7 +57,7 @@ export default class ResourceTypeRegistry {
       this._resourceTypes[type] = {};
 
       // Merge description defaults into provided description
-      description = merge({}, this._resourceDefaults, description);
+      description = merge({}, this._descriptionDefaults, description);
 
       // Make inverse lookup object for exceptions
       description.behaviors.dasherizeOutput._inverseExceptions = invertObject(
@@ -105,7 +105,7 @@ export default class ResourceTypeRegistry {
   behaviors(type, behaviorsToSet) {
     this._resourceTypes[type] = this._resourceTypes[type] || {};
     if (behaviorsToSet) {
-      let behaviors = merge({}, this._resourceDefaults.behaviors, behaviorsToSet);
+      let behaviors = merge({}, this._descriptionDefaults.behaviors, behaviorsToSet);
       behaviors.dasherizeOutput._inverseExceptions = invertObject(
         behaviors.dasherizeOutput.exceptions
       );

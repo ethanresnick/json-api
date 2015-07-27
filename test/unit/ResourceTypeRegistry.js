@@ -34,10 +34,10 @@ describe("ResourceTypeRegistry", function() {
       expect(registry.type("someType").info).to.equal("provided to constructor");
     });
 
-    it("should merge global defaults into the second paramter and save as _resourceDefaults property", () => {
+    it("should merge global defaults into the second paramter and save as _descriptionDefaults property", () => {
       let defaults = { info: "provided to defaults" };
       registry = new ResourceTypeRegistry([], defaults);
-      expect(registry._resourceDefaults.info).to.equal("provided to defaults");
+      expect(registry._descriptionDefaults.info).to.equal("provided to defaults");
     });
   });
 
@@ -54,16 +54,6 @@ describe("ResourceTypeRegistry", function() {
     it("should be a getter/setter for a type",
       makeGetterSetterTest(description, "mytypes", "type", true)
     );
-
-    it("should merge global defaults and descriptionDefaults into resource description", () => {
-      registry = new ResourceTypeRegistry([], {
-        info: "provided as default"
-      });
-
-      registry.type("someType", {});
-      expect(registry.type("someType").info).to.equal("provided as default");
-      expect(registry.type("someType").behaviors).to.be.an("object");
-    });
 
     it("should give the description precedence over the provided default", () => {
       registry = new ResourceTypeRegistry([], {
