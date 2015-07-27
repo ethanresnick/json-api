@@ -42,18 +42,6 @@ describe("ResourceTypeRegistry", function() {
   });
 
   describe("type", () => {
-    let description = {
-      dbAdapter: {},
-      beforeSave: () => {},
-      beforeRender: () => {},
-      behaviors: { dasherizeOutput: { enabled: true, exceptions: {}, _inverseExceptions: {} } },
-      info: {},
-      urlTemplates: {"path": "test template"}
-    };
-
-    it("should be a getter/setter for a type",
-      makeGetterSetterTest(description, "mytypes", "type", true)
-    );
 
     it("should give the description precedence over the provided default", () => {
       registry = new ResourceTypeRegistry([], {
