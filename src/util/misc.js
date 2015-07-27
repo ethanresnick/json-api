@@ -47,7 +47,7 @@ export function invertObject(obj) {
       if (typeof value !== "string") {
         throw new Error("Only flat objects with string values can be inverted.");
       }
-      inverted[obj[key]] = key;
+      inverted[value] = key;
     }
   }
   return inverted;
