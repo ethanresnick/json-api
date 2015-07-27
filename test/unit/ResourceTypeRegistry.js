@@ -55,13 +55,14 @@ describe("ResourceTypeRegistry", function() {
       makeGetterSetterTest(description, "mytypes", "type", true)
     );
 
-    it("should merge descriptionDefaults into resource description", () => {
+    it("should merge global defaults and descriptionDefaults into resource description", () => {
       registry = new ResourceTypeRegistry([], {
         info: "provided as default"
       });
 
       registry.type("someType", {});
       expect(registry.type("someType").info).to.equal("provided as default");
+      expect(registry.type("someType").behaviors).to.be.an("object");
     });
 
     it("should give the description precedence over the provided default", () => {
