@@ -32,6 +32,10 @@ var _controllersAPI = require("../controllers/API");
 
 var _controllersAPI2 = _interopRequireDefault(_controllersAPI);
 
+var _typesAPIError = require("../types/APIError");
+
+var _typesAPIError2 = _interopRequireDefault(_typesAPIError);
+
 var _typesHTTPRequest = require("../types/HTTP/Request");
 
 var _typesHTTPRequest2 = _interopRequireDefault(_typesHTTPRequest);
@@ -183,7 +187,7 @@ function buildRequestObject(req, allowTunneling) {
     if (allowTunneling && it.method === "post" && requestedMethod === "patch") {
       it.method = "patch";
     } else if (requestedMethod) {
-      reject(new Error("Cannot tunnel to the method \"" + requestedMethod + "\"."));
+      reject(new _typesAPIError2["default"](400, undefined, "Cannot tunnel to the method \"" + requestedMethod + "\"."));
     }
 
     it.hasBody = hasBody(req);
@@ -207,9 +211,7 @@ function buildRequestObject(req, allowTunneling) {
             it.body = JSON.parse(string);
             resolve(it);
           } catch (error) {
-            var parseErr = new Error("Request contains invalid JSON.");
-            parseErr.status = error.statusCode = 400;
-            reject(err);
+            reject(new _typesAPIError2["default"](400, undefined, "Request contains invalid JSON."));
           }
         }
       });
