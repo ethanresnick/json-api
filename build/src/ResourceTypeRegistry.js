@@ -76,10 +76,10 @@ var ResourceTypeRegistry = (function () {
     value: function types() {
       return _Object$keys(this._resourceTypes);
     }
-  }, {
-    key: "urlTemplates",
 
     //calling the arg "templatesToSet" to avoid conflict with templates var below
+  }, {
+    key: "urlTemplates",
     value: function urlTemplates(type, templatesToSet) {
       this._resourceTypes[type] = this._resourceTypes[type] || {};
 

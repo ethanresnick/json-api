@@ -66,16 +66,16 @@ exports["default"] = function (acceptHeader, availableBaseTypes) {
     // For everything but the JSON API media type, trust
     // negotiator to handle things correctly.
     else if (preferredType.toLowerCase() !== "application/vnd.api+json") {
-      resolve(preferredType);
-    }
+        resolve(preferredType);
+      }
 
-    // Otherwise, our preferred type is non existent or json api and, if it's
-    // json api, we have it unparameterized at least once.
-    else if (jsonApiRanges.length && endpointSupportsJsonApi) {
-      resolve("application/vnd.api+json");
-    } else {
-      reject(new _typesAPIError2["default"](406, null, "Not Acceptable"));
-    }
+      // Otherwise, our preferred type is non existent or json api and, if it's
+      // json api, we have it unparameterized at least once.
+      else if (jsonApiRanges.length && endpointSupportsJsonApi) {
+          resolve("application/vnd.api+json");
+        } else {
+          reject(new _typesAPIError2["default"](406, null, "Not Acceptable"));
+        }
   });
 };
 

@@ -39,8 +39,8 @@ function errorHandler(err) {
   // Don't worry about revealing internal concerns, as the pipeline maps
   // all unhandled errors to generic json-api APIError objects pre responding.
   else {
-    errors.push(err);
-  }
+      errors.push(err);
+    }
 
   throw errors;
 }

@@ -81,17 +81,17 @@ var MongooseAdapter = (function () {
     this.idGenerator = idGenerator;
   }
 
+  /**
+   * Returns a Promise for an array of two items: the primary resources (either
+   * a single Resource or a Collection) and the included resources, as an array.
+   *
+   * Note: The correct behavior if idOrIds is an empty array is to return no
+   * documents, as happens below. If it's undefined, though, we're not filtering
+   * by id and should return all documents.
+   */
+
   _createClass(MongooseAdapter, [{
     key: "find",
-
-    /**
-     * Returns a Promise for an array of two items: the primary resources (either
-     * a single Resource or a Collection) and the included resources, as an array.
-     *
-     * Note: The correct behavior if idOrIds is an empty array is to return no
-     * documents, as happens below. If it's undefined, though, we're not filtering
-     * by id and should return all documents.
-     */
     value: function find(type, idOrIds, fields, sorts, filters, includePaths) {
       var _this = this;
 
@@ -208,8 +208,6 @@ var MongooseAdapter = (function () {
         return _this.constructor.docsToResourceOrCollection(it, makeCollection, pluralizer, fields);
       }), includedResourcesPromise])["catch"](util.errorHandler);
     }
-  }, {
-    key: "create",
 
     /**
      * Returns a Promise that fulfills with the created Resource. The Promise
@@ -220,6 +218,8 @@ var MongooseAdapter = (function () {
      * @param {(Resource|Collection)} resourceOrCollection - The resource or
      *   collection of resources to create.
      */
+  }, {
+    key: "create",
     value: function create(parentType, resourceOrCollection) {
       var _this2 = this;
 
@@ -253,8 +253,6 @@ var MongooseAdapter = (function () {
         return _this2.constructor.docsToResourceOrCollection(finalDocs, makeCollection, _this2.inflector.plural);
       })["catch"](util.errorHandler);
     }
-  }, {
-    key: "update",
 
     /**
      * @param {string} parentType - All the resources to be created must be this
@@ -262,6 +260,8 @@ var MongooseAdapter = (function () {
      * @param {Object} resourceOrCollection - The changed Resource or Collection
      *   of resources. Should only have the fields that are changed.
      */
+  }, {
+    key: "update",
     value: function update(parentType, resourceOrCollection) {
       var _this3 = this;
 
@@ -375,8 +375,6 @@ var MongooseAdapter = (function () {
         return docs;
       })["catch"](util.errorHandler);
     }
-  }, {
-    key: "addToRelationship",
 
     /**
      * Unlike update(), which would do full replacement of a to-many relationship
@@ -385,6 +383,8 @@ var MongooseAdapter = (function () {
      * run. But validation and the update query hooks will work if you're using
      * Mongoose 4.0.
      */
+  }, {
+    key: "addToRelationship",
     value: function addToRelationship(type, id, relationshipPath, newLinkage) {
       var model = this.getModel(this.constructor.getModelName(type));
       var update = {
@@ -427,20 +427,18 @@ var MongooseAdapter = (function () {
       var parentModel = this.getModel(this.constructor.getModelName(parentType, this.inflector.singular));
       return [parentType].concat(this.constructor.getChildTypes(parentModel, this.inflector.plural));
     }
-  }, {
-    key: "getRelationshipNames",
 
     /**
      * Return the paths that, for the provided type, must always must be filled
      * with relationship info, if they're present. Occassionally, a path might be
      * optionally fillable w/ relationship info; this shouldn't return those paths.
      */
+  }, {
+    key: "getRelationshipNames",
     value: function getRelationshipNames(type) {
       var model = this.getModel(this.constructor.getModelName(type, this.inflector.singular));
       return util.getReferencePaths(model);
     }
-  }], [{
-    key: "docsToResourceOrCollection",
 
     /**
      * We want to always return a collection when the user is asking for something
@@ -457,6 +455,8 @@ var MongooseAdapter = (function () {
      * @param makeCollection Whether we're making a collection.
      * @param pluralizer An inflector function for setting the Resource's type
      */
+  }], [{
+    key: "docsToResourceOrCollection",
     value: function docsToResourceOrCollection(docs, makeCollection, pluralizer, fields) {
       var _this4 = this;
 
@@ -472,10 +472,10 @@ var MongooseAdapter = (function () {
       });
       return makeCollection ? new _typesCollection2["default"](docs) : docs[0];
     }
-  }, {
-    key: "docToResource",
 
     // Useful to have this as static for calling as a utility outside this class.
+  }, {
+    key: "docToResource",
     value: function docToResource(doc, pluralizer, fields) {
       var _this5 = this;
 
@@ -583,14 +583,14 @@ var MongooseAdapter = (function () {
         return it.charAt(0).toUpperCase() + it.slice(1);
       }).join("");
     }
-  }, {
-    key: "getType",
 
     // Get the json api type name for a model.
+  }, {
+    key: "getType",
     value: function getType(modelName) {
       var pluralizer = arguments.length <= 1 || arguments[1] === undefined ? _pluralize2["default"].plural : arguments[1];
 
-      return pluralizer(modelName.replace(/([A-Z])/g, "-$1").slice(1).toLowerCase());
+      return pluralizer(modelName.replace(/([A-Z])/g, "\-$1").slice(1).toLowerCase());
     }
   }, {
     key: "getReferencedType",

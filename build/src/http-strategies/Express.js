@@ -75,14 +75,14 @@ var ExpressStrategy = (function () {
     this.config = _Object$assign(defaultOptions, options); // apply options
   }
 
+  // For requests like GET /:type, GET /:type/:id/:relationship,
+  // POST /:type PATCH /:type/:id, PATCH /:type, DELETE /:type/:idOrLabel,
+  // DELETE /:type, GET /:type/:id/links/:relationship,
+  // PATCH /:type/:id/links/:relationship, POST /:type/:id/links/:relationship,
+  // and DELETE /:type/:id/links/:relationship.
+
   _createClass(ExpressStrategy, [{
     key: "apiRequest",
-
-    // For requests like GET /:type, GET /:type/:id/:relationship,
-    // POST /:type PATCH /:type/:id, PATCH /:type, DELETE /:type/:idOrLabel,
-    // DELETE /:type, GET /:type/:id/links/:relationship,
-    // PATCH /:type/:id/links/:relationship, POST /:type/:id/links/:relationship,
-    // and DELETE /:type/:id/links/:relationship.
     value: function apiRequest(req, res, next) {
       var _this = this;
 
@@ -94,10 +94,10 @@ var ExpressStrategy = (function () {
         res.status(err.status).send(err.message);
       }).done();
     }
-  }, {
-    key: "docsRequest",
 
     // For requests for the documentation.
+  }, {
+    key: "docsRequest",
     value: function docsRequest(req, res, next) {
       var _this2 = this;
 
@@ -131,8 +131,6 @@ var ExpressStrategy = (function () {
         }
       }
     }
-  }, {
-    key: "sendError",
 
     /**
      * A user of this library may wish to send an error response for an exception
@@ -140,6 +138,8 @@ var ExpressStrategy = (function () {
      * main spec's scope (e.g. an authentication error). So, the controller
      * exposes this method which allows them to do that.
      */
+  }, {
+    key: "sendError",
     value: function sendError(error, req, res) {
       var _this3 = this;
 
@@ -149,13 +149,13 @@ var ExpressStrategy = (function () {
         });
       });
     }
-  }, {
-    key: "toApp",
 
     /**
      * @TODO Uses this ExpressStrategy to create an express app with
      * preconfigured routes that can be mounted as a subapp.
      */
+  }, {
+    key: "toApp",
     value: function toApp(typesToExcludedMethods) {}
   }]);
 

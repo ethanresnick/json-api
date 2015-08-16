@@ -50,27 +50,27 @@ exports["default"] = function (requestContext, responseContext, registry) {
   //   have a links key.
   // - sorts don't apply beacuse that's only for resource collections.
   else {
-    if (Array.isArray(requestContext.idOrIds)) {
-      throw new _typesAPIError2["default"](400, undefined, "You can only request the linkage for one resource at a time.");
-    }
-
-    return adapter.find(type, requestContext.idOrIds).spread(function (resource) {
-      // 404 if the requested relationship is not a relationship path. Doing
-      // it here is more accurate than using adapter.getRelationshipNames,
-      // since we're allowing for paths that can optionally hold linkage,
-      // which getRelationshipNames doesn't return.
-      var relationship = resource.relationships && resource.relationships[requestContext.relationship];
-
-      if (!relationship) {
-        var title = "Invalid relationship name.";
-        var detail = requestContext.relationship + " is not a valid " + ("relationship name on resources of type '" + type + "'");
-
-        throw new _typesAPIError2["default"](404, undefined, title, detail);
+      if (Array.isArray(requestContext.idOrIds)) {
+        throw new _typesAPIError2["default"](400, undefined, "You can only request the linkage for one resource at a time.");
       }
 
-      responseContext.primary = relationship.linkage;
-    });
-  }
+      return adapter.find(type, requestContext.idOrIds).spread(function (resource) {
+        // 404 if the requested relationship is not a relationship path. Doing
+        // it here is more accurate than using adapter.getRelationshipNames,
+        // since we're allowing for paths that can optionally hold linkage,
+        // which getRelationshipNames doesn't return.
+        var relationship = resource.relationships && resource.relationships[requestContext.relationship];
+
+        if (!relationship) {
+          var title = "Invalid relationship name.";
+          var detail = requestContext.relationship + " is not a valid " + ("relationship name on resources of type '" + type + "'");
+
+          throw new _typesAPIError2["default"](404, undefined, title, detail);
+        }
+
+        responseContext.primary = relationship.linkage;
+      });
+    }
 };
 
 function parseFields(fieldsParam) {

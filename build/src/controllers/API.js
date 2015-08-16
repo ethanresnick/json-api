@@ -88,7 +88,7 @@ var supportedExt = [];
 // are suboptimal. See https://github.com/ethanresnick/json-api/issues/47
 // We use eval so that the runtime transformer doesn't replace our check for an
 // existing promise with an invocation of the polyfill.
-Promise = eval("typeof Promise !== 'undefined' ? Promise : undefined") || require("babel-runtime/core-js/promise")["default"];
+GLOBAL.Promise = eval("typeof Promise !== 'undefined' ? Promise : undefined") || require("babel-runtime/core-js/promise")["default"];
 
 var APIController = (function () {
   function APIController(registry) {

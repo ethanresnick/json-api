@@ -101,11 +101,11 @@ var DocumentationController = (function () {
 
       return (0, _q2["default"])(response);
     }
-  }, {
-    key: "getTypeInfo",
 
     // Clients can extend this if, say, the adapter can't infer
     // as much info about the models' structure as they would like.
+  }, {
+    key: "getTypeInfo",
     value: function getTypeInfo(type) {
       var adapter = this.registry.dbAdapter(type);
       var modelName = adapter.constructor.getModelName(type);
@@ -133,20 +133,20 @@ var DocumentationController = (function () {
           // it's included to emphasize that the description key has a special
           // meaning and is, e.g., given special treatment in the default template.
           else if (key === "description") {
-            field.description = pathInfo.description;
-          }
+              field.description = pathInfo.description;
+            }
 
-          // copy in any other info properties that don't conflict
-          else if (!(key in field)) {
-            field[key] = pathInfo[key];
-          }
+            // copy in any other info properties that don't conflict
+            else if (!(key in field)) {
+                field[key] = pathInfo[key];
+              }
 
-          // try to merge in info properties. if the key conflicts and doesn't
-          // hold an object into which we can merge, we just give up (i.e. we
-          // don't try anything else after the below).
-          else if (typeof field[key] === "object" && !Array.isArray(field[key])) {
-            _Object$assign(field[key], pathInfo[key]);
-          }
+              // try to merge in info properties. if the key conflicts and doesn't
+              // hold an object into which we can merge, we just give up (i.e. we
+              // don't try anything else after the below).
+              else if (typeof field[key] === "object" && !Array.isArray(field[key])) {
+                  _Object$assign(field[key], pathInfo[key]);
+                }
         }
       });
       // Other info

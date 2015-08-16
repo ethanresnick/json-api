@@ -26,6 +26,24 @@ var Resource = (function () {
     this.meta = _ref[4];
   }
 
+  /**
+   * Checks that a group of fields (i.e. the attributes or the relationships
+   * objects) are provided as objects and that they don't contain `type` and
+   * `id` members. Also checks that attributes and relationships don't contain
+   * the same keys as one another, and it checks that complex attributes don't
+   * contain "relationships" or "links" members.
+   *
+   * @param {Object} group The an object of fields (attributes or relationships)
+   *    that the user is trying to add to the Resource.
+   * @param {Object} otherFields The other fields that will still exist on the
+   *    Resource. The new fields are checked against these other fields for
+   *    naming conflicts.
+   * @param {Boolean} isAttributes Whether the `group` points to the attributes
+   *    of the resource. Triggers complex attribute validation.
+   * @return {undefined}
+   * @throws {Error} If the field group is invalid given the other fields.
+   */
+
   _createClass(Resource, [{
     key: "equals",
     value: function equals(otherResource) {
@@ -90,24 +108,6 @@ var Resource = (function () {
 })();
 
 exports["default"] = Resource;
-
-/**
- * Checks that a group of fields (i.e. the attributes or the relationships
- * objects) are provided as objects and that they don't contain `type` and
- * `id` members. Also checks that attributes and relationships don't contain
- * the same keys as one another, and it checks that complex attributes don't
- * contain "relationships" or "links" members.
- *
- * @param {Object} group The an object of fields (attributes or relationships)
- *    that the user is trying to add to the Resource.
- * @param {Object} otherFields The other fields that will still exist on the
- *    Resource. The new fields are checked against these other fields for
- *    naming conflicts.
- * @param {Boolean} isAttributes Whether the `group` points to the attributes
- *    of the resource. Triggers complex attribute validation.
- * @return {undefined}
- * @throws {Error} If the field group is invalid given the other fields.
- */
 function validateFieldGroup(group, otherFields, isAttributes) {
   if (!(0, _utilMisc.isPlainObject)(group)) {
     throw new Error("Attributes and relationships must be provided as an object.");
@@ -131,7 +131,7 @@ function validateFieldGroup(group, otherFields, isAttributes) {
 function validateComplexAttribute(attrOrAttrPart) {
   if ((0, _utilMisc.isPlainObject)(attrOrAttrPart)) {
     if (typeof attrOrAttrPart.relationships !== "undefined" || typeof attrOrAttrPart.links !== "undefined") {
-      throw new Error("Complex attributes may not have \"relationships\" or \"links\" keys.");
+      throw new Error('Complex attributes may not have "relationships" or "links" keys.');
     }
     for (var key in attrOrAttrPart) {
       validateComplexAttribute(attrOrAttrPart[key]);

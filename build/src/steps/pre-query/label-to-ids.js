@@ -25,8 +25,8 @@ exports["default"] = function (type, labelOrId, registry, frameworkReq) {
     // or, if we couldn't find a label mapper, that means
     // we were given an id, so we just resolve with that id.
     else {
-      resolve(labelOrId);
-    }
+        resolve(labelOrId);
+      }
   });
 };
 

@@ -18,6 +18,8 @@ Object.defineProperty(exports, "__esModule", {
 var nonEnumerable = { writable: true, enumerable: false };
 
 var APIError = (function (_Error) {
+  _inherits(APIError, _Error);
+
   /*eslint-disable no-unused-vars */
 
   function APIError(status, code, title, detail, links, paths) {
@@ -70,17 +72,15 @@ var APIError = (function (_Error) {
     this.paths = _Array$from2[5];
   }
 
-  _inherits(APIError, _Error);
+  /*eslint-enable */
+
+  /**
+   * Creates a JSON-API Compliant Error Object from a JS Error object
+   *
+   */
 
   _createClass(APIError, null, [{
     key: "fromError",
-
-    /*eslint-enable */
-
-    /**
-     * Creates a JSON-API Compliant Error Object from a JS Error object
-     *
-     */
     value: function fromError(err) {
       var fallbackTitle = "An unknown error occurred while trying to process this request.";
 
@@ -92,13 +92,13 @@ var APIError = (function (_Error) {
       // to read values off it and show them to the user. (Note: most of
       // the args below will probably be null/undefined, but that's fine.)
       else if (err.isJSONAPIDisplayReady) {
-        return new APIError(err.status || err.statusCode || 500, err.code, err.title || fallbackTitle, err.details || (err.message ? err.message : undefined), err.links, err.paths);
-      }
+          return new APIError(err.status || err.statusCode || 500, err.code, err.title || fallbackTitle, err.details || (err.message ? err.message : undefined), err.links, err.paths);
+        }
 
-      // Otherwise, we just show a generic error message.
-      else {
-        return new APIError(500, undefined, fallbackTitle);
-      }
+        // Otherwise, we just show a generic error message.
+        else {
+            return new APIError(500, undefined, fallbackTitle);
+          }
     }
   }]);
 

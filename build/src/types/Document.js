@@ -36,12 +36,11 @@ var Document = (function () {
   function Document(primaryOrErrors, included, meta, urlTemplates, reqURI) {
     _classCallCheck(this, Document);
 
+    // validate meta
     var _ref = [primaryOrErrors, included, reqURI];
     this.primaryOrErrors = _ref[0];
     this.included = _ref[1];
     this.reqURI = _ref[2];
-
-    // validate meta
     if (meta !== undefined) {
       if (typeof meta === "object" && !Array.isArray(meta)) {
         this.meta = meta;
@@ -84,8 +83,8 @@ var Document = (function () {
 
       // it's either resource, a collection, linkage, null, or errors...
       else {
-        doc.errors = this.primaryOrErrors.map(errorToJSON);
-      }
+          doc.errors = this.primaryOrErrors.map(errorToJSON);
+        }
 
       if (this.included && this.included instanceof _Collection2["default"]) {
         doc.included = (0, _utilArrays.arrayUnique)(this.included.resources).map(function (resource) {

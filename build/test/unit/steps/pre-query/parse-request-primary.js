@@ -30,11 +30,11 @@ var expect = _chai2["default"].expect;
 
 describe("Resource Parser", function () {
   describe.skip("Parsing Linkage", function () {
-    it.skip("should read in the incoming json correctly", function () {
-      console.log("see https://github.com/json-api/json-api/issues/482");
-    });
+    it.skip("should read in the incoming json correctly", function () {});
 
-    it.skip("should reject invalid linkage", function () {});
+    it.skip("should reject invalid linkage", function () {
+      //linkage who's value is true, or {"id": ""}
+    });
   });
 
   describe("Parsing a Collection", function () {
@@ -93,5 +93,3 @@ describe("Resource Parser", function () {
     });
   });
 });
-
-//linkage who's value is true, or {"id": ""}

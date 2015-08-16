@@ -18,7 +18,7 @@ describe("negotiateContentType", function () {
   });
 
   it("should use JSON API if clients correctly request it", function (done) {
-    var accept = "application/vnd.api+json";
+    var accept = 'application/vnd.api+json';
     (0, _srcStepsHttpContentNegotiationNegotiateContentType2["default"])(accept, ["application/vnd.api+json"]).then(function (contentType) {
       (0, _chai.expect)(contentType).to.equal("application/vnd.api+json");
       done();
@@ -26,7 +26,7 @@ describe("negotiateContentType", function () {
   });
 
   it("should 406 if all json api parameter instances are parameterized, even if there's a valid alternative", function (done) {
-    var accept = "application/vnd.api+json; ext=\"ext2\", application/json";
+    var accept = 'application/vnd.api+json; ext="ext2", application/json';
     (0, _srcStepsHttpContentNegotiationNegotiateContentType2["default"])(accept, ["application/vnd.api+json"]).then(done, function (err) {
       (0, _chai.expect)(err.status).to.equal("406");
       done();
@@ -34,7 +34,7 @@ describe("negotiateContentType", function () {
   });
 
   it("should allow parameterized json api media ranges as long as not all are parameterized", function (done) {
-    var accept = "application/vnd.api+json; ext=\"ext2\",application/vnd.api+json";
+    var accept = 'application/vnd.api+json; ext="ext2",application/vnd.api+json';
     (0, _srcStepsHttpContentNegotiationNegotiateContentType2["default"])(accept, ["application/vnd.api+json", "text/html"]).then(function (contentType) {
       if (contentType === "application/vnd.api+json") {
         done();

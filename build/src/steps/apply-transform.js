@@ -36,8 +36,8 @@ exports["default"] = function (toTransform, mode, registry, frameworkReq, framew
 
   // We only transform resources or collections.
   else {
-    return _q.Promise.resolve(toTransform);
-  }
+      return _q.Promise.resolve(toTransform);
+    }
 };
 
 function transform(resource, req, res, transformMode, registry) {

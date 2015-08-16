@@ -19,6 +19,8 @@ var _FieldType2 = require("./FieldType");
 var _FieldType3 = _interopRequireDefault(_FieldType2);
 
 var RelationshipType = (function (_FieldType) {
+  _inherits(RelationshipType, _FieldType);
+
   function RelationshipType(toMany, targetModel, targetType) {
     _classCallCheck(this, RelationshipType);
 
@@ -27,8 +29,6 @@ var RelationshipType = (function (_FieldType) {
     this.targetModel = _ref[0];
     this.targetType = _ref[1];
   }
-
-  _inherits(RelationshipType, _FieldType);
 
   _createClass(RelationshipType, [{
     key: "toString",
