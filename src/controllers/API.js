@@ -23,6 +23,13 @@ import doDELETE from "../steps/do-query/do-delete";
 
 let supportedExt = [];
 
+// We have to globally patch Promise for co to work, even though global patches
+// are suboptimal. See https://github.com/ethanresnick/json-api/issues/47
+// We use eval so that the runtime transformer doesn't replace our check for an
+// existing promise with an invocation of the polyfill.
+GLOBAL.Promise = eval("typeof Promise !== 'undefined' ? Promise : undefined") ||
+  require("babel-runtime/core-js/promise")["default"];
+
 class APIController {
   constructor(registry) {
     this.registry = registry;
