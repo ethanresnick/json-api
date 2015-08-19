@@ -147,37 +147,36 @@ function buildRequestObject(req, allowTunneling) {
     if(it.hasBody) {
       it.contentType  = req.headers["content-type"];
 
-      if (isReadableStream(req)) {
-        const typeParsed = contentType.parse(req);
-        let bodyParserOptions = {
-          encoding: typeParsed.parameters.charset || "utf8",
-          limit: "1mb"
-        };
-
-        if (req.headers["content-length"] && !isNaN(req.headers["content-length"])) {
-          bodyParserOptions.length = req.headers["content-length"];
-        }
-
-        // The req has not yet been read, so let's read it
-        getRawBody(req, bodyParserOptions, function(err, string) {
-          if (err) { reject(err); }
-          else {
-            try {
-              it.body = JSON.parse(string);
-              resolve(it);
-            }
-            catch (error) {
-              reject(
-                new APIError(400, undefined, "Request contains invalid JSON.")
-              );
-            }
-          }
-        });
-      } else {
+      if (isExhaustedStream(req)) {
         reject(
           new APIError(500, undefined, "Request body could not be parsed. Make sure other body parsers applied on ")
         );
       }
+
+      const typeParsed = contentType.parse(req);
+
+      let bodyParserOptions = {};
+      bodyParserOptions.encoding = typeParsed.parameters.charset || "utf8";
+      bodyParserOptions.limit = "1mb";
+      if (req.headers["content-length"] && !isNaN(req.headers["content-length"])) {
+        bodyParserOptions.length = req.headers["content-length"];
+      }
+
+      // The req has not yet been read, so let's read it
+      getRawBody(req, bodyParserOptions, function(err, string) {
+        if (err) { reject(err); }
+        else {
+          try {
+            it.body = JSON.parse(string);
+            resolve(it);
+          }
+          catch (error) {
+            reject(
+              new APIError(400, undefined, "Request contains invalid JSON.")
+            );
+          }
+        }
+      });
     }
     else {
       it.body = null;
@@ -191,6 +190,6 @@ function hasBody(req) {
     || !isNaN(req.headers["content-length"]);
 }
 
-function isReadableStream(req) {
+function isExhaustedStream(req) {
   return typeof req._readableState === 'object' && req._readableState.endEmitted === false;
 }

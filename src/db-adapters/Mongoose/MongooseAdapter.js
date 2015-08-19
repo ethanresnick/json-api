@@ -33,8 +33,7 @@ export default class MongooseAdapter {
     const model = this.getModel(this.constructor.getModelName(type));
     let queryBuilder = new mongoose.Query(null, null, model, model.collection);
     const pluralizer = this.inflector.plural;
-    let primaryDocumentsPromise;
-    let includedResourcesPromise = Q(null);
+    let primaryDocumentsPromise, includedResourcesPromise = Q(null);
 
     let idQuery = this.constructor.makeIdQuery(idOrIds);
     let mode = typeof idQuery === 'string' ? 'findOne' : 'find';
