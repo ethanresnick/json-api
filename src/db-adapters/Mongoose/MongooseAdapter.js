@@ -30,27 +30,16 @@ export default class MongooseAdapter {
    * by id and should return all documents.
    */
   find(type, idOrIds, fields, sorts, filters, includePaths) {
-    let model = this.getModel(this.constructor.getModelName(type));
+    const model = this.getModel(this.constructor.getModelName(type));
     let queryBuilder = new mongoose.Query(null, null, model, model.collection);
-    let pluralizer = this.inflector.plural;
-    let mode = "find", idQuery;
-    let primaryDocumentsPromise, includedResourcesPromise = Q(null);
+    const pluralizer = this.inflector.plural;
+    let primaryDocumentsPromise;
+    let includedResourcesPromise = Q(null);
 
-    if(idOrIds) {
-      if(typeof idOrIds === "string") {
-        mode = "findOne";
-        idQuery = idOrIds;
-      }
-      else {
-        idQuery = {"$in": idOrIds};
-      }
+    let idQuery = this.constructor.makeIdQuery(idOrIds);
+    let mode = typeof idQuery === 'string' ? 'findOne' : 'find';
 
-      queryBuilder[mode]({"_id": idQuery});
-    }
-
-    else {
-      queryBuilder.find();
-    }
+    queryBuilder[mode](idQuery);
 
     // do sorting
     if(Array.isArray(sorts)) {
@@ -202,16 +191,17 @@ export default class MongooseAdapter {
     const plural = this.inflector.plural;
 
     // Set up some data structures based on resourcesOrCollection
-    const resourceTypes = [];
-    const changeSets = {};
+    let resourceTypes = [];
+    let changeSets = {};
+
     const idOrIds = mapResources(resourceOrCollection, (it) => {
       changeSets[it.id] = it;
       resourceTypes.push(it.type);
       return it.id;
     });
 
-    const mode    = typeof idOrIds === "string" ? "findOne" : "find";
-    const idQuery = typeof idOrIds === "string" ? idOrIds : {"$in": idOrIds};
+    let idQuery = this.constructor.makeIdQuery(idOrIds);
+    let mode = typeof idQuery === 'string' ? 'findOne' : 'find';
 
     return Q(model[mode]({"_id": idQuery}).exec()).then((docs) => {
       const successfulSavesPromises = [];
@@ -280,23 +270,11 @@ export default class MongooseAdapter {
 
   delete(parentType, idOrIds) {
     const model = this.getModel(this.constructor.getModelName(parentType));
-    let mode = "find", idQuery;
-
-    if(!idOrIds) {
-      return Q.Promise((resolve, reject) => {
-        reject(new APIError(400, undefined, "You must specify some resources to delete"));
-      });
-    }
-
-    else if(typeof idOrIds === "string") {
-      mode = "findOne";
-      idQuery = idOrIds;
-    }
-    else {
-      idQuery = {"$in": idOrIds};
-    }
+    let idQuery = this.constructor.makeIdQuery(idOrIds);
+    let mode = typeof idQuery === 'string' ? 'findOne' : 'find';
 
     return Q(model[mode]({"_id": idQuery}).exec()).then((docs) => {
+      if (!docs) throw new APIError(404, undefined, 'No matching resource found.');
       forEachArrayOrVal(docs, (it) => { it.remove(); });
       return docs;
     }).catch(util.errorHandler);
@@ -613,5 +591,28 @@ export default class MongooseAdapter {
     }
 
     return words.join(" ");
+  }
+
+  static makeIdQuery(idOrIds) {
+    const idIsValid = mongoose.Types.ObjectId.isValid;
+    let idQuery;
+
+    if (typeof idOrIds === "string") {
+      if (!idIsValid(idOrIds)) {
+        throw new APIError(404, undefined, "No matching resource found.");
+      }
+
+      idQuery = idOrIds;
+    } else if (Array.isArray(idOrIds)) {
+      let validIds = idOrIds.filter(idIsValid);
+
+      if (!validIds.length) {
+        throw new APIError(404, undefined, "No matching resources found.");
+      }
+
+      idQuery = {"$in": idOrIds};
+    }
+
+    return idQuery;
   }
 }
