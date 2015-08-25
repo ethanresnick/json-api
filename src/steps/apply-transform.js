@@ -14,9 +14,9 @@ export default function(toTransform, mode, registry, frameworkReq, frameworkRes)
     // below, allow the user to return undefined to remove a vlaue.
     return Promise.all(toTransform.resources.map((it) =>
       transform(it, frameworkReq, frameworkRes, mode, registry)
-    ).filter((it) => it !== undefined)).then((newResources) => {
-      return new Collection(newResources);
-    });
+    )).then((transformed) =>
+      new Collection(transformed.filter((it) => it !== undefined))
+    );
   }
 
   // We only transform resources or collections.
