@@ -23,3 +23,19 @@ export function checkBodyExistence(requestContext) {
     }
   });
 }
+
+export function checkMethod({method}) {
+  if(["patch", "post", "delete", "get"].indexOf(method) === -1) {
+    let detail = `The method "${method}" is not supported.` + (method === "put" ? " See http://jsonapi.org/faq/#wheres-put" : "");
+
+    return Promise.reject(new APIError(
+      405,
+      undefined,
+      "Method not supported.",
+      detail
+    ));
+  }
+  else {
+    return Promise.resolve();
+  }
+}

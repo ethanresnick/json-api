@@ -52,6 +52,9 @@ class APIController {
     // Kick off the chain for generating the response.
     return co(function*() {
       try {
+        // check that a valid method is in use
+        yield requestValidators.checkMethod(request);
+
         // throw if the body is supposed to be present but isn't (or vice-versa).
         yield requestValidators.checkBodyExistence(request);
 
