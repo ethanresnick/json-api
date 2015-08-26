@@ -1,7 +1,7 @@
 json-api ![CircleCI Badge](https://circleci.com/gh/ethanresnick/json-api.png?0d6d9ba9db7f15eb6363c6fd93408526bef06035&style=shield)
 ========
 
-This library creates a [JSON API](http://jsonapi.org/)-compliant REST API from your Node app. And it generates API documentation automatically.
+This library creates a [JSON API](http://jsonapi.org/)-compliant REST API from your Node app and automatically generates API documentation.
 
 It currently integrates with [Express](http://expressjs.com/) apps that use [Mongoose](http://mongoosejs.com/) models, but it can easily be integrated with other frameworks and databases. If you want to see an integration with another stack, just open an issue!
 
@@ -35,7 +35,7 @@ Check out the [full, working example repo](http://github.com/ethanresnick/json-a
   });
 
   registry.type("places", {
-    adapter: adapter,
+    dbAdapter: adapter,
     urlTemplates: {"self": "/places/{id}"}
   });
 
@@ -66,7 +66,7 @@ Check out the [full, working example repo](http://github.com/ethanresnick/json-a
 
 # Core Concepts
 ## Resource Type Descriptions <a name="resource-type-descriptions"></a>
-The JSON-API spec is built around the idea of typed resource collections. For example, you can have a `"people"` collection and a `"companies"` collection. (By convention, type names are plural and lowercase.)
+The JSON-API spec is built around the idea of typed resource collections. For example, you can have a `"people"` collection and a `"companies"` collection. (By convention, type names are plural, lowercase, and dasherized.)
 
 To use this library, you describe the special behavior (if any) that resources of each type should have, and then register that description with a central `ResourceTypeRegistry`. Then the library takes care of the rest. A resource type description is simply an object with the following properties:
 
@@ -82,6 +82,25 @@ To use this library, you describe the special behavior (if any) that resources o
 - <a name="parentType"></a>`parentType` (optional): this allows you to designate one resource type being a sub-type of another (its `parentType`). This is often used when you have two resource types that live in the same database table/collection, and their type is determined with a discriminator key. See the [`schools` type](https://github.com/ethanresnick/json-api-example/blob/master/src/resource-descriptions/schools.js#L2) in the example repository.
 
 -  <a name="info"></a>`info` (optional): this allows you to provide extra information about the resource that will be included in the documentation. Available properties are `"description"` (a string describing what resources of this type are) and `"fields"`. `"fields"` holds an object in which you can describe each field in the resource (e.g. listing validation rules). See the [example implemenation](https://github.com/ethanresnick/json-api-example/blob/master/src/resource-descriptions/schools.js) for more details.
+
+## Filtering
+This library includes basic filtering capabilities out of the box. Filters are accepted in the following form:
+```
+?filter[simple][<field_name>]=<value>
+```
+For example, to get all people with the name "John":
+```
+GET /people?filter[simple][name]=John
+```
+Also available are Mongo-specific operators, taking the following form:
+```
+?filter[simple][<field_name>][<operator>]=<value>
+```
+The `<operator>` can be set to any [Mongo query operator](http://docs.mongodb.org/manual/reference/operator/query/). For example, to get all jobs completed before June 2015:
+```
+GET /jobs?filter[simple][dateCompleted][$lt]=2015-06-01
+```
+Please note however that as these operators are Mongo-specific, they may be replaced in a future version with a more database-agnostic syntax.
 
 ## Routing, Authentication & Controllers
 This library gives you a Front controller (shown in the example) that can handle requests for API results or for the documentation. But the library doesn't prescribe how requests get to this controller. This allows you to use any url scheme, routing layer, or authentication system you already have in place. You just need to make sure that: `req.params.type` reflects the requested resource type; `req.params.id` or (if you want to allow labels on a request) `req.params.idOrLabel` reflects the requested id, if any; and `req.params.relationship` reflects the relationship name, in the event that the user is requesting a relationship url.
