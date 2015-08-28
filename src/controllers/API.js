@@ -26,7 +26,7 @@ let supportedExt = [];
 // We have to globally patch Promise for co to work, even though global patches
 // are suboptimal. See https://github.com/ethanresnick/json-api/issues/47
 // We use eval so that the runtime transformer doesn't replace our check for an
-// existing promise with an invocation of the polyfill.
+// existing Promise with an invocation of the polyfill.
 GLOBAL.Promise = eval("typeof Promise !== 'undefined' ? Promise : undefined") ||
   require("babel-runtime/core-js/promise")["default"];
 
@@ -183,13 +183,13 @@ class APIController {
     });
   }
 
-  static responseFromExternalError(request, error) {
+  static responseFromExternalError(error, requestAccepts) {
     let response = new Response();
     response.errors = [APIError.fromError(error)];
     response.status = pickStatus(response.errors.map((v) => Number(v.status)));
     response.body = new Document(response.errors).get(true);
 
-    return negotiateContentType(request.accepts, ["application/vnd.api+json"])
+    return negotiateContentType(requestAccepts, ["application/vnd.api+json"])
       .then((contentType) => {
         response.contentType = (contentType.toLowerCase() === "application/json")
           ? contentType : "application/vnd.api+json";
