@@ -146,17 +146,25 @@ function buildRequestObject(req, allowTunneling) {
 
     if(it.hasBody) {
       it.contentType  = req.headers["content-type"];
-      let typeParsed = contentType.parse(req);
+
+      if (isExhaustedStream(req)) {
+        reject(
+          new APIError(500, undefined, "Request body could not be parsed. Make sure other body parsers applied on ")
+        );
+      }
+
+      const typeParsed = contentType.parse(req);
 
       let bodyParserOptions = {};
       bodyParserOptions.encoding = typeParsed.parameters.charset || "utf8";
       bodyParserOptions.limit = "1mb";
-      if(req.headers["content-length"] && !isNaN(req.headers["content-length"])) {
+      if (req.headers["content-length"] && !isNaN(req.headers["content-length"])) {
         bodyParserOptions.length = req.headers["content-length"];
       }
 
+      // The req has not yet been read, so let's read it
       getRawBody(req, bodyParserOptions, function(err, string) {
-        if(err) { reject(err); }
+        if (err) { reject(err); }
         else {
           try {
             it.body = JSON.parse(string);
@@ -180,4 +188,8 @@ function buildRequestObject(req, allowTunneling) {
 function hasBody(req) {
   return req.headers["transfer-encoding"] !== undefined
     || !isNaN(req.headers["content-length"]);
+}
+
+function isExhaustedStream(req) {
+  return typeof req._readableState === 'object' && req._readableState.endEmitted === false;
 }
