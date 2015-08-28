@@ -35,8 +35,7 @@ export default class ExpressStrategy {
 
     this.api = apiController;
     this.docs = docsController;
-    this.config = Object.assign(defaultOptions, options); // apply options
-
+    this.config = Object.assign({}, defaultOptions, options); // apply options
   }
 
   // For requests like GET /:type, GET /:type/:id/:relationship,
@@ -46,21 +45,23 @@ export default class ExpressStrategy {
   // and DELETE /:type/:id/links/:relationship.
   apiRequest(req, res, next) {
     buildRequestObject(req, this.config.tunnel).then((requestObject) => {
-      this.api.handle(requestObject, req, res).then((responseObject) => {
+      return this.api.handle(requestObject, req, res).then((responseObject) => {
         this.sendResources(responseObject, res, next);
       });
-    }, (err) => {
-      res.status(err.status).send(err.message);
-    }).done();
+    }).catch((err) => {
+      this.sendError(err, req, res);
+    });
   }
 
   // For requests for the documentation.
   docsRequest(req, res, next) {
     buildRequestObject(req, this.config.tunnel).then((requestObject) => {
-      this.docs.handle(requestObject).then((responseObject) => {
+      return this.docs.handle(requestObject).then((responseObject) => {
         this.sendResources(responseObject, res, next);
       });
-    }).done();
+    }).catch((err) => {
+      this.sendError(err, req, res);
+    });
   }
 
   sendResources(responseObject, res, next) {
@@ -95,10 +96,11 @@ export default class ExpressStrategy {
    * exposes this method which allows them to do that.
    */
   sendError(error, req, res) {
-    buildRequestObject(req).then((requestObject) => {
-      API.responseFromExternalError(requestObject, error, this.api.registry).then(
-        (responseObject) => this.sendResources(responseObject, res, () => {})
-      );
+    API.responseFromExternalError(error, req.headers.accept).then(
+      (responseObject) => this.sendResources(responseObject, res, () => {})
+    ).catch((err) => {
+      // if we hit an error generating our error...
+      res.status(err.status).send(err.message);
     });
   }
 
