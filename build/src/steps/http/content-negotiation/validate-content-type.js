@@ -30,13 +30,13 @@ function validateContentType(requestContext, supportedExt) {
     // In the future, we might delegate back to the framework if the client
     // provides a base content type other than json-api's. But, for now, we 415.
     if (contentType.type !== "application/vnd.api+json") {
-      var detail = "The request's Content-Type must be application/vnd.api+json, " + "but you provided: " + contentType.type + ".";
+      var detail = "The request's Content-Type must be application/vnd.api+json, " + "but you provided " + contentType.type + ".";
 
-      reject(new _typesAPIError2["default"](415, null, "Invalid Media Type", detail));
+      reject(new _typesAPIError2["default"](415, undefined, "Invalid Media Type", detail));
     } else if (!(0, _utilTypeHandling.objectIsEmpty)(contentType.parameters)) {
       var detail = "The request's Content-Type must be application/vnd.api+json, with " + "no parameters. But the Content-Type you provided contained the " + ("parameters: " + _Object$keys(contentType.parameters).join(", ") + ".");
 
-      reject(new _typesAPIError2["default"](415, null, "Invalid Media Type Parameter(s)", detail));
+      reject(new _typesAPIError2["default"](415, undefined, "Invalid Media Type Parameter(s)", detail));
     } else {
       resolve();
     }

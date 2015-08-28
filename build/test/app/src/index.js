@@ -43,11 +43,11 @@ exports["default"] = _databaseIndex2["default"].then(function (dbModule) {
   var apiReqHandler = Front.apiRequest.bind(Front);
 
   // Now, add the routes.
-  // To do this in a more scalable and configurable way, check out
-  // http://github.com/ethanresnick/express-simple-router. To protect some
-  // routes, check out http://github.com/ethanresnick/express-simple-firewall.
+  // Note: below, express incorrectly passes requests using PUT and other
+  // unknown methods into the API Controller at some routes. We're doing this
+  // here just to test that the controller rejects them properly.
   app.get("/", Front.docsRequest.bind(Front));
-  app.route("/:type(people|organizations|schools)").get(apiReqHandler).post(apiReqHandler).patch(apiReqHandler);
+  app.route("/:type(people|organizations|schools)").all(apiReqHandler);
   app.route("/:type(people|organizations|schools)/:id").get(apiReqHandler).patch(apiReqHandler)["delete"](apiReqHandler);
   app.route("/:type(people|organizations|schools)/:id/:related").get(apiReqHandler);
   app.route("/:type(people|organizations|schools)/:id/relationships/:relationship").get(apiReqHandler).post(apiReqHandler).patch(apiReqHandler);

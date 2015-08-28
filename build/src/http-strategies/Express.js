@@ -72,7 +72,7 @@ var ExpressStrategy = (function () {
 
     this.api = apiController;
     this.docs = docsController;
-    this.config = _Object$assign(defaultOptions, options); // apply options
+    this.config = _Object$assign({}, defaultOptions, options); // apply options
   }
 
   // For requests like GET /:type, GET /:type/:id/:relationship,
@@ -87,12 +87,12 @@ var ExpressStrategy = (function () {
       var _this = this;
 
       buildRequestObject(req, this.config.tunnel).then(function (requestObject) {
-        _this.api.handle(requestObject, req, res).then(function (responseObject) {
+        return _this.api.handle(requestObject, req, res).then(function (responseObject) {
           _this.sendResources(responseObject, res, next);
         });
-      }, function (err) {
-        res.status(err.status).send(err.message);
-      }).done();
+      })["catch"](function (err) {
+        _this.sendError(err, req, res);
+      });
     }
 
     // For requests for the documentation.
@@ -102,10 +102,12 @@ var ExpressStrategy = (function () {
       var _this2 = this;
 
       buildRequestObject(req, this.config.tunnel).then(function (requestObject) {
-        _this2.docs.handle(requestObject).then(function (responseObject) {
+        return _this2.docs.handle(requestObject).then(function (responseObject) {
           _this2.sendResources(responseObject, res, next);
         });
-      }).done();
+      })["catch"](function (err) {
+        _this2.sendError(err, req, res);
+      });
     }
   }, {
     key: "sendResources",
@@ -143,10 +145,11 @@ var ExpressStrategy = (function () {
     value: function sendError(error, req, res) {
       var _this3 = this;
 
-      buildRequestObject(req).then(function (requestObject) {
-        _controllersAPI2["default"].responseFromExternalError(requestObject, error, _this3.api.registry).then(function (responseObject) {
-          return _this3.sendResources(responseObject, res, function () {});
-        });
+      _controllersAPI2["default"].responseFromExternalError(error, req.headers.accept).then(function (responseObject) {
+        return _this3.sendResources(responseObject, res, function () {});
+      })["catch"](function (err) {
+        // if we hit an error generating our error...
+        res.status(err.status).send(err.message);
       });
     }
 
@@ -183,11 +186,11 @@ function buildRequestObject(req, allowTunneling) {
 
     // Support Verb tunneling, but only for PATCH and only if user turns it on.
     // Turning on any tunneling automatically could be a security issue.
-    var requestedMethod = (req.headers["X-HTTP-Method-Override"] || "").toLowerCase();
+    var requestedMethod = (req.headers["x-http-method-override"] || "").toLowerCase();
     if (allowTunneling && it.method === "post" && requestedMethod === "patch") {
       it.method = "patch";
     } else if (requestedMethod) {
-      reject(new _typesAPIError2["default"](400, undefined, "Cannot tunnel to the method \"" + requestedMethod + "\"."));
+      reject(new _typesAPIError2["default"](400, undefined, "Cannot tunnel to the method \"" + requestedMethod.toUpperCase() + "\"."));
     }
 
     it.hasBody = hasBody(req);

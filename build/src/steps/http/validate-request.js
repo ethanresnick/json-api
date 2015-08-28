@@ -1,11 +1,14 @@
 "use strict";
 
+var _Promise = require("babel-runtime/core-js/promise")["default"];
+
 var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.checkBodyExistence = checkBodyExistence;
+exports.checkMethod = checkMethod;
 
 var _q = require("q");
 
@@ -27,4 +30,16 @@ function checkBodyExistence(requestContext) {
       reject(new _typesAPIError2["default"](400, undefined, "This request should not have a body, but does."));
     }
   });
+}
+
+function checkMethod(_ref) {
+  var method = _ref.method;
+
+  if (["patch", "post", "delete", "get"].indexOf(method) === -1) {
+    var detail = "The method \"" + method + "\" is not supported." + (method === "put" ? " See http://jsonapi.org/faq/#wheres-put" : "");
+
+    return _Promise.reject(new _typesAPIError2["default"](405, undefined, "Method not supported.", detail));
+  } else {
+    return _Promise.resolve();
+  }
 }

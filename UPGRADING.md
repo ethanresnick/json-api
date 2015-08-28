@@ -1,3 +1,9 @@
+# v2.8 -> 2.9 Breaking Changes (Not Semver until 3.0)
+- APIController.responseFromExternalError() has a changed API
+- Errors caused in the Express handler while building the Request object are now
+  sent in a JSON API-compliant format. Before, only the status was sent or, in
+  some cases, the app hung/crashed. See https://github.com/ethanresnick/json-api/issues/61
+
 # v2.7 -> 2.8 Breaking Changes (Not Semver until 3.0)
 - Babel's polyfills are no longer loaded globally, so, if you were relying on them, you'll need to re-include them yourself. See http://babeljs.io/docs/usage/polyfill/
 

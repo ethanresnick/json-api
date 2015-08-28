@@ -87,7 +87,7 @@ var supportedExt = [];
 // We have to globally patch Promise for co to work, even though global patches
 // are suboptimal. See https://github.com/ethanresnick/json-api/issues/47
 // We use eval so that the runtime transformer doesn't replace our check for an
-// existing promise with an invocation of the polyfill.
+// existing Promise with an invocation of the polyfill.
 GLOBAL.Promise = eval("typeof Promise !== 'undefined' ? Promise : undefined") || require("babel-runtime/core-js/promise")["default"];
 
 var APIController = (function () {
@@ -122,13 +122,17 @@ var APIController = (function () {
             case 0:
               context$3$0.prev = 0;
               context$3$0.next = 3;
-              return requestValidators.checkBodyExistence(request);
+              return requestValidators.checkMethod(request);
 
             case 3:
               context$3$0.next = 5;
-              return (0, _stepsHttpContentNegotiationNegotiateContentType2["default"])(request.accepts, ["application/vnd.api+json"]);
+              return requestValidators.checkBodyExistence(request);
 
             case 5:
+              context$3$0.next = 7;
+              return (0, _stepsHttpContentNegotiationNegotiateContentType2["default"])(request.accepts, ["application/vnd.api+json"]);
+
+            case 7:
               response.contentType = context$3$0.sent;
 
               // No matter what, though, we're varying on Accept. See:
@@ -138,57 +142,57 @@ var APIController = (function () {
               // If the type requested in the endpoint hasn't been registered, we 404.
 
               if (registry.type(request.type)) {
-                context$3$0.next = 9;
+                context$3$0.next = 11;
                 break;
               }
 
               throw new _typesAPIError2["default"](404, undefined, request.type + " is not a valid type.");
 
-            case 9:
+            case 11:
               if (!request.hasBody) {
-                context$3$0.next = 23;
+                context$3$0.next = 25;
                 break;
               }
 
-              context$3$0.next = 12;
-              return (0, _stepsHttpContentNegotiationValidateContentType2["default"])(request, supportedExt);
-
-            case 12:
               context$3$0.next = 14;
-              return (0, _stepsPreQueryValidateDocument2["default"])(request.body);
+              return (0, _stepsHttpContentNegotiationValidateContentType2["default"])(request, supportedExt);
 
             case 14:
               context$3$0.next = 16;
-              return (0, _stepsPreQueryParseRequestPrimary2["default"])(request.body.data, request.aboutRelationship);
+              return (0, _stepsPreQueryValidateDocument2["default"])(request.body);
 
             case 16:
+              context$3$0.next = 18;
+              return (0, _stepsPreQueryParseRequestPrimary2["default"])(request.body.data, request.aboutRelationship);
+
+            case 18:
               parsedPrimary = context$3$0.sent;
 
               if (request.aboutRelationship) {
-                context$3$0.next = 20;
+                context$3$0.next = 22;
                 break;
               }
 
-              context$3$0.next = 20;
+              context$3$0.next = 22;
               return (0, _stepsPreQueryValidateResources2["default"])(request.type, parsedPrimary, registry);
 
-            case 20:
-              context$3$0.next = 22;
+            case 22:
+              context$3$0.next = 24;
               return (0, _stepsApplyTransform2["default"])(parsedPrimary, "beforeSave", registry, frameworkReq, frameworkRes);
 
-            case 22:
+            case 24:
               request.primary = context$3$0.sent;
 
-            case 23:
+            case 25:
               if (!(request.idOrIds && request.allowLabel)) {
-                context$3$0.next = 30;
+                context$3$0.next = 32;
                 break;
               }
 
-              context$3$0.next = 26;
+              context$3$0.next = 28;
               return (0, _stepsPreQueryLabelToIds2["default"])(request.type, request.idOrIds, registry, frameworkReq);
 
-            case 26:
+            case 28:
               mappedLabel = context$3$0.sent;
 
               // set the idOrIds on the request context
@@ -203,47 +207,47 @@ var APIController = (function () {
                 response.primary = mappedLabel ? new _typesCollection2["default"]() : null;
               }
 
-            case 30:
+            case 32:
               if (!(typeof response.primary === "undefined")) {
-                context$3$0.next = 45;
+                context$3$0.next = 47;
                 break;
               }
 
               context$3$0.t0 = request.method;
-              context$3$0.next = context$3$0.t0 === "get" ? 34 : context$3$0.t0 === "post" ? 37 : context$3$0.t0 === "patch" ? 40 : context$3$0.t0 === "delete" ? 43 : 45;
+              context$3$0.next = context$3$0.t0 === "get" ? 36 : context$3$0.t0 === "post" ? 39 : context$3$0.t0 === "patch" ? 42 : context$3$0.t0 === "delete" ? 45 : 47;
               break;
-
-            case 34:
-              context$3$0.next = 36;
-              return (0, _stepsDoQueryDoGet2["default"])(request, response, registry);
 
             case 36:
-              return context$3$0.abrupt("break", 45);
+              context$3$0.next = 38;
+              return (0, _stepsDoQueryDoGet2["default"])(request, response, registry);
 
-            case 37:
-              context$3$0.next = 39;
-              return (0, _stepsDoQueryDoPost2["default"])(request, response, registry);
+            case 38:
+              return context$3$0.abrupt("break", 47);
 
             case 39:
-              return context$3$0.abrupt("break", 45);
+              context$3$0.next = 41;
+              return (0, _stepsDoQueryDoPost2["default"])(request, response, registry);
 
-            case 40:
-              context$3$0.next = 42;
-              return (0, _stepsDoQueryDoPatch2["default"])(request, response, registry);
+            case 41:
+              return context$3$0.abrupt("break", 47);
 
             case 42:
-              return context$3$0.abrupt("break", 45);
+              context$3$0.next = 44;
+              return (0, _stepsDoQueryDoPatch2["default"])(request, response, registry);
 
-            case 43:
-              context$3$0.next = 45;
-              return (0, _stepsDoQueryDoDelete2["default"])(request, response, registry);
+            case 44:
+              return context$3$0.abrupt("break", 47);
 
             case 45:
-              context$3$0.next = 53;
-              break;
+              context$3$0.next = 47;
+              return (0, _stepsDoQueryDoDelete2["default"])(request, response, registry);
 
             case 47:
-              context$3$0.prev = 47;
+              context$3$0.next = 55;
+              break;
+
+            case 49:
+              context$3$0.prev = 49;
               context$3$0.t1 = context$3$0["catch"](0);
               errorsArr = Array.isArray(context$3$0.t1) ? context$3$0.t1 : [context$3$0.t1];
               apiErrors = errorsArr.map(_typesAPIError2["default"].fromError);
@@ -259,9 +263,9 @@ var APIController = (function () {
               response.errors = response.errors.concat(apiErrors);
               //console.log("API CONTROLLER ERRORS", errorsArr[0], errorsArr[0].stack);
 
-            case 53:
+            case 55:
               if (!response.errors.length) {
-                context$3$0.next = 57;
+                context$3$0.next = 59;
                 break;
               }
 
@@ -271,16 +275,16 @@ var APIController = (function () {
               response.body = new _typesDocument2["default"](response.errors).get(true);
               return context$3$0.abrupt("return", response);
 
-            case 57:
-              context$3$0.next = 59;
+            case 59:
+              context$3$0.next = 61;
               return (0, _stepsApplyTransform2["default"])(response.primary, "beforeRender", registry, frameworkReq, frameworkRes);
 
-            case 59:
+            case 61:
               response.primary = context$3$0.sent;
-              context$3$0.next = 62;
+              context$3$0.next = 64;
               return (0, _stepsApplyTransform2["default"])(response.included, "beforeRender", registry, frameworkReq, frameworkRes);
 
-            case 62:
+            case 64:
               response.included = context$3$0.sent;
 
               if (response.status !== 204) {
@@ -289,16 +293,16 @@ var APIController = (function () {
 
               return context$3$0.abrupt("return", response);
 
-            case 65:
+            case 67:
             case "end":
               return context$3$0.stop();
           }
-        }, callee$2$0, this, [[0, 47]]);
+        }, callee$2$0, this, [[0, 49]]);
       }));
     }
   }], [{
     key: "responseFromExternalError",
-    value: function responseFromExternalError(request, error) {
+    value: function responseFromExternalError(error, requestAccepts) {
       var response = new _typesHTTPResponse2["default"]();
       response.errors = [_typesAPIError2["default"].fromError(error)];
       response.status = pickStatus(response.errors.map(function (v) {
@@ -306,7 +310,7 @@ var APIController = (function () {
       }));
       response.body = new _typesDocument2["default"](response.errors).get(true);
 
-      return (0, _stepsHttpContentNegotiationNegotiateContentType2["default"])(request.accepts, ["application/vnd.api+json"]).then(function (contentType) {
+      return (0, _stepsHttpContentNegotiationNegotiateContentType2["default"])(requestAccepts, ["application/vnd.api+json"]).then(function (contentType) {
         response.contentType = contentType.toLowerCase() === "application/json" ? contentType : "application/vnd.api+json";
         return response;
       }, function () {
@@ -332,6 +336,8 @@ function pickStatus(errStatuses) {
   return errStatuses[0];
 }
 module.exports = exports["default"];
+
+// check that a valid method is in use
 
 // throw if the body is supposed to be present but isn't (or vice-versa).
 
