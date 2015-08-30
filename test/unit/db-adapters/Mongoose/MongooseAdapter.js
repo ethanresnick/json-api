@@ -1,18 +1,16 @@
 import {expect} from "chai";
-import sinon from "sinon";
-import Resource from "../../../../src/types/Resource";
-import Collection from "../../../../src/types/Collection";
+import APIError from "../../../../src/types/APIError";
 import MongooseAdapter from "../../../../src/db-adapters/Mongoose/MongooseAdapter";
 
 describe("Mongoose Adapter", () => {
   describe("its instances methods", () => {
     describe("getModel", () => {
       it("should throw an exception for unknown models", () => {
-        let adapter = new MongooseAdapter({})
+        let adapter = new MongooseAdapter({});
         expect(() => { adapter.getModel("x"); }).to.throw(/model .+ has not been registered/);
       });
     });
-  })
+  });
 
   describe("its static methods", () => {
     const typesToModelNames = {
@@ -66,6 +64,64 @@ describe("Mongoose Adapter", () => {
         expect(MongooseAdapter.toFriendlyName("thisIsATest")).to.equal("This Is A Test");
         expect(MongooseAdapter.toFriendlyName("ATest")).to.equal("A Test");
         expect(MongooseAdapter.toFriendlyName("isCaseB")).to.equal("Is Case B");
+      });
+    });
+
+    describe("getIdQueryType", () => {
+      it("should handle null input", () => {
+        const res = MongooseAdapter.getIdQueryType();
+        expect(res[0]).to.equal("find");
+        expect(res[1]).to.be.undefined;
+      });
+
+      describe("string", () => {
+        it("should throw on invalid input", () => {
+          const fn = function() { MongooseAdapter.getIdQueryType("1"); };
+          expect(fn).to.throw(APIError);
+        });
+
+        it("should produce query on valid input", () => {
+          const res = MongooseAdapter.getIdQueryType("552c5e1c604d41e5836bb174");
+          expect(res[0]).to.equal("findOne");
+          expect(res[1]._id).to.equal("552c5e1c604d41e5836bb174");
+        });
+      });
+
+      describe("array", () => {
+        it("should throw if any ids are invalid", () => {
+          const fn = function() { MongooseAdapter.getIdQueryType(["1", "552c5e1c604d41e5836bb174"]); };
+          expect(fn).to.throw(APIError);
+        });
+
+        it("should produce query on valid input", () => {
+          const res = MongooseAdapter.getIdQueryType(["552c5e1c604d41e5836bb174", "552c5e1c604d41e5836bb175"]);
+          expect(res[0]).to.equal("find");
+          expect(res[1]._id.$in).to.be.an.Array;
+          expect(res[1]._id.$in[0]).to.equal("552c5e1c604d41e5836bb174");
+          expect(res[1]._id.$in[1]).to.equal("552c5e1c604d41e5836bb175");
+        });
+      });
+    });
+
+    describe("idIsValid", () => {
+      it("should reject null input", () => {
+        expect(MongooseAdapter.idIsValid()).to.not.be.ok;
+      });
+
+      it("should reject bad input type", () => {
+        expect(MongooseAdapter.idIsValid(true)).to.not.be.ok;
+      });
+
+      it("should reject empty string", () => {
+        expect(MongooseAdapter.idIsValid("")).to.not.be.ok;
+      });
+
+      it("should reject numbers", () => {
+        expect(MongooseAdapter.idIsValid(1)).to.not.be.ok;
+      });
+
+      it("should accpet valid hex string", () => {
+        expect(MongooseAdapter.idIsValid("552c5e1c604d41e5836bb175")).to.be.ok;
       });
     });
   });
