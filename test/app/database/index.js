@@ -9,8 +9,10 @@ import OrganizationModelSchema from "./models/organization";
 /*eslint-disable new-cap */
 const ObjectId = mongoose.Types.ObjectId;
 const govtId = ObjectId("54419d550a5069a2129ef254");
+const otherGovtId = ObjectId("54419d550a5069a2129ef255");
 const smithId = ObjectId("53f54dd98d1e62ff12539db2");
 const doeId = ObjectId("53f54dd98d1e62ff12539db3");
+const stateCollegeId = ObjectId("53f54dd98d1e62ff12539db4");
 /*eslint-enable new-cap */
 
 const OrganizationModel = OrganizationModelSchema.model;
@@ -29,11 +31,12 @@ fixtures.save("all", {
     { name: "Doug Wilson", gender: "male" }
   ],
   Organization: [
-    {name: "State Government", description: "Representing the good people.", liaisons: [doeId, smithId], _id: govtId}
+    {name: "State Government", description: "Representing the good people.", liaisons: [doeId, smithId], _id: govtId},
+    {name: "Other State Government", description: "Representing the other good people.", _id: otherGovtId}
   ],
   School: [
     {name: "City College", description: "Just your average local college.", liaisons: [smithId]},
-    {name: "State College", description: "Just your average state college."}
+    {name: "State College", description: "Just your average state college.", _id: stateCollegeId}
   ]
 });
 
