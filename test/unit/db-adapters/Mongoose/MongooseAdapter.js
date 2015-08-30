@@ -104,8 +104,10 @@ describe("Mongoose Adapter", () => {
     });
 
     describe("idIsValid", () => {
-      it("should reject null input", () => {
+      it("should reject all == null input", () => {
         expect(MongooseAdapter.idIsValid()).to.not.be.ok;
+        expect(MongooseAdapter.idIsValid(null)).to.not.be.ok;
+        expect(MongooseAdapter.idIsValid(undefined)).to.not.be.ok;
       });
 
       it("should reject bad input type", () => {
@@ -114,6 +116,12 @@ describe("Mongoose Adapter", () => {
 
       it("should reject empty string", () => {
         expect(MongooseAdapter.idIsValid("")).to.not.be.ok;
+      });
+
+      // the string coming into the MongooseAdapter needs to be the 24-character,
+      // hex encoded version of the ObjectId, not an arbitrary 12 byte string.
+      it("should reject 12-character strings", () => {
+        expect(MongooseAdapter.idIsValid("aaabbbccc111")).to.not.be.ok;
       });
 
       it("should reject numbers", () => {
