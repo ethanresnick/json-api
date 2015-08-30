@@ -2,6 +2,7 @@ import co from "co";
 
 import Response from "../types/HTTP/Response";
 import Document from "../types/Document";
+import Resource from "../types/Resource";
 import Collection from "../types/Collection";
 import APIError from "../types/APIError";
 
@@ -112,6 +113,24 @@ class APIController {
           if(mappedLabel === null || mappedLabel === undefined || mappedIsEmptyArray) {
             response.primary = (mappedLabel) ? new Collection() : null;
           }
+        }
+
+        if (request.method === "delete") {
+          let toTransform;
+
+          if (Array.isArray(request.idOrIds)) {
+            toTransform = new Collection(
+              request.idOrIds.map((id) => new Resource(request.type, id))
+            );
+          }
+
+          else if (typeof request.idOrIds === "string") {
+            toTransform = new Resource(request.type, request.idOrIds);
+          }
+
+          yield applyTransform(
+            toTransform, "beforeDelete", registry, frameworkReq, frameworkRes
+          );
         }
 
         // Actually fulfill the request!

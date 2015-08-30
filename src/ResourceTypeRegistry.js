@@ -5,7 +5,7 @@
  * whose property is being retrieved/set, and the value to set it to, if any.
  */
 const autoGetterSetterProps = ["dbAdapter", "beforeSave", "beforeRender",
-  "labelMappers", "defaultIncludes", "info", "parentType"];
+  "beforeDelete", "labelMappers", "defaultIncludes", "info", "parentType"];
 
 /**
  * To fulfill a JSON API request, you often need to know about all the resources
