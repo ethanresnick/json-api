@@ -1,6 +1,5 @@
 import APIError from "../../types/APIError";
 import Collection from "../../types/Collection";
-import {mapResources} from "../../util/type-handling";
 
 export default function(request, response, registry) {
   let type    = request.type;
@@ -38,7 +37,7 @@ export default function(request, response, registry) {
   }
 
   else {
-    return adapter.delete(type, request.idOrIds).then((resources) => {
+    return adapter.delete(type, request.idOrIds).then(() => {
       response.status = 204;
     });
   }

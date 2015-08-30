@@ -9,7 +9,7 @@ export default function(type, labelOrId, registry, frameworkReq) {
 
     // reolve with the mapped label
     if(typeof labelMapper === "function") {
-      Q(labelMapper(model, frameworkReq)).then(resolve);
+      Q(labelMapper(model, frameworkReq)).then(resolve, reject);
     }
 
     // or, if we couldn't find a label mapper, that means

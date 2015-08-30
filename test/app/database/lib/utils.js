@@ -1,13 +1,13 @@
 "use strict";
 module.exports = {
   inherit: function (child, parent) {
-    var __hasProp = {}.hasOwnProperty;
-    for (var key in parent) {
+    const __hasProp = {}.hasOwnProperty;
+    for (let key in parent) {
       if (__hasProp.call(parent, key)) child[key] = parent[key];
     }
-    function ctor() { this.constructor = child; }
-    ctor.prototype = parent.prototype;
-    child.prototype = new ctor();
+    function Ctor() { this.constructor = child; }
+    Ctor.prototype = parent.prototype;
+    child.prototype = new Ctor();
     return child;
   }
 };

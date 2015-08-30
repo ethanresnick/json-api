@@ -1,18 +1,15 @@
 import {expect} from "chai";
-import sinon from "sinon";
-import Resource from "../../../../src/types/Resource";
-import Collection from "../../../../src/types/Collection";
 import MongooseAdapter from "../../../../src/db-adapters/Mongoose/MongooseAdapter";
 
 describe("Mongoose Adapter", () => {
   describe("its instances methods", () => {
     describe("getModel", () => {
       it("should throw an exception for unknown models", () => {
-        let adapter = new MongooseAdapter({})
+        let adapter = new MongooseAdapter({});
         expect(() => { adapter.getModel("x"); }).to.throw(/model .+ has not been registered/);
       });
     });
-  })
+  });
 
   describe("its static methods", () => {
     const typesToModelNames = {

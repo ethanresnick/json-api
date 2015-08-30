@@ -1,7 +1,4 @@
 import Q from "q";
-import {groupResourcesByType} from "../../util/type-handling";
-import {arrayContains} from "../../util/arrays";
-import {isSubsetOf} from "../../util/misc";
 import APIError from "../../types/APIError";
 
 export default function(body) {

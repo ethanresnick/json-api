@@ -70,8 +70,14 @@ export default class ExpressStrategy {
     }
 
     if(!responseObject.contentType) {
-      this.config.handleContentNegotiation ? res.status(406).send() : next();
+      if(this.config.handleContentNegotiation) {
+        res.status(406).send();
+      }
+      else {
+        next();
+      }
     }
+
     else {
       res.set("Content-Type", responseObject.contentType);
       res.status(responseObject.status || 200);
@@ -107,9 +113,9 @@ export default class ExpressStrategy {
   /**
    * @TODO Uses this ExpressStrategy to create an express app with
    * preconfigured routes that can be mounted as a subapp.
-   */
   toApp(typesToExcludedMethods) {
   }
+  */
 }
 
 

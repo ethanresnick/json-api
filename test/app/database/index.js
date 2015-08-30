@@ -3,13 +3,15 @@ import mongoose from "mongoose";
 import fixtures from "node-mongoose-fixtures";
 
 import PersonModel from "./models/person";
-import SchoolModelConstructor from "./models/school";
+import makeSchoolModelConstructor from "./models/school";
 import OrganizationModelSchema from "./models/organization";
 
+/*eslint-disable new-cap */
 const ObjectId = mongoose.Types.ObjectId;
 const govtId = ObjectId("54419d550a5069a2129ef254");
 const smithId = ObjectId("53f54dd98d1e62ff12539db2");
 const doeId = ObjectId("53f54dd98d1e62ff12539db3");
+/*eslint-enable new-cap */
 
 const OrganizationModel = OrganizationModelSchema.model;
 const OrganizationSchema = OrganizationModelSchema.schema;
@@ -17,7 +19,7 @@ const OrganizationSchema = OrganizationModelSchema.schema;
 const models = {
   Person: PersonModel,
   Organization: OrganizationModel,
-  School: SchoolModelConstructor(OrganizationModel, OrganizationSchema)
+  School: makeSchoolModelConstructor(OrganizationModel, OrganizationSchema)
 };
 
 fixtures.save("all", {

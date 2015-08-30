@@ -12,7 +12,7 @@
     "no-use-before-define": [1, "nofunc"],
     "no-underscore-dangle": 0,
     "no-multi-spaces": 0,
-    "no-unused-vars": 1,
+    "no-unused-vars": [2, {"vars": "all", "args": "none"}],
     "no-unreachable": 2,
     "use-isnan": 2,
     "no-constant-condition": 2,

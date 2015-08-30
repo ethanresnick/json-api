@@ -71,12 +71,12 @@ describe("", () => {
         describe("Fetching Ascending Gendered Collection", () => {
           it("should have Jane above John", () => {
             let johnJaneList = res.body.data.map((it) => it.attributes.name).filter((it) => {
-              return ["John Smith", "Jane Doe"].indexOf(it) > -1
+              return ["John Smith", "Jane Doe"].indexOf(it) > -1;
             });
             expect(johnJaneList[0]).to.equal("Jane Doe");
             expect(johnJaneList[1]).to.equal("John Smith");
           });
-        })
+        });
       }).done();
 
     Agent.request("GET", "/people?sort=-name")
@@ -86,7 +86,7 @@ describe("", () => {
         describe("Fetching Descended Sorted Name Collection", () => {
           it("Should have John above Jane", () => {
             let johnJaneList = res.body.data.map((it) => it.attributes.name).filter((it) => {
-              return ["John", "Jane"].indexOf(it.substring(0, 4)) > -1
+              return ["John", "Jane"].indexOf(it.substring(0, 4)) > -1;
             });
             expect(johnJaneList[0]).to.equal("John Smith");
             expect(johnJaneList[1]).to.equal("Jane Doe");

@@ -54,8 +54,8 @@ describe("", () => {
                     .type("application/vnd.api+json")
                     .send({"data": VALID_SCHOOL_RESOURCE_NO_ID})
                     .promise()
-                    .then((res) => {
-                      expect(res.body.data.attributes.description).to.equal("Modified in a Promise");
+                    .then((res2) => {
+                      expect(res2.body.data.attributes.description).to.equal("Modified in a Promise");
                       done();
                     }, done).catch(done);
                 });

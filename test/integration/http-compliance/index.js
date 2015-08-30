@@ -13,20 +13,26 @@ describe("HTTP Compliance", () => {
 
   it("should reject PUT with a PUT-specific message", (done) => {
     Agent.request("PUT", "/organizations").send({}).promise().then(
-      (res) => done(new Error("Shouldn't run since response should be an error")),
+      (res) => {
+        done(new Error("Shouldn't run since response should be an error"));
+      },
       (err) => {
         expect(err.response.status).to.equal(405);
         expect(err.response.body.errors[0].detail).to.match(/PUT.+jsonapi\.org/i);
-    }).done(done);
+      }
+    ).done(done);
   });
 
   it("should reject other unknown methods too", (done) => {
     Agent.request("LOCK", "/organizations").send({}).promise().then(
-      (res) => done(new Error("Shouldn't run since response should be an error")),
+      (res) => {
+        done(new Error("Shouldn't run since response should be an error"));
+      },
       (err) => {
         expect(err.response.status).to.equal(405);
         expect(err.response.body.errors[0].detail).to.match(/lock/i);
-    }).done(done);
+      }
+    ).done(done);
   });
 
 });

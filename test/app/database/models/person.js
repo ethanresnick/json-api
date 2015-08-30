@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const schema = mongoose.Schema({
+const schema = mongoose.Schema({ //eslint-disable-line new-cap
   name: String,
   email: {type: String, lowercase: true},
   gender: {
