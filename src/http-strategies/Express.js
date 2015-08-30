@@ -151,8 +151,14 @@ function buildRequestObject(req, allowTunneling) {
     it.hasBody = hasBody(req);
 
     if(it.hasBody) {
+      if(!isReadableStream(req)) {
+        return reject(
+          new APIError(500, undefined, "Request body could not be parsed. Make sure other no other middleware has already parsed the request body.")
+        );
+      }
+
       it.contentType  = req.headers["content-type"];
-      let typeParsed = contentType.parse(req);
+      const typeParsed = contentType.parse(req);
 
       let bodyParserOptions = {};
       bodyParserOptions.encoding = typeParsed.parameters.charset || "utf8";
@@ -161,6 +167,7 @@ function buildRequestObject(req, allowTunneling) {
         bodyParserOptions.length = req.headers["content-length"];
       }
 
+      // The req has not yet been read, so let's read it
       getRawBody(req, bodyParserOptions, function(err, string) {
         if(err) { reject(err); }
         else {
@@ -186,4 +193,8 @@ function buildRequestObject(req, allowTunneling) {
 function hasBody(req) {
   return req.headers["transfer-encoding"] !== undefined
     || !isNaN(req.headers["content-length"]);
+}
+
+function isReadableStream(req) {
+  return typeof req._readableState === "object" && req._readableState.endEmitted === false;
 }
