@@ -148,7 +148,7 @@ function buildRequestObject(req, allowTunneling) {
       );
     }
 
-    it.hasBody = hasBody(req);
+    it.hasBody = hasNonEmptyBody(req);
 
     if(it.hasBody) {
       if(!isReadableStream(req)) {
@@ -190,9 +190,9 @@ function buildRequestObject(req, allowTunneling) {
   });
 }
 
-function hasBody(req) {
+function hasNonEmptyBody(req) {
   return req.headers["transfer-encoding"] !== undefined
-    || !isNaN(req.headers["content-length"]);
+    || (!isNaN(req.headers["content-length"]) && req.headers["content-length"] > 0);
 }
 
 function isReadableStream(req) {
