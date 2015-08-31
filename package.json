@@ -41,7 +41,7 @@
     "superagent": "1.2.x"
   },
   "peerDependencies": {
-    "mongoose": "4.0.x"
+    "mongoose": "^4.0.0"
   },
   "scripts": {
     "prepublish": "make compile",
