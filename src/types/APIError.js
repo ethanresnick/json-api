@@ -44,6 +44,7 @@ export default class APIError extends Error {
    */
   static fromError(err) {
     const fallbackTitle = "An unknown error occurred while trying to process this request.";
+    const ErrorConstructor = this || APIError; // in case this isn't bound.
 
     if(err instanceof APIError) {
       return err;
@@ -53,7 +54,7 @@ export default class APIError extends Error {
     // to read values off it and show them to the user. (Note: most of
     // the args below will probably be null/undefined, but that's fine.)
     else if(err.isJSONAPIDisplayReady) {
-      return new this(
+      return new ErrorConstructor(
         err.status || err.statusCode || 500,
         err.code,
         err.title || fallbackTitle,
@@ -65,7 +66,7 @@ export default class APIError extends Error {
 
     // Otherwise, we just show a generic error message.
     else {
-      return new this(500, undefined, fallbackTitle);
+      return new ErrorConstructor(500, undefined, fallbackTitle);
     }
 
   }
