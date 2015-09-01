@@ -53,7 +53,7 @@ export default class APIError extends Error {
     // to read values off it and show them to the user. (Note: most of
     // the args below will probably be null/undefined, but that's fine.)
     else if(err.isJSONAPIDisplayReady) {
-      return new APIError(
+      return new this(
         err.status || err.statusCode || 500,
         err.code,
         err.title || fallbackTitle,
@@ -65,7 +65,7 @@ export default class APIError extends Error {
 
     // Otherwise, we just show a generic error message.
     else {
-      return new APIError(500, undefined, fallbackTitle);
+      return new this(500, undefined, fallbackTitle);
     }
 
   }

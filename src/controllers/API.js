@@ -199,7 +199,7 @@ class APIController {
     response.errors = Array.isArray(errors) ? errors : [errors];
 
     // Convert Errors to APIErrors
-    response.errors = response.errors.map(APIError.fromError);
+    response.errors = response.errors.map(APIError.fromError.bind(APIError));
 
     response.status = pickStatus(response.errors.map((v) => Number(v.status)));
     response.body = new Document(response.errors).get(true);
