@@ -302,11 +302,25 @@ var APIController = (function () {
         }, callee$2$0, this, [[0, 49]]);
       }));
     }
+
+    /**
+     * Builds a response from errors. Allows errors that occur outside of the
+     * library to be handled and returned in JSON API-compiant fashion.
+     *
+     * @param {Error|APIError|Error[]|APIError[]} errors Error or array of errors
+     * @param {string} requestAccepts Request's Accepts header
+     */
   }], [{
     key: "responseFromExternalError",
-    value: function responseFromExternalError(error, requestAccepts) {
+    value: function responseFromExternalError(errors, requestAccepts) {
       var response = new _typesHTTPResponse2["default"]();
-      response.errors = [_typesAPIError2["default"].fromError(error)];
+
+      // Convert to array
+      response.errors = Array.isArray(errors) ? errors : [errors];
+
+      // Convert Errors to APIErrors
+      response.errors = response.errors.map(_typesAPIError2["default"].fromError);
+
       response.status = pickStatus(response.errors.map(function (v) {
         return Number(v.status);
       }));

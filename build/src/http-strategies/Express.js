@@ -143,13 +143,17 @@ var ExpressStrategy = (function () {
      * that originated outside of the JSON API Pipeline and that's outside the
      * main spec's scope (e.g. an authentication error). So, the controller
      * exposes this method which allows them to do that.
+     *
+     * @param {Error|APIError|Error[]|APIError[]} errors Error or array of errors
+     * @param {Object} req Express's request object
+     * @param {Object} res Express's response object
      */
   }, {
     key: "sendError",
-    value: function sendError(error, req, res) {
+    value: function sendError(errors, req, res) {
       var _this3 = this;
 
-      _controllersAPI2["default"].responseFromExternalError(error, req.headers.accept).then(function (responseObject) {
+      _controllersAPI2["default"].responseFromExternalError(errors, req.headers.accept).then(function (responseObject) {
         return _this3.sendResources(responseObject, res, function () {});
       })["catch"](function (err) {
         // if we hit an error generating our error...
@@ -196,7 +200,7 @@ function buildRequestObject(req, allowTunneling) {
       reject(new _typesAPIError2["default"](400, undefined, "Cannot tunnel to the method \"" + requestedMethod.toUpperCase() + "\"."));
     }
 
-    it.hasBody = hasBody(req);
+    it.hasBody = hasNonEmptyBody(req);
 
     if (it.hasBody) {
       if (!isReadableStream(req)) {
@@ -233,8 +237,8 @@ function buildRequestObject(req, allowTunneling) {
   });
 }
 
-function hasBody(req) {
-  return req.headers["transfer-encoding"] !== undefined || !isNaN(req.headers["content-length"]);
+function hasNonEmptyBody(req) {
+  return req.headers["transfer-encoding"] !== undefined || !isNaN(req.headers["content-length"]) && req.headers["content-length"] > 0;
 }
 
 function isReadableStream(req) {
