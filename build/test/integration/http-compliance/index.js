@@ -20,7 +20,7 @@ describe("HTTP Compliance", function () {
 
   it("should reject PUT with a PUT-specific message", function (done) {
     Agent.request("PUT", "/organizations").send({}).promise().then(function (res) {
-      return done(new Error("Shouldn't run since response should be an error"));
+      done(new Error("Shouldn't run since response should be an error"));
     }, function (err) {
       (0, _chai.expect)(err.response.status).to.equal(405);
       (0, _chai.expect)(err.response.body.errors[0].detail).to.match(/PUT.+jsonapi\.org/i);
@@ -29,7 +29,7 @@ describe("HTTP Compliance", function () {
 
   it("should reject other unknown methods too", function (done) {
     Agent.request("LOCK", "/organizations").send({}).promise().then(function (res) {
-      return done(new Error("Shouldn't run since response should be an error"));
+      done(new Error("Shouldn't run since response should be an error"));
     }, function (err) {
       (0, _chai.expect)(err.response.status).to.equal(405);
       (0, _chai.expect)(err.response.body.errors[0].detail).to.match(/lock/i);

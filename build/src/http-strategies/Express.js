@@ -117,7 +117,11 @@ var ExpressStrategy = (function () {
       }
 
       if (!responseObject.contentType) {
-        this.config.handleContentNegotiation ? res.status(406).send() : next();
+        if (this.config.handleContentNegotiation) {
+          res.status(406).send();
+        } else {
+          next();
+        }
       } else {
         res.set("Content-Type", responseObject.contentType);
         res.status(responseObject.status || 200);
@@ -156,10 +160,9 @@ var ExpressStrategy = (function () {
     /**
      * @TODO Uses this ExpressStrategy to create an express app with
      * preconfigured routes that can be mounted as a subapp.
-     */
-  }, {
-    key: "toApp",
-    value: function toApp(typesToExcludedMethods) {}
+    toApp(typesToExcludedMethods) {
+    }
+    */
   }]);
 
   return ExpressStrategy;
@@ -196,6 +199,10 @@ function buildRequestObject(req, allowTunneling) {
     it.hasBody = hasBody(req);
 
     if (it.hasBody) {
+      if (!isReadableStream(req)) {
+        return reject(new _typesAPIError2["default"](500, undefined, "Request body could not be parsed. Make sure other no other middleware has already parsed the request body."));
+      }
+
       it.contentType = req.headers["content-type"];
       var typeParsed = _contentType2["default"].parse(req);
 
@@ -206,6 +213,7 @@ function buildRequestObject(req, allowTunneling) {
         bodyParserOptions.length = req.headers["content-length"];
       }
 
+      // The req has not yet been read, so let's read it
       (0, _rawBody2["default"])(req, bodyParserOptions, function (err, string) {
         if (err) {
           reject(err);
@@ -227,5 +235,9 @@ function buildRequestObject(req, allowTunneling) {
 
 function hasBody(req) {
   return req.headers["transfer-encoding"] !== undefined || !isNaN(req.headers["content-length"]);
+}
+
+function isReadableStream(req) {
+  return typeof req._readableState === "object" && req._readableState.endEmitted === false;
 }
 module.exports = exports["default"];

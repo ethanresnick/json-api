@@ -5,11 +5,11 @@ module.exports = {
     for (var key in parent) {
       if (__hasProp.call(parent, key)) child[key] = parent[key];
     }
-    function ctor() {
+    function Ctor() {
       this.constructor = child;
     }
-    ctor.prototype = parent.prototype;
-    child.prototype = new ctor();
+    Ctor.prototype = parent.prototype;
+    child.prototype = new Ctor();
     return child;
   }
 };

@@ -49,6 +49,7 @@ function transform(resource, req, res, transformMode, registry) {
   // transformer. Otherwise, it'll return the result of calling
   // the parentType's transformer with the provided arguments.
   var superFn = function superFn(resource, req, res) {
+    // eslint-disable-line no-shadow
     var parentType = registry.parentType(resource.type);
 
     if (!parentType || !registry[transformMode](parentType)) {

@@ -30,10 +30,12 @@ var _modelsOrganization = require("./models/organization");
 
 var _modelsOrganization2 = _interopRequireDefault(_modelsOrganization);
 
+/*eslint-disable new-cap */
 var ObjectId = _mongoose2["default"].Types.ObjectId;
 var govtId = ObjectId("54419d550a5069a2129ef254");
 var smithId = ObjectId("53f54dd98d1e62ff12539db2");
 var doeId = ObjectId("53f54dd98d1e62ff12539db3");
+/*eslint-enable new-cap */
 
 var OrganizationModel = _modelsOrganization2["default"].model;
 var OrganizationSchema = _modelsOrganization2["default"].schema;

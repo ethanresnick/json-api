@@ -48,8 +48,8 @@ describe("", function () {
               });
 
               it("should allow beforeSave to return a Promise", function (done) {
-                Agent.request("POST", "/schools").type("application/vnd.api+json").send({ "data": _fixturesCreation.VALID_SCHOOL_RESOURCE_NO_ID }).promise().then(function (res) {
-                  (0, _chai.expect)(res.body.data.attributes.description).to.equal("Modified in a Promise");
+                Agent.request("POST", "/schools").type("application/vnd.api+json").send({ "data": _fixturesCreation.VALID_SCHOOL_RESOURCE_NO_ID }).promise().then(function (res2) {
+                  (0, _chai.expect)(res2.body.data.attributes.description).to.equal("Modified in a Promise");
                   done();
                 }, done)["catch"](done);
               });

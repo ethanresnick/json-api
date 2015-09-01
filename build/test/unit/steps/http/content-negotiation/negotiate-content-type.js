@@ -18,7 +18,7 @@ describe("negotiateContentType", function () {
   });
 
   it("should use JSON API if clients correctly request it", function (done) {
-    var accept = 'application/vnd.api+json';
+    var accept = "application/vnd.api+json";
     (0, _srcStepsHttpContentNegotiationNegotiateContentType2["default"])(accept, ["application/vnd.api+json"]).then(function (contentType) {
       (0, _chai.expect)(contentType).to.equal("application/vnd.api+json");
       done();
