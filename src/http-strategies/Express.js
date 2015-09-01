@@ -100,9 +100,13 @@ export default class ExpressStrategy {
    * that originated outside of the JSON API Pipeline and that's outside the
    * main spec's scope (e.g. an authentication error). So, the controller
    * exposes this method which allows them to do that.
+   *
+   * @param {Error|APIError|Error[]|APIError[]} errors Error or array of errors
+   * @param {Object} req Express's request object
+   * @param {Object} res Express's response object
    */
-  sendError(error, req, res) {
-    API.responseFromExternalError(error, req.headers.accept).then(
+  sendError(errors, req, res) {
+    API.responseFromExternalError(errors, req.headers.accept).then(
       (responseObject) => this.sendResources(responseObject, res, () => {})
     ).catch((err) => {
       // if we hit an error generating our error...

@@ -185,9 +185,22 @@ class APIController {
     });
   }
 
-  static responseFromExternalError(error, requestAccepts) {
+  /**
+   * Builds a response from errors. Allows errors that occur outside of the
+   * library to be handled and returned in JSON API-compiant fashion.
+   *
+   * @param {Error|APIError|Error[]|APIError[]} errors Error or array of errors
+   * @param {string} requestAccepts Request's Accepts header
+   */
+  static responseFromExternalError(errors, requestAccepts) {
     let response = new Response();
-    response.errors = [APIError.fromError(error)];
+
+    // Convert to array
+    response.errors = Array.isArray(errors) ? errors : [errors];
+
+    // Convert Errors to APIErrors
+    response.errors = response.errors.map(APIError.fromError);
+
     response.status = pickStatus(response.errors.map((v) => Number(v.status)));
     response.body = new Document(response.errors).get(true);
 
