@@ -111,19 +111,7 @@ In the example above, routing is handled with Express's built-in `app[VERB]` met
 
 ## Handling Errors
 
-This library provides an error contructor and a handler that you can use to return JSON API-compliant errors to the user. For example, here is how you would handle 404s.
-
-```javascript
-var API = require("json-api");
-var APIError = API.types.Error;
-
-// Your route definitions would go here, but if none match...
-
-app.use(function(req, res, next) {
-  var err = new APIError(404, undefined, "Not Found");
-  Front.sendError(err, req, res);
-});
-```
+This library provides an error contructor and a handler that you can use to return JSON API-compliant errors to the user. For an example, please see the [example repo](https://github.com/ethanresnick/json-api-example/blob/master/src/index.js#L64).
 
 You can also throw an APIError inside `beforeSave`, `beforeRender`, and `beforeDelete` transforms to cancel the request.
 
