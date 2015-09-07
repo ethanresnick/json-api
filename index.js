@@ -1,6 +1,18 @@
+var mongooseAdapter = null;
+
+try {
+    var mongoose = require.resolve('mongoose');
+
+    mongooseAdapter = require('./build/src/db-adapters/Mongoose/MongooseAdapter');
+} catch (e) {
+    mongooseAdapter = function() {
+        throw new Error("Cannot use dbAdapters.Mongoose because 'mongoose' module is missing.")
+    };
+}
+
 module.exports = {
   dbAdapters: {
-    Mongoose: require('./build/src/db-adapters/Mongoose/MongooseAdapter')
+    Mongoose: mongooseAdapter
   },
   httpStrategies: {
     Express: require('./build/src/http-strategies/Express'),
