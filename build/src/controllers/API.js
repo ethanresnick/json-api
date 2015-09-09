@@ -319,7 +319,7 @@ var APIController = (function () {
       response.errors = Array.isArray(errors) ? errors : [errors];
 
       // Convert Errors to APIErrors
-      response.errors = response.errors.map(_typesAPIError2["default"].fromError);
+      response.errors = response.errors.map(_typesAPIError2["default"].fromError.bind(_typesAPIError2["default"]));
 
       response.status = pickStatus(response.errors.map(function (v) {
         return Number(v.status);
