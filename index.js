@@ -1,21 +1,19 @@
-var mongooseAdapter = null;
-
-try {
-    var mongoose = require.resolve('mongoose');
-
-    mongooseAdapter = require('./build/src/db-adapters/Mongoose/MongooseAdapter');
-} catch (e) {
-    mongooseAdapter = function() {
-        throw new Error("Cannot use dbAdapters.Mongoose because 'mongoose' module is missing.")
-    };
-}
-
+/**
+ * Peer dependencies may or may not be installed (npm@3 doesn't install them
+ * automatically, and users may not need every peer dependency if they bring
+ * their own adapters/strategies). So the code below only tries to require them
+ * when they're asked for, as doing otherwise can cause errors.
+ */
 module.exports = {
   dbAdapters: {
-    Mongoose: mongooseAdapter
+    get Mongoose() {
+      return require('./build/src/db-adapters/Mongoose/MongooseAdapter')
+    }
   },
   httpStrategies: {
-    Express: require('./build/src/http-strategies/Express'),
+    get Express() {
+      return require('./build/src/http-strategies/Express')
+    }
   },
   types: {
     Collection: require('./build/src/types/Collection'),
