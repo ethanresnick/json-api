@@ -50,8 +50,20 @@ describe("ResourceTypeRegistry", function() {
         info: "provided as default"
       });
 
-      registry.type("someType", { info: "overriding the default" });
-      expect(registry.type("someType").info).to.equal("overriding the default");
+      let someType = {
+        info: "overriding the default",
+        beforeSave: () => {},
+        beforeRender: () => {},
+        urlTemplates: {"path": "test template"}
+      };
+
+      registry.type("someType", someType);
+      let output = registry.type("someType");
+
+      expect(output.info).to.equal(someType.info);
+      expect(output.beforeSave).to.equal(someType.beforeSave);
+      expect(output.beforeRender).to.equal(someType.beforeRender);
+      expect(output.urlTemplates).to.deep.equal(someType.urlTemplates);
     });
   });
 
