@@ -20,6 +20,15 @@ describe("Delete Resource", () => {
           done();
         }).catch(done);
     });
+
+    it("should have deleted the resource", (done) => {
+      Agent.request("GET", "/organizations/54419d550a5069a2129ef255")
+        .promise()
+        .then(done, (err) => {
+          expect(err.status).to.equal(404);
+          done();
+        }).catch(done);
+    })
   });
 
   describe("Invalid deletion", () => {
