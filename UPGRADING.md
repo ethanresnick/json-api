@@ -1,3 +1,5 @@
+# 2.9 -> 2.10 Breaking Changes  (Not Semver until 3.0)
+- [Very subtle changes](https://github.com/ethanresnick/json-api/commit/19e16edfb58ee2b5f2573a9e2d1d09cb73d05050) to how the request body is parsed and stored on the request object. You almost certainly don’t need to care about these changes.
 # v2.8 -> 2.9 Breaking Changes (Not Semver until 3.0)
 - APIController.responseFromExternalError() has a changed API
 - Errors caused in the Express handler while building the Request object are now
