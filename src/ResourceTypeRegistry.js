@@ -32,9 +32,9 @@ const globalResourceDefaults = {
  * JSON api type and has a number of properties defining it.
  */
 export default class ResourceTypeRegistry {
-  constructor(typeDescriptions = [], resourceDefaults = {}) {
+  constructor(typeDescriptions = [], descriptionDefaults = {}) {
     this._resourceTypes = {};
-    this._descriptionDefaults = merge({}, resourceDefaults, globalResourceDefaults);
+    this._descriptionDefaults = merge({}, globalResourceDefaults, descriptionDefaults);
     typeDescriptions.forEach((it) => { this.type(it); });
   }
 
