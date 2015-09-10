@@ -91,12 +91,11 @@ export default class ResourceTypeRegistry {
     }
   }
 
-  behaviors(type, behaviorsToSet, doMerge = true) {
+  behaviors(type, behaviorsToSet) {
     this._resourceTypes[type] = this._resourceTypes[type] || {};
     if (behaviorsToSet) {
-      this._resourceTypes[type].behaviors = doMerge ?
-        merge({}, this._descriptionDefaults.behaviors, behaviorsToSet) :
-        behaviors;
+      this._resourceTypes[type].behaviors =
+        merge({}, this._descriptionDefaults.behaviors, behaviorsToSet);
     }
 
     else {
