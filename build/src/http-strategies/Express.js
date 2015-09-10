@@ -200,9 +200,7 @@ function buildRequestObject(req, allowTunneling) {
       reject(new _typesAPIError2["default"](400, undefined, "Cannot tunnel to the method \"" + requestedMethod.toUpperCase() + "\"."));
     }
 
-    it.hasBody = hasNonEmptyBody(req);
-
-    if (it.hasBody) {
+    if (hasBody(req)) {
       if (!isReadableStream(req)) {
         return reject(new _typesAPIError2["default"](500, undefined, "Request body could not be parsed. Make sure other no other middleware has already parsed the request body."));
       }
@@ -221,24 +219,37 @@ function buildRequestObject(req, allowTunneling) {
       (0, _rawBody2["default"])(req, bodyParserOptions, function (err, string) {
         if (err) {
           reject(err);
-        } else {
-          try {
-            it.body = JSON.parse(string);
-            resolve(it);
-          } catch (error) {
-            reject(new _typesAPIError2["default"](400, undefined, "Request contains invalid JSON."));
-          }
         }
+
+        // Even though we passed the hasBody check, the body could still be
+        // empty, so we check the length. (We can't check this before doing
+        // getRawBody because, while Content-Length: 0 signals an empty body,
+        // there's no similar in-advance clue for detecting empty bodies when
+        // Transfer-Encoding: chunked is being used.)
+        else if (string.length === 0) {
+            it.hasBody = false;
+            it.body = "";
+            resolve(it);
+          } else {
+            try {
+              it.hasBody = true;
+              it.body = JSON.parse(string);
+              resolve(it);
+            } catch (error) {
+              reject(new _typesAPIError2["default"](400, undefined, "Request contains invalid JSON."));
+            }
+          }
       });
     } else {
-      it.body = null;
+      it.hasBody = false;
+      it.body = undefined;
       resolve(it);
     }
   });
 }
 
-function hasNonEmptyBody(req) {
-  return req.headers["transfer-encoding"] !== undefined || !isNaN(req.headers["content-length"]) && req.headers["content-length"] > 0;
+function hasBody(req) {
+  return req.headers["transfer-encoding"] !== undefined || !isNaN(req.headers["content-length"]);
 }
 
 function isReadableStream(req) {

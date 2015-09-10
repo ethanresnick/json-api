@@ -32,16 +32,82 @@ describe("ResourceTypeRegistry", function () {
     registry = new _srcResourceTypeRegistry2["default"]();
   });
 
-  describe("type", function () {
-    var description = {
-      dbAdapter: {},
-      beforeSave: function beforeSave() {},
-      beforeRender: function beforeRender() {},
-      info: {},
-      urlTemplates: { "path": "test template" }
-    };
+  describe("constructor", function () {
+    it("should register resource descriptions provided in first parameter", function () {
+      var registry = new _srcResourceTypeRegistry2["default"]([{
+        type: "someType",
+        info: "provided to constructor"
+      }]);
+      expect(registry.type("someType")).to.be.an.object;
+      expect(registry.type("someType").info).to.equal("provided to constructor");
+    });
+  });
 
-    it("should be a getter/setter for a type", makeGetterSetterTest(description, "mytypes", "type", true));
+  describe("type", function () {
+    it("should merge descriptionDefaults into resource description", function () {
+      var registry = new _srcResourceTypeRegistry2["default"]([], {
+        info: "provided as default"
+      });
+
+      registry.type("someType", {});
+      expect(registry.type("someType").info).to.equal("provided as default");
+      expect(registry.type("someType").behaviors).to.be.an("object");
+    });
+
+    it("should give the description precedence over the provided default", function () {
+      var registry = new _srcResourceTypeRegistry2["default"]([], {
+        info: "provided as default"
+      });
+
+      var someType = {
+        info: "overriding the default",
+        beforeSave: function beforeSave() {},
+        beforeRender: function beforeRender() {},
+        urlTemplates: { "path": "test template" }
+      };
+
+      registry.type("someType", someType);
+      var output = registry.type("someType");
+
+      expect(output.info).to.equal(someType.info);
+      expect(output.beforeSave).to.equal(someType.beforeSave);
+      expect(output.beforeRender).to.equal(someType.beforeRender);
+      expect(output.urlTemplates).to.deep.equal(someType.urlTemplates);
+    });
+
+    it("should give description and resource defaults precedence over global defaults", function () {
+      var registry = new _srcResourceTypeRegistry2["default"]([{
+        "type": "testType",
+        "behaviors": {
+          "dasherizeOutput": {
+            "enabled": true
+          }
+        }
+      }, {
+        "type": "testType2"
+      }], {
+        "behaviors": {
+          "dasherizeOutput": { "enabled": false, "exceptions": [] }
+        }
+      });
+
+      var testTypeOutput = registry.type("testType");
+      var testType2Output = registry.type("testType2");
+
+      expect(testTypeOutput.behaviors.dasherizeOutput.enabled).to.be["true"];
+      expect(testType2Output.behaviors.dasherizeOutput.enabled).to.be["false"];
+      expect(testTypeOutput.behaviors.dasherizeOutput.exceptions).to.deep.equal([]);
+    });
+  });
+
+  describe("behaviors", function () {
+    it("should merge in provided behaviors config", function () {
+      var registry = new _srcResourceTypeRegistry2["default"]();
+      registry.behaviors("testType", { "dasherizeOutput": { exceptions: {} } });
+
+      // the global default shouldn't have been replaced over by the set above.
+      expect(registry.behaviors("testType").dasherizeOutput.enabled).to.be["true"];
+    });
   });
 
   describe("adapter", function () {
