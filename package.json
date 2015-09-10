@@ -11,6 +11,7 @@
     "name": "Ethan Resnick",
     "email": "ethan.resnick@gmail.com"
   },
+  "license": "LGPL-3.0",
   "main": "index.js",
   "dependencies": {
     "babel-runtime": "5.6.17",
