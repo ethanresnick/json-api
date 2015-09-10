@@ -24,18 +24,47 @@ describe("ResourceTypeRegistry", function() {
     registry = new ResourceTypeRegistry();
   });
 
-  describe("type", () => {
-    let description = {
-      dbAdapter: {},
-      beforeSave: () => {},
-      beforeRender: () => {},
-      info: {},
-      urlTemplates: {"path": "test template"}
-    };
+  describe("constructor", () => {
+    it("should register resource descriptions provided in first parameter", () => {
+      let registry = new ResourceTypeRegistry([{
+        type: "someType",
+        info: "provided to constructor"
+      }]);
+      expect(registry.type("someType")).to.be.an.object;
+      expect(registry.type("someType").info).to.equal("provided to constructor");
+    });
+  });
 
-    it("should be a getter/setter for a type",
-      makeGetterSetterTest(description, "mytypes", "type", true)
-    );
+  describe("type", () => {
+    it("should merge descriptionDefaults into resource description", () => {
+      let registry = new ResourceTypeRegistry([], {
+        info: "provided as default"
+      });
+
+      registry.type("someType", {});
+      expect(registry.type("someType").info).to.equal("provided as default");
+    });
+
+    it("should give the description precedence over the provided default", () => {
+      let registry = new ResourceTypeRegistry([], {
+        info: "provided as default"
+      });
+
+      let someType = {
+        info: "overriding the default",
+        beforeSave: () => {},
+        beforeRender: () => {},
+        urlTemplates: {"path": "test template"}
+      };
+
+      registry.type("someType", someType);
+      let output = registry.type("someType");
+
+      expect(output.info).to.equal(someType.info);
+      expect(output.beforeSave).to.equal(someType.beforeSave);
+      expect(output.beforeRender).to.equal(someType.beforeRender);
+      expect(output.urlTemplates).to.deep.equal(someType.urlTemplates);
+    });
   });
 
   describe("adapter", () => {
