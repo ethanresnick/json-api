@@ -26,7 +26,7 @@ describe("ResourceTypeRegistry", function() {
 
   describe("constructor", () => {
     it("should register resource descriptions provided in first parameter", () => {
-      registry = new ResourceTypeRegistry([{
+      let registry = new ResourceTypeRegistry([{
         type: "someType",
         info: "provided to constructor"
       }]);
@@ -37,7 +37,7 @@ describe("ResourceTypeRegistry", function() {
 
   describe("type", () => {
     it("should merge descriptionDefaults into resource description", () => {
-      registry = new ResourceTypeRegistry([], {
+      let registry = new ResourceTypeRegistry([], {
         info: "provided as default"
       });
 
@@ -46,7 +46,7 @@ describe("ResourceTypeRegistry", function() {
     });
 
     it("should give the description precedence over the provided default", () => {
-      registry = new ResourceTypeRegistry([], {
+      let registry = new ResourceTypeRegistry([], {
         info: "provided as default"
       });
 
