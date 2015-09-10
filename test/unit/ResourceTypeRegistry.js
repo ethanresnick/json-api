@@ -43,6 +43,7 @@ describe("ResourceTypeRegistry", function() {
 
       registry.type("someType", {});
       expect(registry.type("someType").info).to.equal("provided as default");
+      expect(registry.type("someType").behaviors).to.be.an("object");
     });
 
     it("should give the description precedence over the provided default", () => {
@@ -64,6 +65,40 @@ describe("ResourceTypeRegistry", function() {
       expect(output.beforeSave).to.equal(someType.beforeSave);
       expect(output.beforeRender).to.equal(someType.beforeRender);
       expect(output.urlTemplates).to.deep.equal(someType.urlTemplates);
+    });
+
+    it("should give description and resource defaults precedence over global defaults", () => {
+      let registry = new ResourceTypeRegistry([{
+        "type": "testType",
+        "behaviors": {
+          "dasherizeOutput": {
+            "enabled": true
+          }
+        }
+      }, {
+        "type": "testType2"
+      }], {
+        "behaviors": {
+          "dasherizeOutput": {"enabled": false, "exceptions": []}
+        }
+      });
+
+      let testTypeOutput = registry.type("testType");
+      let testType2Output = registry.type("testType2");
+
+      expect(testTypeOutput.behaviors.dasherizeOutput.enabled).to.be.true;
+      expect(testType2Output.behaviors.dasherizeOutput.enabled).to.be.false;
+      expect(testTypeOutput.behaviors.dasherizeOutput.exceptions).to.deep.equal([]);
+    });
+  });
+
+  describe("behaviors", () => {
+    it("should merge in provided behaviors config", () => {
+      let registry = new ResourceTypeRegistry();
+      registry.behaviors("testType", {"dasherizeOutput": {exceptions: {}}});
+
+      // the global default shouldn't have been replaced over by the set above.
+      expect(registry.behaviors("testType").dasherizeOutput.enabled).to.be.true;
     });
   });
 
