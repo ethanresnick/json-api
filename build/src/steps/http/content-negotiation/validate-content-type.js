@@ -27,6 +27,10 @@ function validateContentType(requestContext, supportedExt) {
   return _q2["default"].Promise(function (resolve, reject) {
     var contentType = _contentType2["default"].parse(requestContext.contentType);
 
+    // Removed due to issues with Firefox automatically adding charset parameter
+    // See: https://github.com/ethanresnick/json-api/issues/78
+    delete contentType.parameters.charset;
+
     // In the future, we might delegate back to the framework if the client
     // provides a base content type other than json-api's. But, for now, we 415.
     if (contentType.type !== "application/vnd.api+json") {

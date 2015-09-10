@@ -10,92 +10,105 @@ var _appAgent2 = _interopRequireDefault(_appAgent);
 
 var _fixturesCreation = require("../fixtures/creation");
 
-describe("", function () {
-  _appAgent2["default"].then(function (Agent) {
-    Agent.request("POST", "/organizations").type("application/vnd.api+json").send({ "data": _fixturesCreation.VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER, "extra": false }).promise().then(function (res) {
-      var createdResource = res.body.data;
+describe("Creating Resources", function () {
+  var Agent = undefined;
 
-      describe("Creating a Valid Resource (With an Extra Member)", function () {
-        describe("HTTP", function () {
-          it("should return 201", function () {
-            (0, _chai.expect)(res.status).to.equal(201);
-          });
+  describe("Creating a Valid Resource (With an Extra Member)", function () {
+    var createdResource = undefined,
+        createdId = undefined,
+        res = undefined;
+    before(function (done) {
+      _appAgent2["default"].then(function (A) {
+        Agent = A;
+        Agent.request("POST", "/organizations").type("application/vnd.api+json").send({ "data": _fixturesCreation.VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER, "extra": false }).promise().then(function (response) {
+          res = response;
+          createdResource = res.body.data;
+          createdId = res.body.data.id;
+          done();
+        });
+      })["catch"](done);
+    });
 
-          it("should include a valid Location header", function () {
-            (0, _chai.expect)(res.headers.location).to.match(/\/organizations\/[a-z0-9]+/);
-            (0, _chai.expect)(createdResource.links.self).to.equal(res.headers.location);
-          });
+    describe("HTTP", function () {
+      it("should return 201", function () {
+        (0, _chai.expect)(res.status).to.equal(201);
+      });
+
+      it("should include a valid Location header", function () {
+        (0, _chai.expect)(res.headers.location).to.match(/\/organizations\/[a-z0-9]+/);
+        (0, _chai.expect)(createdResource.links.self).to.equal(res.headers.location);
+      });
+    });
+
+    describe("Document Structure", function () {
+      // "A JSON object MUST be at the root of every
+      // JSON API request and response containing data."
+      it("should have an object/document at the top level", function () {
+        (0, _chai.expect)(res.body).to.be.an("object");
+      });
+
+      it("should ignore extra document object members", function () {
+        (0, _chai.expect)(res.status).to.be.within(200, 299);
+        (0, _chai.expect)(res.body.extra).to.be.undefined;
+      });
+    });
+
+    describe("Links", function () {});
+
+    describe("Transforms", function () {
+      describe("beforeSave", function () {
+        it("should execute beforeSave hook", function () {
+          (0, _chai.expect)(createdResource.attributes.description).to.equal("Added a description in beforeSave");
         });
 
-        describe("Document Structure", function () {
-          // "A JSON object MUST be at the root of every
-          // JSON API request and response containing data."
-          it("should have an object/document at the top level", function () {
-            (0, _chai.expect)(res.body).to.be.an("object");
-          });
-
-          it("should ignore extra document object members", function () {
-            (0, _chai.expect)(res.status).to.be.within(200, 299);
-            (0, _chai.expect)(res.body.extra).to.be.undefined;
-          });
-
-          describe("Links", function () {});
-
-          describe("Transforms", function () {
-            describe("beforeSave", function () {
-              it("should execute beforeSave hook", function () {
-                (0, _chai.expect)(createdResource.attributes.description).to.equal("Added a description in beforeSave");
-              });
-
-              it("should allow beforeSave to return a Promise", function (done) {
-                Agent.request("POST", "/schools").type("application/vnd.api+json").send({ "data": _fixturesCreation.VALID_SCHOOL_RESOURCE_NO_ID }).promise().then(function (res2) {
-                  (0, _chai.expect)(res2.body.data.attributes.description).to.equal("Modified in a Promise");
-                  done();
-                }, done)["catch"](done);
-              });
-            });
-          });
-
-          describe("The Created Resource", function () {
-            it("should return the created resource", function () {
-              (0, _chai.expect)(createdResource).to.be.an("object");
-              (0, _chai.expect)(createdResource.type).to.equal("organizations");
-              (0, _chai.expect)(createdResource.attributes).to.be.an("object");
-              (0, _chai.expect)(createdResource.relationships).to.be.an("object");
-              (0, _chai.expect)(createdResource.relationships.liaisons).to.be.an("object");
-            });
-
-            it("should ignore extra resource object members", function () {
-              (0, _chai.expect)(res.body.data.extraMember).to.be.undefined;
-              (0, _chai.expect)(res.body.data.attributes.extraMember).to.be.undefined;
-            });
-          });
+        it("should allow beforeSave to return a Promise", function (done) {
+          Agent.request("POST", "/schools").type("application/vnd.api+json").send({ "data": _fixturesCreation.VALID_SCHOOL_RESOURCE_NO_ID }).promise().then(function (response) {
+            (0, _chai.expect)(response.body.data.attributes.description).to.equal("Modified in a Promise");
+            done();
+          }, done)["catch"](done);
         });
       });
-    }).done();
-  }).done();
-});
+    });
 
-describe("", function () {
-  _appAgent2["default"].then(function (Agent) {
-    Agent.request("POST", "/organizations").type("application/vnd.api+json").send({ "data": _fixturesCreation.ORG_RESOURCE_CLIENT_ID }).promise().then(function () {
-      throw new Error("Should not run!");
-    }, function (err) {
-      describe("Creating a Resource With A Client-Id", function () {
-        describe("HTTP", function () {
-          it("should return 403", function () {
-            (0, _chai.expect)(err.response.status).to.equal(403);
-          });
-        });
-
-        describe("Document Structure", function () {
-          it("should contain an error", function () {
-            (0, _chai.expect)(err.response.body.errors).to.be.an("array");
-          });
-        });
+    describe("The Created Resource", function () {
+      it("should be returned in the body", function () {
+        (0, _chai.expect)(createdResource).to.be.an("object");
+        (0, _chai.expect)(createdResource.type).to.equal("organizations");
+        (0, _chai.expect)(createdResource.attributes).to.be.an("object");
+        (0, _chai.expect)(createdResource.relationships).to.be.an("object");
+        (0, _chai.expect)(createdResource.relationships.liaisons).to.be.an("object");
       });
-    }).done();
-  }).done();
+
+      it("should ignore extra resource object members", function () {
+        (0, _chai.expect)(res.body.data.extraMember).to.be.undefined;
+        (0, _chai.expect)(res.body.data.attributes.extraMember).to.be.undefined;
+      });
+    });
+  });
+
+  describe("Creating a Resource With A Client-Id", function () {
+    var err = undefined;
+    before(function (done) {
+      Agent.request("POST", "/organizations").type("application/vnd.api+json").send({ "data": _fixturesCreation.ORG_RESOURCE_CLIENT_ID }).promise().then(function () {
+        return done("Should not run!");
+      }, function (error) {
+        err = error;
+        done();
+      });
+    });
+
+    describe("HTTP", function () {
+      it("should return 403", function () {
+        (0, _chai.expect)(err.response.status).to.equal(403);
+      });
+    });
+
+    describe("Document Structure", function () {
+      it("should contain an error", function () {
+        (0, _chai.expect)(err.response.body.errors).to.be.an("array");
+      });
+    });
+  });
 });
 
 // "[S]erver implementations MUST ignore
