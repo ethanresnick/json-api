@@ -95,7 +95,7 @@ describe("ResourceTypeRegistry", function() {
   describe("behaviors", () => {
     it("should merge in provided behaviors config", () => {
       let registry = new ResourceTypeRegistry();
-      registry.behaviors("testType", {"dasherizeOutput": {exceptions: {}});
+      registry.behaviors("testType", {"dasherizeOutput": {exceptions: {}}});
 
       // the global default shouldn't have been replaced over by the set above.
       expect(registry.behaviors("testType").dasherizeOutput.enabled).to.be.true;
