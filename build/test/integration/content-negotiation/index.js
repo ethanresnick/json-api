@@ -28,6 +28,15 @@ _appAgent2["default"].then(function (Agent) {
       })["catch"](done);
     });
 
+    // Spec ignored due to issues with Firefox automatically adding charset parameter
+    // See: https://github.com/ethanresnick/json-api/issues/78
+    it("must accept charset parameter", function (done) {
+      Agent.request("POST", "/organizations").type("application/vnd.api+json;charset=utf-8").send({ "data": _fixturesCreation.VALID_ORG_RESOURCE_NO_ID }).promise().then(function (res) {
+        (0, _chai.expect)(res.status).to.equal(201);
+        done();
+      }, done)["catch"](done);
+    });
+
     // "Servers MUST send all JSON API data in response documents with the
     //  header Content-Type: application/vnd.api+json without any media type
     //  parameters."

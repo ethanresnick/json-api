@@ -1,6 +1,6 @@
 {
   "name": "json-api",
-  "version": "2.9.0",
+  "version": "2.10.0",
   "description": "A library for constructing JSON-API compliant responses",
   "homepage": "https://github.com/ethanresnick/json-api",
   "repository": {
@@ -11,6 +11,7 @@
     "name": "Ethan Resnick",
     "email": "ethan.resnick@gmail.com"
   },
+  "license": "LGPL-3.0",
   "main": "index.js",
   "dependencies": {
     "babel-runtime": "5.6.17",
@@ -19,6 +20,7 @@
     "dasherize": "2.0.x",
     "flat": "^1.2.1",
     "jade": "1.5.x",
+    "lodash": "^3.10.0",
     "negotiator": "ethanresnick/negotiator#full-parse-access",
     "pluralize": "0.0.11",
     "q": "1.4.1",
@@ -41,7 +43,8 @@
     "superagent": "1.2.x"
   },
   "peerDependencies": {
-    "mongoose": "4.0.x"
+    "mongoose": "^4.0.0",
+    "express": "^4.0.0"
   },
   "scripts": {
     "prepublish": "make compile",

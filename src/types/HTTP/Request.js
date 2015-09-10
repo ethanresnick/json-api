@@ -2,7 +2,7 @@ import {ValueObject} from "../../util/type-handling";
 
 class Request {
   constructor() {
-    // Whether the request has a body,
+    // Whether the request has a (non-empty) body,
     // in which case we'll need to validate the Content-Type.
     this.hasBody = null;
 

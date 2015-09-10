@@ -1,9 +1,3 @@
-/**
- * A private array of properties that will be used by the class below to
- * automatically generate simple getter setters for each property, all
- * following same format. Those getters/setters will take the resource type
- * whose property is being retrieved/set, and the value to set it to, if any.
- */
 "use strict";
 
 var _createClass = require("babel-runtime/helpers/create-class")["default"];
@@ -14,21 +8,45 @@ var _Object$assign = require("babel-runtime/core-js/object/assign")["default"];
 
 var _Object$keys = require("babel-runtime/core-js/object/keys")["default"];
 
+var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-var autoGetterSetterProps = ["dbAdapter", "beforeSave", "beforeRender", "labelMappers", "defaultIncludes", "info", "parentType"];
+
+var _lodashObjectMerge = require("lodash/object/merge");
+
+var _lodashObjectMerge2 = _interopRequireDefault(_lodashObjectMerge);
+
+/**
+ * A private array of properties that will be used by the class below to
+ * automatically generate simple getter setters for each property, all
+ * following same format. Those getters/setters will take the resource type
+ * whose property is being retrieved/set, and the value to set it to, if any.
+ */
+var autoGetterSetterProps = ["dbAdapter", "beforeSave", "beforeRender", "beforeDelete", "labelMappers", "defaultIncludes", "info", "parentType"];
+
+/**
+ * Global defaults for resource descriptions, to be merged into defaults
+ * provided to the ResourceTypeRegistry, which are in turn merged into defaults
+ * provided in each resource type descriptions.
+ */
+var globalResourceDefaults = {
+  behaviors: {
+    dasherizeOutput: { enabled: true }
+  }
+};
 
 /**
  * To fulfill a JSON API request, you often need to know about all the resources
  * in the system--not just the primary resource associated with the type being
  * requested. For example, if the request is for a User, you might need to
  * include related Projects, so the code handling the users request needs access
- * to the Project resource's beforeSave and afterQuery methods. Similarly, it
+ * to the Project resource's beforeSave and beforeRender methods. Similarly, it
  * would need access to url templates that point at relationships on the Project
  * resources. Etc. So we handle this by introducing a ResourceTypeRegistry that
- * the Dispatcher can have access to. Each resource type is registered by its
- * JSON api type and has a number of properties defining it.
+ * the Controller can have access to. Each resource type is registered by its
+ * JSON API type and has a number of properties defining it.
  */
 
 var ResourceTypeRegistry = (function () {
@@ -36,10 +54,12 @@ var ResourceTypeRegistry = (function () {
     var _this = this;
 
     var typeDescriptions = arguments.length <= 0 || arguments[0] === undefined ? [] : arguments[0];
+    var descriptionDefaults = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
     _classCallCheck(this, ResourceTypeRegistry);
 
     this._resourceTypes = {};
+    this._descriptionDefaults = (0, _lodashObjectMerge2["default"])({}, globalResourceDefaults, descriptionDefaults);
     typeDescriptions.forEach(function (it) {
       _this.type(it);
     });
@@ -61,8 +81,11 @@ var ResourceTypeRegistry = (function () {
       if (description) {
         this._resourceTypes[_type] = {};
 
+        // Merge description defaults into provided description
+        description = (0, _lodashObjectMerge2["default"])({}, this._descriptionDefaults, description);
+
         // Set all the properties for the type that the description provides.
-        autoGetterSetterProps.concat(["urlTemplates"]).forEach(function (k) {
+        autoGetterSetterProps.concat(["urlTemplates", "behaviors"]).forEach(function (k) {
           if (Object.prototype.hasOwnProperty.call(description, k)) {
             _this2[k](_type, description[k]);
           }
@@ -96,6 +119,16 @@ var ResourceTypeRegistry = (function () {
 
         default:
           this._resourceTypes[type].urlTemplates = templatesToSet;
+      }
+    }
+  }, {
+    key: "behaviors",
+    value: function behaviors(type, behaviorsToSet) {
+      this._resourceTypes[type] = this._resourceTypes[type] || {};
+      if (behaviorsToSet) {
+        this._resourceTypes[type].behaviors = (0, _lodashObjectMerge2["default"])({}, this._descriptionDefaults.behaviors, behaviorsToSet);
+      } else {
+        return this._resourceTypes[type].behaviors;
       }
     }
   }]);

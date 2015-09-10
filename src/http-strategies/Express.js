@@ -100,9 +100,13 @@ export default class ExpressStrategy {
    * that originated outside of the JSON API Pipeline and that's outside the
    * main spec's scope (e.g. an authentication error). So, the controller
    * exposes this method which allows them to do that.
+   *
+   * @param {Error|APIError|Error[]|APIError[]} errors Error or array of errors
+   * @param {Object} req Express's request object
+   * @param {Object} res Express's response object
    */
-  sendError(error, req, res) {
-    API.responseFromExternalError(error, req.headers.accept).then(
+  sendError(errors, req, res) {
+    API.responseFromExternalError(errors, req.headers.accept).then(
       (responseObject) => this.sendResources(responseObject, res, () => {})
     ).catch((err) => {
       // if we hit an error generating our error...
@@ -148,9 +152,7 @@ function buildRequestObject(req, allowTunneling) {
       );
     }
 
-    it.hasBody = hasBody(req);
-
-    if(it.hasBody) {
+    if(hasBody(req)) {
       if(!isReadableStream(req)) {
         return reject(
           new APIError(500, undefined, "Request body could not be parsed. Make sure other no other middleware has already parsed the request body.")
@@ -169,9 +171,24 @@ function buildRequestObject(req, allowTunneling) {
 
       // The req has not yet been read, so let's read it
       getRawBody(req, bodyParserOptions, function(err, string) {
-        if(err) { reject(err); }
+        if(err) {
+          reject(err);
+        }
+
+        // Even though we passed the hasBody check, the body could still be
+        // empty, so we check the length. (We can't check this before doing
+        // getRawBody because, while Content-Length: 0 signals an empty body,
+        // there's no similar in-advance clue for detecting empty bodies when
+        // Transfer-Encoding: chunked is being used.)
+        else if(string.length === 0) {
+          it.hasBody = false;
+          it.body = "";
+          resolve(it);
+        }
+
         else {
           try {
+            it.hasBody = true;
             it.body = JSON.parse(string);
             resolve(it);
           }
@@ -183,16 +200,17 @@ function buildRequestObject(req, allowTunneling) {
         }
       });
     }
+
     else {
-      it.body = null;
+      it.hasBody = false;
+      it.body = undefined;
       resolve(it);
     }
   });
 }
 
 function hasBody(req) {
-  return req.headers["transfer-encoding"] !== undefined
-    || !isNaN(req.headers["content-length"]);
+  return req.headers["transfer-encoding"] !== undefined || !isNaN(req.headers["content-length"]);
 }
 
 function isReadableStream(req) {

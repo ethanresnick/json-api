@@ -14,8 +14,6 @@ var _typesCollection = require("../../types/Collection");
 
 var _typesCollection2 = _interopRequireDefault(_typesCollection);
 
-var _utilTypeHandling = require("../../util/type-handling");
-
 exports["default"] = function (request, response, registry) {
   var type = request.type;
   var adapter = registry.dbAdapter(type);
@@ -47,7 +45,7 @@ exports["default"] = function (request, response, registry) {
       response.status = 204;
     });
   } else {
-    return adapter["delete"](type, request.idOrIds).then(function (resources) {
+    return adapter["delete"](type, request.idOrIds).then(function () {
       response.status = 204;
     });
   }

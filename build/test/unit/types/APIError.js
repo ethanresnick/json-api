@@ -22,6 +22,11 @@ describe("Error Objects", function () {
   });
 
   describe("the fromError helper", function () {
+    it("should pass APIError instances through as is", function () {
+      var error = new _srcTypesAPIError2["default"]();
+      (0, _chai.expect)(_srcTypesAPIError2["default"].fromError(error)).to.equal(error);
+    });
+
     it("should use the error's statusCode val as status iff status not defined", function () {
       var er = _srcTypesAPIError2["default"].fromError({
         "statusCode": 300,

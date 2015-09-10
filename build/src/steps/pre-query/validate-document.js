@@ -10,12 +10,6 @@ var _q = require("q");
 
 var _q2 = _interopRequireDefault(_q);
 
-var _utilTypeHandling = require("../../util/type-handling");
-
-var _utilArrays = require("../../util/arrays");
-
-var _utilMisc = require("../../util/misc");
-
 var _typesAPIError = require("../../types/APIError");
 
 var _typesAPIError2 = _interopRequireDefault(_typesAPIError);

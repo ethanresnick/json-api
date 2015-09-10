@@ -4,17 +4,9 @@ var _interopRequireDefault = require("babel-runtime/helpers/interop-require-defa
 
 var _chai = require("chai");
 
-var _sinon = require("sinon");
+var _srcTypesAPIError = require("../../../../src/types/APIError");
 
-var _sinon2 = _interopRequireDefault(_sinon);
-
-var _srcTypesResource = require("../../../../src/types/Resource");
-
-var _srcTypesResource2 = _interopRequireDefault(_srcTypesResource);
-
-var _srcTypesCollection = require("../../../../src/types/Collection");
-
-var _srcTypesCollection2 = _interopRequireDefault(_srcTypesCollection);
+var _srcTypesAPIError2 = _interopRequireDefault(_srcTypesAPIError);
 
 var _srcDbAdaptersMongooseMongooseAdapter = require("../../../../src/db-adapters/Mongoose/MongooseAdapter");
 
@@ -88,6 +80,76 @@ describe("Mongoose Adapter", function () {
         (0, _chai.expect)(_srcDbAdaptersMongooseMongooseAdapter2["default"].toFriendlyName("thisIsATest")).to.equal("This Is A Test");
         (0, _chai.expect)(_srcDbAdaptersMongooseMongooseAdapter2["default"].toFriendlyName("ATest")).to.equal("A Test");
         (0, _chai.expect)(_srcDbAdaptersMongooseMongooseAdapter2["default"].toFriendlyName("isCaseB")).to.equal("Is Case B");
+      });
+    });
+
+    describe("getIdQueryType", function () {
+      it("should handle null input", function () {
+        var res = _srcDbAdaptersMongooseMongooseAdapter2["default"].getIdQueryType();
+        (0, _chai.expect)(res[0]).to.equal("find");
+        (0, _chai.expect)(res[1]).to.be.undefined;
+      });
+
+      describe("string", function () {
+        it("should throw on invalid input", function () {
+          var fn = function fn() {
+            _srcDbAdaptersMongooseMongooseAdapter2["default"].getIdQueryType("1");
+          };
+          (0, _chai.expect)(fn).to["throw"](_srcTypesAPIError2["default"]);
+        });
+
+        it("should produce query on valid input", function () {
+          var res = _srcDbAdaptersMongooseMongooseAdapter2["default"].getIdQueryType("552c5e1c604d41e5836bb174");
+          (0, _chai.expect)(res[0]).to.equal("findOne");
+          (0, _chai.expect)(res[1]._id).to.equal("552c5e1c604d41e5836bb174");
+        });
+      });
+
+      describe("array", function () {
+        it("should throw if any ids are invalid", function () {
+          var fn = function fn() {
+            _srcDbAdaptersMongooseMongooseAdapter2["default"].getIdQueryType(["1", "552c5e1c604d41e5836bb174"]);
+          };
+          (0, _chai.expect)(fn).to["throw"](_srcTypesAPIError2["default"]);
+        });
+
+        it("should produce query on valid input", function () {
+          var res = _srcDbAdaptersMongooseMongooseAdapter2["default"].getIdQueryType(["552c5e1c604d41e5836bb174", "552c5e1c604d41e5836bb175"]);
+          (0, _chai.expect)(res[0]).to.equal("find");
+          (0, _chai.expect)(res[1]._id.$in).to.be.an.Array;
+          (0, _chai.expect)(res[1]._id.$in[0]).to.equal("552c5e1c604d41e5836bb174");
+          (0, _chai.expect)(res[1]._id.$in[1]).to.equal("552c5e1c604d41e5836bb175");
+        });
+      });
+    });
+
+    describe("idIsValid", function () {
+      it("should reject all == null input", function () {
+        (0, _chai.expect)(_srcDbAdaptersMongooseMongooseAdapter2["default"].idIsValid()).to.not.be.ok;
+        (0, _chai.expect)(_srcDbAdaptersMongooseMongooseAdapter2["default"].idIsValid(null)).to.not.be.ok;
+        (0, _chai.expect)(_srcDbAdaptersMongooseMongooseAdapter2["default"].idIsValid(undefined)).to.not.be.ok;
+      });
+
+      it("should reject bad input type", function () {
+        (0, _chai.expect)(_srcDbAdaptersMongooseMongooseAdapter2["default"].idIsValid(true)).to.not.be.ok;
+      });
+
+      it("should reject empty string", function () {
+        (0, _chai.expect)(_srcDbAdaptersMongooseMongooseAdapter2["default"].idIsValid("")).to.not.be.ok;
+      });
+
+      // the string coming into the MongooseAdapter needs to be the 24-character,
+      // hex encoded version of the ObjectId, not an arbitrary 12 byte string.
+      it("should reject 12-character strings", function () {
+        (0, _chai.expect)(_srcDbAdaptersMongooseMongooseAdapter2["default"].idIsValid("aaabbbccc111")).to.not.be.ok;
+      });
+
+      it("should reject numbers", function () {
+        (0, _chai.expect)(_srcDbAdaptersMongooseMongooseAdapter2["default"].idIsValid(1)).to.not.be.ok;
+      });
+
+      it("should accpet valid hex string", function () {
+        (0, _chai.expect)(_srcDbAdaptersMongooseMongooseAdapter2["default"].idIsValid("552c5e1c604d41e5836bb175")).to.be.ok;
       });
     });
   });

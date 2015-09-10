@@ -6,12 +6,6 @@ var _q = require("q");
 
 var _q2 = _interopRequireDefault(_q);
 
-var _chai = require("chai");
-
-var _appAgent = require("../app/agent");
-
-var _appAgent2 = _interopRequireDefault(_appAgent);
-
 var _appDatabase = require("../app/database");
 
 var _appDatabase2 = _interopRequireDefault(_appDatabase);
@@ -32,6 +26,7 @@ before(function (done) {
       require("./content-negotiation");
       require("./fetch-collection");
       require("./create-resource");
+      require("./delete-resource");
       done();
     }).done();
   });

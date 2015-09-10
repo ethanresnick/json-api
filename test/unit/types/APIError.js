@@ -15,6 +15,11 @@ describe("Error Objects", () => {
   });
 
   describe("the fromError helper", () => {
+    it("should pass APIError instances through as is", () => {
+      let error = new APIError();
+      expect(APIError.fromError(error)).to.equal(error);
+    });
+
     it("should use the error's statusCode val as status iff status not defined", () => {
       let er = APIError.fromError({
         "statusCode": 300,

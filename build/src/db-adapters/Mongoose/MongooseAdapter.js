@@ -6,6 +6,8 @@ var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default
 
 var _defineProperty = require("babel-runtime/helpers/define-property")["default"];
 
+var _slicedToArray = require("babel-runtime/helpers/sliced-to-array")["default"];
+
 var _Object$keys = require("babel-runtime/core-js/object/keys")["default"];
 
 var _Object$assign = require("babel-runtime/core-js/object/assign")["default"];
@@ -97,24 +99,19 @@ var MongooseAdapter = (function () {
 
       var model = this.getModel(this.constructor.getModelName(type));
       var queryBuilder = new _mongoose2["default"].Query(null, null, model, model.collection);
+
+      var _constructor$getIdQueryType = this.constructor.getIdQueryType(idOrIds);
+
+      var _constructor$getIdQueryType2 = _slicedToArray(_constructor$getIdQueryType, 2);
+
+      var mode = _constructor$getIdQueryType2[0];
+      var idQuery = _constructor$getIdQueryType2[1];
+
       var pluralizer = this.inflector.plural;
-      var mode = "find",
-          idQuery = undefined;
       var primaryDocumentsPromise = undefined,
           includedResourcesPromise = (0, _q2["default"])(null);
 
-      if (idOrIds) {
-        if (typeof idOrIds === "string") {
-          mode = "findOne";
-          idQuery = idOrIds;
-        } else {
-          idQuery = { "$in": idOrIds };
-        }
-
-        queryBuilder[mode]({ "_id": idQuery });
-      } else {
-        queryBuilder.find();
-      }
+      queryBuilder[mode](idQuery);
 
       // do sorting
       if (Array.isArray(sorts)) {
@@ -278,16 +275,21 @@ var MongooseAdapter = (function () {
       // Set up some data structures based on resourcesOrCollection
       var resourceTypes = [];
       var changeSets = {};
+
       var idOrIds = (0, _utilTypeHandling.mapResources)(resourceOrCollection, function (it) {
         changeSets[it.id] = it;
         resourceTypes.push(it.type);
         return it.id;
       });
 
-      var mode = typeof idOrIds === "string" ? "findOne" : "find";
-      var idQuery = typeof idOrIds === "string" ? idOrIds : { "$in": idOrIds };
+      var _constructor$getIdQueryType3 = this.constructor.getIdQueryType(idOrIds);
 
-      return (0, _q2["default"])(model[mode]({ "_id": idQuery }).exec()).then(function (docs) {
+      var _constructor$getIdQueryType32 = _slicedToArray(_constructor$getIdQueryType3, 2);
+
+      var mode = _constructor$getIdQueryType32[0];
+      var idQuery = _constructor$getIdQueryType32[1];
+
+      return (0, _q2["default"])(model[mode](idQuery).exec()).then(function (docs) {
         var successfulSavesPromises = [];
 
         // if some ids were invalid/deleted/not found, we can't let *any* update
@@ -354,21 +356,22 @@ var MongooseAdapter = (function () {
     key: "delete",
     value: function _delete(parentType, idOrIds) {
       var model = this.getModel(this.constructor.getModelName(parentType));
-      var mode = "find",
-          idQuery = undefined;
+
+      var _constructor$getIdQueryType4 = this.constructor.getIdQueryType(idOrIds);
+
+      var _constructor$getIdQueryType42 = _slicedToArray(_constructor$getIdQueryType4, 2);
+
+      var mode = _constructor$getIdQueryType42[0];
+      var idQuery = _constructor$getIdQueryType42[1];
 
       if (!idOrIds) {
         return _q2["default"].Promise(function (resolve, reject) {
           reject(new _typesAPIError2["default"](400, undefined, "You must specify some resources to delete"));
         });
-      } else if (typeof idOrIds === "string") {
-        mode = "findOne";
-        idQuery = idOrIds;
-      } else {
-        idQuery = { "$in": idOrIds };
       }
 
-      return (0, _q2["default"])(model[mode]({ "_id": idQuery }).exec()).then(function (docs) {
+      return (0, _q2["default"])(model[mode](idQuery).exec()).then(function (docs) {
+        if (!docs) throw new _typesAPIError2["default"](404, undefined, "No matching resource found.");
         (0, _utilTypeHandling.forEachArrayOrVal)(docs, function (it) {
           it.remove();
         });
@@ -706,6 +709,33 @@ var MongooseAdapter = (function () {
       }
 
       return words.join(" ");
+    }
+  }, {
+    key: "getIdQueryType",
+    value: function getIdQueryType(idOrIds) {
+      var mode = typeof idOrIds === "string" ? "findOne" : "find";
+      var idQuery = undefined;
+
+      if (typeof idOrIds === "string") {
+        if (!this.idIsValid(idOrIds)) {
+          throw new _typesAPIError2["default"](404, undefined, "No matching resource found.", "Invalid ID.");
+        }
+
+        idQuery = { _id: idOrIds };
+      } else if (Array.isArray(idOrIds)) {
+        if (!idOrIds.every(this.idIsValid)) {
+          throw new _typesAPIError2["default"](400, undefined, "Invalid ID.");
+        }
+
+        idQuery = { _id: { "$in": idOrIds } };
+      }
+
+      return [mode, idQuery];
+    }
+  }, {
+    key: "idIsValid",
+    value: function idIsValid(id) {
+      return typeof id === "string" && /^[0-9a-fA-F]{24}$/.test(id);
     }
   }]);
 
