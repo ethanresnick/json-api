@@ -3,7 +3,8 @@ import AgentPromise from "../../app/agent";
 import {
   ORG_RESOURCE_CLIENT_ID,
   VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER,
-  VALID_SCHOOL_RESOURCE_NO_ID
+  VALID_SCHOOL_RESOURCE_NO_ID,
+  INVALID_ORG_RESOURCE_NO_DATA_IN_RELATIONSHIP
 } from "../fixtures/creation";
 
 describe("Creating Resources", () => {
@@ -115,6 +116,40 @@ describe("Creating Resources", () => {
       });
     });
   });
+});
+
+describe("", () => {
+  AgentPromise.then((Agent) => {
+    Agent.request("POST", "/organizations")
+      .type("application/vnd.api+json")
+      .send({"data": INVALID_ORG_RESOURCE_NO_DATA_IN_RELATIONSHIP})
+      .promise()
+      .then(() => { throw new Error("Should not run!"); }, (err) => {
+        describe("Creating a Resource With a Missing Relationship Data Key", () => {
+          describe("HTTP", () => {
+            it("should return 400", () => {
+              expect(err.response.status).to.equal(400);
+            });
+          });
+
+          describe("Document Structure", () => {
+            it("should contain an error", () => {
+              expect(err.response.body.errors).to.be.an("array");
+            });
+          });
+
+          describe("Error", () => {
+            it("should have the correct title", () => {
+              expect(err.response.body.errors[0].title).to.be.equal("Missing relationship linkage.");
+            });
+
+            it("should have the correct details", () => {
+              expect(err.response.body.errors[0].details).to.be.equal("No data was found for the liaisons relationship.");
+            });
+          });
+        });
+      }).done();
+  }).done();
 });
 
     // "[S]erver implementations MUST ignore

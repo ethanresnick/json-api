@@ -22,14 +22,24 @@ export default function(data, parseAsLinkage) {
     }
 
     catch (error) {
-      const title = "The resources you provided could not be parsed.";
-      const details = `The precise error was: "${error.message}".`;
-      reject(new APIError(400, undefined, title, details));
+      if (error instanceof APIError) {
+        reject(error);
+      }
+
+      else {
+        const title = "The resources you provided could not be parsed.";
+        const details = `The precise error was: "${error.message}".`;
+        reject(new APIError(400, undefined, title, details));
+      }
     }
   });
 }
 
 function relationshipObjectFromJSON(json) {
+  if (typeof json.data === "undefined") {
+    throw new APIError(400, undefined, `Missing relationship linkage.`);
+  }
+
   return new RelationshipObject(linkageFromJSON(json.data));
 }
 
@@ -41,8 +51,15 @@ function resourceFromJSON(json) {
   let relationships = json.relationships || {};
 
   //build RelationshipObjects
-  for(let key in relationships) {
-    relationships[key] = relationshipObjectFromJSON(relationships[key]);
+  let key;
+  try {
+    for(key in relationships) {
+      relationships[key] = relationshipObjectFromJSON(relationships[key], key);
+    }
+  }
+  catch (e) {
+    e.details = `No data was found for the ${key} relationship.`;
+    throw e;
   }
 
   return new Resource(json.type, json.id, json.attributes, relationships, json.meta);
