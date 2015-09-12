@@ -11,7 +11,7 @@ describe("Creating Resources", () => {
   let Agent;
 
   describe("Creating a Valid Resource (With an Extra Member)", () => {
-    let createdResource, createdId, res;
+    let createdResource, res;
     before(done => {
       AgentPromise.then((A) => {
         Agent = A;
@@ -22,7 +22,6 @@ describe("Creating Resources", () => {
           .then((response) => {
             res = response;
             createdResource = res.body.data;
-            createdId = res.body.data.id;
             done();
           });
       }).catch(done);
@@ -99,7 +98,7 @@ describe("Creating Resources", () => {
         .send({"data": ORG_RESOURCE_CLIENT_ID})
         .promise()
         .then(
-          () => { done("Should not run!") },
+          () => { done("Should not run!"); },
           (error) => {
             err = error;
             done();

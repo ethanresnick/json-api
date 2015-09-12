@@ -2,8 +2,8 @@ import chai from "chai";
 import ResourceTypeRegistry from "../../src/ResourceTypeRegistry";
 
 let expect = chai.expect;
-let registry = {};
 let makeGetterSetterTest = function(newThing, type, methodName, deep) {
+  let registry = new ResourceTypeRegistry();
   return function() {
     expect(registry[methodName](type)).to.be.undefined;
     registry[methodName](type, newThing);
@@ -20,10 +20,6 @@ let makeGetterSetterTest = function(newThing, type, methodName, deep) {
 };
 
 describe("ResourceTypeRegistry", function() {
-  beforeEach(() => {
-    registry = new ResourceTypeRegistry();
-  });
-
   describe("constructor", () => {
     it("should register resource descriptions provided in first parameter", () => {
       let registry = new ResourceTypeRegistry([{

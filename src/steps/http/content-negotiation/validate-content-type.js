@@ -6,7 +6,7 @@ import {objectIsEmpty} from "../../../util/type-handling";
 export default function validateContentType(requestContext, supportedExt) {
   return Q.Promise(function(resolve, reject) {
     let contentType = contentTypeParser.parse(requestContext.contentType);
-    
+
     // Removed due to issues with Firefox automatically adding charset parameter
     // See: https://github.com/ethanresnick/json-api/issues/78
     delete contentType.parameters.charset;
