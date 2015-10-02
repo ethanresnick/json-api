@@ -537,8 +537,8 @@ export default class MongooseAdapter {
       // Add validation info
       let validationRules = {
         required: !!type.options.required,
-        oneOf: type.options.enum ? type.enumValues : undefined,
-        max: type.options.max ? type.options.max : undefined
+        oneOf: type.enumValues || (type.caster && type.caster.enumValues) || undefined,
+        max: type.options.max || undefined
       };
 
       type.validators.forEach((validator) => {
