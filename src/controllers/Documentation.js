@@ -75,24 +75,24 @@ export default class DocumentationController {
     schema.forEach((field) => {
       // look up user defined field info on info.fields.
       let pathInfo = (info && info.fields && info.fields[field.name]) || {};
-      
+
       // Keys that have a meaning in the default template.
       let overrideableKeys = ["friendlyName",  "kind", "description"];
 
       for(let key in pathInfo) {
-        // allow the user to override auto-generated friendlyName and the 
-        // auto-generated type info, which is undefined for virtuals. Also, 
+        // allow the user to override auto-generated friendlyName and the
+        // auto-generated type info, which is undefined for virtuals. Also,
         // allow them to set the description, which is always user-provided.
-        // And, finally, copy in any other info properties that don't 
+        // And, finally, copy in any other info properties that don't
         // conflict with ones defined by this library.
         if (overrideableKeys.indexOf(key) > -1 || !(key in field)) {
           field[key] = pathInfo[key];
         }
 
-        // If the current info key does conflict (i.e. `key in field`), but 
-        // the user-provided value is an object, try to merge in the object's 
-        // properties. If the key conflicts and doesn't hold an object into 
-        // which we can merge, we just give up (i.e. we don't try anything 
+        // If the current info key does conflict (i.e. `key in field`), but
+        // the user-provided value is an object, try to merge in the object's
+        // properties. If the key conflicts and doesn't hold an object into
+        // which we can merge, we just give up (i.e. we don't try anything
         // else after the below).
         else if(typeof field[key] === "object" && !Array.isArray(field[key])) {
           Object.assign(field[key], pathInfo[key]);
