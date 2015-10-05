@@ -19,7 +19,11 @@ module.exports = {
     Collection: require('./build/src/types/Collection'),
     Document: require('./build/src/types/Document'),
     Error: require('./build/src/types/APIError'),
-    Resource: require('./build/src/types/Resource')
+    Resource: require('./build/src/types/Resource'),
+    Documentation: {
+      Field: require('./build/src/types/Documentation/Field'),
+      FieldType: require('./build/src/types/Documentation/FieldType')
+    }
   },
   controllers: {
     API: require('./build/src/controllers/API'),
