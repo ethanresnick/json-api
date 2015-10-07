@@ -657,10 +657,14 @@ var MongooseAdapter = (function () {
           defaultVal = type.options["default"];
         }
 
+        // find the "base type's" options (used below), in case
+        // we have an array of values of the same type at this path.
+        var baseTypeOptions = Array.isArray(type.options.type) ? type.options.type[0] : type.options;
+
         // Add validation info
         var validationRules = {
           required: !!type.options.required,
-          oneOf: type.enumValues || type.caster && type.caster.enumValues || undefined,
+          oneOf: baseTypeOptions["enum"] ? baseTypeOptions["enum"].values : undefined,
           max: type.options.max || undefined
         };
 
