@@ -41,14 +41,22 @@ exports["default"] = function (data, parseAsLinkage) {
         resolve(resourceFromJSON(data));
       }
     } catch (error) {
-      var title = "The resources you provided could not be parsed.";
-      var details = "The precise error was: \"" + error.message + "\".";
-      reject(new _typesAPIError2["default"](400, undefined, title, details));
+      if (error instanceof _typesAPIError2["default"]) {
+        reject(error);
+      } else {
+        var title = "The resources you provided could not be parsed.";
+        var details = "The precise error was: \"" + error.message + "\".";
+        reject(new _typesAPIError2["default"](400, undefined, title, details));
+      }
     }
   });
 };
 
 function relationshipObjectFromJSON(json) {
+  if (typeof json.data === "undefined") {
+    throw new _typesAPIError2["default"](400, undefined, "Missing relationship linkage.");
+  }
+
   return new _typesRelationshipObject2["default"](linkageFromJSON(json.data));
 }
 
@@ -60,8 +68,14 @@ function resourceFromJSON(json) {
   var relationships = json.relationships || {};
 
   //build RelationshipObjects
-  for (var key in relationships) {
-    relationships[key] = relationshipObjectFromJSON(relationships[key]);
+  var key = undefined;
+  try {
+    for (key in relationships) {
+      relationships[key] = relationshipObjectFromJSON(relationships[key], key);
+    }
+  } catch (e) {
+    e.details = "No data was found for the " + key + " relationship.";
+    throw e;
   }
 
   return new _typesResource2["default"](json.type, json.id, json.attributes, relationships, json.meta);

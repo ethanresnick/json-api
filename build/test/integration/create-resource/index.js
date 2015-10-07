@@ -15,7 +15,6 @@ describe("Creating Resources", function () {
 
   describe("Creating a Valid Resource (With an Extra Member)", function () {
     var createdResource = undefined,
-        createdId = undefined,
         res = undefined;
     before(function (done) {
       _appAgent2["default"].then(function (A) {
@@ -23,7 +22,6 @@ describe("Creating Resources", function () {
         Agent.request("POST", "/organizations").type("application/vnd.api+json").send({ "data": _fixturesCreation.VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER, "extra": false }).promise().then(function (response) {
           res = response;
           createdResource = res.body.data;
-          createdId = res.body.data.id;
           done();
         });
       })["catch"](done);
@@ -90,7 +88,7 @@ describe("Creating Resources", function () {
     var err = undefined;
     before(function (done) {
       Agent.request("POST", "/organizations").type("application/vnd.api+json").send({ "data": _fixturesCreation.ORG_RESOURCE_CLIENT_ID }).promise().then(function () {
-        return done("Should not run!");
+        done("Should not run!");
       }, function (error) {
         err = error;
         done();
@@ -106,6 +104,40 @@ describe("Creating Resources", function () {
     describe("Document Structure", function () {
       it("should contain an error", function () {
         (0, _chai.expect)(err.response.body.errors).to.be.an("array");
+      });
+    });
+  });
+
+  describe("Creating a Resource With a Missing Relationship Data Key", function () {
+    var err = undefined;
+    before(function (done) {
+      Agent.request("POST", "/organizations").type("application/vnd.api+json").send({ "data": _fixturesCreation.INVALID_ORG_RESOURCE_NO_DATA_IN_RELATIONSHIP }).promise().then(function () {
+        done("Should not run!");
+      }, function (error) {
+        err = error;
+        done();
+      });
+    });
+
+    describe("HTTP", function () {
+      it("should return 400", function () {
+        (0, _chai.expect)(err.response.status).to.equal(400);
+      });
+    });
+
+    describe("Document Structure", function () {
+      it("should contain an error", function () {
+        (0, _chai.expect)(err.response.body.errors).to.be.an("array");
+      });
+    });
+
+    describe("The error", function () {
+      it("should have the correct title", function () {
+        (0, _chai.expect)(err.response.body.errors[0].title).to.be.equal("Missing relationship linkage.");
+      });
+
+      it("should have the correct details", function () {
+        (0, _chai.expect)(err.response.body.errors[0].details).to.be.equal("No data was found for the liaisons relationship.");
       });
     });
   });

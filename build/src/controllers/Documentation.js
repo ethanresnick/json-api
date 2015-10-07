@@ -123,30 +123,27 @@ var DocumentationController = (function () {
         // look up user defined field info on info.fields.
         var pathInfo = info && info.fields && info.fields[field.name] || {};
 
+        // Keys that have a meaning in the default template.
+        var overrideableKeys = ["friendlyName", "kind", "description"];
+
         for (var key in pathInfo) {
-          // allow the user to override auto-generated friendlyName.
-          if (key === "friendlyName") {
-            field.friendlyName = pathInfo.friendlyName;
+          // allow the user to override auto-generated friendlyName and the
+          // auto-generated type info, which is undefined for virtuals. Also,
+          // allow them to set the description, which is always user-provided.
+          // And, finally, copy in any other info properties that don't
+          // conflict with ones defined by this library.
+          if (overrideableKeys.indexOf(key) > -1 || !(key in field)) {
+            field[key] = pathInfo[key];
           }
 
-          // note: this line is technically redundant given the next else if, but
-          // it's included to emphasize that the description key has a special
-          // meaning and is, e.g., given special treatment in the default template.
-          else if (key === "description") {
-              field.description = pathInfo.description;
+          // If the current info key does conflict (i.e. `key in field`), but
+          // the user-provided value is an object, try to merge in the object's
+          // properties. If the key conflicts and doesn't hold an object into
+          // which we can merge, we just give up (i.e. we don't try anything
+          // else after the below).
+          else if (typeof field[key] === "object" && !Array.isArray(field[key])) {
+              _Object$assign(field[key], pathInfo[key]);
             }
-
-            // copy in any other info properties that don't conflict
-            else if (!(key in field)) {
-                field[key] = pathInfo[key];
-              }
-
-              // try to merge in info properties. if the key conflicts and doesn't
-              // hold an object into which we can merge, we just give up (i.e. we
-              // don't try anything else after the below).
-              else if (typeof field[key] === "object" && !Array.isArray(field[key])) {
-                  _Object$assign(field[key], pathInfo[key]);
-                }
         }
       });
       // Other info

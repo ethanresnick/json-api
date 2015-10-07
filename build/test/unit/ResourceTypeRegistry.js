@@ -11,8 +11,8 @@ var _srcResourceTypeRegistry = require("../../src/ResourceTypeRegistry");
 var _srcResourceTypeRegistry2 = _interopRequireDefault(_srcResourceTypeRegistry);
 
 var expect = _chai2["default"].expect;
-var registry = {};
 var makeGetterSetterTest = function makeGetterSetterTest(newThing, type, methodName, deep) {
+  var registry = new _srcResourceTypeRegistry2["default"]();
   return function () {
     expect(registry[methodName](type)).to.be.undefined;
     registry[methodName](type, newThing);
@@ -28,10 +28,6 @@ var makeGetterSetterTest = function makeGetterSetterTest(newThing, type, methodN
 };
 
 describe("ResourceTypeRegistry", function () {
-  beforeEach(function () {
-    registry = new _srcResourceTypeRegistry2["default"]();
-  });
-
   describe("constructor", function () {
     it("should register resource descriptions provided in first parameter", function () {
       var registry = new _srcResourceTypeRegistry2["default"]([{
