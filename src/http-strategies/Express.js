@@ -56,7 +56,7 @@ export default class ExpressStrategy {
   // For requests for the documentation.
   docsRequest(req, res, next) {
     buildRequestObject(req, this.config.tunnel).then((requestObject) => {
-      return this.docs.handle(requestObject).then((responseObject) => {
+      return this.docs.handle(requestObject, req, res).then((responseObject) => {
         this.sendResources(responseObject, res, next);
       });
     }).catch((err) => {

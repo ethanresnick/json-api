@@ -1,8 +1,10 @@
 import Q from "q";
+import _ from "lodash";
+import path from "path";
 import jade from "jade";
 import Negotiator from "negotiator";
-import path from "path";
 import dasherize from "dasherize";
+import mapValues from "lodash/object/mapValues";
 
 import Response from "../types/HTTP/Response";
 import Document from "../types/Document";
@@ -10,10 +12,13 @@ import Collection from "../types/Collection";
 import Resource from "../types/Resource";
 
 export default class DocumentationController {
-  constructor(registry, apiInfo, templatePath) {
+  constructor(registry, apiInfo, templatePath, dasherizeJSONKeys = true) {
+    this.registry = registry;
+
     const defaultTempPath = "../../../templates/documentation.jade";
     this.template = templatePath || path.resolve(__dirname, defaultTempPath);
-    this.registry = registry;
+
+    this.dasherizeJSONKeys = dasherizeJSONKeys;
 
     // compute template data on construction
     // (it never changes, so this makes more sense than doing it per request)
@@ -29,7 +34,7 @@ export default class DocumentationController {
     this.templateData = data;
   }
 
-  handle(request) {
+  handle(request, frameworkReq, frameworkRes) {
     let response = new Response();
     let negotiator = new Negotiator({headers: {accept: request.accepts}});
     let contentType = negotiator.mediaType(["text/html", "application/vnd.api+json"]);
@@ -37,6 +42,12 @@ export default class DocumentationController {
     // set content type as negotiated & vary on accept.
     response.contentType = contentType;
     response.headers.vary = "Accept";
+
+    // process templateData (just the type infos for now) for this particular request.
+    let templateData = _.cloneDeep(this.templateData);
+    templateData.resourcesMap = mapValues(templateData.resourcesMap, (typeInfo) => {
+      return this.transformTypeInfo(typeInfo, request, response, frameworkReq, frameworkRes);
+    });
 
     if(contentType.toLowerCase() === "text/html") {
       response.body = jade.renderFile(this.template, this.templateData);
@@ -47,10 +58,10 @@ export default class DocumentationController {
       let descriptionResources = new Collection();
 
       // Add a description resource for each resource type to the collection.
-      for(let type in this.templateData.resourcesMap) {
-        let typeInfo = this.templateData.resourcesMap[type];
-        let typeDescription = new Resource("jsonapi-descriptions", type, dasherize(typeInfo));
-        descriptionResources.add(typeDescription);
+      for(let type in templateData.resourcesMap) {
+        descriptionResources.add(
+          new Resource("jsonapi-descriptions", type, templateData.resourcesMap[type]);
+        );
       }
 
       response.body = (new Document(descriptionResources)).get(true);
@@ -118,5 +129,19 @@ export default class DocumentationController {
     if(info && info.description) result.description = info.description;
 
     return result;
+  }
+
+  /**
+   * By extending this function, users have an opportunity to transform
+   * the documentation info for each type based on the particulars of the
+   * current request. This is useful, among other things, for showing 
+   * users documentation only for models they have access to, and it lays
+   * the groundwork for true HATEOS intro pages in the future.
+   */
+  transformTypeInfo(info, request, response, frameworkReq, frameworkRes) {
+    if(this.dasherizeJSONKeys && response.contentType === "application/vnd.api+json") {
+      return dasherize(info);
+    }
+    return info;
   }
 }
