@@ -35,3 +35,24 @@ describe("Fetching JSON Documentation", function () {
     });
   });
 });
+
+describe("Fetching HTML Documentation", function () {
+  var res = undefined,
+      Agent = undefined;
+
+  before(function (done) {
+    _appAgent2["default"].then(function (A) {
+      Agent = A;
+      return Agent.request("GET", "/").accept("text/*").promise();
+    }, done).then(function (response) {
+      res = response;
+      done();
+    })["catch"](done);
+  });
+
+  describe("Content Type", function () {
+    it("should be HTML", function () {
+      (0, _chai.expect)(res.headers["content-type"]).to.equal("text/html; charset=utf-8");
+    });
+  });
+});

@@ -105,7 +105,7 @@ var DocumentationController = (function () {
       });
 
       if (contentType.toLowerCase() === "text/html") {
-        response.body = _jade2["default"].renderFile(this.template, this.templateData);
+        response.body = _jade2["default"].renderFile(this.template, templateData);
       } else {
         // Create a collection of "jsonapi-descriptions" from the templateData
         var descriptionResources = new _typesCollection2["default"]();
