@@ -45,8 +45,8 @@ export default class DocumentationController {
 
     // process templateData (just the type infos for now) for this particular request.
     let templateData = _.cloneDeep(this.templateData);
-    templateData.resourcesMap = mapValues(templateData.resourcesMap, (typeInfo) => {
-      return this.transformTypeInfo(typeInfo, request, response, frameworkReq, frameworkRes);
+    templateData.resourcesMap = mapValues(templateData.resourcesMap, (typeInfo, typeName) => {
+      return this.transformTypeInfo(typeName, typeInfo, request, response, frameworkReq, frameworkRes);
     });
 
     if(contentType.toLowerCase() === "text/html") {
@@ -138,7 +138,7 @@ export default class DocumentationController {
    * users documentation only for models they have access to, and it lays
    * the groundwork for true HATEOS intro pages in the future.
    */
-  transformTypeInfo(info, request, response, frameworkReq, frameworkRes) {
+  transformTypeInfo(typeName, info, request, response, frameworkReq, frameworkRes) {
     if(this.dasherizeJSONKeys && response.contentType === "application/vnd.api+json") {
       return dasherize(info);
     }
