@@ -100,8 +100,8 @@ var DocumentationController = (function () {
 
       // process templateData (just the type infos for now) for this particular request.
       var templateData = _lodash2["default"].cloneDeep(this.templateData);
-      templateData.resourcesMap = (0, _lodashObjectMapValues2["default"])(templateData.resourcesMap, function (typeInfo) {
-        return _this2.transformTypeInfo(typeInfo, request, response, frameworkReq, frameworkRes);
+      templateData.resourcesMap = (0, _lodashObjectMapValues2["default"])(templateData.resourcesMap, function (typeInfo, typeName) {
+        return _this2.transformTypeInfo(typeName, typeInfo, request, response, frameworkReq, frameworkRes);
       });
 
       if (contentType.toLowerCase() === "text/html") {
@@ -195,7 +195,7 @@ var DocumentationController = (function () {
      */
   }, {
     key: "transformTypeInfo",
-    value: function transformTypeInfo(info, request, response, frameworkReq, frameworkRes) {
+    value: function transformTypeInfo(typeName, info, request, response, frameworkReq, frameworkRes) {
       if (this.dasherizeJSONKeys && response.contentType === "application/vnd.api+json") {
         return (0, _dasherize2["default"])(info);
       }

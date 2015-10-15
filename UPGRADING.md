@@ -1,3 +1,6 @@
+# 2.11 -> 2.12 Breaking Changes (Not Semver until 3.0)
+- Tweak signature for Documentation.transformTypeInfo ([aac36d](https://github.com/ethanresnick/json-api/commit/aac36d57bb706a8125d6fb688090a8d2fe799239))
+
 # 2.10 -> 2.11 Breaking Changes (Not Semver until 3.0)
 - HTTP Strategies: If you were writing your own HTTP strategy (or extending the built-in Express one), you must make sure that your strategy calls the Documentation controller's `handle()` method with two additional arguments: the request and response objects from the framework your strategy is for (i.e. from express, koa, etc). The built-in express strategy has already [been patched](https://github.com/ethanresnick/json-api/commit/c658f7ba7ee4ac11f1976a763f1bdabf4b501e34#diff-fa4912ea43328f16ddff5fc0c1781fb5L59) to support this change.
 - Documentation controller: If you were using your own subclass of the Documentation controller, you must update it to be compatible with some [small new changes](https://github.com/ethanresnick/json-api/commit/c658f7ba7ee4ac11f1976a763f1bdabf4b501e34). In particular, a fourth constructor argument was added, and `handle()` now additionally calls the new `transformTypeInfo()` method.
