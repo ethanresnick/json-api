@@ -50,7 +50,7 @@ export default class DocumentationController {
     });
 
     if(contentType.toLowerCase() === "text/html") {
-      response.body = jade.renderFile(this.template, this.templateData);
+      response.body = jade.renderFile(this.template, templateData);
     }
 
     else {

@@ -29,3 +29,25 @@ describe("Fetching JSON Documentation", () => {
     });
   });
 });
+
+describe("Fetching HTML Documentation", () => {
+  let res, Agent;
+
+  before(done => {
+    AgentPromise.then(A => {
+      Agent = A;
+      return Agent.request("GET", "/")
+        .accept("text/*")
+        .promise();
+    }, done).then(response => {
+      res = response;
+      done();
+    }).catch(done);
+  });
+
+  describe("Content Type", () => {
+    it("should be HTML", () => {
+      expect(res.headers["content-type"]).to.equal("text/html; charset=utf-8");
+    });
+  });
+});

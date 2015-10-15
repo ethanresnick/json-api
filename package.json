@@ -19,7 +19,7 @@
     "content-type": "1.x.x",
     "dasherize": "2.0.x",
     "flat": "^1.2.1",
-    "jade": "1.5.x",
+    "jade": "1.11.x",
     "lodash": "^3.10.0",
     "negotiator": "ethanresnick/negotiator#full-parse-access",
     "pluralize": "0.0.11",
