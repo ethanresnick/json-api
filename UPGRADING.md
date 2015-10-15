@@ -1,9 +1,10 @@
-# 2.11 -> 2.12 Breaking Changes (Not Semver until 3.0)
-- Tweak signature for Documentation.transformTypeInfo ([aac36d](https://github.com/ethanresnick/json-api/commit/aac36d57bb706a8125d6fb688090a8d2fe799239))
 
-# 2.10 -> 2.11 Breaking Changes (Not Semver until 3.0)
-- HTTP Strategies: If you were writing your own HTTP strategy (or extending the built-in Express one), you must make sure that your strategy calls the Documentation controller's `handle()` method with two additional arguments: the request and response objects from the framework your strategy is for (i.e. from express, koa, etc). The built-in express strategy has already [been patched](https://github.com/ethanresnick/json-api/commit/c658f7ba7ee4ac11f1976a763f1bdabf4b501e34#diff-fa4912ea43328f16ddff5fc0c1781fb5L59) to support this change.
-- Documentation controller: If you were using your own subclass of the Documentation controller, you must update it to be compatible with some [small new changes](https://github.com/ethanresnick/json-api/commit/c658f7ba7ee4ac11f1976a763f1bdabf4b501e34). In particular, a fourth constructor argument was added, and `handle()` now additionally calls the new `transformTypeInfo()` method.
+# 2.10 -> 2.13 Breaking Changes (Not Semver until 3.0)
+- Please don't use versions 2.11 and 2.12; the new features outlined below were tweaked repeatedly over those versions, and 2.13 is their (more) stable iteration. Moreover, it's just as easy to upgrade from 2.10 to 2.13 as it would be to upgrade to 2.11 or 2.12.
+
+- HTTP Strategies: If you are using your own HTTP strategy (including extending the built-in Express one), you must make sure that your strategy calls the Documentation controller's `handle()` method with two additional arguments: the request and response objects from the framework your strategy is for (i.e. from express, koa, etc). The built-in express strategy has already [been patched](https://github.com/ethanresnick/json-api/commit/c658f7ba7ee4ac11f1976a763f1bdabf4b501e34#diff-fa4912ea43328f16ddff5fc0c1781fb5L59) to support this change.
+
+- Documentation controller: If you are using your own subclass of the Documentation controller, you must update it to be compatible with some small changes made there. In particular, a fourth constructor argument was added, and `handle()` now additionally calls the new `transformTypeInfo()` method. See the [updated file](https://github.com/ethanresnick/json-api/blob/0525598b087e4de6fca9674540f5296054960ac9/src/controllers/Documentation.js) for details.
 
 # 2.9 -> 2.10 Breaking Changes (Not Semver until 3.0)
 - [Very subtle changes](https://github.com/ethanresnick/json-api/commit/19e16edfb58ee2b5f2573a9e2d1d09cb73d05050) to how the request body is parsed and stored on the request object. You almost certainly don’t need to care about these changes.
