@@ -27,6 +27,7 @@ before(function (done) {
       require("./fetch-collection");
       require("./create-resource");
       require("./delete-resource");
+      require("./documentation");
       done();
     }).done();
   });

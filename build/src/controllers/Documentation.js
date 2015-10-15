@@ -16,6 +16,14 @@ var _q = require("q");
 
 var _q2 = _interopRequireDefault(_q);
 
+var _lodash = require("lodash");
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+var _path = require("path");
+
+var _path2 = _interopRequireDefault(_path);
+
 var _jade = require("jade");
 
 var _jade2 = _interopRequireDefault(_jade);
@@ -24,13 +32,13 @@ var _negotiator = require("negotiator");
 
 var _negotiator2 = _interopRequireDefault(_negotiator);
 
-var _path = require("path");
-
-var _path2 = _interopRequireDefault(_path);
-
 var _dasherize = require("dasherize");
 
 var _dasherize2 = _interopRequireDefault(_dasherize);
+
+var _lodashObjectMapValues = require("lodash/object/mapValues");
+
+var _lodashObjectMapValues2 = _interopRequireDefault(_lodashObjectMapValues);
 
 var _typesHTTPResponse = require("../types/HTTP/Response");
 
@@ -52,11 +60,16 @@ var DocumentationController = (function () {
   function DocumentationController(registry, apiInfo, templatePath) {
     var _this = this;
 
+    var dasherizeJSONKeys = arguments.length <= 3 || arguments[3] === undefined ? true : arguments[3];
+
     _classCallCheck(this, DocumentationController);
+
+    this.registry = registry;
 
     var defaultTempPath = "../../../templates/documentation.jade";
     this.template = templatePath || _path2["default"].resolve(__dirname, defaultTempPath);
-    this.registry = registry;
+
+    this.dasherizeJSONKeys = dasherizeJSONKeys;
 
     // compute template data on construction
     // (it never changes, so this makes more sense than doing it per request)
@@ -74,7 +87,9 @@ var DocumentationController = (function () {
 
   _createClass(DocumentationController, [{
     key: "handle",
-    value: function handle(request) {
+    value: function handle(request, frameworkReq, frameworkRes) {
+      var _this2 = this;
+
       var response = new _typesHTTPResponse2["default"]();
       var negotiator = new _negotiator2["default"]({ headers: { accept: request.accepts } });
       var contentType = negotiator.mediaType(["text/html", "application/vnd.api+json"]);
@@ -83,6 +98,12 @@ var DocumentationController = (function () {
       response.contentType = contentType;
       response.headers.vary = "Accept";
 
+      // process templateData (just the type infos for now) for this particular request.
+      var templateData = _lodash2["default"].cloneDeep(this.templateData);
+      templateData.resourcesMap = (0, _lodashObjectMapValues2["default"])(templateData.resourcesMap, function (typeInfo) {
+        return _this2.transformTypeInfo(typeInfo, request, response, frameworkReq, frameworkRes);
+      });
+
       if (contentType.toLowerCase() === "text/html") {
         response.body = _jade2["default"].renderFile(this.template, this.templateData);
       } else {
@@ -90,10 +111,8 @@ var DocumentationController = (function () {
         var descriptionResources = new _typesCollection2["default"]();
 
         // Add a description resource for each resource type to the collection.
-        for (var type in this.templateData.resourcesMap) {
-          var typeInfo = this.templateData.resourcesMap[type];
-          var typeDescription = new _typesResource2["default"]("jsonapi-descriptions", type, (0, _dasherize2["default"])(typeInfo));
-          descriptionResources.add(typeDescription);
+        for (var type in templateData.resourcesMap) {
+          descriptionResources.add(new _typesResource2["default"]("jsonapi-descriptions", type, templateData.resourcesMap[type]));
         }
 
         response.body = new _typesDocument2["default"](descriptionResources).get(true);
@@ -165,6 +184,22 @@ var DocumentationController = (function () {
       if (info && info.description) result.description = info.description;
 
       return result;
+    }
+
+    /**
+     * By extending this function, users have an opportunity to transform
+     * the documentation info for each type based on the particulars of the
+     * current request. This is useful, among other things, for showing
+     * users documentation only for models they have access to, and it lays
+     * the groundwork for true HATEOS intro pages in the future.
+     */
+  }, {
+    key: "transformTypeInfo",
+    value: function transformTypeInfo(info, request, response, frameworkReq, frameworkRes) {
+      if (this.dasherizeJSONKeys && response.contentType === "application/vnd.api+json") {
+        return (0, _dasherize2["default"])(info);
+      }
+      return info;
     }
   }]);
 

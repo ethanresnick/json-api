@@ -102,7 +102,7 @@ var ExpressStrategy = (function () {
       var _this2 = this;
 
       buildRequestObject(req, this.config.tunnel).then(function (requestObject) {
-        return _this2.docs.handle(requestObject).then(function (responseObject) {
+        return _this2.docs.handle(requestObject, req, res).then(function (responseObject) {
           _this2.sendResources(responseObject, res, next);
         });
       })["catch"](function (err) {
