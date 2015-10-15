@@ -134,7 +134,7 @@ export default class DocumentationController {
   /**
    * By extending this function, users have an opportunity to transform
    * the documentation info for each type based on the particulars of the
-   * current request. This is useful, among other things, for showing 
+   * current request. This is useful, among other things, for showing
    * users documentation only for models they have access to, and it lays
    * the groundwork for true HATEOS intro pages in the future.
    */

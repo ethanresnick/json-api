@@ -25,7 +25,6 @@ describe("Fetching JSON Documentation", () => {
   describe("Document Structure", () => {
     it("should transform type info", () => {
       // the default transform dasherizes key names, so we just check for that.
-      console.log(res.body.data[0].attributes.fields)
       expect("friendly-name" in res.body.data[0].attributes.fields[0]).to.be.true;
     });
   });
