@@ -60,7 +60,7 @@ export default class DocumentationController {
       // Add a description resource for each resource type to the collection.
       for(let type in templateData.resourcesMap) {
         descriptionResources.add(
-          new Resource("jsonapi-descriptions", type, templateData.resourcesMap[type]);
+          new Resource("jsonapi-descriptions", type, templateData.resourcesMap[type])
         );
       }
 
