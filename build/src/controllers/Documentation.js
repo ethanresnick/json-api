@@ -6,6 +6,8 @@ var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default
 
 var _Object$assign = require("babel-runtime/core-js/object/assign")["default"];
 
+var _Object$setPrototypeOf = require("babel-runtime/core-js/object/set-prototype-of")["default"];
+
 var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
 
 Object.defineProperty(exports, "__esModule", {
@@ -88,10 +90,10 @@ var DocumentationController = (function () {
   /**
    * A function to pass to _.cloneDeep to customize the result.
    * Basically, it "pseudo-constructs" new instances of any objects
-   * that were instantiated with custom classes/constructor functions 
-   * before. It does this by making a plain object version of the 
-   * instance (i.e. it's local state as captured by it's enumerable 
-   * own properties) and setting the `.constructor` and [[Prototype]] 
+   * that were instantiated with custom classes/constructor functions
+   * before. It does this by making a plain object version of the
+   * instance (i.e. it's local state as captured by it's enumerable
+   * own properties) and setting the `.constructor` and [[Prototype]]
    * on that plain object. This isn't identical to constructing a new
    * instance of course, which could have other side-effects (and also
    * effects super() binding on real ES6 classes), but it's better than
@@ -223,7 +225,7 @@ exports["default"] = DocumentationController;
 function cloneCustomizer(value) {
   if (isCustomObject(value)) {
     var state = _lodash2["default"].cloneDeep(value);
-    state.__proto__ = value.__proto__;
+    _Object$setPrototypeOf(state, Object.getPrototypeOf(value));
     Object.defineProperty(state, "constructor", {
       "writable": true,
       "enumerable": false,
