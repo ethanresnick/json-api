@@ -44,7 +44,7 @@ export default class DocumentationController {
     response.headers.vary = "Accept";
 
     // process templateData (just the type infos for now) for this particular request.
-    let templateData = _.cloneDeep(this.templateData);
+    let templateData = _.cloneDeep(this.templateData, cloneCustomizer);
     templateData.resourcesMap = mapValues(templateData.resourcesMap, (typeInfo, typeName) => {
       return this.transformTypeInfo(typeName, typeInfo, request, response, frameworkReq, frameworkRes);
     });
@@ -144,4 +144,43 @@ export default class DocumentationController {
     }
     return info;
   }
+}
+
+/**
+ * A function to pass to _.cloneDeep to customize the result.
+ * Basically, it "pseudo-constructs" new instances of any objects
+ * that were instantiated with custom classes/constructor functions 
+ * before. It does this by making a plain object version of the 
+ * instance (i.e. it's local state as captured by it's enumerable 
+ * own properties) and setting the `.constructor` and [[Prototype]] 
+ * on that plain object. This isn't identical to constructing a new
+ * instance of course, which could have other side-effects (and also
+ * effects super() binding on real ES6 classes), but it's better than
+ * just using a plain object.
+ */
+function cloneCustomizer(value) {
+  if(isCustomObject(value)) {
+    let state = _.cloneDeep(value);
+    state.__proto__ = value.__proto__;
+    Object.defineProperty(state, "constructor", {
+      "writable": true,
+      "enumerable": false,
+      "value": value.constructor
+    });
+
+    // handle the possibiliy that a key in state was itself a non-plain object
+    for(let key in state) {
+      if(isCustomObject(value[key])) {
+        state[key] = _.cloneDeep(value[key], cloneCustomizer);
+      }
+    }
+
+    return state;
+  }
+
+  return undefined;
+}
+
+function isCustomObject(v) {
+  return v && typeof v === "object" && v.constructor !== Object && !Array.isArray(v);
 }
