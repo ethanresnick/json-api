@@ -66,8 +66,10 @@ html(lang='en')
 
               each field in orderedFields
                 - var fieldId = "resources-"+type+'-'+field.name
+                - var parentFields = modelInfo.parentType && resourcesMap[modelInfo.parentType].fields
                 - var isThisField = function(it) { return it.name === field.name; }
-                if !modelInfo.parentType || !resourcesMap[modelInfo.parentType].fields.some(isThisField)
+
+                if !modelInfo.parentType || !(parentFields && parentFields.some(isThisField))
                   tr
                     td
                       if field.validation.required
@@ -112,30 +114,35 @@ html(lang='en')
               do so will be  silently ignored, with the server-generated id being used instead. This implementation
               also does not yet support pagination.
 
-      section#resources
-        h2 Resource Types
-        each modelInfo, type in resourcesMap
-          //find the root nodes
-          if !modelInfo.parentType
-            +resource-doc(modelInfo, type)
-            each subType in modelInfo.childTypes
-              +resource-doc(resourcesMap[subType], subType)
+      block resource-descriptions
+        section#resources
+          h2 Resource Types
+          each modelInfo, type in resourcesMap
+            //find the root nodes
+            if !modelInfo.parentType
+              +resource-doc(modelInfo, type)
+              each subType in modelInfo.childTypes
+                +resource-doc(resourcesMap[subType], subType)
 
       section#footer
         block footer
 
-    nav
-      ul
-        li: a(href="#intro") Introduction
-        li: a(href="#overview") Usage Overview
-        li
-          h3.h4 Resource Types
-          ul
-            each modelInfo, type in resourcesMap
-              if !modelInfo.parentType
-                li
-                  a(href=("#resources-" + type))= modelInfo.name.model
-                  if modelInfo.childTypes.length > 0
-                    ul
-                      each subType in modelInfo.childTypes
-                        li: a(href=("#resources-" + subType))= resourcesMap[subType].name.model
+    block nav
+      nav
+        ul
+          block nav-intro
+            li: a(href="#intro") Introduction
+            li: a(href="#overview") Usage Overview
+
+          block nav-resource-types
+            li
+              h3.h4 Resource Types
+              ul
+                each modelInfo, type in resourcesMap
+                  if !modelInfo.parentType
+                    li
+                      a(href=("#resources-" + type))= modelInfo.name.model
+                      if modelInfo.childTypes.length > 0
+                        ul
+                          each subType in modelInfo.childTypes
+                            li: a(href=("#resources-" + subType))= resourcesMap[subType].name.model
