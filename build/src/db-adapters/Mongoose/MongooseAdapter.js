@@ -664,7 +664,7 @@ var MongooseAdapter = (function () {
         // Add validation info
         var validationRules = {
           required: !!type.options.required,
-          oneOf: baseTypeOptions["enum"] ? baseTypeOptions["enum"].values : undefined,
+          oneOf: baseTypeOptions["enum"] ? type.enumValues || type.caster && type.caster.enumValues : undefined,
           max: type.options.max || undefined
         };
 
