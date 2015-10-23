@@ -102,7 +102,7 @@ var Document = (function () {
 exports["default"] = Document;
 
 function linkageToJSON(linkage) {
-  return linkage.value;
+  return linkage && linkage.value;
 }
 
 function relationshipObjectToJSON(linkObject, urlTemplates, templateData) {
