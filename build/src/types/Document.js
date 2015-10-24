@@ -102,18 +102,21 @@ var Document = (function () {
 exports["default"] = Document;
 
 function linkageToJSON(linkage) {
-  return linkage.value;
+  return linkage && linkage.value;
 }
 
-function relationshipObjectToJSON(linkObject, urlTemplates, templateData) {
-  var result = {
-    "data": linkageToJSON(linkObject.linkage)
-  };
+function relationshipToJSON(relationship, urlTemplates, templateData) {
+  var result = {};
+
+  if (relationship.linkage) {
+    result.data = linkageToJSON(relationship.linkage);
+  }
 
   // Add urls that we can.
   if (urlTemplates[templateData.ownerType]) {
-    var relatedUrlTemplate = urlTemplates[templateData.ownerType].related;
-    var selfUrlTemplate = urlTemplates[templateData.ownerType].relationship;
+    var relatedUrlTemplate = relationship.relatedURITemplate ? _urlTemplate2["default"].parse(relationship.relatedURITemplate) : urlTemplates[templateData.ownerType].related;
+
+    var selfUrlTemplate = relationship.selfURITemplate ? _urlTemplate2["default"].parse(relationship.selfURITemplate) : urlTemplates[templateData.ownerType].relationship;
 
     if (relatedUrlTemplate || selfUrlTemplate) {
       result.links = {};
@@ -158,7 +161,7 @@ function resourceToJSON(resource, urlTemplates) {
 
     for (var path in resource.relationships) {
       var linkTemplateData = { "ownerType": json.type, "ownerId": json.id, "path": path };
-      json.relationships[path] = relationshipObjectToJSON(resource.relationships[path], urlTemplates, linkTemplateData);
+      json.relationships[path] = relationshipToJSON(resource.relationships[path], urlTemplates, linkTemplateData);
     }
   }
 

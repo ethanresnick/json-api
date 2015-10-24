@@ -22,9 +22,9 @@ var _srcTypesLinkage = require("../../../../src/types/Linkage");
 
 var _srcTypesLinkage2 = _interopRequireDefault(_srcTypesLinkage);
 
-var _srcTypesRelationshipObject = require("../../../../src/types/RelationshipObject");
+var _srcTypesRelationship = require("../../../../src/types/Relationship");
 
-var _srcTypesRelationshipObject2 = _interopRequireDefault(_srcTypesRelationshipObject);
+var _srcTypesRelationship2 = _interopRequireDefault(_srcTypesRelationship);
 
 var expect = _chai2["default"].expect;
 
@@ -75,7 +75,7 @@ describe("Resource Parser", function () {
       });
     });
 
-    it("should create RelationshipObjects/Linkage for each link", function (done) {
+    it("should create Relationship/Linkage for each link", function (done) {
       var parents = [{ "type": "people", "id": "1" }, { "type": "people", "id": "2" }];
       var json = {
         "id": "3", "type": "people",
@@ -85,7 +85,7 @@ describe("Resource Parser", function () {
       };
 
       (0, _srcStepsPreQueryParseRequestPrimary2["default"])(json).then(function (resource) {
-        expect(resource.relationships.parents).to.be["instanceof"](_srcTypesRelationshipObject2["default"]);
+        expect(resource.relationships.parents).to.be["instanceof"](_srcTypesRelationship2["default"]);
         expect(resource.relationships.parents.linkage).to.be["instanceof"](_srcTypesLinkage2["default"]);
         expect(resource.relationships.parents.linkage.value).to.deep.equal(parents);
         done();
