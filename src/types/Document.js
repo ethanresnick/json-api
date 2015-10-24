@@ -67,18 +67,25 @@ export default class Document {
 }
 
 function linkageToJSON(linkage) {
-  return linkage.value;
+  return linkage && linkage.value;
 }
 
-function relationshipObjectToJSON(linkObject, urlTemplates, templateData) {
-  let result = {
-    "data": linkageToJSON(linkObject.linkage)
-  };
+function relationshipToJSON(relationship, urlTemplates, templateData) {
+  let result = {};
+
+  if(relationship.linkage) {
+    result.data = linkageToJSON(relationship.linkage);
+  }
 
   // Add urls that we can.
   if(urlTemplates[templateData.ownerType]) {
-    let relatedUrlTemplate = urlTemplates[templateData.ownerType].related;
-    let selfUrlTemplate = urlTemplates[templateData.ownerType].relationship;
+    const relatedUrlTemplate = relationship.relatedURITemplate ?
+      templating.parse(relationship.relatedURITemplate) :
+      urlTemplates[templateData.ownerType].related;
+
+    const selfUrlTemplate = relationship.selfURITemplate ?
+      templating.parse(relationship.selfURITemplate) :
+      urlTemplates[templateData.ownerType].relationship;
 
     if(relatedUrlTemplate || selfUrlTemplate) {
       result.links = {};
@@ -123,7 +130,7 @@ function resourceToJSON(resource, urlTemplates) {
 
     for(let path in resource.relationships) {
       let linkTemplateData = {"ownerType": json.type, "ownerId": json.id, "path": path};
-      json.relationships[path] = relationshipObjectToJSON(resource.relationships[path], urlTemplates, linkTemplateData);
+      json.relationships[path] = relationshipToJSON(resource.relationships[path], urlTemplates, linkTemplateData);
     }
   }
 

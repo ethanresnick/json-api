@@ -1,6 +1,6 @@
 {
   "name": "json-api",
-  "version": "2.13.1",
+  "version": "2.14.0",
   "description": "A library for constructing JSON-API compliant responses",
   "homepage": "https://github.com/ethanresnick/json-api",
   "repository": {
@@ -33,6 +33,7 @@
     "babel-eslint": "3.x.x",
     "chai": "^1.9.2",
     "coveralls": "^2.11.4",
+    "chai-subset": "^1.1.0",
     "eslint": "0.x.x",
     "express": "4.x.x",
     "gulp": "^3.8.6",

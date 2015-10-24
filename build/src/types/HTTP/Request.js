@@ -60,7 +60,7 @@ var Request = function Request() {
   // Whether the target of the request is a relationship (object), as opposed
   // to a resource object or collection. This effects how incoming data is
   // parsed. Note: the body of the request will be Linkage rather than
-  // RelationshipObjects, in the same way that POSTs targeting a collection
+  // Relationships, in the same way that POSTs targeting a collection
   // include a single resource.
   this.aboutRelationship = false;
 

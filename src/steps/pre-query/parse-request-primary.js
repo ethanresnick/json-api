@@ -1,7 +1,7 @@
 import Q from "q";
 import APIError from "../../types/APIError";
 import Resource from "../../types/Resource";
-import RelationshipObject from "../../types/RelationshipObject";
+import Relationship from "../../types/Relationship";
 import Linkage from "../../types/Linkage";
 import Collection from "../../types/Collection";
 
@@ -35,12 +35,12 @@ export default function(data, parseAsLinkage) {
   });
 }
 
-function relationshipObjectFromJSON(json) {
+function relationshipFromJSON(json) {
   if (typeof json.data === "undefined") {
     throw new APIError(400, undefined, `Missing relationship linkage.`);
   }
 
-  return new RelationshipObject(linkageFromJSON(json.data));
+  return new Relationship(linkageFromJSON(json.data));
 }
 
 function linkageFromJSON(json) {
@@ -50,11 +50,11 @@ function linkageFromJSON(json) {
 function resourceFromJSON(json) {
   let relationships = json.relationships || {};
 
-  //build RelationshipObjects
+  //build Relationships
   let key;
   try {
     for(key in relationships) {
-      relationships[key] = relationshipObjectFromJSON(relationships[key], key);
+      relationships[key] = relationshipFromJSON(relationships[key], key);
     }
   }
   catch (e) {

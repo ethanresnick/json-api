@@ -54,9 +54,9 @@ var _typesLinkage = require("../../types/Linkage");
 
 var _typesLinkage2 = _interopRequireDefault(_typesLinkage);
 
-var _typesRelationshipObject = require("../../types/RelationshipObject");
+var _typesRelationship = require("../../types/Relationship");
 
-var _typesRelationshipObject2 = _interopRequireDefault(_typesRelationshipObject);
+var _typesRelationship2 = _interopRequireDefault(_typesRelationship);
 
 var _typesAPIError = require("../../types/APIError");
 
@@ -540,11 +540,11 @@ var MongooseAdapter = (function () {
         (0, _utilMisc.deleteNested)(path, attrs);
 
         // Now, since the value wasn't excluded, we need to build its
-        // RelationshipObject. Note: the value could still be null or an empty
-        // array. And, because of of population, it could be a single document or
-        // array of documents, in addition to a single/array of ids. So, as is
-        // customary, we'll start by coercing it to an array no matter what,
-        // tracking whether to make it a non-array at the end, to simplify our code.
+        // Relationship. Note: the value could still be null or an empty array.
+        // And, because of population, it could be a single document or array of
+        // documents, in addition to a single/array of ids. So, as is customary,
+        // we'll start by coercing it to an array no matter what, tracking
+        // whether to make it a non-array at the end, to simplify our code.
         var isToOneRelationship = false;
 
         if (!Array.isArray(jsonValAtPath)) {
@@ -569,7 +569,7 @@ var MongooseAdapter = (function () {
 
         // go back from an array if neccessary and save.
         linkage = new _typesLinkage2["default"](isToOneRelationship ? linkage[0] : linkage);
-        relationships[path] = new _typesRelationshipObject2["default"](linkage);
+        relationships[path] = new _typesRelationship2["default"](linkage);
       });
 
       // finally, create the resource.
