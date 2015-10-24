@@ -3,7 +3,7 @@ import parsePrimary from "../../../../src/steps/pre-query/parse-request-primary"
 import Resource from "../../../../src/types/Resource";
 import Collection from "../../../../src/types/Collection";
 import Linkage from "../../../../src/types/Linkage";
-import RelationshipObject from "../../../../src/types/RelationshipObject";
+import Relationship from "../../../../src/types/Relationship";
 
 const expect = chai.expect;
 
@@ -56,7 +56,7 @@ describe("Resource Parser", () => {
       });
     });
 
-    it("should create RelationshipObjects/Linkage for each link", (done) => {
+    it("should create Relationship/Linkage for each link", (done) => {
       const parents = [
         {"type": "people", "id": "1"}, {"type": "people", "id": "2"}
       ];
@@ -68,7 +68,7 @@ describe("Resource Parser", () => {
       };
 
       parsePrimary(json).then((resource) => {
-        expect(resource.relationships.parents).to.be.instanceof(RelationshipObject);
+        expect(resource.relationships.parents).to.be.instanceof(Relationship);
         expect(resource.relationships.parents.linkage).to.be.instanceof(Linkage);
         expect(resource.relationships.parents.linkage.value).to.deep.equal(parents);
         done();
