@@ -26,6 +26,10 @@ var _typesDocument = require("../types/Document");
 
 var _typesDocument2 = _interopRequireDefault(_typesDocument);
 
+var _typesResource = require("../types/Resource");
+
+var _typesResource2 = _interopRequireDefault(_typesResource);
+
 var _typesCollection = require("../types/Collection");
 
 var _typesCollection2 = _interopRequireDefault(_typesCollection);
@@ -118,7 +122,7 @@ var APIController = (function () {
 
       // Kick off the chain for generating the response.
       return (0, _co2["default"])(_regeneratorRuntime.mark(function callee$2$0() {
-        var parsedPrimary, mappedLabel, mappedIsEmptyArray, errorsArr, apiErrors;
+        var parsedPrimary, mappedLabel, mappedIsEmptyArray, toTransform, errorsArr, apiErrors;
         return _regeneratorRuntime.wrap(function callee$2$0$(context$3$0) {
           while (1) switch (context$3$0.prev = context$3$0.next) {
             case 0:
@@ -210,46 +214,65 @@ var APIController = (function () {
               }
 
             case 32:
+              if (!(request.method === "delete")) {
+                context$3$0.next = 37;
+                break;
+              }
+
+              toTransform = undefined;
+
+              if (Array.isArray(request.idOrIds)) {
+                toTransform = new _typesCollection2["default"](request.idOrIds.map(function (id) {
+                  return new _typesResource2["default"](request.type, id);
+                }));
+              } else if (typeof request.idOrIds === "string") {
+                toTransform = new _typesResource2["default"](request.type, request.idOrIds);
+              }
+
+              context$3$0.next = 37;
+              return (0, _stepsApplyTransform2["default"])(toTransform, "beforeDelete", registry, frameworkReq, frameworkRes);
+
+            case 37:
               if (!(typeof response.primary === "undefined")) {
-                context$3$0.next = 47;
+                context$3$0.next = 52;
                 break;
               }
 
               context$3$0.t0 = request.method;
-              context$3$0.next = context$3$0.t0 === "get" ? 36 : context$3$0.t0 === "post" ? 39 : context$3$0.t0 === "patch" ? 42 : context$3$0.t0 === "delete" ? 45 : 47;
+              context$3$0.next = context$3$0.t0 === "get" ? 41 : context$3$0.t0 === "post" ? 44 : context$3$0.t0 === "patch" ? 47 : context$3$0.t0 === "delete" ? 50 : 52;
               break;
-
-            case 36:
-              context$3$0.next = 38;
-              return (0, _stepsDoQueryDoGet2["default"])(request, response, registry);
-
-            case 38:
-              return context$3$0.abrupt("break", 47);
-
-            case 39:
-              context$3$0.next = 41;
-              return (0, _stepsDoQueryDoPost2["default"])(request, response, registry);
 
             case 41:
-              return context$3$0.abrupt("break", 47);
+              context$3$0.next = 43;
+              return (0, _stepsDoQueryDoGet2["default"])(request, response, registry);
 
-            case 42:
-              context$3$0.next = 44;
-              return (0, _stepsDoQueryDoPatch2["default"])(request, response, registry);
+            case 43:
+              return context$3$0.abrupt("break", 52);
 
             case 44:
-              return context$3$0.abrupt("break", 47);
+              context$3$0.next = 46;
+              return (0, _stepsDoQueryDoPost2["default"])(request, response, registry);
 
-            case 45:
-              context$3$0.next = 47;
-              return (0, _stepsDoQueryDoDelete2["default"])(request, response, registry);
+            case 46:
+              return context$3$0.abrupt("break", 52);
 
             case 47:
-              context$3$0.next = 55;
-              break;
+              context$3$0.next = 49;
+              return (0, _stepsDoQueryDoPatch2["default"])(request, response, registry);
 
             case 49:
-              context$3$0.prev = 49;
+              return context$3$0.abrupt("break", 52);
+
+            case 50:
+              context$3$0.next = 52;
+              return (0, _stepsDoQueryDoDelete2["default"])(request, response, registry);
+
+            case 52:
+              context$3$0.next = 60;
+              break;
+
+            case 54:
+              context$3$0.prev = 54;
               context$3$0.t1 = context$3$0["catch"](0);
               errorsArr = Array.isArray(context$3$0.t1) ? context$3$0.t1 : [context$3$0.t1];
               apiErrors = errorsArr.map(_typesAPIError2["default"].fromError);
@@ -265,9 +288,9 @@ var APIController = (function () {
               response.errors = response.errors.concat(apiErrors);
               //console.log("API CONTROLLER ERRORS", errorsArr[0], errorsArr[0].stack);
 
-            case 55:
+            case 60:
               if (!response.errors.length) {
-                context$3$0.next = 59;
+                context$3$0.next = 64;
                 break;
               }
 
@@ -277,16 +300,16 @@ var APIController = (function () {
               response.body = new _typesDocument2["default"](response.errors).get(true);
               return context$3$0.abrupt("return", response);
 
-            case 59:
-              context$3$0.next = 61;
+            case 64:
+              context$3$0.next = 66;
               return (0, _stepsApplyTransform2["default"])(response.primary, "beforeRender", registry, frameworkReq, frameworkRes);
 
-            case 61:
+            case 66:
               response.primary = context$3$0.sent;
-              context$3$0.next = 64;
+              context$3$0.next = 69;
               return (0, _stepsApplyTransform2["default"])(response.included, "beforeRender", registry, frameworkReq, frameworkRes);
 
-            case 64:
+            case 69:
               response.included = context$3$0.sent;
 
               if (response.status !== 204) {
@@ -295,11 +318,11 @@ var APIController = (function () {
 
               return context$3$0.abrupt("return", response);
 
-            case 67:
+            case 72:
             case "end":
               return context$3$0.stop();
           }
-        }, callee$2$0, this, [[0, 49]]);
+        }, callee$2$0, this, [[0, 54]]);
       }));
     }
 

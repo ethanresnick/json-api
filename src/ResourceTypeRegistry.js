@@ -7,7 +7,7 @@ import merge from "lodash/object/merge";
  * whose property is being retrieved/set, and the value to set it to, if any.
  */
 const autoGetterSetterProps = ["dbAdapter", "beforeSave", "beforeRender",
-  "labelMappers", "defaultIncludes", "info", "parentType"];
+  "beforeDelete", "labelMappers", "defaultIncludes", "info", "parentType"];
 
 /**
  * Global defaults for resource descriptions, to be merged into defaults

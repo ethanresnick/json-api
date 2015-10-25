@@ -24,7 +24,7 @@ var _lodashObjectMerge2 = _interopRequireDefault(_lodashObjectMerge);
  * following same format. Those getters/setters will take the resource type
  * whose property is being retrieved/set, and the value to set it to, if any.
  */
-var autoGetterSetterProps = ["dbAdapter", "beforeSave", "beforeRender", "labelMappers", "defaultIncludes", "info", "parentType"];
+var autoGetterSetterProps = ["dbAdapter", "beforeSave", "beforeRender", "beforeDelete", "labelMappers", "defaultIncludes", "info", "parentType"];
 
 /**
  * Global defaults for resource descriptions, to be merged into defaults

@@ -77,6 +77,8 @@ To use this library, you describe the special behavior (if any) that resources o
 
 - <a name="before-save"></a>`beforeSave` (optional): a function called on each resource provided by the client (i.e. in a `POST` or `PATCH` request) before it's sent to the adapter for saving. You can transform the data here as necessary or pre-emptively reject the request. [Usage details](https://github.com/ethanresnick/json-api-example/blob/master/src/resource-descriptions/people.js#L25).
 
+- <a name="before-delete"></a>`beforeDelete` (optional): a function called on each resource to be deleted, allowing you to throw an error if the action is not allowed. See [Handling Errors](#handling-errors) for more information.
+
 - <a name="labels"></a>`labelMappers` (optional): this lets you create urls (or, in REST terminology, resources) that map to different database items over time. For example, you could have an `/events/upcoming` resource or a `/users/me` resource. In those examples, "upcoming" and "me" are called the labels and, in labelMappers, you provide a function that maps each label to the proper database id(s) at any given time. The function can return a Promise if needed.
 
 - <a name="parentType"></a>`parentType` (optional): this allows you to designate one resource type being a sub-type of another (its `parentType`). This is often used when you have two resource types that live in the same database table/collection, and their type is determined with a discriminator key. See the [`schools` type](https://github.com/ethanresnick/json-api-example/blob/master/src/resource-descriptions/schools.js#L2) in the example repository.
@@ -106,6 +108,20 @@ Please note however that as these operators are Mongo-specific, they may be repl
 This library gives you a Front controller (shown in the example) that can handle requests for API results or for the documentation. But the library doesn't prescribe how requests get to this controller. This allows you to use any url scheme, routing layer, or authentication system you already have in place. You just need to make sure that: `req.params.type` reflects the requested resource type; `req.params.id` or (if you want to allow labels on a request) `req.params.idOrLabel` reflects the requested id, if any; and `req.params.relationship` reflects the relationship name, in the event that the user is requesting a relationship url.
 
 In the example above, routing is handled with Express's built-in `app[VERB]` methods, and the three parameters are set properly using express's built-in `:param` syntax. If you're looking for something more robust, you might be interested in [Express Simple Router](https://github.com/ethanresnick/express-simple-router). For authentication, check out [Express Simple Firewall](https://github.com/ethanresnick/express-simple-firewall).
+
+## Handling Errors
+
+This library provides an error contructor and a handler that you can use to return JSON API-compliant errors to the user. For an example, please see the [example repo](https://github.com/ethanresnick/json-api-example/blob/master/src/index.js#L64).
+
+You can also throw an APIError inside `beforeSave`, `beforeRender`, and `beforeDelete` transforms to cancel the request.
+
+```javascript
+beforeDelete: function(resource, req, res, superFn) {
+  if (req.user.role !== "admin") {
+    throw APIError(403, undefined, "You are not allowed to delete this resource.");
+  }
+}
+```
 
 ## Database Adapters
 An adapter handles all the interaction with the database. It is responsible for turning requests into standard [`Resource`](https://github.com/ethanresnick/json-api/blob/master/src/types/Resource.js) or [`Collection`](https://github.com/ethanresnick/json-api/blob/master/src/types/Collection.js) objects that the rest of the library will use. See the built-in [MongooseAdapter](https://github.com/ethanresnick/json-api/blob/master/src/db-adapters/Mongoose/MongooseAdapter.js) for an example.

@@ -8,28 +8,31 @@ var _appAgent = require("../../app/agent");
 
 var _appAgent2 = _interopRequireDefault(_appAgent);
 
-var _fixturesCreation = require("../fixtures/creation");
+describe("Delete Resource", function () {
+  var Agent = undefined;
 
-describe("Deleting a resource", function () {
-
-  var Agent = undefined,
-      id = undefined;
   before(function (done) {
     _appAgent2["default"].then(function (A) {
       Agent = A;
-      return Agent.request("POST", "/schools").type("application/vnd.api+json").send({ "data": _fixturesCreation.VALID_SCHOOL_RESOURCE_NO_ID }).promise().then(function (response) {
-        id = response.body.data.id;
-        return Agent.request("DEL", "/schools/" + id).type("application/vnd.api+json").send().promise();
-      }, done).then(function () {
-        return done();
-      }, done);
-    }, done)["catch"](done);
-  });
-
-  it("should delete a resource by id", function (done) {
-    Agent.request("GET", "/schools/" + id).accept("application/vnd.api+json").promise().then(done, function (err) {
-      (0, _chai.expect)(err.response.statusCode).to.equal(404);
       done();
     })["catch"](done);
+  });
+
+  describe("Valid deletion", function () {
+    it("should return 204", function (done) {
+      Agent.request("DEL", "/organizations/54419d550a5069a2129ef255").promise().then(function (res) {
+        (0, _chai.expect)(res.status).to.equal(204);
+        done();
+      })["catch"](done);
+    });
+  });
+
+  describe("Invalid deletion", function () {
+    it("should return 403", function (done) {
+      Agent.request("DEL", "/schools/53f54dd98d1e62ff12539db4").promise().then(done, function (err) {
+        (0, _chai.expect)(err.status).to.equal(403);
+        done();
+      })["catch"](done);
+    });
   });
 });
