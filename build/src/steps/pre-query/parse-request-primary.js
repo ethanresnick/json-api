@@ -18,9 +18,9 @@ var _typesResource = require("../../types/Resource");
 
 var _typesResource2 = _interopRequireDefault(_typesResource);
 
-var _typesRelationshipObject = require("../../types/RelationshipObject");
+var _typesRelationship = require("../../types/Relationship");
 
-var _typesRelationshipObject2 = _interopRequireDefault(_typesRelationshipObject);
+var _typesRelationship2 = _interopRequireDefault(_typesRelationship);
 
 var _typesLinkage = require("../../types/Linkage");
 
@@ -52,12 +52,12 @@ exports["default"] = function (data, parseAsLinkage) {
   });
 };
 
-function relationshipObjectFromJSON(json) {
+function relationshipFromJSON(json) {
   if (typeof json.data === "undefined") {
     throw new _typesAPIError2["default"](400, undefined, "Missing relationship linkage.");
   }
 
-  return new _typesRelationshipObject2["default"](linkageFromJSON(json.data));
+  return new _typesRelationship2["default"](linkageFromJSON(json.data));
 }
 
 function linkageFromJSON(json) {
@@ -67,11 +67,11 @@ function linkageFromJSON(json) {
 function resourceFromJSON(json) {
   var relationships = json.relationships || {};
 
-  //build RelationshipObjects
+  //build Relationships
   var key = undefined;
   try {
     for (key in relationships) {
-      relationships[key] = relationshipObjectFromJSON(relationships[key], key);
+      relationships[key] = relationshipFromJSON(relationships[key], key);
     }
   } catch (e) {
     e.details = "No data was found for the " + key + " relationship.";

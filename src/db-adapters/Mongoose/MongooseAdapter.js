@@ -8,7 +8,7 @@ import pluralize from "pluralize";
 import Resource from "../../types/Resource";
 import Collection from "../../types/Collection";
 import Linkage from "../../types/Linkage";
-import RelationshipObject from "../../types/RelationshipObject";
+import Relationship from "../../types/Relationship";
 import APIError from "../../types/APIError";
 import FieldDocumentation from "../../types/Documentation/Field";
 import FieldTypeDocumentation from "../../types/Documentation/FieldType";
@@ -429,11 +429,11 @@ export default class MongooseAdapter {
       deleteNested(path, attrs);
 
       // Now, since the value wasn't excluded, we need to build its
-      // RelationshipObject. Note: the value could still be null or an empty
-      // array. And, because of of population, it could be a single document or
-      // array of documents, in addition to a single/array of ids. So, as is
-      // customary, we'll start by coercing it to an array no matter what,
-      // tracking whether to make it a non-array at the end, to simplify our code.
+      // Relationship. Note: the value could still be null or an empty array.
+      // And, because of population, it could be a single document or array of
+      // documents, in addition to a single/array of ids. So, as is customary,
+      // we'll start by coercing it to an array no matter what, tracking
+      // whether to make it a non-array at the end, to simplify our code.
       let isToOneRelationship = false;
 
       if(!Array.isArray(jsonValAtPath)) {
@@ -460,7 +460,7 @@ export default class MongooseAdapter {
 
       // go back from an array if neccessary and save.
       linkage = new Linkage(isToOneRelationship ? linkage[0] : linkage);
-      relationships[path] = new RelationshipObject(linkage);
+      relationships[path] = new Relationship(linkage);
     });
 
     // finally, create the resource.
@@ -541,7 +541,7 @@ export default class MongooseAdapter {
       // Add validation info
       let validationRules = {
         required: !!type.options.required,
-        oneOf: baseTypeOptions.enum ? baseTypeOptions.enum.values : undefined,
+        oneOf: baseTypeOptions.enum ? type.enumValues || (type.caster && type.caster.enumValues) : undefined,
         max: type.options.max || undefined
       };
 

@@ -1,3 +1,6 @@
+# 2.13 -> 2.14 Breaking Changes (Not Semver until 3.0)
+- If you were relying on the RelationshipObject class: the class has been renamed to simply "Relationship", and its fields `selfURI` and `relatedURI` have been renamed to `selfURITemplate` and `relatedURITemplate` respectively.
+- URI Templates specified on a single Relationship instance now take precedence over resource-level templates during serialization
 
 # 2.10 -> 2.13 Breaking Changes (Not Semver until 3.0)
 - Please don't use versions 2.11 and 2.12; the new features outlined below were tweaked repeatedly over those versions, and 2.13 is their (more) stable iteration. Moreover, it's just as easy to upgrade from 2.10 to 2.13 as it would be to upgrade to 2.11 or 2.12.

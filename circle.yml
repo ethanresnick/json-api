@@ -1,3 +1,4 @@
 test:
   post:
     - make lint
+    - npm run cover_ci

@@ -1,5 +1,6 @@
 import {expect} from "chai";
 import APIError from "../../../../src/types/APIError";
+import mongoose from "mongoose";
 import MongooseAdapter from "../../../../src/db-adapters/Mongoose/MongooseAdapter";
 
 describe("Mongoose Adapter", () => {
@@ -130,6 +131,79 @@ describe("Mongoose Adapter", () => {
 
       it("should accpet valid hex string", () => {
         expect(MongooseAdapter.idIsValid("552c5e1c604d41e5836bb175")).to.be.ok;
+      });
+    });
+
+    describe("getStandardizedSchema", () => {
+      let schemaRaw;
+      let standardizedSchema;
+
+      before(() => {
+        schemaRaw = {
+          "valuesEnum": {
+            type: String,
+            enum: {
+              values: ["c", "d"]
+            }
+          },
+          "noValuesEnum": {
+            type: String,
+            enum: ["a", "b"]
+          },
+          "arrayValuesEnum": [{
+            type: String,
+            enum: {
+              values: ["e", "f"]
+            }
+          }],
+          "arrayNoValuesEnum": [{
+            type: String,
+            enum: ["g", "h"]
+          }],
+          "nonEnumNumber": {
+            type: Number,
+            default: 4
+          },
+          "nonEnumString": {
+            type: String,
+            default: 4
+          },
+          "arrayNonEnum": [{
+            type: Number
+          }]
+        };
+
+        // need to compile it, as a schema and a model, before reading.
+        const model = mongoose.model("Test", mongoose.Schema(schemaRaw)); //eslint-disable-line new-cap
+        standardizedSchema = MongooseAdapter.getStandardizedSchema(model);
+      });
+
+      after(() => {
+        delete mongoose.models.Test;
+      });
+
+      it("should return an array of fields", () => {
+        const expectedFieldCount = Object.keys(schemaRaw).length + 1; //+1 for _id
+
+        expect(standardizedSchema).to.be.an("array");
+        expect(standardizedSchema).to.have.length(expectedFieldCount);
+      });
+
+      it("should work with all the ways of declaring enums", () => {
+        const fields = standardizedSchema.reduce((prev, field) => {
+          prev[field.name] = field; return prev;
+        }, {});
+
+        // Mongoose only supports the enum validator on string fields, but it
+        // supports it with two different declaration syntaxes and for single
+        // strings or arrays of strings. That leads to four formats to test.
+        expect(fields.valuesEnum.validation.oneOf).to.deep.equal(["c", "d"]);
+        expect(fields.noValuesEnum.validation.oneOf).to.deep.equal(["a", "b"]);
+        expect(fields.arrayValuesEnum.validation.oneOf).to.deep.equal(["e", "f"]);
+        expect(fields.arrayNoValuesEnum.validation.oneOf).to.deep.equal(["g", "h"]);
+        expect(fields.nonEnumNumber.validation.oneOf).to.be.undefined;
+        expect(fields.nonEnumString.validation.oneOf).to.be.undefined;
+        expect(fields.arrayNonEnum.validation.oneOf).to.be.undefined;
       });
     });
   });

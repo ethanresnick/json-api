@@ -19,7 +19,7 @@ test:
 	npm test
 
 coverage:
-	npm run cover
+	npm run cover_local
 	open coverage/lcov-report/index.html
 
 compile-dev-src:

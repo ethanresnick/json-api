@@ -1,5 +1,7 @@
 "use strict";
 
+var _Object$keys = require("babel-runtime/core-js/object/keys")["default"];
+
 var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
 
 var _chai = require("chai");
@@ -7,6 +9,10 @@ var _chai = require("chai");
 var _srcTypesAPIError = require("../../../../src/types/APIError");
 
 var _srcTypesAPIError2 = _interopRequireDefault(_srcTypesAPIError);
+
+var _mongoose = require("mongoose");
+
+var _mongoose2 = _interopRequireDefault(_mongoose);
 
 var _srcDbAdaptersMongooseMongooseAdapter = require("../../../../src/db-adapters/Mongoose/MongooseAdapter");
 
@@ -150,6 +156,79 @@ describe("Mongoose Adapter", function () {
 
       it("should accpet valid hex string", function () {
         (0, _chai.expect)(_srcDbAdaptersMongooseMongooseAdapter2["default"].idIsValid("552c5e1c604d41e5836bb175")).to.be.ok;
+      });
+    });
+
+    describe("getStandardizedSchema", function () {
+      var schemaRaw = undefined;
+      var standardizedSchema = undefined;
+
+      before(function () {
+        schemaRaw = {
+          "valuesEnum": {
+            type: String,
+            "enum": {
+              values: ["c", "d"]
+            }
+          },
+          "noValuesEnum": {
+            type: String,
+            "enum": ["a", "b"]
+          },
+          "arrayValuesEnum": [{
+            type: String,
+            "enum": {
+              values: ["e", "f"]
+            }
+          }],
+          "arrayNoValuesEnum": [{
+            type: String,
+            "enum": ["g", "h"]
+          }],
+          "nonEnumNumber": {
+            type: Number,
+            "default": 4
+          },
+          "nonEnumString": {
+            type: String,
+            "default": 4
+          },
+          "arrayNonEnum": [{
+            type: Number
+          }]
+        };
+
+        // need to compile it, as a schema and a model, before reading.
+        var model = _mongoose2["default"].model("Test", _mongoose2["default"].Schema(schemaRaw)); //eslint-disable-line new-cap
+        standardizedSchema = _srcDbAdaptersMongooseMongooseAdapter2["default"].getStandardizedSchema(model);
+      });
+
+      after(function () {
+        delete _mongoose2["default"].models.Test;
+      });
+
+      it("should return an array of fields", function () {
+        var expectedFieldCount = _Object$keys(schemaRaw).length + 1; //+1 for _id
+
+        (0, _chai.expect)(standardizedSchema).to.be.an("array");
+        (0, _chai.expect)(standardizedSchema).to.have.length(expectedFieldCount);
+      });
+
+      it("should work with all the ways of declaring enums", function () {
+        var fields = standardizedSchema.reduce(function (prev, field) {
+          prev[field.name] = field;return prev;
+        }, {});
+
+        // Mongoose only supports the enum validator on string fields, but it
+        // supports it with two different declaration syntaxes and for single
+        // strings or arrays of strings. That leads to four formats to test.
+        (0, _chai.expect)(fields.valuesEnum.validation.oneOf).to.deep.equal(["c", "d"]);
+        (0, _chai.expect)(fields.noValuesEnum.validation.oneOf).to.deep.equal(["a", "b"]);
+        (0, _chai.expect)(fields.arrayValuesEnum.validation.oneOf).to.deep.equal(["e", "f"]);
+        (0, _chai.expect)(fields.arrayNoValuesEnum.validation.oneOf).to.deep.equal(["g", "h"]);
+        (0, _chai.expect)(fields.nonEnumNumber.validation.oneOf).to.be.undefined;
+        (0, _chai.expect)(fields.nonEnumString.validation.oneOf).to.be.undefined;
+        (0, _chai.expect)(fields.arrayNonEnum.validation.oneOf).to.be.undefined;
       });
     });
   });

@@ -20,6 +20,8 @@ module.exports = {
     Document: require('./build/src/types/Document'),
     Error: require('./build/src/types/APIError'),
     Resource: require('./build/src/types/Resource'),
+    Relationship: require('./build/src/types/Relationship'),
+    Linkage: require('./build/src/types/Linkage'),
     Documentation: {
       Field: require('./build/src/types/Documentation/Field'),
       FieldType: require('./build/src/types/Documentation/FieldType')
