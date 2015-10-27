@@ -23,10 +23,10 @@ module.exports = {
     }
   },
 
-  beforeSave: function(resource) {
+  beforeSave: function(resource, req, res, superFn) {
     return new Promise((resolve, reject) => {
-      resource.attrs.description = "Modified in a Promise";
+      resource.attrs.modified = new Date("2015-10-27T05:16:57.257Z");
       resolve(resource);
-    });
+    }).then((transformed) => superFn(transformed, req, res));
   }
 };

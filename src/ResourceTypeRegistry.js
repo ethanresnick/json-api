@@ -1,124 +1,131 @@
-import merge from "lodash/object/merge";
+import Immutable from "immutable";
+import {pseudoTopSort} from "./util/misc";
 
 /**
  * A private array of properties that will be used by the class below to
- * automatically generate simple getter setters for each property, all
- * following same format. Those getters/setters will take the resource type
- * whose property is being retrieved/set, and the value to set it to, if any.
+ * automatically generate simple getters for each property, all following the
+ * same format. Those getters will take the name of the resource type whose
+ * property is being retrieved.
  */
-const autoGetterSetterProps = ["dbAdapter", "beforeSave", "beforeRender",
+const autoGetterProps = ["dbAdapter", "beforeSave", "beforeRender", "behaviors",
   "labelMappers", "defaultIncludes", "info", "parentType"];
 
 /**
- * Global defaults for resource descriptions, to be merged into defaults
- * provided to the ResourceTypeRegistry, which are in turn merged into defaults
- * provided in each resource type descriptions.
+ * Global defaults for all resource descriptions, to be merged into the
+ * defaults provided to the ResourceTypeRegistry, which are in turn merged
+ * into the values provided in each resource type description.
  */
-const globalResourceDefaults = {
+const globalResourceDefaults = Immutable.fromJS({
   behaviors: {
     dasherizeOutput: { enabled: true }
   }
-};
+});
+
+const typesKey = Symbol();
 
 /**
  * To fulfill a JSON API request, you often need to know about all the resources
- * in the system--not just the primary resource associated with the type being
- * requested. For example, if the request is for a User, you might need to
- * include related Projects, so the code handling the users request needs access
- * to the Project resource's beforeSave and beforeRender methods. Similarly, it
- * would need access to url templates that point at relationships on the Project
- * resources. Etc. So we handle this by introducing a ResourceTypeRegistry that
- * the Controller can have access to. Each resource type is registered by its
- * JSON API type and has a number of properties defining it.
+ * types in the system--not just the type that is the primary target of the
+ * request. For example, if the request is for a User (or Users), you might need
+ * to include related Projects, so the code handling the users request needs
+ * access to the Project resource's beforeSave and beforeRender methods; its
+ * url templates; etc. So we handle this by introducing a ResourceTypeRegistry
+ * that the Controller can have access to. Each resource type is registered by
+ * its JSON API type and has a number of properties defining it.
  */
 export default class ResourceTypeRegistry {
-  constructor(typeDescriptions = [], descriptionDefaults = {}) {
-    this._resourceTypes = {};
-    this._descriptionDefaults = merge({}, globalResourceDefaults, descriptionDefaults);
-    typeDescriptions.forEach((it) => { this.type(it); });
+  constructor(typeDescriptions = {}, descriptionDefaults = {}) {
+    this[typesKey] = {};
+    descriptionDefaults = globalResourceDefaults.mergeDeep(descriptionDefaults);
+
+    // Sort the types so we can register them in an order that respects their
+    // parentType. First, we pre-process the typeDescriptions to create edges
+    // pointing to each node's children (rather than the links we have by
+    // default, which point to the parent). Then we do an abridged topological
+    // sort that works in this case. Below, nodes is a list of type names.
+    // Roots are nodes with no parents. Edges is a map, with each key being the
+    // name of a starting node A, and the value being a set of node names for
+    // which there is an edge from A to that node.
+    const nodes = [], roots = [], edges = {};
+
+    for(const typeName in typeDescriptions) {
+      const nodeParentType = typeDescriptions[typeName].parentType;
+      nodes.push(typeName);
+
+      if(nodeParentType) {
+        edges[nodeParentType] = edges[nodeParentType] || {};
+        edges[nodeParentType][typeName] = true;
+      }
+      else {
+        roots.push(typeName);
+      }
+    }
+
+    const typeRegistrationOrder = pseudoTopSort(nodes, edges, roots);
+
+    // register the types, in order
+    typeRegistrationOrder.forEach((typeName) => {
+      const parentType = typeDescriptions[typeName].parentType;
+
+      // defaultIncludes need to be made into an object if they came as an array.
+      // TODO: Remove support for array format before v3. It's inconsistent.
+      const thisDescriptionRaw = Immutable.fromJS(typeDescriptions[typeName]);
+      const thisDescriptionMerged = descriptionDefaults.mergeDeep(thisDescriptionRaw);
+
+      this[typesKey][typeName] = (parentType) ?
+        // If we have a parentType, we merge in all the parent's fields,
+        // BUT we then overwrite labelMappers with just the ones directly
+        // from this description. We don't inherit labelMappers because a
+        // labelMapper is a kind of filter, and the results of a filter
+        // on the parent type may not be instances of the subtype.
+        this[typesKey][parentType].mergeDeep(thisDescriptionRaw)
+          .set("labelMappers", thisDescriptionRaw.get("labelMappers")) :
+
+        // If we don't have a parentType, just register
+        // the description merged with the universal defaults
+        thisDescriptionMerged;
+    });
   }
 
-  type(type, description) {
-    // create a one-argument version that takes the
-    // type as a key on the description object.
-    if(typeof type === "object" && typeof description === "undefined") {
-      description = type;
-      type = type.type;
-      delete description.type;
-    }
-
-    if(description) {
-      this._resourceTypes[type] = {};
-
-      // Merge description defaults into provided description
-      description = merge({}, this._descriptionDefaults, description);
-
-      // Set all the properties for the type that the description provides.
-      autoGetterSetterProps.concat(["urlTemplates", "behaviors"]).forEach((k) => {
-        if(Object.prototype.hasOwnProperty.call(description, k)) {
-          this[k](type, description[k]);
-        }
-      });
-    }
-    else if(this._resourceTypes[type]) {
-      return Object.assign({}, this._resourceTypes[type]);
-    }
+  type(typeName) {
+    return this.hasType(typeName) ? this[typesKey][typeName].toJS() : undefined;
   }
 
-  types() {
-    return Object.keys(this._resourceTypes);
+  hasType(typeName) {
+    return typeName in this[typesKey];
   }
 
-  //calling the arg "templatesToSet" to avoid conflict with templates var below
-  urlTemplates(type, templatesToSet) {
-    this._resourceTypes[type] = this._resourceTypes[type] || {};
-
-    switch(arguments.length) {
-      case 1:
-        return this._resourceTypes[type].urlTemplates
-          ? Object.assign({}, this._resourceTypes[type].urlTemplates)
-          : this._resourceTypes[type].urlTemplates;
-
-      case 0:
-        let templates = {};
-        for(let currType in this._resourceTypes) {
-          templates[currType] = this.urlTemplates(currType);
-        }
-        return templates;
-
-      default:
-        this._resourceTypes[type].urlTemplates = templatesToSet;
-    }
+  typeNames() {
+    return Object.keys(this[typesKey]);
   }
 
-  behaviors(type, behaviorsToSet) {
-    this._resourceTypes[type] = this._resourceTypes[type] || {};
-    if (behaviorsToSet) {
-      this._resourceTypes[type].behaviors =
-        merge({}, this._descriptionDefaults.behaviors, behaviorsToSet);
+  urlTemplates(type) {
+    if(type) {
+      const maybeDesc = this[typesKey][type];
+      const maybeTemplates = maybeDesc ? maybeDesc.get("urlTemplates") : maybeDesc;
+      return maybeTemplates ? maybeTemplates.toJS() : maybeTemplates;
     }
 
-    else {
-      return this._resourceTypes[type].behaviors;
-    }
+    return Object.keys(this[typesKey]).reduce((prev, typeName) => {
+      prev[typeName] = this.urlTemplates(typeName);
+      return prev;
+    }, {});
   }
 }
 
-autoGetterSetterProps.forEach((propName) => {
-  ResourceTypeRegistry.prototype[propName] = makeGetterSetter(propName);
+autoGetterProps.forEach((propName) => {
+  ResourceTypeRegistry.prototype[propName] = makeGetter(propName);
 });
 
+function makeGetter(attrName) {
+  return function(type) {
+    const maybeDesc = this[typesKey][type];
+    const maybeVal = maybeDesc ? maybeDesc.get(attrName) : maybeDesc;
 
-function makeGetterSetter(attrName) {
-  return function(type, optValue) {
-    this._resourceTypes[type] = this._resourceTypes[type] || {};
-
-    if(optValue) {
-      this._resourceTypes[type][attrName] = optValue;
+    if(maybeVal instanceof Immutable.Map || maybeVal instanceof Immutable.List) {
+      return maybeVal.toJS();
     }
 
-    else {
-      return this._resourceTypes[type][attrName];
-    }
+    return maybeVal;
   };
 }

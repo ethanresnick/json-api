@@ -1,6 +1,6 @@
 {
   "name": "json-api",
-  "version": "2.14.0",
+  "version": "2.15.0",
   "description": "A library for constructing JSON-API compliant responses",
   "homepage": "https://github.com/ethanresnick/json-api",
   "repository": {
@@ -19,6 +19,7 @@
     "content-type": "1.x.x",
     "dasherize": "2.0.x",
     "flat": "^1.2.1",
+    "immutable": "^3.7.5",
     "jade": "1.11.x",
     "lodash": "^3.10.0",
     "negotiator": "ethanresnick/negotiator#full-parse-access",

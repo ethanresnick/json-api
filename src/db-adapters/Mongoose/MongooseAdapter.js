@@ -37,7 +37,6 @@ export default class MongooseAdapter {
     let primaryDocumentsPromise, includedResourcesPromise = Q(null);
 
 
-
     queryBuilder[mode](idQuery);
 
     // do sorting
@@ -100,6 +99,10 @@ export default class MongooseAdapter {
       let includedResources = [];
       primaryDocumentsPromise = Q(queryBuilder.exec()).then((docs) => {
         forEachArrayOrVal(docs, (doc) => {
+          // There's no gaurantee that the doc (or every doc) was found
+          // and we can't populate paths on a non-existent doc.
+          if(!doc) return;
+
           populatedPaths.forEach((path) => {
             // if it's a toOne relationship, doc[path] will be a doc or undefined;
             // if it's a toMany relationship, we have an array (or undefined).

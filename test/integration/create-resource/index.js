@@ -59,15 +59,17 @@ describe("Creating Resources", () => {
       describe("beforeSave", () => {
         it("should execute beforeSave hook", () => {
           expect(createdResource.attributes.description).to.equal("Added a description in beforeSave");
+          expect(createdResource.attributes.modified).to.equal("2015-01-01T00:00:00.000Z");
         });
 
-        it("should allow beforeSave to return a Promise", (done) => {
+        it("should allow beforeSave to return a Promise and support super()", (done) => {
           Agent.request("POST", "/schools")
             .type("application/vnd.api+json")
             .send({"data": VALID_SCHOOL_RESOURCE_NO_ID})
             .promise()
             .then((response) => {
-              expect(response.body.data.attributes.description).to.equal("Modified in a Promise");
+              expect(response.body.data.attributes.description).to.equal("Added a description in beforeSave");
+              expect(response.body.data.attributes.modified).to.equal("2015-10-27T05:16:57.257Z");
               done();
             }, done).catch(done);
         });
