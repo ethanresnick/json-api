@@ -20,6 +20,14 @@ html(lang='en')
         block intro
           h1= name + ' Documentation'
 
+      mixin navItemForModel(modelInfo, typeName)
+        li
+          a(href=("#resources-" + typeName))= modelInfo.name.model
+          if modelInfo.childTypes.length > 0
+            ul
+              each subType in modelInfo.childTypes
+                li: a(href=("#resources-" + subType))= resourcesMap[subType].name.model
+
 
       mixin resource-doc(modelInfo, type)
         section(id="resources-"+type)
@@ -140,9 +148,4 @@ html(lang='en')
               ul
                 each modelInfo, type in resourcesMap
                   if !modelInfo.parentType
-                    li
-                      a(href=("#resources-" + type))= modelInfo.name.model
-                      if modelInfo.childTypes.length > 0
-                        ul
-                          each subType in modelInfo.childTypes
-                            li: a(href=("#resources-" + subType))= resourcesMap[subType].name.model
+                    +navItemForModel(modelInfo, type)
