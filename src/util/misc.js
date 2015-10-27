@@ -68,7 +68,9 @@ export function pseudoTopSort(nodes, edges, roots) {
   // "while S is non-empty do"
   while(roots.length) {
     // "remove a node n from S"
-    const thisRoot = roots.pop();
+    // We shift() instead of pop() to we preserve more of the
+    // original order, in case it was significant to the user.
+    const thisRoot = roots.shift();
     const thisRootChildren = edges[thisRoot] || {};
 
     // "add n to tail of L"
