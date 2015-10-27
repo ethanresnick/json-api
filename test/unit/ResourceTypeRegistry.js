@@ -112,7 +112,7 @@ describe("ResourceTypeRegistry", function() {
     });
 
     expect(registry.behaviors("testType")).to.equal(null);
-  })
+  });
 
   describe("urlTemplates()", () => {
     it("should return a copy of the templates for all types", () => {

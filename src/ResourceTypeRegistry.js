@@ -1,4 +1,3 @@
-import merge from "lodash/object/merge";
 import Immutable from "immutable";
 import {pseudoTopSort} from "./util/misc";
 
@@ -103,7 +102,7 @@ export default class ResourceTypeRegistry {
   urlTemplates(type) {
     if(type) {
       const maybeDesc = this[typesKey][type];
-      const maybeTemplates = maybeDesc ? maybeDesc.get('urlTemplates') : maybeDesc;
+      const maybeTemplates = maybeDesc ? maybeDesc.get("urlTemplates") : maybeDesc;
       return maybeTemplates ? maybeTemplates.toJS() : maybeTemplates;
     }
 
