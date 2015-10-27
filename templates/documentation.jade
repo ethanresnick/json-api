@@ -28,26 +28,33 @@ html(lang='en')
               each subType in modelInfo.childTypes
                 li: a(href=("#resources-" + subType))= resourcesMap[subType].name.model
 
+      mixin resource-doc-name-and-desc(modelInfo, type)
+        h3(class=(modelInfo.description ? "with-p" : ""))= modelInfo.name.model
+        if modelInfo.description
+          p= modelInfo.description
+
+      mixin resource-doc-extends-info(modelInfo, type)
+        if modelInfo.parentType
+          p.
+            <code>#{modelInfo.name.model}</code> resources extend <a href="#resources-#{modelInfo.parentType}">
+            <code>#{resourcesMap[modelInfo.parentType].name.model}</code></a> resources, meaning they have
+            all the same fields and requirements. The fields shown below are only the <em>additional</em>
+            fields that <code>#{modelInfo.name.model}</code> resources have but
+            <code>#{resourcesMap[modelInfo.parentType].name.model}</code> resources don&rsquo;t.
+
+      mixin resource-doc-example(modelInfo, type)
+        if modelInfo.example
+          .conditional-section
+            .toggle Show example representation
+            .contents
+              code
+                pre= modelInfo.example
 
       mixin resource-doc(modelInfo, type)
         section(id="resources-"+type)
-          h3(class=(modelInfo.description ? "with-p" : ""))= modelInfo.name.model
-          if modelInfo.description
-            p= modelInfo.description
-          if modelInfo.parentType
-            p.
-              <code>#{modelInfo.name.model}</code> resources extend <a href="#resources-#{modelInfo.parentType}">
-              <code>#{resourcesMap[modelInfo.parentType].name.model}</code></a> resources, meaning they have
-              all the same fields and requirements. The fields shown below are only the <em>additional</em>
-              fields that <code>#{modelInfo.name.model}</code> resources have but
-              <code>#{resourcesMap[modelInfo.parentType].name.model}</code> resources don&rsquo;t.
-
-          if modelInfo.example
-            .conditional-section
-              .toggle Show example representation
-              .contents
-                code
-                  pre= modelInfo.example
+          +resource-doc-name-and-desc(modelInfo, type)
+          +resource-doc-extends-info(modelInfo, type)
+          +resource-doc-example(modelInfo, type)
 
           //allow subtemplates to stick in sections before the fields.
           block fieldsPrepend
