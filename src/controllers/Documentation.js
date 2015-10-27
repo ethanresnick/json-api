@@ -27,8 +27,8 @@ export default class DocumentationController {
 
     // Store in the resourcesMap the info object about each type,
     // as returned by @getTypeInfo.
-    this.registry.types().forEach((type) => {
-      data.resourcesMap[type] = this.getTypeInfo(type);
+    this.registry.typeNames().forEach((typeName) => {
+      data.resourcesMap[typeName] = this.getTypeInfo(typeName);
     });
 
     this.templateData = data;

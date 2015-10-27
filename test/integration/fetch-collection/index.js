@@ -65,6 +65,18 @@ describe("Fetching Collection", () => {
           expect(it.data).to.not.be.undefined; //can be null, though
         });
       });
+
+      // This test is good on its own, and the next couple tests also assume it passes.
+      it("should contain both organizations and schools", () => {
+        expect(res.body.data.some(it => it.type === "schools")).to.be.true;
+        expect(res.body.data.some(it => it.type === "organizations")).to.be.true;
+      });
+
+      it("should have transformed all resources, including sub types", () => {
+        expect(res.body.data.every(resource => {
+          return resource.attributes.addedBeforeRender;
+        })).to.be.true;
+      });
     });
 
     describe("Fetching Ascending Gendered Collection", () => {

@@ -6,19 +6,19 @@ import database from "../database/index";
  * Export a promise for the app.
  */
 export default database.then(function(dbModule) {
-  const adapter = new API.dbAdapters.Mongoose(dbModule.models())
-    , registry = new API.ResourceTypeRegistry()
-    , Controller = new API.controllers.API(registry);
-
-  ["people", "organizations", "schools"].forEach(function(resourceType) {
-    const description = require("./resource-descriptions/" + resourceType);
-    description.dbAdapter = adapter;
-    registry.type(resourceType, description);
+  const adapter = new API.dbAdapters.Mongoose(dbModule.models());
+  const registry = new API.ResourceTypeRegistry({
+    "people": require("./resource-descriptions/people"),
+    "organizations": require("./resource-descriptions/organizations"),
+    "schools": require("./resource-descriptions/schools")
+  }, {
+    dbAdapter: adapter
   });
 
   // Initialize the automatic documentation.
   // Note: don't do this til after you've registered all your resources.)
   const Docs = new API.controllers.Documentation(registry, {name: "Example API"});
+  const Controller = new API.controllers.API(registry);
 
   // Initialize the express app + front controller.
   const app = express();
