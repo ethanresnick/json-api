@@ -24,23 +24,25 @@ Check out the [full, working example repo](http://github.com/ethanresnick/json-a
     "Place": require('./models/place')
   };
 
-  var registry = new API.ResourceTypeRegistry();
   var adapter = new API.dbAdapters.Mongoose(models);
-
-  registry.type("people", {
-    dbAdapter: adapter,
-    urlTemplates: {
-      "self": "/people/{id}"
+  var registry = new API.ResourceTypeRegistry({
+    "people": {
+      urlTemplates: {
+        "self": "/people/{id}"
+      },
+      beforeRender: function(resource, req, res) {
+        if(!userIsAdmin(req)) resource.removeAttr("password");
+        return resource;
+      }
+    },
+    "places": {
+      urlTemplates: {"self": "/places/{id}"}
     }
-  });
-
-  registry.type("places", {
-    dbAdapter: adapter,
-    urlTemplates: {"self": "/places/{id}"}
+  }, {
+    "dbAdapter": adapter
   });
 
   // Initialize the automatic documentation.
-  // Note: don't do this til after you've registered all your resources.
   var DocsController = new API.controllers.Documentation(registry, {name: 'Example API'});
 
   // Set up our controllers
@@ -68,7 +70,7 @@ Check out the [full, working example repo](http://github.com/ethanresnick/json-a
 ## Resource Type Descriptions <a name="resource-type-descriptions"></a>
 The JSON-API spec is built around the idea of typed resource collections. For example, you can have a `"people"` collection and a `"companies"` collection. (By convention, type names are plural, lowercase, and dasherized.)
 
-To use this library, you describe the special behavior (if any) that resources of each type should have, and then register that description with a central `ResourceTypeRegistry`. Then the library takes care of the rest. A resource type description is simply an object with the following properties:
+To use this library, you describe the special behavior (if any) that resources of each type should have, and then register those descriptions with a central `ResourceTypeRegistry`. Then the library takes care of the rest. Each resource type description is simply an object with the following properties:
 
 - `urlTemplates`: an object containing url templates used to output the json for resources of the type being described. Currently, the supported keys are: `"self"`, which defines the template used for building [resource urls](http://jsonapi.org/format/#document-structure-resource-urls) of that type, and `"relationship"`, which defines the template that will be used for [relationship urls](http://jsonapi.org/format/#fetching-relationships).
 - `dbAdapter`: the [database adapter](#database-adapters) to use to find and update these resources. By specifying this for each resource type, different resource types can live in different kinds of databases.
@@ -79,7 +81,7 @@ To use this library, you describe the special behavior (if any) that resources o
 
 - <a name="labels"></a>`labelMappers` (optional): this lets you create urls (or, in REST terminology, resources) that map to different database items over time. For example, you could have an `/events/upcoming` resource or a `/users/me` resource. In those examples, "upcoming" and "me" are called the labels and, in labelMappers, you provide a function that maps each label to the proper database id(s) at any given time. The function can return a Promise if needed.
 
-- <a name="parentType"></a>`parentType` (optional): this allows you to designate one resource type being a sub-type of another (its `parentType`). This is often used when you have two resource types that live in the same database table/collection, and their type is determined with a discriminator key. See the [`schools` type](https://github.com/ethanresnick/json-api-example/blob/master/src/resource-descriptions/schools.js#L2) in the example repository.
+- <a name="parentType"></a>`parentType` (optional): this allows you to designate one resource type being a sub-type of another (its `parentType`). This is often used when you have two resource types that live in the same database table/collection, and their type is determined with a discriminator key. See the [`schools` type](https://github.com/ethanresnick/json-api-example/blob/master/src/resource-descriptions/schools.js#L2) in the example repository. If a resource has a `parentType`, it inherits that type's configuration (i.e. its `urlTemplates`, `beforeSave`/`beforeRender` functions, and `info`). The only exception is that `labelMappers` are not inherited.
 
 -  <a name="info"></a>`info` (optional): this allows you to provide extra information about the resource that will be included in the documentation. Available properties are `"description"` (a string describing what resources of this type are) and `"fields"`. `"fields"` holds an object in which you can describe each field in the resource (e.g. listing validation rules). See the [example implemenation](https://github.com/ethanresnick/json-api-example/blob/master/src/resource-descriptions/schools.js) for more details.
 

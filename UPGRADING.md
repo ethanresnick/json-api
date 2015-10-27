@@ -1,3 +1,11 @@
+# 2.14 -> 2.15 Breaking Changes  (Not Semver until 3.0)
+## ResourceTypeRegistry
+- All resource descriptions must now be passed at the time of construction, as an object whose keys are the type names. Passing an array to the constructor is no longer supported.
+- All setter methods have been removed. Please set all your data before initializing the Registry.
+- Resource type descriptions now inherit from the descriptions of their `parentType`. So if type B extends A, B will use A's `beforeSave`, `beforeRender`, `info`, etc. by default. The only exception is that `labelMappers` are not inherited. Among other things, this means that the JSON generated for sub-types now better reflects any `info` stored on the parent type's fields. (Addresses [#93](https://github.com/ethanresnick/json-api/issues/93) and [#18](https://github.com/ethanresnick/json-api/issues/18).)
+- The `ResourceTypeRegistry.types()` method has been renamed to `ResourceTypeRegistry.typeNames()`
+- For more details on the above, see [the relevant commit]().
+
 # 2.13 -> 2.14 Breaking Changes (Not Semver until 3.0)
 - If you were relying on the RelationshipObject class: the class has been renamed to simply "Relationship", and its fields `selfURI` and `relatedURI` have been renamed to `selfURITemplate` and `relatedURITemplate` respectively.
 - URI Templates specified on a single Relationship instance now take precedence over resource-level templates during serialization
