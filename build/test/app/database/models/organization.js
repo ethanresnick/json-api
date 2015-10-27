@@ -26,7 +26,8 @@ function OrganizationSchema() {
     description: {
       type: String
     },
-    liaisons: [{ ref: "Person", type: ObjectId }]
+    liaisons: [{ ref: "Person", type: ObjectId }],
+    modified: Date
   });
 }
 

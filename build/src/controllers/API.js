@@ -143,7 +143,7 @@ var APIController = (function () {
 
               // If the type requested in the endpoint hasn't been registered, we 404.
 
-              if (registry.type(request.type)) {
+              if (registry.hasType(request.type)) {
                 context$3$0.next = 11;
                 break;
               }

@@ -176,6 +176,10 @@ var MongooseAdapter = (function () {
           var includedResources = [];
           primaryDocumentsPromise = (0, _q2["default"])(queryBuilder.exec()).then(function (docs) {
             (0, _utilTypeHandling.forEachArrayOrVal)(docs, function (doc) {
+              // There's no gaurantee that the doc (or every doc) was found
+              // and we can't populate paths on a non-existent doc.
+              if (!doc) return;
+
               populatedPaths.forEach(function (path) {
                 // if it's a toOne relationship, doc[path] will be a doc or undefined;
                 // if it's a toMany relationship, we have an array (or undefined).

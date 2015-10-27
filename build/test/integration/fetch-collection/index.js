@@ -76,6 +76,22 @@ describe("Fetching Collection", function () {
           (0, _chai.expect)(it.data).to.not.be.undefined; //can be null, though
         });
       });
+
+      // This test is good on its own, and the next couple tests also assume it passes.
+      it("should contain both organizations and schools", function () {
+        (0, _chai.expect)(res.body.data.some(function (it) {
+          return it.type === "schools";
+        })).to.be["true"];
+        (0, _chai.expect)(res.body.data.some(function (it) {
+          return it.type === "organizations";
+        })).to.be["true"];
+      });
+
+      it("should have transformed all resources, including sub types", function () {
+        (0, _chai.expect)(res.body.data.every(function (resource) {
+          return resource.attributes.addedBeforeRender;
+        })).to.be["true"];
+      });
     });
 
     describe("Fetching Ascending Gendered Collection", function () {

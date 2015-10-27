@@ -57,11 +57,13 @@ describe("Creating Resources", function () {
       describe("beforeSave", function () {
         it("should execute beforeSave hook", function () {
           (0, _chai.expect)(createdResource.attributes.description).to.equal("Added a description in beforeSave");
+          (0, _chai.expect)(createdResource.attributes.modified).to.equal("2015-01-01T00:00:00.000Z");
         });
 
-        it("should allow beforeSave to return a Promise", function (done) {
+        it("should allow beforeSave to return a Promise and support super()", function (done) {
           Agent.request("POST", "/schools").type("application/vnd.api+json").send({ "data": _fixturesCreation.VALID_SCHOOL_RESOURCE_NO_ID }).promise().then(function (response) {
-            (0, _chai.expect)(response.body.data.attributes.description).to.equal("Modified in a Promise");
+            (0, _chai.expect)(response.body.data.attributes.description).to.equal("Added a description in beforeSave");
+            (0, _chai.expect)(response.body.data.attributes.modified).to.equal("2015-10-27T05:16:57.257Z");
             done();
           }, done)["catch"](done);
         });

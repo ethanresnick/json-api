@@ -22,19 +22,19 @@ var _databaseIndex2 = _interopRequireDefault(_databaseIndex);
  * Export a promise for the app.
  */
 exports["default"] = _databaseIndex2["default"].then(function (dbModule) {
-  var adapter = new _index2["default"].dbAdapters.Mongoose(dbModule.models()),
-      registry = new _index2["default"].ResourceTypeRegistry(),
-      Controller = new _index2["default"].controllers.API(registry);
-
-  ["people", "organizations", "schools"].forEach(function (resourceType) {
-    var description = require("./resource-descriptions/" + resourceType);
-    description.dbAdapter = adapter;
-    registry.type(resourceType, description);
+  var adapter = new _index2["default"].dbAdapters.Mongoose(dbModule.models());
+  var registry = new _index2["default"].ResourceTypeRegistry({
+    "people": require("./resource-descriptions/people"),
+    "organizations": require("./resource-descriptions/organizations"),
+    "schools": require("./resource-descriptions/schools")
+  }, {
+    dbAdapter: adapter
   });
 
   // Initialize the automatic documentation.
   // Note: don't do this til after you've registered all your resources.)
   var Docs = new _index2["default"].controllers.Documentation(registry, { name: "Example API" });
+  var Controller = new _index2["default"].controllers.API(registry);
 
   // Initialize the express app + front controller.
   var app = (0, _express2["default"])();

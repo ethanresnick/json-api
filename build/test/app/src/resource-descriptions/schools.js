@@ -25,10 +25,12 @@ module.exports = {
     }
   },
 
-  beforeSave: function beforeSave(resource) {
+  beforeSave: function beforeSave(resource, req, res, superFn) {
     return new _q.Promise(function (resolve, reject) {
-      resource.attrs.description = "Modified in a Promise";
+      resource.attrs.modified = new Date("2015-10-27T05:16:57.257Z");
       resolve(resource);
+    }).then(function (transformed) {
+      return superFn(transformed, req, res);
     });
   }
 };

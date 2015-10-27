@@ -56,4 +56,23 @@ describe("Utility methods", function () {
       (0, _chai.expect)(utils.isSubsetOf(["false"], [0])).to.be["false"];
     });
   });
+
+  describe("pseudoTopSort", function () {
+    it("should sort the items correctly", function () {
+      var nodes = ["c", "b", "f", "a", "d", "e"];
+      var roots = ["a", "d", "f"];
+      var edges = { "a": { "b": true }, "b": { "c": true }, "d": { "e": true } };
+      var sorted = utils.pseudoTopSort(nodes, edges, roots);
+
+      // check that all the nodes were returned exactly once.
+      (0, _chai.expect)(sorted.length).to.equal(6);
+      (0, _chai.expect)(nodes.every(function (node) {
+        return sorted.indexOf(node) > -1;
+      })).to.be["true"];
+
+      (0, _chai.expect)(sorted.indexOf("b")).to.be.gt(sorted.indexOf("a"));
+      (0, _chai.expect)(sorted.indexOf("c")).to.be.gt(sorted.indexOf("b"));
+      (0, _chai.expect)(sorted.indexOf("e")).to.be.gt(sorted.indexOf("d"));
+    });
+  });
 });
