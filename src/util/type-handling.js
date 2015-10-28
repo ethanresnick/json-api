@@ -89,3 +89,52 @@ export function forEachArrayOrVal(arrayOrVal, eachFn) {
   Array.isArray(arrayOrVal) ? arrayOrVal.forEach(eachFn) : eachFn(arrayOrVal);
   /*eslint-enable */
 }
+
+
+/**
+ * The Maybe monad, with a totally-not-monadic unwrap() so we can
+ * get out the raw value w/o needing to pass the monad everywhere.
+ *
+ * We also match js's convention from Promise of not requiring
+ * the user's bind() to always return the monad. If a raw value
+ * x is returned, it's converted to Maybe(x).
+ */
+export const Nothing = {
+  unwrap() {
+    return undefined;
+  },
+
+  bind() {
+    return this;
+  }
+};
+
+export class Just {
+  constructor(x) {
+    this.val = x;
+  }
+
+  unwrap() {
+    return this.val;
+  }
+
+  bind(transform) {
+    const transformed = transform(this.val);
+    if(transformed instanceof Just || transformed === Nothing) {
+      return transformed;
+    }
+    else {
+      return Maybe(transformed);
+    }
+  }
+}
+
+export function Maybe(x) {
+  // Sometimes, null is a valid value, so Nothing only covers undefined.
+  if(x !== undefined) {
+    return new Just(x);
+  }
+  else {
+    return Nothing;
+  }
+}

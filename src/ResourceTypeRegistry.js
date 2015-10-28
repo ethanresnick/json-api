@@ -1,5 +1,6 @@
 import Immutable from "immutable";
 import {pseudoTopSort} from "./util/misc";
+import {Maybe} from "./util/type-handling";
 
 /**
  * A private array of properties that will be used by the class below to
@@ -88,7 +89,7 @@ export default class ResourceTypeRegistry {
   }
 
   type(typeName) {
-    return this.hasType(typeName) ? this[typesKey][typeName].toJS() : undefined;
+    return Maybe(this[typesKey][typeName]).bind(it => it.toJS()).unwrap();
   }
 
   hasType(typeName) {
@@ -101,9 +102,10 @@ export default class ResourceTypeRegistry {
 
   urlTemplates(type) {
     if(type) {
-      const maybeDesc = this[typesKey][type];
-      const maybeTemplates = maybeDesc ? maybeDesc.get("urlTemplates") : maybeDesc;
-      return maybeTemplates ? maybeTemplates.toJS() : maybeTemplates;
+      return Maybe(this[typesKey][type])
+        .bind(it => it.get("urlTemplates"))
+        .bind(it => it.toJS())
+        .unwrap();
     }
 
     return Object.keys(this[typesKey]).reduce((prev, typeName) => {
@@ -119,13 +121,9 @@ autoGetterProps.forEach((propName) => {
 
 function makeGetter(attrName) {
   return function(type) {
-    const maybeDesc = this[typesKey][type];
-    const maybeVal = maybeDesc ? maybeDesc.get(attrName) : maybeDesc;
-
-    if(maybeVal instanceof Immutable.Map || maybeVal instanceof Immutable.List) {
-      return maybeVal.toJS();
-    }
-
-    return maybeVal;
+    return Maybe(this[typesKey][type])
+      .bind(it => it.get(attrName))
+      .bind(it => it instanceof Immutable.Map || it instanceof Immutable.List ? it.toJS() : it)
+      .unwrap();
   };
 }

@@ -64,4 +64,4 @@ class Request {
   }
 }
 
-export default ValueObject(Request); // eslint-disable-line new-cap
+export default ValueObject(Request);

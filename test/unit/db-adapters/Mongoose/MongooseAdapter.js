@@ -174,7 +174,7 @@ describe("Mongoose Adapter", () => {
         };
 
         // need to compile it, as a schema and a model, before reading.
-        const model = mongoose.model("Test", mongoose.Schema(schemaRaw)); //eslint-disable-line new-cap
+        const model = mongoose.model("Test", mongoose.Schema(schemaRaw));
         standardizedSchema = MongooseAdapter.getStandardizedSchema(model);
       });
 
