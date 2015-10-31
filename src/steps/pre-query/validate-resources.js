@@ -36,7 +36,7 @@ export default function(endpointParentType, resourceOrCollection, registry) {
         /*eslint-enable no-loop-func */
 
         if(invalid) {
-          let title = "Relationship fields must be specified under the links key.";
+          let title = "Relationship fields must be specified under the `relationships` key.";
           return reject(new APIError(400, undefined, title));
         }
       }
