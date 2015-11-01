@@ -330,7 +330,7 @@ var MongooseAdapter = (function () {
           var currentModelName = currDoc.constructor.modelName;
           var newModelName = _this3.constructor.getModelName(newResource.type, singular);
           if (currentModelName !== newModelName) {
-            var newDoc = currDoc.toObject();
+            var newDoc = currDoc.toObject({ virtuals: true, getters: true });
             var NewModelConstructor = _this3.getModel(newModelName);
             newDoc[currDoc.constructor.schema.options.discriminatorKey] = newModelName;
 
@@ -499,7 +499,7 @@ var MongooseAdapter = (function () {
       // That's stupid, and it breaks our include handling.
       // Also, starting in 4.0, we won't need the delete versionKey line:
       // https://github.com/Automattic/mongoose/issues/2675
-      var attrs = doc.toJSON({ virtuals: true });
+      var attrs = doc.toJSON({ virtuals: true, getters: true });
       delete attrs.id; // from the id virtual.
       delete attrs._id;
       delete attrs[schemaOptions.versionKey];

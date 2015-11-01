@@ -1,5 +1,9 @@
 "use strict";
 
+var _createClass = require("babel-runtime/helpers/create-class")["default"];
+
+var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default"];
+
 var _Object$seal = require("babel-runtime/core-js/object/seal")["default"];
 
 var _Object$assign = require("babel-runtime/core-js/object/assign")["default"];
@@ -16,6 +20,7 @@ exports.mapResources = mapResources;
 exports.forEachResources = forEachResources;
 exports.groupResourcesByType = groupResourcesByType;
 exports.forEachArrayOrVal = forEachArrayOrVal;
+exports.Maybe = Maybe;
 
 var _typesCollection = require("../types/Collection");
 
@@ -108,4 +113,62 @@ function forEachArrayOrVal(arrayOrVal, eachFn) {
   /*eslint-disable no-unused-expressions */
   Array.isArray(arrayOrVal) ? arrayOrVal.forEach(eachFn) : eachFn(arrayOrVal);
   /*eslint-enable */
+}
+
+/**
+ * The Maybe monad, with a totally-not-monadic unwrap() so we can
+ * get out the raw value w/o needing to pass the monad everywhere.
+ *
+ * We also match js's convention from Promise of not requiring
+ * the user's bind() to always return the monad. If a raw value
+ * x is returned, it's converted to Maybe(x).
+ */
+var Nothing = {
+  unwrap: function unwrap() {
+    return undefined;
+  },
+
+  bind: function bind() {
+    return this;
+  }
+};
+
+exports.Nothing = Nothing;
+
+var Just = (function () {
+  function Just(x) {
+    _classCallCheck(this, Just);
+
+    this.val = x;
+  }
+
+  _createClass(Just, [{
+    key: "unwrap",
+    value: function unwrap() {
+      return this.val;
+    }
+  }, {
+    key: "bind",
+    value: function bind(transform) {
+      var transformed = transform(this.val);
+      if (transformed instanceof Just || transformed === Nothing) {
+        return transformed;
+      } else {
+        return Maybe(transformed);
+      }
+    }
+  }]);
+
+  return Just;
+})();
+
+exports.Just = Just;
+
+function Maybe(x) {
+  // Sometimes, null is a valid value, so Nothing only covers undefined.
+  if (x !== undefined) {
+    return new Just(x);
+  } else {
+    return Nothing;
+  }
 }

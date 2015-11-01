@@ -54,5 +54,4 @@ var Response = function Response() {
 };
 
 exports["default"] = (0, _utilTypeHandling.ValueObject)(Response);
-// eslint-disable-line new-cap
 module.exports = exports["default"];

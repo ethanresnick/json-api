@@ -10,7 +10,7 @@ var _mongoose = require("mongoose");
 
 var _mongoose2 = _interopRequireDefault(_mongoose);
 
-var schema = _mongoose2["default"].Schema({ //eslint-disable-line new-cap
+var schema = _mongoose2["default"].Schema({
   name: String,
   email: { type: String, lowercase: true },
   gender: {

@@ -46,7 +46,7 @@ exports["default"] = function (endpointParentType, resourceOrCollection, registr
         /*eslint-enable no-loop-func */
 
         if (invalid) {
-          var title = "Relationship fields must be specified under the links key.";
+          var title = "Relationship fields must be specified under the `relationships` key.";
           return {
             v: reject(new _typesAPIError2["default"](400, undefined, title))
           };

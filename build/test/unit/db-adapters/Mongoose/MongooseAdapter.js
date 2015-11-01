@@ -199,7 +199,7 @@ describe("Mongoose Adapter", function () {
         };
 
         // need to compile it, as a schema and a model, before reading.
-        var model = _mongoose2["default"].model("Test", _mongoose2["default"].Schema(schemaRaw)); //eslint-disable-line new-cap
+        var model = _mongoose2["default"].model("Test", _mongoose2["default"].Schema(schemaRaw));
         standardizedSchema = _srcDbAdaptersMongooseMongooseAdapter2["default"].getStandardizedSchema(model);
       });
 

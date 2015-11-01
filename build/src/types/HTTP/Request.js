@@ -73,5 +73,4 @@ var Request = function Request() {
 };
 
 exports["default"] = (0, _utilTypeHandling.ValueObject)(Request);
-// eslint-disable-line new-cap
 module.exports = exports["default"];

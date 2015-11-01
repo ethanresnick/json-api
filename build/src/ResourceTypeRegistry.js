@@ -20,6 +20,8 @@ var _immutable2 = _interopRequireDefault(_immutable);
 
 var _utilMisc = require("./util/misc");
 
+var _utilTypeHandling = require("./util/type-handling");
+
 /**
  * A private array of properties that will be used by the class below to
  * automatically generate simple getters for each property, all following the
@@ -116,7 +118,9 @@ var ResourceTypeRegistry = (function () {
   _createClass(ResourceTypeRegistry, [{
     key: "type",
     value: function type(typeName) {
-      return this.hasType(typeName) ? this[typesKey][typeName].toJS() : undefined;
+      return (0, _utilTypeHandling.Maybe)(this[typesKey][typeName]).bind(function (it) {
+        return it.toJS();
+      }).unwrap();
     }
   }, {
     key: "hasType",
@@ -134,9 +138,11 @@ var ResourceTypeRegistry = (function () {
       var _this2 = this;
 
       if (type) {
-        var maybeDesc = this[typesKey][type];
-        var maybeTemplates = maybeDesc ? maybeDesc.get("urlTemplates") : maybeDesc;
-        return maybeTemplates ? maybeTemplates.toJS() : maybeTemplates;
+        return (0, _utilTypeHandling.Maybe)(this[typesKey][type]).bind(function (it) {
+          return it.get("urlTemplates");
+        }).bind(function (it) {
+          return it.toJS();
+        }).unwrap();
       }
 
       return _Object$keys(this[typesKey]).reduce(function (prev, typeName) {
@@ -157,14 +163,11 @@ autoGetterProps.forEach(function (propName) {
 
 function makeGetter(attrName) {
   return function (type) {
-    var maybeDesc = this[typesKey][type];
-    var maybeVal = maybeDesc ? maybeDesc.get(attrName) : maybeDesc;
-
-    if (maybeVal instanceof _immutable2["default"].Map || maybeVal instanceof _immutable2["default"].List) {
-      return maybeVal.toJS();
-    }
-
-    return maybeVal;
+    return (0, _utilTypeHandling.Maybe)(this[typesKey][type]).bind(function (it) {
+      return it.get(attrName);
+    }).bind(function (it) {
+      return it instanceof _immutable2["default"].Map || it instanceof _immutable2["default"].List ? it.toJS() : it;
+    }).unwrap();
   };
 }
 module.exports = exports["default"];
