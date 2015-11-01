@@ -240,7 +240,7 @@ export default class MongooseAdapter {
         const currentModelName = currDoc.constructor.modelName;
         const newModelName = this.constructor.getModelName(newResource.type, singular);
         if(currentModelName !== newModelName) {
-          const newDoc = currDoc.toObject();
+          const newDoc = currDoc.toObject({virtuals: true, getters: true});
           const NewModelConstructor = this.getModel(newModelName);
           newDoc[currDoc.constructor.schema.options.discriminatorKey] = newModelName;
 
@@ -391,7 +391,7 @@ export default class MongooseAdapter {
     // That's stupid, and it breaks our include handling.
     // Also, starting in 4.0, we won't need the delete versionKey line:
     // https://github.com/Automattic/mongoose/issues/2675
-    let attrs = doc.toJSON({virtuals: true});
+    let attrs = doc.toJSON({virtuals: true, getters: true});
     delete attrs.id; // from the id virtual.
     delete attrs._id;
     delete attrs[schemaOptions.versionKey];
