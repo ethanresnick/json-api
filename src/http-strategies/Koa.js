@@ -37,7 +37,7 @@ export default class KoaStrategy extends Base {
     return function *(next){
       const ctx = this;
       try {
-        const reqObj = yield strategy.buildRequestObject(ctx.req, ctx.protocol, ctx.params);
+        const reqObj = yield strategy.buildRequestObject(ctx.req, ctx.protocol, ctx.host, ctx.params);
         const resObj = yield strategy.api.handle(reqObj, ctx);
         const delegate406Handling = strategy.sendResources(resObj, ctx);
         if(delegate406Handling){
@@ -56,7 +56,7 @@ export default class KoaStrategy extends Base {
     return function *(next){
       const ctx = this;
       try {
-        const reqObj = yield strategy.buildRequestObject(ctx.req, ctx.protocol, ctx.params);
+        const reqObj = yield strategy.buildRequestObject(ctx.req, ctx.protocol, ctx.host, ctx.params);
         const resObj = yield strategy.docs.handle(reqObj, ctx);
         const delegate406Handling = strategy.sendResources(resObj, ctx);
         if(delegate406Handling){

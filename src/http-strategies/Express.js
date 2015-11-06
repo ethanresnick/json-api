@@ -33,7 +33,7 @@ export default class ExpressStrategy extends Base {
   // PATCH /:type/:id/links/:relationship, POST /:type/:id/links/:relationship,
   // and DELETE /:type/:id/links/:relationship.
   apiRequest(req, res, next) {
-    this.buildRequestObject(req, req.protocol, req.params, req.query).then((requestObject) => {
+    this.buildRequestObject(req, req.protocol, req.get("Host"), req.params, req.query).then((requestObject) => {
       return this.api.handle(requestObject, req, res).then((responseObject) => {
         this.sendResources(responseObject, res, next);
       });
@@ -44,7 +44,7 @@ export default class ExpressStrategy extends Base {
 
   // For requests for the documentation.
   docsRequest(req, res, next) {
-    this.buildRequestObject(req, req.protocol, req.params, req.query).then((requestObject) => {
+    this.buildRequestObject(req, req.protocol, req.get("Host"), req.params, req.query).then((requestObject) => {
       return this.docs.handle(requestObject, req, res).then((responseObject) => {
         this.sendResources(responseObject, res, next);
       });

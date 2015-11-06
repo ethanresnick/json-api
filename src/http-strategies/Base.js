@@ -44,10 +44,11 @@ export default class BaseStrategy {
    *
    * @param {http.IncomingMessage} req original request object from core node module http
    * @param {string} protocol
+   * @param {string} host
    * @param {Object} params object containing url parameters
    * @param {Object} [query] object containing query parameters
    */
-  buildRequestObject(req, protocol, params, query){
+  buildRequestObject(req, protocol, host, params, query){
     const config = this.config;
 
     return Q.Promise(function(resolve, reject) {
@@ -68,7 +69,10 @@ export default class BaseStrategy {
       it.relationship      = params.related || params.relationship;
 
       // Handle HTTP/Conneg.
-      it.uri     = protocol + "://" + req.headers.host + req.url;
+      protocol  = protocol || (req.connection.encrypted ? "https" : "http");
+      host      = host || req.headers.host;
+
+      it.uri     = protocol + "://" + host + req.url;
       it.method  = req.method.toLowerCase();
       it.accepts = req.headers.accept;
 
