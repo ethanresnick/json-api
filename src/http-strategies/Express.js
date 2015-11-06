@@ -1,14 +1,10 @@
-import Q from "q";
 import vary from "vary";
-import contentType from "content-type";
-import getRawBody from "raw-body";
 import API from "../controllers/API";
-import APIError from "../types/APIError";
-import Request from "../types/HTTP/Request";
+import Base from "./Base";
 
 /**
  * This controller receives requests directly from express and sends responses
- * direclty through it, but it converts incoming requests to, and generates
+ * directly through it, but it converts incoming requests to, and generates
  * responses, from Request and Response objects that are defined by this
  * framework in a way that's not particular to express. This controller thereby
  * acts as a translation-layer between express and the rest of this json-api
@@ -23,19 +19,12 @@ import Request from "../types/HTTP/Request";
  *    can't produce a representation for the response that the client can
  *    `Accept`, should it return 406 or should it hand the request back to
  *    Express (i.e. call next()) so that subsequent handlers can attempt to
- *    find an alternate representation? By defualt, it does the former. But you
- *    can set this option to false to have this code just pass on to express.
+ *    find an alternate representation? By default, it does the former. But you
+ *    can set this option to false to have this code just pass on to Express.
  */
-export default class ExpressStrategy {
+export default class ExpressStrategy extends Base {
   constructor(apiController, docsController, options) {
-    const defaultOptions = {
-      tunnel: false,
-      handleContentNegotiation: true
-    };
-
-    this.api = apiController;
-    this.docs = docsController;
-    this.config = Object.assign({}, defaultOptions, options); // apply options
+    super(apiController, docsController, options);
   }
 
   // For requests like GET /:type, GET /:type/:id/:relationship,
@@ -44,7 +33,7 @@ export default class ExpressStrategy {
   // PATCH /:type/:id/links/:relationship, POST /:type/:id/links/:relationship,
   // and DELETE /:type/:id/links/:relationship.
   apiRequest(req, res, next) {
-    buildRequestObject(req, this.config.tunnel).then((requestObject) => {
+    this.buildRequestObject(req, req.protocol, req.get("Host"), req.params, req.query).then((requestObject) => {
       return this.api.handle(requestObject, req, res).then((responseObject) => {
         this.sendResources(responseObject, res, next);
       });
@@ -55,7 +44,7 @@ export default class ExpressStrategy {
 
   // For requests for the documentation.
   docsRequest(req, res, next) {
-    buildRequestObject(req, this.config.tunnel).then((requestObject) => {
+    this.buildRequestObject(req, req.protocol, req.get("Host"), req.params, req.query).then((requestObject) => {
       return this.docs.handle(requestObject, req, res).then((responseObject) => {
         this.sendResources(responseObject, res, next);
       });
@@ -120,99 +109,4 @@ export default class ExpressStrategy {
   toApp(typesToExcludedMethods) {
   }
   */
-}
-
-
-function buildRequestObject(req, allowTunneling) {
-  return Q.Promise(function(resolve, reject) {
-    let it = new Request();
-
-    // Handle route & query params
-    it.queryParams       = req.query;
-    it.allowLabel        = !!(req.params.idOrLabel && !req.params.id);
-    it.idOrIds           = req.params.id || req.params.idOrLabel;
-    it.type              = req.params.type;
-    it.aboutRelationship = !!req.params.relationship;
-    it.relationship      = req.params.related || req.params.relationship;
-
-    // Handle HTTP/Conneg.
-    it.uri     = req.protocol + "://" + req.get("Host") + req.originalUrl;
-    it.method  = req.method.toLowerCase();
-    it.accepts = req.headers.accept;
-
-    // Support Verb tunneling, but only for PATCH and only if user turns it on.
-    // Turning on any tunneling automatically could be a security issue.
-    let requestedMethod = (req.headers["x-http-method-override"] || "").toLowerCase();
-    if(allowTunneling && it.method === "post" && requestedMethod === "patch") {
-      it.method = "patch";
-    }
-    else if(requestedMethod) {
-      reject(
-        new APIError(400, undefined, `Cannot tunnel to the method "${requestedMethod.toUpperCase()}".`)
-      );
-    }
-
-    if(hasBody(req)) {
-      if(!isReadableStream(req)) {
-        return reject(
-          new APIError(500, undefined, "Request body could not be parsed. Make sure other no other middleware has already parsed the request body.")
-        );
-      }
-
-      it.contentType  = req.headers["content-type"];
-      const typeParsed = contentType.parse(req);
-
-      let bodyParserOptions = {};
-      bodyParserOptions.encoding = typeParsed.parameters.charset || "utf8";
-      bodyParserOptions.limit = "1mb";
-      if(req.headers["content-length"] && !isNaN(req.headers["content-length"])) {
-        bodyParserOptions.length = req.headers["content-length"];
-      }
-
-      // The req has not yet been read, so let's read it
-      getRawBody(req, bodyParserOptions, function(err, string) {
-        if(err) {
-          reject(err);
-        }
-
-        // Even though we passed the hasBody check, the body could still be
-        // empty, so we check the length. (We can't check this before doing
-        // getRawBody because, while Content-Length: 0 signals an empty body,
-        // there's no similar in-advance clue for detecting empty bodies when
-        // Transfer-Encoding: chunked is being used.)
-        else if(string.length === 0) {
-          it.hasBody = false;
-          it.body = "";
-          resolve(it);
-        }
-
-        else {
-          try {
-            it.hasBody = true;
-            it.body = JSON.parse(string);
-            resolve(it);
-          }
-          catch (error) {
-            reject(
-              new APIError(400, undefined, "Request contains invalid JSON.")
-            );
-          }
-        }
-      });
-    }
-
-    else {
-      it.hasBody = false;
-      it.body = undefined;
-      resolve(it);
-    }
-  });
-}
-
-function hasBody(req) {
-  return req.headers["transfer-encoding"] !== undefined || !isNaN(req.headers["content-length"]);
-}
-
-function isReadableStream(req) {
-  return typeof req._readableState === "object" && req._readableState.endEmitted === false;
 }

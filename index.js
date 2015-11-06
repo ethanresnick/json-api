@@ -13,6 +13,9 @@ module.exports = {
   httpStrategies: {
     get Express() {
       return require('./build/src/http-strategies/Express')
+    },
+    get Koa() {
+      return require('./build/src/http-strategies/Koa')
     }
   },
   types: {
