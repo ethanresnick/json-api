@@ -1,10 +1,12 @@
 "use strict";
 
+var _get = require("babel-runtime/helpers/get")["default"];
+
+var _inherits = require("babel-runtime/helpers/inherits")["default"];
+
 var _createClass = require("babel-runtime/helpers/create-class")["default"];
 
 var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default"];
-
-var _Object$assign = require("babel-runtime/core-js/object/assign")["default"];
 
 var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
 
@@ -12,37 +14,21 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _q = require("q");
-
-var _q2 = _interopRequireDefault(_q);
-
 var _vary = require("vary");
 
 var _vary2 = _interopRequireDefault(_vary);
-
-var _contentType = require("content-type");
-
-var _contentType2 = _interopRequireDefault(_contentType);
-
-var _rawBody = require("raw-body");
-
-var _rawBody2 = _interopRequireDefault(_rawBody);
 
 var _controllersAPI = require("../controllers/API");
 
 var _controllersAPI2 = _interopRequireDefault(_controllersAPI);
 
-var _typesAPIError = require("../types/APIError");
+var _Base2 = require("./Base");
 
-var _typesAPIError2 = _interopRequireDefault(_typesAPIError);
-
-var _typesHTTPRequest = require("../types/HTTP/Request");
-
-var _typesHTTPRequest2 = _interopRequireDefault(_typesHTTPRequest);
+var _Base3 = _interopRequireDefault(_Base2);
 
 /**
  * This controller receives requests directly from express and sends responses
- * direclty through it, but it converts incoming requests to, and generates
+ * directly through it, but it converts incoming requests to, and generates
  * responses, from Request and Response objects that are defined by this
  * framework in a way that's not particular to express. This controller thereby
  * acts as a translation-layer between express and the rest of this json-api
@@ -57,22 +43,17 @@ var _typesHTTPRequest2 = _interopRequireDefault(_typesHTTPRequest);
  *    can't produce a representation for the response that the client can
  *    `Accept`, should it return 406 or should it hand the request back to
  *    Express (i.e. call next()) so that subsequent handlers can attempt to
- *    find an alternate representation? By defualt, it does the former. But you
- *    can set this option to false to have this code just pass on to express.
+ *    find an alternate representation? By default, it does the former. But you
+ *    can set this option to false to have this code just pass on to Express.
  */
 
-var ExpressStrategy = (function () {
+var ExpressStrategy = (function (_Base) {
+  _inherits(ExpressStrategy, _Base);
+
   function ExpressStrategy(apiController, docsController, options) {
     _classCallCheck(this, ExpressStrategy);
 
-    var defaultOptions = {
-      tunnel: false,
-      handleContentNegotiation: true
-    };
-
-    this.api = apiController;
-    this.docs = docsController;
-    this.config = _Object$assign({}, defaultOptions, options); // apply options
+    _get(Object.getPrototypeOf(ExpressStrategy.prototype), "constructor", this).call(this, apiController, docsController, options);
   }
 
   // For requests like GET /:type, GET /:type/:id/:relationship,
@@ -86,7 +67,7 @@ var ExpressStrategy = (function () {
     value: function apiRequest(req, res, next) {
       var _this = this;
 
-      buildRequestObject(req, this.config.tunnel).then(function (requestObject) {
+      this.buildRequestObject(req, req.protocol, req.get("Host"), req.params, req.query).then(function (requestObject) {
         return _this.api.handle(requestObject, req, res).then(function (responseObject) {
           _this.sendResources(responseObject, res, next);
         });
@@ -101,7 +82,7 @@ var ExpressStrategy = (function () {
     value: function docsRequest(req, res, next) {
       var _this2 = this;
 
-      buildRequestObject(req, this.config.tunnel).then(function (requestObject) {
+      this.buildRequestObject(req, req.protocol, req.get("Host"), req.params, req.query).then(function (requestObject) {
         return _this2.docs.handle(requestObject, req, res).then(function (responseObject) {
           _this2.sendResources(responseObject, res, next);
         });
@@ -170,89 +151,7 @@ var ExpressStrategy = (function () {
   }]);
 
   return ExpressStrategy;
-})();
+})(_Base3["default"]);
 
 exports["default"] = ExpressStrategy;
-
-function buildRequestObject(req, allowTunneling) {
-  return _q2["default"].Promise(function (resolve, reject) {
-    var it = new _typesHTTPRequest2["default"]();
-
-    // Handle route & query params
-    it.queryParams = req.query;
-    it.allowLabel = !!(req.params.idOrLabel && !req.params.id);
-    it.idOrIds = req.params.id || req.params.idOrLabel;
-    it.type = req.params.type;
-    it.aboutRelationship = !!req.params.relationship;
-    it.relationship = req.params.related || req.params.relationship;
-
-    // Handle HTTP/Conneg.
-    it.uri = req.protocol + "://" + req.get("Host") + req.originalUrl;
-    it.method = req.method.toLowerCase();
-    it.accepts = req.headers.accept;
-
-    // Support Verb tunneling, but only for PATCH and only if user turns it on.
-    // Turning on any tunneling automatically could be a security issue.
-    var requestedMethod = (req.headers["x-http-method-override"] || "").toLowerCase();
-    if (allowTunneling && it.method === "post" && requestedMethod === "patch") {
-      it.method = "patch";
-    } else if (requestedMethod) {
-      reject(new _typesAPIError2["default"](400, undefined, "Cannot tunnel to the method \"" + requestedMethod.toUpperCase() + "\"."));
-    }
-
-    if (hasBody(req)) {
-      if (!isReadableStream(req)) {
-        return reject(new _typesAPIError2["default"](500, undefined, "Request body could not be parsed. Make sure other no other middleware has already parsed the request body."));
-      }
-
-      it.contentType = req.headers["content-type"];
-      var typeParsed = _contentType2["default"].parse(req);
-
-      var bodyParserOptions = {};
-      bodyParserOptions.encoding = typeParsed.parameters.charset || "utf8";
-      bodyParserOptions.limit = "1mb";
-      if (req.headers["content-length"] && !isNaN(req.headers["content-length"])) {
-        bodyParserOptions.length = req.headers["content-length"];
-      }
-
-      // The req has not yet been read, so let's read it
-      (0, _rawBody2["default"])(req, bodyParserOptions, function (err, string) {
-        if (err) {
-          reject(err);
-        }
-
-        // Even though we passed the hasBody check, the body could still be
-        // empty, so we check the length. (We can't check this before doing
-        // getRawBody because, while Content-Length: 0 signals an empty body,
-        // there's no similar in-advance clue for detecting empty bodies when
-        // Transfer-Encoding: chunked is being used.)
-        else if (string.length === 0) {
-            it.hasBody = false;
-            it.body = "";
-            resolve(it);
-          } else {
-            try {
-              it.hasBody = true;
-              it.body = JSON.parse(string);
-              resolve(it);
-            } catch (error) {
-              reject(new _typesAPIError2["default"](400, undefined, "Request contains invalid JSON."));
-            }
-          }
-      });
-    } else {
-      it.hasBody = false;
-      it.body = undefined;
-      resolve(it);
-    }
-  });
-}
-
-function hasBody(req) {
-  return req.headers["transfer-encoding"] !== undefined || !isNaN(req.headers["content-length"]);
-}
-
-function isReadableStream(req) {
-  return typeof req._readableState === "object" && req._readableState.endEmitted === false;
-}
 module.exports = exports["default"];
