@@ -26,6 +26,7 @@ before(function (done) {
       require("./content-negotiation");
       require("./fetch-collection");
       require("./create-resource");
+      require("./patch-relationship");
       require("./delete-resource");
       require("./documentation");
       done();

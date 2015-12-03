@@ -20,6 +20,10 @@ var _typesResource = require("../../types/Resource");
 
 var _typesResource2 = _interopRequireDefault(_typesResource);
 
+var _typesRelationship = require("../../types/Relationship");
+
+var _typesRelationship2 = _interopRequireDefault(_typesRelationship);
+
 var _typesLinkage = require("../../types/Linkage");
 
 var _typesLinkage2 = _interopRequireDefault(_typesLinkage);
@@ -47,11 +51,12 @@ exports["default"] = function (requestContext, responseContext, registry) {
     }
     changedResourceOrCollection = primary;
   } else if (primary instanceof _typesLinkage2["default"]) {
-    changedResourceOrCollection = new _typesResource2["default"](requestContext.type, requestContext.idOrIds, _defineProperty({}, requestContext.relationship, requestContext.primary));
+    changedResourceOrCollection = new _typesResource2["default"](requestContext.type, requestContext.idOrIds, undefined, _defineProperty({}, requestContext.relationship, new _typesRelationship2["default"](requestContext.primary)));
   }
 
   return adapter.update(type, changedResourceOrCollection).then(function (resources) {
-    responseContext.primary = resources;
+
+    responseContext.primary = primary instanceof _typesLinkage2["default"] ? resources.relationships[requestContext.relationship].linkage : resources;
   });
 };
 

@@ -5,6 +5,16 @@ var _Object$assign = require("babel-runtime/core-js/object/assign")["default"];
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+var VALID_PERSON_RESOURCE_NO_ID = {
+  "type": "people",
+  "attributes": {
+    "name": "Ethan Resnick",
+    "email": "ethan.resnick@gmail.com",
+    "gender": "male"
+  }
+};
+
+exports.VALID_PERSON_RESOURCE_NO_ID = VALID_PERSON_RESOURCE_NO_ID;
 var VALID_ORG_RESOURCE_NO_ID = {
   "type": "organizations",
   "attributes": {
