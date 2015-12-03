@@ -1,3 +1,12 @@
+export const VALID_PERSON_RESOURCE_NO_ID = {
+  "type": "people",
+  "attributes": {
+    "name": "Ethan Resnick",
+    "email": "ethan.resnick@gmail.com",
+    "gender": "male"
+  }
+};
+
 export const VALID_ORG_RESOURCE_NO_ID = {
   "type": "organizations",
   "attributes": {
@@ -34,3 +43,4 @@ export const INVALID_ORG_RESOURCE_NO_DATA_IN_RELATIONSHIP = {
     }
   }
 };
+
