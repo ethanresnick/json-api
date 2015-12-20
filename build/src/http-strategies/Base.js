@@ -149,12 +149,12 @@ var BaseStrategy = (function () {
               else if (string.length === 0) {
                   it.hasBody = false;
                   it.body = "";
-                  resolve(it);
+                  return resolve(it);
                 } else {
                   try {
                     it.hasBody = true;
                     it.body = JSON.parse(string);
-                    resolve(it);
+                    return resolve(it);
                   } catch (error) {
                     reject(new _typesAPIError2["default"](400, undefined, "Request contains invalid JSON."));
                   }
@@ -166,11 +166,13 @@ var BaseStrategy = (function () {
               it.hasBody = true;
               it.body = JSON.parse(rawBody);
               it.rawBody = req.rawBody;
+              return resolve(it);
             }
             // The request has been read, but the body has been set
             else if (typeof req.body === 'object') {
                 it.hasBody = true;
                 it.body = req.body;
+                return resolve(it);
               }
               // The request has been read, but neither req.body or req.rawBody have been set
               else {
