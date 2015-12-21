@@ -95,7 +95,7 @@ export default class BaseStrategy {
 
 
         if(isReadableStream(req)) {
-          
+
           let bodyParserOptions = {};
           bodyParserOptions.encoding = typeParsed.parameters.charset || "utf8";
           bodyParserOptions.limit = "1mb";
@@ -133,20 +133,20 @@ export default class BaseStrategy {
               }
             }
           });
-        } 
+        }
         // The request has been read, but the rawBody property has been set
         else if(!req.rawBody) {
           it.hasBody = true;
-          it.body = JSON.parse(rawBody);
+          it.body = JSON.parse(req.rawBody);
           it.rawBody = req.rawBody;
           return resolve(it);
-        } 
+        }
         // The request has been read, but the body has been set
-        else if(typeof req.body === 'object') {
+        else if(typeof req.body === "object") {
           it.hasBody = true;
           it.body = req.body;
           return resolve(it);
-        } 
+        }
         // The request has been read, but neither req.body or req.rawBody have been set
         else {
           return reject(
