@@ -548,8 +548,8 @@ export default class MongooseAdapter {
         max: type.options.max || undefined
       };
 
-      type.validators.forEach((validator) => {
-        Object.assign(validationRules, validator.JSONAPIDocumentation);
+      type.validators.forEach((validatorObj) => {
+        Object.assign(validationRules, validatorObj.validator.JSONAPIDocumentation);
       });
 
       schemaFields.push(new FieldDocumentation(
