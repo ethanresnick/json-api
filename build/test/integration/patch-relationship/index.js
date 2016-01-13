@@ -26,12 +26,14 @@ describe("Patching a relationship", function () {
     var url = "/organizations/" + orgId + "/relationships/liaisons";
 
     var setRelationship = function setRelationship(data, url) {
+      //eslint-disable-line no-shadow
       return Agent.request("PATCH", url).accept("application/vnd.api+json").type("application/vnd.api+json").send(data).promise().then(function (res) {
         (0, _chai.expect)(res.body.data).to.deep.equal(data.data);
       });
     };
 
     var testRelationshipState = function testRelationshipState(expectedVal, url) {
+      //eslint-disable-line no-shadow
       return Agent.request("GET", url).accept("application/vnd.api+json").promise().then(function (res) {
         (0, _chai.expect)(res.body.data).to.deep.equal(expectedVal.data);
       });

@@ -672,8 +672,8 @@ var MongooseAdapter = (function () {
           max: type.options.max || undefined
         };
 
-        type.validators.forEach(function (validator) {
-          _Object$assign(validationRules, validator.JSONAPIDocumentation);
+        type.validators.forEach(function (validatorObj) {
+          _Object$assign(validationRules, validatorObj.validator.JSONAPIDocumentation);
         });
 
         schemaFields.push(new _typesDocumentationField2["default"](name, fieldType, validationRules, _this7.toFriendlyName(name), defaultVal));
