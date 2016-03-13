@@ -3,6 +3,8 @@ import APIError from "../../../../src/types/APIError";
 import mongoose from "mongoose";
 import MongooseAdapter from "../../../../src/db-adapters/Mongoose/MongooseAdapter";
 
+const School = mongoose.model('School');
+
 describe("Mongoose Adapter", () => {
   describe("its instances methods", () => {
     describe("getModel", () => {
@@ -69,37 +71,51 @@ describe("Mongoose Adapter", () => {
     });
 
     describe("getIdQueryType", () => {
-      it("should handle null input", () => {
-        const res = MongooseAdapter.getIdQueryType();
-        expect(res[0]).to.equal("find");
-        expect(res[1]).to.be.undefined;
+      it("should handle null input", function(done) {
+        MongooseAdapter.getIdQueryType(null, School).then(([ mode, idQuery ]) => {
+          expect(mode).to.equal("find");
+          expect(idQuery).to.be.undefined;
+          done();
+        }, done);
       });
 
       describe("string", () => {
-        it("should throw on invalid input", () => {
-          const fn = function() { MongooseAdapter.getIdQueryType("1"); };
-          expect(fn).to.throw(APIError);
+        it("should throw on invalid input", function(done) {
+          MongooseAdapter.getIdQueryType("1", School).then(res => {
+            expect(false).to.be.ok;
+          }, err => {
+            expect(err).to.be.instanceof(APIError);
+            done();
+          });
         });
 
-        it("should produce query on valid input", () => {
-          const res = MongooseAdapter.getIdQueryType("552c5e1c604d41e5836bb174");
-          expect(res[0]).to.equal("findOne");
-          expect(res[1]._id).to.equal("552c5e1c604d41e5836bb174");
+        it("should produce query on valid input", function(done) {
+          MongooseAdapter.getIdQueryType("552c5e1c604d41e5836bb174", School).then(([ mode, idQuery ]) => {
+            expect(mode).to.equal("findOne");
+            expect(idQuery._id).to.equal("552c5e1c604d41e5836bb174");
+            done();
+          }).catch(err => { console.log(err); done(err); });
         });
       });
 
       describe("array", () => {
-        it("should throw if any ids are invalid", () => {
-          const fn = function() { MongooseAdapter.getIdQueryType(["1", "552c5e1c604d41e5836bb174"]); };
-          expect(fn).to.throw(APIError);
+        it("should throw if any ids are invalid", function(done) {
+          MongooseAdapter.getIdQueryType(["1", "552c5e1c604d41e5836bb174"], School).then(res => {
+            expect(false).to.be.ok;
+          }, err => {
+            expect(err).to.be.instanceof(APIError);
+            done();
+          });
         });
 
-        it("should produce query on valid input", () => {
-          const res = MongooseAdapter.getIdQueryType(["552c5e1c604d41e5836bb174", "552c5e1c604d41e5836bb175"]);
-          expect(res[0]).to.equal("find");
-          expect(res[1]._id.$in).to.be.an.Array;
-          expect(res[1]._id.$in[0]).to.equal("552c5e1c604d41e5836bb174");
-          expect(res[1]._id.$in[1]).to.equal("552c5e1c604d41e5836bb175");
+        it("should produce query on valid input", function(done) {
+          MongooseAdapter.getIdQueryType(["552c5e1c604d41e5836bb174", "552c5e1c604d41e5836bb175"], School).then(([ mode, idQuery ]) => {
+            expect(mode).to.equal("find");
+            expect(idQuery._id.$in).to.be.an.Array;
+            expect(idQuery._id.$in[0]).to.equal("552c5e1c604d41e5836bb174");
+            expect(idQuery._id.$in[1]).to.equal("552c5e1c604d41e5836bb175");
+            done();
+          }, done);
         });
       });
     });
