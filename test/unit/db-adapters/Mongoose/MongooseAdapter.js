@@ -222,8 +222,8 @@ describe("Mongoose Adapter", () => {
       it("should reject empty string", function(done) {
         const tests = [
           MongooseAdapter.idIsValid("", School),
-          MongooseAdapter.idIsValid("", NumericId)
-          // StringId should except anything != null
+          MongooseAdapter.idIsValid("", NumericId),
+          MongooseAdapter.idIsValid("", StringId)
         ];
 
         Q.allSettled(tests).then((res) => {
