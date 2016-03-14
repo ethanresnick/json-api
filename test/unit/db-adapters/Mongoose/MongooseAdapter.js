@@ -4,9 +4,9 @@ import APIError from "../../../../src/types/APIError";
 import mongoose from "mongoose";
 import MongooseAdapter from "../../../../src/db-adapters/Mongoose/MongooseAdapter";
 
-const School = mongoose.model('School');
-const NumericId = mongoose.model('NumericId');
-const StringId = mongoose.model('StringId');
+const School = mongoose.model("School");
+const NumericId = mongoose.model("NumericId");
+const StringId = mongoose.model("StringId");
 
 describe("Mongoose Adapter", () => {
   describe("its instances methods", () => {

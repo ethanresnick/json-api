@@ -604,35 +604,37 @@ export default class MongooseAdapter {
     return words.join(" ");
   }
 
-  static getIdQueryType(idOrIds, model) {
+  static getIdQueryType(idOrIds, Model) {
     if (idOrIds == null) {
       return Q([ "find", undefined ]);
     }
 
     const [ mode, ids ] = Array.isArray(idOrIds) ? [ "find", idOrIds ] : [ "findOne", [ idOrIds ] ];
-    const idValidationPromises = ids.map(id => this.idIsValid(id, model));
+    const idValidationPromises = ids.map(id => this.idIsValid(id, Model));
 
     return Q.all(idValidationPromises).then((idsAreValid) => {
       if (idsAreValid.every(valid => valid)) {
         const idQuery = { _id: mode === "find" ? { $in: ids } : ids[0] };
         return [ mode, ids.length ? idQuery : undefined ];
-      } else {
+      }
+      else {
         if (mode === "findOne") {
           throw new APIError(404, undefined, "No matching resource found.", "Invalid ID.");
-        } else {
+        }
+        else {
           throw new APIError(400, undefined, "Invalid ID.");
         }
       }
     });
   }
 
-  static idIsValid(id, model) {
+  static idIsValid(id, Model) {
     return Q.Promise((resolve, reject) => {
       if (id == null) {
         return reject();
       }
 
-      return (new model({ _id: id })).validate().then(
+      return (new Model({ _id: id })).validate().then(
         (res) => resolve(true),
         (err) => err.errors && err.errors._id ? resolve(false) : resolve(true)
       );

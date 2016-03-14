@@ -37,7 +37,7 @@ export default function(data, parseAsLinkage) {
 
 function relationshipFromJSON(json) {
   if (typeof json.data === "undefined") {
-    throw new APIError(400, undefined, `Missing relationship linkage.`);
+    throw new APIError(400, undefined, "Missing relationship linkage.");
   }
 
   return new Relationship(linkageFromJSON(json.data));
