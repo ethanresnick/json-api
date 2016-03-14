@@ -178,7 +178,7 @@ describe("Mongoose Adapter", () => {
     });
 
     describe("idIsValid", () => {
-      it("should reject all == null input", function(done) {
+      it("should refuse all == null input", function(done) {
         const tests = [
           MongooseAdapter.idIsValid(School),
           MongooseAdapter.idIsValid(NumericId),
@@ -188,16 +188,16 @@ describe("Mongoose Adapter", () => {
           MongooseAdapter.idIsValid(null, StringId),
           MongooseAdapter.idIsValid(undefined, School),
           MongooseAdapter.idIsValid(undefined, NumericId),
-          MongooseAdapter.idIsValid(undefined, StringId),
+          MongooseAdapter.idIsValid(undefined, StringId)
         ];
 
         Q.allSettled(tests).then((res) => {
-          res.forEach(result => expect(result.state).to.equal("rejected"));
+          res.forEach(result => expect(result.result).to.not.be.ok);
           done();
         }).catch(done);
       });
 
-      it("should reject bad input type", function(done) {
+      it("should refuse a bad input type", function(done) {
         const tests = [
           MongooseAdapter.idIsValid(true, School),
           MongooseAdapter.idIsValid(false, School),
@@ -214,12 +214,12 @@ describe("Mongoose Adapter", () => {
         ];
 
         Q.allSettled(tests).then((res) => {
-          res.forEach(result => expect(result.state).to.equal("rejected"));
+          res.forEach(result => expect(result.result).to.not.be.ok);
           done();
         }).catch(done);
       });
 
-      it("should reject empty string", function(done) {
+      it("should refuse an empty string", function(done) {
         const tests = [
           MongooseAdapter.idIsValid("", School),
           MongooseAdapter.idIsValid("", NumericId),
@@ -227,7 +227,7 @@ describe("Mongoose Adapter", () => {
         ];
 
         Q.allSettled(tests).then((res) => {
-          res.forEach(result => expect(result.state).to.equal("rejected"));
+          res.forEach(result => expect(result.result).to.not.be.ok);
           done();
         }).catch(done);
       });
