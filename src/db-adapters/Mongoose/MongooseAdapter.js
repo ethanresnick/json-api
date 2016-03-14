@@ -605,15 +605,16 @@ export default class MongooseAdapter {
   }
 
   static getIdQueryType(idOrIds, model) {
-    const mode = typeof idOrIds === "string" ? "findOne" : "find";
-    const ids = Array.isArray(idOrIds) ? idOrIds : [ idOrIds ];
-    const tests = ids
-      .filter(id => id != null) // mongo treats these as to-be-generated and therefore valid
-      .map(id => this.idIsValid(id, model));
+    if (idOrIds == null) {
+      return Q.resolve([ "find", undefined ]);
+    }
 
-    return Q.all(tests).then((validIds) => {
-      const idQuery = { _id: mode === "find" ? { $in: validIds } : validIds[0] };
-      return [ mode, validIds.length ? idQuery : undefined ];
+    const [ mode, ids ] = Array.isArray(idOrIds) ? [ "find", idOrIds ] : [ "findOne", [ idOrIds ] ];
+    const tests = ids.map(id => this.idIsValid(id, model));
+
+    return Q.all(tests).then(() => {
+      const idQuery = { _id: mode === "find" ? { $in: ids } : ids[0] };
+      return [ mode, ids.length ? idQuery : undefined ];
     }, (err) => {
       if (mode === "findOne") {
         throw new APIError(404, undefined, "No matching resource found.", "Invalid ID.");
@@ -630,7 +631,7 @@ export default class MongooseAdapter {
       }
 
       return (new model({ _id: id })).validate().then(
-        (res) => resolve(id),
+        (res) => resolve(true),
         (err) => err.errors && err.errors._id ? reject(err.errors._id) : resolve(id)
       );
     });
