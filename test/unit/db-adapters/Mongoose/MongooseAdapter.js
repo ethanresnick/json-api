@@ -177,57 +177,63 @@ describe("Mongoose Adapter", () => {
       });
     });
 
-    describe("idIsValid", () => {
+    describe("validateId", () => {
       it("should refuse all == null input", function(done) {
         const tests = [
-          MongooseAdapter.idIsValid(School),
-          MongooseAdapter.idIsValid(NumericId),
-          MongooseAdapter.idIsValid(StringId),
-          MongooseAdapter.idIsValid(null, School),
-          MongooseAdapter.idIsValid(null, NumericId),
-          MongooseAdapter.idIsValid(null, StringId),
-          MongooseAdapter.idIsValid(undefined, School),
-          MongooseAdapter.idIsValid(undefined, NumericId),
-          MongooseAdapter.idIsValid(undefined, StringId)
+          MongooseAdapter.validateId(null, School),
+          MongooseAdapter.validateId(null, NumericId),
+          MongooseAdapter.validateId(null, StringId),
+          MongooseAdapter.validateId(undefined, School),
+          MongooseAdapter.validateId(undefined, NumericId),
+          MongooseAdapter.validateId(undefined, StringId)
         ];
 
         Q.allSettled(tests).then((res) => {
-          res.forEach(result => expect(result.result).to.not.be.ok);
+          res.forEach(result => expect(result.state).to.equal("rejected"));
           done();
         }).catch(done);
       });
 
       it("should refuse a bad input type", function(done) {
         const tests = [
-          MongooseAdapter.idIsValid(true, School),
-          MongooseAdapter.idIsValid(false, School),
-          MongooseAdapter.idIsValid("not hex", School),
-          MongooseAdapter.idIsValid([], School),
-          MongooseAdapter.idIsValid("1234567890abcdef", School),
-          MongooseAdapter.idIsValid(1234567890, School),
-          MongooseAdapter.idIsValid("NaN", NumericId),
-          MongooseAdapter.idIsValid("one", NumericId),
-          MongooseAdapter.idIsValid([], NumericId),
-          MongooseAdapter.idIsValid(true, NumericId),
-          MongooseAdapter.idIsValid(false, NumericId)
+          MongooseAdapter.validateId(true, School),
+          MongooseAdapter.validateId(false, School),
+          MongooseAdapter.validateId("not hex", School),
+          MongooseAdapter.validateId([], School),
+          MongooseAdapter.validateId("1234567890abcdef", School),
+          MongooseAdapter.validateId(1234567890, School),
+          MongooseAdapter.validateId("NaN", NumericId),
+          MongooseAdapter.validateId("one", NumericId),
+          MongooseAdapter.validateId([], NumericId),
+          MongooseAdapter.validateId(true, NumericId),
+          MongooseAdapter.validateId(false, NumericId)
           // StringId should except anything != null
         ];
 
         Q.allSettled(tests).then((res) => {
-          res.forEach(result => expect(result.result).to.not.be.ok);
+          res.forEach(result => {
+            expect(result.state).to.equal("rejected");
+            expect(result.reason.name).to.equal("CastError");
+            expect(result.reason.path).to.equal("_id");
+          });
+
           done();
         }).catch(done);
       });
 
       it("should refuse an empty string", function(done) {
         const tests = [
-          MongooseAdapter.idIsValid("", School),
-          MongooseAdapter.idIsValid("", NumericId),
-          MongooseAdapter.idIsValid("", StringId)
+          MongooseAdapter.validateId("", School),
+          MongooseAdapter.validateId("", NumericId),
+          MongooseAdapter.validateId("", StringId)
         ];
 
         Q.allSettled(tests).then((res) => {
-          res.forEach(result => expect(result.result).to.not.be.ok);
+          res.forEach(result => {
+            expect(result.state).to.equal("rejected");
+            expect(result.reason.name).to.match(/ValidatorError|CastError/);
+            expect(result.reason.path).to.equal("_id");
+          });
           done();
         }).catch(done);
       });
@@ -235,20 +241,20 @@ describe("Mongoose Adapter", () => {
       // the string coming into the MongooseAdapter needs to be the 24-character,
       // hex encoded version of the ObjectId, not an arbitrary 12 byte string.
       it("should reject 12-character strings", function(done) {
-        MongooseAdapter.idIsValid("aaabbbccc111", School)
+        MongooseAdapter.validateId("aaabbbccc111", School)
           .then(() => expect(false).to.be.ok)
           .catch(() => done());
       });
 
       it("should accpet valid IDs", function(done) {
         const tests = [
-          MongooseAdapter.idIsValid("552c5e1c604d41e5836bb175", School),
-          MongooseAdapter.idIsValid("123", NumericId),
-          MongooseAdapter.idIsValid(123, NumericId),
-          MongooseAdapter.idIsValid("0", NumericId),
-          MongooseAdapter.idIsValid(0, NumericId),
-          MongooseAdapter.idIsValid("0", StringId),
-          MongooseAdapter.idIsValid("null", StringId)
+          MongooseAdapter.validateId("552c5e1c604d41e5836bb175", School),
+          MongooseAdapter.validateId("123", NumericId),
+          MongooseAdapter.validateId(123, NumericId),
+          MongooseAdapter.validateId("0", NumericId),
+          MongooseAdapter.validateId(0, NumericId),
+          MongooseAdapter.validateId("0", StringId),
+          MongooseAdapter.validateId("null", StringId)
         ];
 
         Q.all(tests).then((res) => done(), done);

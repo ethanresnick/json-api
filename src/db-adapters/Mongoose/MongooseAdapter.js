@@ -610,25 +610,22 @@ export default class MongooseAdapter {
     }
 
     const [ mode, ids ] = Array.isArray(idOrIds) ? [ "find", idOrIds ] : [ "findOne", [ idOrIds ] ];
-    const idValidationPromises = ids.map(id => this.idIsValid(id, Model));
+    const idValidationPromises = ids.map(id => this.validateId(id, Model));
 
-    return Q.all(idValidationPromises).then((idsAreValid) => {
-      if (idsAreValid.every(valid => valid)) {
-        const idQuery = { _id: mode === "find" ? { $in: ids } : ids[0] };
-        return [ mode, ids.length ? idQuery : undefined ];
+    return Q.all(idValidationPromises).then(() => {
+      const idQuery = { _id: mode === "find" ? { $in: ids } : ids[0] };
+      return [ mode, ids.length ? idQuery : undefined ];
+    }, err => {
+      if (mode === "findOne") {
+        throw new APIError(404, undefined, "No matching resource found.", "Invalid ID.");
       }
       else {
-        if (mode === "findOne") {
-          throw new APIError(404, undefined, "No matching resource found.", "Invalid ID.");
-        }
-        else {
-          throw new APIError(400, undefined, "Invalid ID.");
-        }
+        throw new APIError(400, undefined, "Invalid ID.");
       }
     });
   }
 
-  static idIsValid(id, Model) {
+  static validateId(id, Model) {
     return Q.Promise((resolve, reject) => {
       if (id == null) {
         return reject();
@@ -636,7 +633,7 @@ export default class MongooseAdapter {
 
       return (new Model({ _id: id })).validate().then(
         (res) => resolve(true),
-        (err) => err.errors && err.errors._id ? resolve(false) : resolve(true)
+        (err) => err.errors && err.errors._id ? reject(err.errors._id) : resolve(true)
       );
     });
   }
