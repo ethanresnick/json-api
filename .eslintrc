@@ -4,7 +4,7 @@
     "strict": 0,
 
     "curly": 0,
-    "indent": [2, 2, {indentSwitchCase: true}],
+    "indent": [2, 2, {"SwitchCase": 1}],
     "brace-style": [2, "stroustrup", { "allowSingleLine": true }],
     "new-cap": [2, {"capIsNewExceptions": ["Q", "Promise", "ValueObject", "Maybe", "mongoose.Schema", "Schema"]}],
     "quotes": [2, "double", "avoid-escape"],
