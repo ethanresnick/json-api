@@ -605,43 +605,34 @@ export default class MongooseAdapter {
   }
 
   static getIdQueryType(idOrIds, model) {
-    return Q.Promise((resolve, reject) => {
-      const mode = typeof idOrIds === "string" ? "findOne" : "find";
-      let ids = Array.isArray(idOrIds) ? idOrIds : [ idOrIds ];
-      let idQuery;
-      let tests = [];
+    const mode = typeof idOrIds === "string" ? "findOne" : "find";
+    const ids = Array.isArray(idOrIds) ? idOrIds : [ idOrIds ];
+    const tests = ids
+      .filter(id => id != null) // mongo treats these as to-be-generated and therefore valid
+      .map(id => this.idIsValid(id, model));
 
-      ids = ids.filter(id => Boolean(id));
-
-      ids.forEach(id => {
-        const testDoc = new model({ _id: id })
-        tests.push(testDoc.validate());
-      });
-
-      Q.allSettled(tests).then(results => {
-        let invalid = false;
-
-        results.forEach(result => {
-          if (result.reason && result.reason.errors._id) {
-            invalid = true;
-          }
-        });
-
-        if (!invalid) {
-          const idQuery = { _id: mode === "find" ? { $in: ids } : ids[0] };
-          resolve([ mode, results.length ? idQuery : undefined ]);
-        } else {
-          if (mode === "findOne") {
-            reject(new APIError(404, undefined, "No matching resource found.", "Invalid ID."));
-          } else {
-            reject(new APIError(400, undefined, "Invalid ID."));
-          }
-        }
-      }).catch(reject);
+    return Q.all(tests).then((validIds) => {
+      const idQuery = { _id: mode === "find" ? { $in: validIds } : validIds[0] };
+      return [ mode, validIds.length ? idQuery : undefined ];
+    }, (err) => {
+      if (mode === "findOne") {
+        throw new APIError(404, undefined, "No matching resource found.", "Invalid ID.");
+      } else {
+        throw new APIError(400, undefined, "Invalid ID.");
+      }
     });
   }
 
-  static idIsValid(id) {
-    return typeof id === "string" && /^[0-9a-fA-F]{24}$/.test(id);
+  static idIsValid(id, model) {
+    return Q.Promise((resolve, reject) => {
+      if (id == null) {
+        return reject();
+      }
+
+      return (new model({ _id: id })).validate().then(
+        (res) => resolve(id),
+        (err) => err.errors && err.errors._id ? reject(err.errors._id) : resolve(id)
+      );
+    });
   }
 }

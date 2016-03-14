@@ -1,9 +1,12 @@
+import Q from "q";
 import {expect} from "chai";
 import APIError from "../../../../src/types/APIError";
 import mongoose from "mongoose";
 import MongooseAdapter from "../../../../src/db-adapters/Mongoose/MongooseAdapter";
 
 const School = mongoose.model('School');
+const NumericId = mongoose.model('NumericId');
+const StringId = mongoose.model('StringId');
 
 describe("Mongoose Adapter", () => {
   describe("its instances methods", () => {
@@ -76,77 +79,179 @@ describe("Mongoose Adapter", () => {
           expect(mode).to.equal("find");
           expect(idQuery).to.be.undefined;
           done();
-        }, done);
+        }).catch(done);
       });
 
       describe("string", () => {
-        it("should throw on invalid input", function(done) {
+        it("should reject on invalid ObjectId input", function(done) {
           MongooseAdapter.getIdQueryType("1", School).then(res => {
             expect(false).to.be.ok;
           }, err => {
             expect(err).to.be.instanceof(APIError);
             done();
-          });
+          }).catch(done);
         });
 
-        it("should produce query on valid input", function(done) {
+        it("should reject on invalid numeric ID input", function(done) {
+          MongooseAdapter.getIdQueryType("123abc", NumericId).then(res => {
+            expect(false).to.be.ok;
+          }, err => {
+            expect(err).to.be.instanceof(APIError);
+            done();
+          }).catch(done);
+        });
+
+        it("should produce query on valid ObjectId input", function(done) {
           MongooseAdapter.getIdQueryType("552c5e1c604d41e5836bb174", School).then(([ mode, idQuery ]) => {
             expect(mode).to.equal("findOne");
             expect(idQuery._id).to.equal("552c5e1c604d41e5836bb174");
             done();
-          }).catch(err => { console.log(err); done(err); });
+          }).catch(done);
+        });
+
+        it("should produce query on valid numeric ID input", function(done) {
+          MongooseAdapter.getIdQueryType("0", NumericId).then(([ mode, idQuery ]) => {
+            expect(mode).to.equal("findOne");
+            expect(idQuery._id).to.equal("0");
+            done();
+          }).catch(done);
+        });
+
+        it("should produce query on valid string ID input", function(done) {
+          MongooseAdapter.getIdQueryType("null", StringId).then(([ mode, idQuery ]) => {
+            expect(mode).to.equal("findOne");
+            expect(idQuery._id).to.equal("null");
+            done();
+          }).catch(done);
         });
       });
 
       describe("array", () => {
-        it("should throw if any ids are invalid", function(done) {
+        it("should throw if any ObjectIds are invalid", function(done) {
           MongooseAdapter.getIdQueryType(["1", "552c5e1c604d41e5836bb174"], School).then(res => {
             expect(false).to.be.ok;
           }, err => {
             expect(err).to.be.instanceof(APIError);
             done();
-          });
+          }).catch(done);
         });
 
-        it("should produce query on valid input", function(done) {
+        it("should throw if any numeric ids are invalid", function(done) {
+          MongooseAdapter.getIdQueryType(["abc", "123"], NumericId).then(res => {
+            expect(false).to.be.ok;
+          }, err => {
+            expect(err).to.be.instanceof(APIError);
+            done();
+          }).catch(done);
+        });
+
+        it("should produce query on valid ObjectId input", function(done) {
           MongooseAdapter.getIdQueryType(["552c5e1c604d41e5836bb174", "552c5e1c604d41e5836bb175"], School).then(([ mode, idQuery ]) => {
             expect(mode).to.equal("find");
             expect(idQuery._id.$in).to.be.an.Array;
             expect(idQuery._id.$in[0]).to.equal("552c5e1c604d41e5836bb174");
             expect(idQuery._id.$in[1]).to.equal("552c5e1c604d41e5836bb175");
             done();
-          }, done);
+          }).catch(done);
+        });
+
+        it("should produce query on valid numeric ID input", function(done) {
+          MongooseAdapter.getIdQueryType(["0", "1"], NumericId).then(([ mode, idQuery ]) => {
+            expect(mode).to.equal("find");
+            expect(idQuery._id.$in).to.be.an.Array;
+            expect(idQuery._id.$in[0]).to.equal("0");
+            expect(idQuery._id.$in[1]).to.equal("1");
+            done();
+          }).catch(done);
+        });
+
+        it("should produce query on valid string ID input", function(done) {
+          MongooseAdapter.getIdQueryType(["a", "null"], StringId).then(([ mode, idQuery ]) => {
+            expect(mode).to.equal("find");
+            expect(idQuery._id.$in).to.be.an.Array;
+            expect(idQuery._id.$in[0]).to.equal("a");
+            expect(idQuery._id.$in[1]).to.equal("null");
+            done();
+          }).catch(done);
         });
       });
     });
 
     describe("idIsValid", () => {
-      it("should reject all == null input", () => {
-        expect(MongooseAdapter.idIsValid()).to.not.be.ok;
-        expect(MongooseAdapter.idIsValid(null)).to.not.be.ok;
-        expect(MongooseAdapter.idIsValid(undefined)).to.not.be.ok;
+      it("should reject all == null input", function(done) {
+        const tests = [
+          MongooseAdapter.idIsValid(School),
+          MongooseAdapter.idIsValid(NumericId),
+          MongooseAdapter.idIsValid(StringId),
+          MongooseAdapter.idIsValid(null, School),
+          MongooseAdapter.idIsValid(null, NumericId),
+          MongooseAdapter.idIsValid(null, StringId),
+          MongooseAdapter.idIsValid(undefined, School),
+          MongooseAdapter.idIsValid(undefined, NumericId),
+          MongooseAdapter.idIsValid(undefined, StringId),
+        ];
+
+        Q.allSettled(tests).then((res) => {
+          res.forEach(result => expect(result.state).to.equal("rejected"));
+          done();
+        }).catch(done);
       });
 
-      it("should reject bad input type", () => {
-        expect(MongooseAdapter.idIsValid(true)).to.not.be.ok;
+      it("should reject bad input type", function(done) {
+        const tests = [
+          MongooseAdapter.idIsValid(true, School),
+          MongooseAdapter.idIsValid(false, School),
+          MongooseAdapter.idIsValid("not hex", School),
+          MongooseAdapter.idIsValid([], School),
+          MongooseAdapter.idIsValid("1234567890abcdef", School),
+          MongooseAdapter.idIsValid(1234567890, School),
+          MongooseAdapter.idIsValid("NaN", NumericId),
+          MongooseAdapter.idIsValid("one", NumericId),
+          MongooseAdapter.idIsValid([], NumericId),
+          MongooseAdapter.idIsValid(true, NumericId),
+          MongooseAdapter.idIsValid(false, NumericId)
+          // StringId should except anything != null
+        ];
+
+        Q.allSettled(tests).then((res) => {
+          res.forEach(result => expect(result.state).to.equal("rejected"));
+          done();
+        }).catch(done);
       });
 
-      it("should reject empty string", () => {
-        expect(MongooseAdapter.idIsValid("")).to.not.be.ok;
+      it("should reject empty string", function(done) {
+        const tests = [
+          MongooseAdapter.idIsValid("", School),
+          MongooseAdapter.idIsValid("", NumericId)
+          // StringId should except anything != null
+        ];
+
+        Q.allSettled(tests).then((res) => {
+          res.forEach(result => expect(result.state).to.equal("rejected"));
+          done();
+        }).catch(done);
       });
 
       // the string coming into the MongooseAdapter needs to be the 24-character,
       // hex encoded version of the ObjectId, not an arbitrary 12 byte string.
-      it("should reject 12-character strings", () => {
-        expect(MongooseAdapter.idIsValid("aaabbbccc111")).to.not.be.ok;
+      it("should reject 12-character strings", function(done) {
+        MongooseAdapter.idIsValid("aaabbbccc111", School)
+          .then(() => expect(false).to.be.ok)
+          .catch(() => done());
       });
 
-      it("should reject numbers", () => {
-        expect(MongooseAdapter.idIsValid(1)).to.not.be.ok;
-      });
+      it("should accpet valid IDs", function(done) {
+        const tests = [
+          MongooseAdapter.idIsValid("552c5e1c604d41e5836bb175", School),
+          MongooseAdapter.idIsValid("123", NumericId),
+          MongooseAdapter.idIsValid(123, NumericId),
+          MongooseAdapter.idIsValid("0", NumericId),
+          MongooseAdapter.idIsValid(0, NumericId),
+          MongooseAdapter.idIsValid("0", StringId),
+          MongooseAdapter.idIsValid("null", StringId)
+        ];
 
-      it("should accpet valid hex string", () => {
-        expect(MongooseAdapter.idIsValid("552c5e1c604d41e5836bb175")).to.be.ok;
+        Q.all(tests).then((res) => done(), done);
       });
     });
 
