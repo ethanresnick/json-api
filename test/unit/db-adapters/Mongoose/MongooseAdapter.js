@@ -174,6 +174,15 @@ describe("Mongoose Adapter", () => {
             done();
           }).catch(done);
         });
+
+        it("should produce an empty query when passed an empty array of ids", function(done) {
+          MongooseAdapter.getIdQueryType([], School).then(([ mode, idQuery ]) => {
+            expect(mode).to.equal("find");
+            expect(idQuery._id.$in).to.be.an.Array
+            expect(idQuery._id.$in).to.have.lengthOf(0);
+            done();
+          }).catch(done);
+        });
       });
     });
 

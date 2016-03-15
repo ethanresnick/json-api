@@ -614,7 +614,7 @@ export default class MongooseAdapter {
 
     return Q.all(idValidationPromises).then(() => {
       const idQuery = { _id: mode === "find" ? { $in: ids } : ids[0] };
-      return [ mode, ids.length ? idQuery : undefined ];
+      return [ mode, idOrIds != null ? idQuery : undefined ];
     }, err => {
       if (mode === "findOne") {
         throw new APIError(404, undefined, "No matching resource found.", "Invalid ID.");
