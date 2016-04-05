@@ -195,7 +195,9 @@ describe("Mongoose Adapter", function () {
           },
           "arrayNonEnum": [{
             type: Number
-          }]
+          }],
+          "arrayObjectId": [{ type: _mongoose2["default"].Schema.Types.ObjectId, ref: 'Test' }],
+          "stringArray": [String]
         };
 
         // need to compile it, as a schema and a model, before reading.
@@ -229,6 +231,8 @@ describe("Mongoose Adapter", function () {
         (0, _chai.expect)(fields.nonEnumNumber.validation.oneOf).to.be.undefined;
         (0, _chai.expect)(fields.nonEnumString.validation.oneOf).to.be.undefined;
         (0, _chai.expect)(fields.arrayNonEnum.validation.oneOf).to.be.undefined;
+        (0, _chai.expect)(fields.arrayObjectId.validation.oneOf).to.be.undefined;
+        (0, _chai.expect)(fields.stringArray.validation.oneOf).to.be.undefined;
       });
     });
   });

@@ -170,7 +170,11 @@ describe("Mongoose Adapter", () => {
           },
           "arrayNonEnum": [{
             type: Number
-          }]
+          }],
+          "arrayObjectId": [
+            { type: mongoose.Schema.Types.ObjectId, ref: 'Test' }
+          ],
+          "stringArray": [String],
         };
 
         // need to compile it, as a schema and a model, before reading.
@@ -204,6 +208,8 @@ describe("Mongoose Adapter", () => {
         expect(fields.nonEnumNumber.validation.oneOf).to.be.undefined;
         expect(fields.nonEnumString.validation.oneOf).to.be.undefined;
         expect(fields.arrayNonEnum.validation.oneOf).to.be.undefined;
+        expect(fields.arrayObjectId.validation.oneOf).to.be.undefined;
+        expect(fields.stringArray.validation.oneOf).to.be.undefined;
       });
     });
   });
