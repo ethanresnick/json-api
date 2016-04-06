@@ -503,9 +503,11 @@ export default class MongooseAdapter {
         return new FieldTypeDocumentation("Id", false);
       }
 
+
       const typeOptions = schemaType.options.type;
       const holdsArray = Array.isArray(typeOptions);
-      const baseType = holdsArray ? typeOptions[0].type.name : typeOptions.name;
+
+      const baseType = holdsArray ? typeOptions[0].ref : typeOptions.name;
       const refModelName = util.getReferencedModelName(model, path);
 
       return !refModelName ?
@@ -513,6 +515,7 @@ export default class MongooseAdapter {
         new RelationshipTypeDocumentation(
           holdsArray, refModelName, this.getType(refModelName, pluralizer)
         );
+
     };
 
     model.schema.eachPath((name, type) => {
