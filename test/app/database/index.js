@@ -5,6 +5,8 @@ import fixtures from "node-mongoose-fixtures";
 import PersonModel from "./models/person";
 import makeSchoolModelConstructor from "./models/school";
 import OrganizationModelSchema from "./models/organization";
+import NumericId from "./models/numeric-id";
+import StringId from "./models/string-id";
 
 /*eslint-disable new-cap */
 const ObjectId = mongoose.Types.ObjectId;
@@ -19,7 +21,9 @@ const OrganizationSchema = OrganizationModelSchema.schema;
 const models = {
   Person: PersonModel,
   Organization: OrganizationModel,
-  School: makeSchoolModelConstructor(OrganizationModel, OrganizationSchema)
+  School: makeSchoolModelConstructor(OrganizationModel, OrganizationSchema),
+  NumericId,
+  StringId
 };
 
 fixtures.save("all", {

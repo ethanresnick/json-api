@@ -32,108 +32,108 @@ export default class MongooseAdapter {
   find(type, idOrIds, fields, sorts, filters, includePaths) {
     const model = this.getModel(this.constructor.getModelName(type));
     const queryBuilder = new mongoose.Query(null, null, model, model.collection);
-    const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
     const pluralizer = this.inflector.plural;
     let primaryDocumentsPromise, includedResourcesPromise = Q(null);
 
+    return this.constructor.getIdQueryType(idOrIds, model).then(([ mode, idQuery]) => {
+      queryBuilder[mode](idQuery);
 
-    queryBuilder[mode](idQuery);
+      // do sorting
+      if(Array.isArray(sorts)) {
+        queryBuilder.sort(sorts.join(" "));
+      }
 
-    // do sorting
-    if(Array.isArray(sorts)) {
-      queryBuilder.sort(sorts.join(" "));
-    }
+      // filter out invalid records with simple fields equality.
+      // note that there's a non-trivial risk of sql-like injection here.
+      // we're mostly protected by the fact that we're treating the filter's
+      // value as a single string, though, and not parsing as JSON.
+      if(typeof filters === "object" && !Array.isArray(filters)) {
+        queryBuilder.where(filters);
+      }
 
-    // filter out invalid records with simple fields equality.
-    // note that there's a non-trivial risk of sql-like injection here.
-    // we're mostly protected by the fact that we're treating the filter's
-    // value as a single string, though, and not parsing as JSON.
-    if(typeof filters === "object" && !Array.isArray(filters)) {
-      queryBuilder.where(filters);
-    }
+      // in an ideal world, we'd use mongoose here to filter the fields before
+      // querying. But, because the fields to filter can be scoped by type and
+      // we don't always know about a document's type until after query (becuase
+      // of discriminator keys), and because filtering out fields can really
+      // complicate population for includes, we don't yet filter at query time but
+      // instead just hide filtered fields in @docToResource. There is a more-
+      // efficient way to do this down the road, though--something like taking the
+      // provided fields and expanding them just enough (by looking at the type
+      // heirarachy and the relationship paths) to make sure that we're not going
+      // to run into any of the problems outlined above, while still querying for
+      // less data than we would without any fields restriction. For reference, the
+      // code for safely using the user's `fields` input, by putting them into a
+      // mongoose `.select()` object so that the user can't prefix a field with a
+      // minus on input to affect the query, is below.
+      // Reference: http://mongoosejs.com/docs/api.html#query_Query-select.
+      // let arrToSelectObject = (prev, curr) => { prev[curr] = 1; return prev; };
+      // for(let type in fields) {
+      //   fields[type] = fields[type].reduce(arrToSelectObject, {});
+      // }
 
-    // in an ideal world, we'd use mongoose here to filter the fields before
-    // querying. But, because the fields to filter can be scoped by type and
-    // we don't always know about a document's type until after query (becuase
-    // of discriminator keys), and because filtering out fields can really
-    // complicate population for includes, we don't yet filter at query time but
-    // instead just hide filtered fields in @docToResource. There is a more-
-    // efficient way to do this down the road, though--something like taking the
-    // provided fields and expanding them just enough (by looking at the type
-    // heirarachy and the relationship paths) to make sure that we're not going
-    // to run into any of the problems outlined above, while still querying for
-    // less data than we would without any fields restriction. For reference, the
-    // code for safely using the user's `fields` input, by putting them into a
-    // mongoose `.select()` object so that the user can't prefix a field with a
-    // minus on input to affect the query, is below.
-    // Reference: http://mongoosejs.com/docs/api.html#query_Query-select.
-    // let arrToSelectObject = (prev, curr) => { prev[curr] = 1; return prev; };
-    // for(let type in fields) {
-    //   fields[type] = fields[type].reduce(arrToSelectObject, {});
-    // }
+      // support includes, but only a level deep for now (recursive includes,
+      // especially if done in an efficient way query wise, are a pain in the ass).
+      if(includePaths) {
+        const populatedPaths = [];
+        const refPaths = util.getReferencePaths(model);
 
-    // support includes, but only a level deep for now (recursive includes,
-    // especially if done in an efficient way query wise, are a pain in the ass).
-    if(includePaths) {
-      const populatedPaths = [];
-      const refPaths = util.getReferencePaths(model);
+        includePaths = includePaths.map((it) => it.split("."));
+        includePaths.forEach((pathParts) => {
+          // first, check that the include path is valid.
+          if(!arrayContains(refPaths, pathParts[0])) {
+            let title = "Invalid include path.";
+            let detail = `Resources of type "${type}" don't have a(n) "${pathParts[0]}" relationship.`;
+            throw new APIError(400, undefined, title, detail);
+          }
 
-      includePaths = includePaths.map((it) => it.split("."));
-      includePaths.forEach((pathParts) => {
-        // first, check that the include path is valid.
-        if(!arrayContains(refPaths, pathParts[0])) {
-          let title = "Invalid include path.";
-          let detail = `Resources of type "${type}" don't have a(n) "${pathParts[0]}" relationship.`;
-          throw new APIError(400, undefined, title, detail);
-        }
+          if(pathParts.length > 1) {
+            throw new APIError(501, undefined, "Multi-level include paths aren't yet supported.");
+          }
 
-        if(pathParts.length > 1) {
-          throw new APIError(501, undefined, "Multi-level include paths aren't yet supported.");
-        }
-
-        // Finally, do the population
-        populatedPaths.push(pathParts[0]);
-        queryBuilder.populate(pathParts[0]);
-      });
-
-      let includedResources = [];
-      primaryDocumentsPromise = Q(queryBuilder.exec()).then((docs) => {
-        forEachArrayOrVal(docs, (doc) => {
-          // There's no gaurantee that the doc (or every doc) was found
-          // and we can't populate paths on a non-existent doc.
-          if(!doc) return;
-
-          populatedPaths.forEach((path) => {
-            // if it's a toOne relationship, doc[path] will be a doc or undefined;
-            // if it's a toMany relationship, we have an array (or undefined).
-            let refDocs = Array.isArray(doc[path]) ? doc[path] : [doc[path]];
-            refDocs.forEach((it) => {
-              // only include if it's not undefined.
-              if(it) {
-                includedResources.push(
-                  this.constructor.docToResource(it, pluralizer, fields)
-                );
-              }
-            });
-          });
+          // Finally, do the population
+          populatedPaths.push(pathParts[0]);
+          queryBuilder.populate(pathParts[0]);
         });
 
-        return docs;
-      });
+        let includedResources = [];
+        primaryDocumentsPromise = Q(queryBuilder.exec()).then((docs) => {
+          forEachArrayOrVal(docs, (doc) => {
+            // There's no gaurantee that the doc (or every doc) was found
+            // and we can't populate paths on a non-existent doc.
+            if(!doc) return;
 
-      includedResourcesPromise = primaryDocumentsPromise.then(() =>
-        new Collection(includedResources)
-      );
-    }
+            populatedPaths.forEach((path) => {
+              // if it's a toOne relationship, doc[path] will be a doc or undefined;
+              // if it's a toMany relationship, we have an array (or undefined).
+              let refDocs = Array.isArray(doc[path]) ? doc[path] : [doc[path]];
+              refDocs.forEach((it) => {
+                // only include if it's not undefined.
+                if(it) {
+                  includedResources.push(
+                    this.constructor.docToResource(it, pluralizer, fields)
+                  );
+                }
+              });
+            });
+          });
 
-    else {
-      primaryDocumentsPromise = Q(queryBuilder.exec());
-    }
+          return docs;
+        });
 
-    return Q.all([primaryDocumentsPromise.then((it) => {
-      const makeCollection = !idOrIds || Array.isArray(idOrIds) ? true : false;
-      return this.constructor.docsToResourceOrCollection(it, makeCollection, pluralizer, fields);
-    }), includedResourcesPromise]).catch(util.errorHandler);
+        includedResourcesPromise = primaryDocumentsPromise.then(() =>
+          new Collection(includedResources)
+        );
+      }
+
+      else {
+        primaryDocumentsPromise = Q(queryBuilder.exec());
+      }
+
+      return Q.all([primaryDocumentsPromise.then((it) => {
+        const makeCollection = !idOrIds || Array.isArray(idOrIds) ? true : false;
+        return this.constructor.docsToResourceOrCollection(it, makeCollection, pluralizer, fields);
+      }), includedResourcesPromise]).catch(util.errorHandler);
+    });
   }
 
   /**
@@ -202,88 +202,89 @@ export default class MongooseAdapter {
       return it.id;
     });
 
-    const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
+    return this.constructor.getIdQueryType(idOrIds, model)
+      .then(([ mode, idQuery]) => model[mode](idQuery).exec())
+      .then((docs) => {
+        const successfulSavesPromises = [];
 
-    return Q(model[mode](idQuery).exec()).then((docs) => {
-      const successfulSavesPromises = [];
-
-      // if some ids were invalid/deleted/not found, we can't let *any* update
-      // succeed. this is the beginning of our simulation of transactions.
-      // There are two types of invalid cases here: we looked up one or more
-      // docs and got none back (i.e. docs === null) or we looked up an array of
-      // docs and got back docs that were missing some requested ids.
-      if(docs === null) {
-        throw new APIError(404, undefined, "No matching resource found.");
-      }
-      else {
-        const idOrIdsAsArray = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
-        const docIdOrIdsAsArray = Array.isArray(docs) ? docs.map(it => it.id) : [docs.id];
-
-        if(!arrayValuesMatch(idOrIdsAsArray, docIdOrIdsAsArray)) {
-          let title = "Some of the resources you're trying to update could not be found.";
-          throw new APIError(404, undefined, title);
+        // if some ids were invalid/deleted/not found, we can't let *any* update
+        // succeed. this is the beginning of our simulation of transactions.
+        // There are two types of invalid cases here: we looked up one or more
+        // docs and got none back (i.e. docs === null) or we looked up an array of
+        // docs and got back docs that were missing some requested ids.
+        if(docs === null) {
+          throw new APIError(404, undefined, "No matching resource found.");
         }
-      }
+        else {
+          const idOrIdsAsArray = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
+          const docIdOrIdsAsArray = Array.isArray(docs) ? docs.map(it => it.id) : [docs.id];
 
-      forEachArrayOrVal(docs, (currDoc) => {
-        let newResource = changeSets[currDoc.id];
-
-        // Allowing the type to change is a bit of a pain. If the type's
-        // changed, it means the mongoose Model representing the doc must be
-        // different too. So we have to get the data from the old doc with
-        // .toObject(), change its discriminator, and then create an instance
-        // of the new model with that data. We also have to mark that new
-        // instance as not representing a new document, so that mongoose will
-        // do an update query rather than a save. Finally, we have to do all
-        // this before updating other attributes, so that they're correctly
-        // marked as modified when changed.
-        const currentModelName = currDoc.constructor.modelName;
-        const newModelName = this.constructor.getModelName(newResource.type, singular);
-        if(currentModelName !== newModelName) {
-          const newDoc = currDoc.toObject({virtuals: true, getters: true});
-          const NewModelConstructor = this.getModel(newModelName);
-          newDoc[currDoc.constructor.schema.options.discriminatorKey] = newModelName;
-
-          // replace the currDoc with our new creation.
-          currDoc = new NewModelConstructor(newDoc);
-          currDoc.isNew = false;
+          if(!arrayValuesMatch(idOrIdsAsArray, docIdOrIdsAsArray)) {
+            let title = "Some of the resources you're trying to update could not be found.";
+            throw new APIError(404, undefined, title);
+          }
         }
 
-        // update all attributes and links provided, ignoring type/meta/id.
-        currDoc.set(util.resourceToDocObject(newResource));
+        forEachArrayOrVal(docs, (currDoc) => {
+          let newResource = changeSets[currDoc.id];
 
-        successfulSavesPromises.push(
-          Q.Promise(function (resolve, reject) {
-            currDoc.save((err, doc) => {
-              if(err) reject(err);
-              resolve(doc);
-            });
-          })
-        );
-      });
+          // Allowing the type to change is a bit of a pain. If the type's
+          // changed, it means the mongoose Model representing the doc must be
+          // different too. So we have to get the data from the old doc with
+          // .toObject(), change its discriminator, and then create an instance
+          // of the new model with that data. We also have to mark that new
+          // instance as not representing a new document, so that mongoose will
+          // do an update query rather than a save. Finally, we have to do all
+          // this before updating other attributes, so that they're correctly
+          // marked as modified when changed.
+          const currentModelName = currDoc.constructor.modelName;
+          const newModelName = this.constructor.getModelName(newResource.type, singular);
+          if(currentModelName !== newModelName) {
+            const newDoc = currDoc.toObject({virtuals: true, getters: true});
+            const NewModelConstructor = this.getModel(newModelName);
+            newDoc[currDoc.constructor.schema.options.discriminatorKey] = newModelName;
 
-      return Q.all(successfulSavesPromises);
-    }).then((docs) => {
-      let makeCollection = resourceOrCollection instanceof Collection;
-      return this.constructor.docsToResourceOrCollection(docs, makeCollection, plural);
-    }).catch(util.errorHandler);
+            // replace the currDoc with our new creation.
+            currDoc = new NewModelConstructor(newDoc);
+            currDoc.isNew = false;
+          }
+
+          // update all attributes and links provided, ignoring type/meta/id.
+          currDoc.set(util.resourceToDocObject(newResource));
+
+          successfulSavesPromises.push(
+            Q.Promise(function (resolve, reject) {
+              currDoc.save((err, doc) => {
+                if(err) reject(err);
+                resolve(doc);
+              });
+            })
+          );
+        });
+
+        return Q.all(successfulSavesPromises);
+      }).then((docs) => {
+        let makeCollection = resourceOrCollection instanceof Collection;
+        return this.constructor.docsToResourceOrCollection(docs, makeCollection, plural);
+      }).catch(util.errorHandler);
   }
 
   delete(parentType, idOrIds) {
     const model = this.getModel(this.constructor.getModelName(parentType));
-    const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
 
-    if(!idOrIds) {
-      return Q.Promise((resolve, reject) => {
-        reject(new APIError(400, undefined, "You must specify some resources to delete"));
-      });
-    }
+    return this.constructor.getIdQueryType(idOrIds, model).then(([ mode, idQuery ]) => {
+      if(!idOrIds) {
+        return Q.Promise((resolve, reject) => {
+          reject(new APIError(400, undefined, "You must specify some resources to delete"));
+        });
+      }
 
-    return Q(model[mode](idQuery).exec()).then((docs) => {
-      if(!docs) throw new APIError(404, undefined, "No matching resource found.");
-      forEachArrayOrVal(docs, (it) => { it.remove(); });
-      return docs;
-    }).catch(util.errorHandler);
+      return Q(model[mode](idQuery).exec()).then((docs) => {
+        if(!docs) throw new APIError(404, undefined, "No matching resource found.");
+        forEachArrayOrVal(docs, (it) => { it.remove(); });
+        return docs;
+      }).catch(util.errorHandler);
+    });
   }
 
   /**
@@ -606,30 +607,37 @@ export default class MongooseAdapter {
     return words.join(" ");
   }
 
-  static getIdQueryType(idOrIds) {
-    const mode = typeof idOrIds === "string" ? "findOne" : "find";
-    let idQuery;
+  static getIdQueryType(idOrIds, Model) {
+    if (idOrIds == null) {
+      return Q([ "find", undefined ]);
+    }
 
-    if (typeof idOrIds === "string") {
-      if (!this.idIsValid(idOrIds)) {
+    const [ mode, ids ] = Array.isArray(idOrIds) ? [ "find", idOrIds ] : [ "findOne", [ idOrIds ] ];
+    const idValidationPromises = ids.map(id => this.validateId(id, Model));
+
+    return Q.all(idValidationPromises).then(() => {
+      const idQuery = { _id: mode === "find" ? { $in: ids } : ids[0] };
+      return [ mode, idOrIds != null ? idQuery : undefined ];
+    }, err => {
+      if (mode === "findOne") {
         throw new APIError(404, undefined, "No matching resource found.", "Invalid ID.");
       }
-
-      idQuery = {_id: idOrIds};
-    }
-
-    else if (Array.isArray(idOrIds)) {
-      if (!idOrIds.every(this.idIsValid)) {
+      else {
         throw new APIError(400, undefined, "Invalid ID.");
       }
-
-      idQuery = {_id: {"$in": idOrIds}};
-    }
-
-    return [mode, idQuery];
+    });
   }
 
-  static idIsValid(id) {
-    return typeof id === "string" && /^[0-9a-fA-F]{24}$/.test(id);
+  static validateId(id, Model) {
+    return Q.Promise((resolve, reject) => {
+      if (id == null) {
+        return reject();
+      }
+
+      return (new Model({ _id: id })).validate().then(
+        (res) => resolve(true),
+        (err) => err.errors && err.errors._id ? reject(err.errors._id) : resolve(true)
+      );
+    });
   }
 }

@@ -15,7 +15,7 @@ describe("Patching a relationship", () => {
     }).then(done, done);
   });
 
-  it("should support full replacement at a to-many relationship endpoint", (done) => {
+  it("should support full replacement at a to-many relationship endpoint", function(done) {
     const url = `/organizations/${orgId}/relationships/liaisons`;
 
     const setRelationship = (data, url) => { //eslint-disable-line no-shadow

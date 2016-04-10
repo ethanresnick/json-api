@@ -14,7 +14,7 @@
   "license": "LGPL-3.0",
   "main": "index.js",
   "dependencies": {
-    "babel-runtime": "5.6.17",
+    "babel-runtime": "^5.8.35",
     "co": "4.5.x",
     "content-type": "1.x.x",
     "dasherize": "2.0.x",
@@ -32,11 +32,11 @@
   },
   "devDependencies": {
     "babel": "5.6.14",
-    "babel-eslint": "3.x.x",
+    "babel-eslint": "^5.0.0",
     "chai": "^1.9.2",
-    "coveralls": "^2.11.4",
     "chai-subset": "^1.1.0",
-    "eslint": "0.x.x",
+    "coveralls": "^2.11.4",
+    "eslint": "~2.2.0",
     "express": "4.x.x",
     "gulp": "^3.8.6",
     "istanbul": "0.3.x",
