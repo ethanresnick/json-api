@@ -637,13 +637,20 @@ var MongooseAdapter = (function () {
           return new _typesDocumentationFieldType2["default"]("Id", false);
         }
 
-        var typeOptions = schemaType.options.type;
-        var holdsArray = Array.isArray(typeOptions);
-
-        var baseType = holdsArray ? typeOptions[0].ref : typeOptions.name;
+        var holdsArray = Array.isArray(schemaType.options.type);
         var refModelName = util.getReferencedModelName(model, path);
 
-        return !refModelName ? new _typesDocumentationFieldType2["default"](baseType, holdsArray) : new _typesDocumentationRelationshipType2["default"](holdsArray, refModelName, _this7.getType(refModelName, pluralizer));
+        if (refModelName) {
+          return new _typesDocumentationRelationshipType2["default"](holdsArray, refModelName, _this7.getType(refModelName, pluralizer));
+        }
+
+        var typeOptions = holdsArray ? schemaType.options.type[0] : schemaType.options.type;
+
+        var isEmbeddedDocument = ["SchemaType", "DocumentArray"].includes(schemaType.constructor.name);
+
+        var baseType = isEmbeddedDocument ? "EmbeddedDocument" : typeOptions.name;
+
+        return new _typesDocumentationFieldType2["default"](baseType, holdsArray);
       };
 
       model.schema.eachPath(function (name, type) {
