@@ -18,8 +18,8 @@ describe("Deleting a resource", () => {
             .type("application/vnd.api+json")
             .send()
             .promise();
-        }, done).then(() => done(), done);
-    }, done).catch(done);
+        }).then(() => done());
+    }).catch(done);
   });
 
   it("should delete a resource by id", done => {

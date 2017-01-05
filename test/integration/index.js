@@ -21,7 +21,7 @@ before((done) => {
       require("./documentation");
       done();
     }).done();
-  });
+  }).catch(done);
 });
 
 
