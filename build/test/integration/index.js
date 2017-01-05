@@ -31,5 +31,5 @@ before(function (done) {
       require("./documentation");
       done();
     }).done();
-  });
+  })["catch"](done);
 });

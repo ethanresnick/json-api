@@ -1,14 +1,12 @@
 "use strict";
 
+var _Promise = require("babel-runtime/core-js/promise")["default"];
+
 var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-var _q = require("q");
-
-var _q2 = _interopRequireDefault(_q);
 
 var _superagent = require("superagent");
 
@@ -31,13 +29,17 @@ exports["default"] = _srcIndex2["default"].then(function (app) {
 
   app.baseUrl = "http://" + host + ":" + port;
 
-  return _q2["default"].Promise(function (resolve, reject) {
+  return new _Promise(function (resolve, reject) {
     app.listen(port, host, function () {
       resolve({
         request: function request(method, url) {
           var req = _superagent2["default"][method.toLowerCase()](app.baseUrl + url).buffer(true);
           req.promise = function () {
-            return _q2["default"].npost(req, "end", []);
+            return new _Promise(function (resolveInner, rejectInner) {
+              return req.end(function (err, res) {
+                return err ? rejectInner(err) : resolveInner(res);
+              });
+            });
           };
           return req;
         },

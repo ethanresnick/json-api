@@ -40,7 +40,7 @@
     "express": "4.x.x",
     "gulp": "^3.8.6",
     "istanbul": "0.3.x",
-    "mocha": "2.2.x",
+    "mocha": "2.3.x",
     "mongoose": "4.0.x",
     "node-mongoose-fixtures": "^0.2.4",
     "sinon": "1.10.2",

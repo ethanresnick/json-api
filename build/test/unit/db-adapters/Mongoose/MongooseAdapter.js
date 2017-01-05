@@ -196,7 +196,7 @@ describe("Mongoose Adapter", function () {
           "arrayNonEnum": [{
             type: Number
           }],
-          "arrayObjectId": [{ type: _mongoose2["default"].Schema.Types.ObjectId, ref: 'Test' }],
+          "arrayObjectId": [{ type: _mongoose2["default"].Schema.Types.ObjectId, ref: "Test" }],
           "stringArray": [String]
         };
 

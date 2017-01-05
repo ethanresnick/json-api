@@ -20,10 +20,10 @@ describe("Deleting a resource", function () {
       return Agent.request("POST", "/schools").type("application/vnd.api+json").send({ "data": _fixturesCreation.VALID_SCHOOL_RESOURCE_NO_ID }).promise().then(function (response) {
         id = response.body.data.id;
         return Agent.request("DEL", "/schools/" + id).type("application/vnd.api+json").send().promise();
-      }, done).then(function () {
+      }).then(function () {
         return done();
-      }, done);
-    }, done)["catch"](done);
+      });
+    })["catch"](done);
   });
 
   it("should delete a resource by id", function (done) {

@@ -24,7 +24,7 @@ describe("HTTP Compliance", function () {
     }, function (err) {
       (0, _chai.expect)(err.response.status).to.equal(405);
       (0, _chai.expect)(err.response.body.errors[0].detail).to.match(/PUT.+jsonapi\.org/i);
-    }).done(done);
+    }).then(done, done);
   });
 
   it("should reject other unknown methods too", function (done) {
@@ -33,6 +33,6 @@ describe("HTTP Compliance", function () {
     }, function (err) {
       (0, _chai.expect)(err.response.status).to.equal(405);
       (0, _chai.expect)(err.response.body.errors[0].detail).to.match(/lock/i);
-    }).done(done);
+    }).then(done, done);
   });
 });
