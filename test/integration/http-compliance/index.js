@@ -20,7 +20,7 @@ describe("HTTP Compliance", () => {
         expect(err.response.status).to.equal(405);
         expect(err.response.body.errors[0].detail).to.match(/PUT.+jsonapi\.org/i);
       }
-    ).done(done);
+    ).then(done, done);
   });
 
   it("should reject other unknown methods too", (done) => {
@@ -32,7 +32,7 @@ describe("HTTP Compliance", () => {
         expect(err.response.status).to.equal(405);
         expect(err.response.body.errors[0].detail).to.match(/lock/i);
       }
-    ).done(done);
+    ).then(done, done);
   });
 
 });
