@@ -172,9 +172,9 @@ describe("Mongoose Adapter", () => {
             type: Number
           }],
           "arrayObjectId": [
-            { type: mongoose.Schema.Types.ObjectId, ref: 'Test' }
+            { type: mongoose.Schema.Types.ObjectId, ref: "Test" }
           ],
-          "stringArray": [String],
+          "stringArray": [String]
         };
 
         // need to compile it, as a schema and a model, before reading.
