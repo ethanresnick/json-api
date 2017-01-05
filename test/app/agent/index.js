@@ -1,4 +1,3 @@
-import Q from "q";
 import superagent from "superagent";
 import appPromise from "../src/index";
 
@@ -15,12 +14,16 @@ export default appPromise.then(function(app) {
 
   app.baseUrl = "http://" + host + ":" + port;
 
-  return Q.Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     app.listen(port, host, () => {
       resolve({
         request(method, url) {
           const req = superagent[method.toLowerCase()](app.baseUrl + url).buffer(true);
-          req.promise = () => Q.npost(req, "end", []);
+          req.promise = () => {
+            return new Promise((resolveInner, rejectInner) =>
+              req.end((err, res) => err ? rejectInner(err) : resolveInner(res))
+            );
+          };
           return req;
         },
         superagent: superagent
