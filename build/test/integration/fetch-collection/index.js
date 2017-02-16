@@ -147,6 +147,42 @@ describe("Fetching Collection", function () {
       })).to.deep.equal(["Doug Wilson", "John Smith", "Jane Doe"]);
     });
   });
+
+  describe("Fetching with Offset and Limit", function () {
+    before(function (done) {
+      Agent.request("GET", "/people?page[offset]=1&page[limit]=1").accept("application/vnd.api+json").promise().then(function (response) {
+        res = response;
+        done();
+      })["catch"](done);
+    });
+
+    it("Should only have the 2nd person", function () {
+      (0, _chai.expect)(res.body.data.map(function (it) {
+        return it.attributes.name;
+      })).to.deep.equal(["Jane Doe"]);
+    });
+
+    it("Should include the total record count", function () {
+      (0, _chai.expect)(res.body.meta).to.deep.equal({
+        total: 3
+      });
+    });
+  });
+
+  describe("Fetching Descended Sorted by Name with Offset and Limit", function () {
+    before(function (done) {
+      Agent.request("GET", "/people?order=-name&page[offset]=1&page[limit]=3").accept("application/vnd.api+json").promise().then(function (response) {
+        res = response;
+        done();
+      })["catch"](done);
+    });
+
+    it("Should have ", function () {
+      (0, _chai.expect)(res.body.data.map(function (it) {
+        return it.attributes.name;
+      })).to.deep.equal(["Jane Doe", "Doug Wilson"]);
+    });
+  });
 });
 
 // "[S]erver implementations MUST ignore

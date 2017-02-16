@@ -137,6 +137,48 @@ describe("Fetching Collection", () => {
       ]);
     });
   });
+
+  describe("Fetching with Offset and Limit", () => {
+    before(done => {
+      Agent.request("GET", "/people?page[offset]=1&page[limit]=1")
+        .accept("application/vnd.api+json")
+        .promise()
+        .then(response => {
+          res = response;
+          done();
+        }).catch(done);
+    });
+
+    it("Should only have the 2nd person", () => {
+      expect(res.body.data.map((it) => it.attributes.name)).to.deep.equal([
+        "Jane Doe"
+      ]);
+    });
+
+    it("Should include the total record count", () => {
+      expect(res.body.meta).to.deep.equal({
+        total: 3
+      });
+    });
+  });
+
+  describe("Fetching Descended Sorted by Name with Offset and Limit", () => {
+    before(done => {
+      Agent.request("GET", "/people?order=-name&page[offset]=1&page[limit]=3")
+        .accept("application/vnd.api+json")
+        .promise()
+        .then(response => {
+          res = response;
+          done();
+        }).catch(done);
+    });
+
+    it("Should have ", () => {
+      expect(res.body.data.map((it) => it.attributes.name)).to.deep.equal([
+        "Jane Doe", "Doug Wilson"
+      ]);
+    });
+  });
 });
 
     // "[S]erver implementations MUST ignore

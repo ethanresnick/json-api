@@ -177,7 +177,7 @@ class APIController {
       if(response.status !== 204) {
         response.body = new Document(
           response.primary, response.included,
-          undefined, registry.urlTemplates(), request.uri
+          response.meta, registry.urlTemplates(), request.uri
         ).get(true);
       }
 

@@ -99,6 +99,7 @@ var MongooseAdapter = (function () {
 
       var model = this.getModel(this.constructor.getModelName(type));
       var queryBuilder = new _mongoose2["default"].Query(null, null, model, model.collection);
+      var totalBuilder = new _mongoose2["default"].Query(null, null, model, model.collection);
 
       var _constructor$getIdQueryType = this.constructor.getIdQueryType(idOrIds);
 
@@ -123,6 +124,7 @@ var MongooseAdapter = (function () {
       // we're mostly protected by the fact that we're treating the filter's
       // value as a single string, though, and not parsing as JSON.
       if (typeof filters === "object" && !Array.isArray(filters)) {
+        totalBuilder.where(filters);
         queryBuilder.where(filters);
       }
 
@@ -215,7 +217,7 @@ var MongooseAdapter = (function () {
       return _q2["default"].all([primaryDocumentsPromise.then(function (it) {
         var makeCollection = !idOrIds || Array.isArray(idOrIds) ? true : false;
         return _this.constructor.docsToResourceOrCollection(it, makeCollection, pluralizer, fields);
-      }), includedResourcesPromise])["catch"](util.errorHandler);
+      }), includedResourcesPromise, totalBuilder.count()])["catch"](util.errorHandler);
     }
 
     /**

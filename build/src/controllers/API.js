@@ -290,7 +290,7 @@ var APIController = (function () {
               response.included = context$3$0.sent;
 
               if (response.status !== 204) {
-                response.body = new _typesDocument2["default"](response.primary, response.included, undefined, registry.urlTemplates(), request.uri).get(true);
+                response.body = new _typesDocument2["default"](response.primary, response.included, response.meta, registry.urlTemplates(), request.uri).get(true);
               }
 
               return context$3$0.abrupt("return", response);

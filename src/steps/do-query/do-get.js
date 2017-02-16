@@ -27,10 +27,12 @@ export default function(requestContext, responseContext, registry) {
       requestContext.queryParams.page && requestContext.queryParams.page.limit
     );
 
+    responseContext.meta = responseContext.meta || {};
+
     return adapter
       .find(type, requestContext.idOrIds, fields, sorts, filters, includes, offset, limit)
       .then((resources) => {
-        [responseContext.primary, responseContext.included] = resources;
+        [responseContext.primary, responseContext.included, responseContext.meta.total] = resources;
       });
   }
 

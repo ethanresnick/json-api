@@ -32,10 +32,10 @@ export default class MongooseAdapter {
   find(type, idOrIds, fields, sorts, filters, includePaths, offset, limit) {
     const model = this.getModel(this.constructor.getModelName(type));
     const queryBuilder = new mongoose.Query(null, null, model, model.collection);
+    const totalBuilder = new mongoose.Query(null, null, model, model.collection);
     const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
     const pluralizer = this.inflector.plural;
     let primaryDocumentsPromise, includedResourcesPromise = Q(null);
-
 
     queryBuilder[mode](idQuery);
 
@@ -49,6 +49,7 @@ export default class MongooseAdapter {
     // we're mostly protected by the fact that we're treating the filter's
     // value as a single string, though, and not parsing as JSON.
     if(typeof filters === "object" && !Array.isArray(filters)) {
+      totalBuilder.where(filters);
       queryBuilder.where(filters);
     }
 
@@ -141,7 +142,7 @@ export default class MongooseAdapter {
     return Q.all([primaryDocumentsPromise.then((it) => {
       const makeCollection = !idOrIds || Array.isArray(idOrIds) ? true : false;
       return this.constructor.docsToResourceOrCollection(it, makeCollection, pluralizer, fields);
-    }), includedResourcesPromise]).catch(util.errorHandler);
+    }), includedResourcesPromise, totalBuilder.count()]).catch(util.errorHandler);
   }
 
   /**

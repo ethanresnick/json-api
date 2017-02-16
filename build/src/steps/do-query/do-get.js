@@ -40,11 +40,14 @@ exports["default"] = function (requestContext, responseContext, registry) {
 
     limit = parseIntegerParam(requestContext.queryParams.page && requestContext.queryParams.page.limit);
 
+    responseContext.meta = responseContext.meta || {};
+
     return adapter.find(type, requestContext.idOrIds, fields, sorts, filters, includes, offset, limit).then(function (resources) {
-      var _resources = _slicedToArray(resources, 2);
+      var _resources = _slicedToArray(resources, 3);
 
       responseContext.primary = _resources[0];
       responseContext.included = _resources[1];
+      responseContext.meta.total = _resources[2];
     });
   }
 
