@@ -94,7 +94,7 @@ var MongooseAdapter = (function () {
 
   _createClass(MongooseAdapter, [{
     key: "find",
-    value: function find(type, idOrIds, fields, sorts, filters, includePaths) {
+    value: function find(type, idOrIds, fields, sorts, filters, includePaths, offset, limit) {
       var _this = this;
 
       var model = this.getModel(this.constructor.getModelName(type));
@@ -124,6 +124,14 @@ var MongooseAdapter = (function () {
       // value as a single string, though, and not parsing as JSON.
       if (typeof filters === "object" && !Array.isArray(filters)) {
         queryBuilder.where(filters);
+      }
+
+      if (offset) {
+        queryBuilder.skip(offset);
+      }
+
+      if (limit) {
+        queryBuilder.limit(limit);
       }
 
       // in an ideal world, we'd use mongoose here to filter the fields before

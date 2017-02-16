@@ -4,7 +4,7 @@ import {arrayContains} from "../../util/arrays";
 export default function(requestContext, responseContext, registry) {
   let type    = requestContext.type;
   let adapter = registry.dbAdapter(type);
-  let fields, sorts, includes, filters;
+  let fields, sorts, includes, filters, offset, limit;
 
   // Handle fields, sorts, includes and filters.
   if(!requestContext.aboutRelationship) {
@@ -19,8 +19,16 @@ export default function(requestContext, responseContext, registry) {
       includes = registry.defaultIncludes(type);
     }
 
+    offset = parseIntegerParam(
+      requestContext.queryParams.page && requestContext.queryParams.page.offset
+    );
+
+    limit = parseIntegerParam(
+      requestContext.queryParams.page && requestContext.queryParams.page.limit
+    );
+
     return adapter
-      .find(type, requestContext.idOrIds, fields, sorts, filters, includes)
+      .find(type, requestContext.idOrIds, fields, sorts, filters, includes, offset, limit)
       .then((resources) => {
         [responseContext.primary, responseContext.included] = resources;
       });
@@ -79,4 +87,8 @@ function parseFields(fieldsParam) {
 
 function parseCommaSeparatedParam(it) {
   return it ? it.split(",").map(decodeURIComponent) : undefined;
+}
+
+function parseIntegerParam(it) {
+  return it ? parseInt(it, 10) : undefined;
 }

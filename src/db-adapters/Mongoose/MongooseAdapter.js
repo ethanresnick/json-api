@@ -29,7 +29,7 @@ export default class MongooseAdapter {
    * documents, as happens below. If it's undefined, though, we're not filtering
    * by id and should return all documents.
    */
-  find(type, idOrIds, fields, sorts, filters, includePaths) {
+  find(type, idOrIds, fields, sorts, filters, includePaths, offset, limit) {
     const model = this.getModel(this.constructor.getModelName(type));
     const queryBuilder = new mongoose.Query(null, null, model, model.collection);
     const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
@@ -50,6 +50,14 @@ export default class MongooseAdapter {
     // value as a single string, though, and not parsing as JSON.
     if(typeof filters === "object" && !Array.isArray(filters)) {
       queryBuilder.where(filters);
+    }
+
+    if(offset) {
+      queryBuilder.skip(offset);
+    }
+
+    if(limit) {
+      queryBuilder.limit(limit);
     }
 
     // in an ideal world, we'd use mongoose here to filter the fields before

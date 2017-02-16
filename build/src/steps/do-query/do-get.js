@@ -20,7 +20,9 @@ exports["default"] = function (requestContext, responseContext, registry) {
   var fields = undefined,
       sorts = undefined,
       includes = undefined,
-      filters = undefined;
+      filters = undefined,
+      offset = undefined,
+      limit = undefined;
 
   // Handle fields, sorts, includes and filters.
   if (!requestContext.aboutRelationship) {
@@ -34,7 +36,11 @@ exports["default"] = function (requestContext, responseContext, registry) {
       includes = registry.defaultIncludes(type);
     }
 
-    return adapter.find(type, requestContext.idOrIds, fields, sorts, filters, includes).then(function (resources) {
+    offset = parseIntegerParam(requestContext.queryParams.page && requestContext.queryParams.page.offset);
+
+    limit = parseIntegerParam(requestContext.queryParams.page && requestContext.queryParams.page.limit);
+
+    return adapter.find(type, requestContext.idOrIds, fields, sorts, filters, includes, offset, limit).then(function (resources) {
       var _resources = _slicedToArray(resources, 2);
 
       responseContext.primary = _resources[0];
@@ -91,5 +97,9 @@ function parseFields(fieldsParam) {
 
 function parseCommaSeparatedParam(it) {
   return it ? it.split(",").map(decodeURIComponent) : undefined;
+}
+
+function parseIntegerParam(it) {
+  return it ? parseInt(it, 10) : undefined;
 }
 module.exports = exports["default"];
