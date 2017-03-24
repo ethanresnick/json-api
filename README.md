@@ -5,7 +5,7 @@ This library creates a [JSON API](http://jsonapi.org/)-compliant REST API from y
 
 It currently integrates with [Express](http://expressjs.com/) apps that use [Mongoose](http://mongoosejs.com/) models, but it can easily be integrated with other frameworks and databases. If you want to see an integration with another stack, just open an issue!
 
-This library implements all the required portions of the 1.0 spec, which is more than enough for basic CRUD. It does not yet implement some of the smaller, optional pieces, like pagination and related resource URIs.
+This library implements all the required portions of the 1.0 spec, which is more than enough for basic CRUD. It does not yet implement some of the smaller, optional pieces, like related resource URIs.
 
 # Installation
 ```$ npm install json-api```
@@ -103,6 +103,16 @@ The `<operator>` can be set to any [Mongo query operator](http://docs.mongodb.or
 GET /jobs?filter[simple][dateCompleted][$lt]=2015-06-01
 ```
 Please note however that as these operators are Mongo-specific, they may be replaced in a future version with a more database-agnostic syntax.
+
+## Pagination
+Pagination limit and offset parameters are accepted in the following form:
+```
+?page[offset]=<value>&page[limit]=<value>
+```
+For example, to get 25 people starting at the 51st person:
+```
+GET /people?page[offset]=50&page[limit]=25
+```
 
 ## Routing, Authentication & Controllers
 This library gives you a Front controller (shown in the example) that can handle requests for API results or for the documentation. But the library doesn't prescribe how requests get to this controller. This allows you to use any url scheme, routing layer, or authentication system you already have in place. You just need to make sure that: `req.params.type` reflects the requested resource type; `req.params.id` or (if you want to allow labels on a request) `req.params.idOrLabel` reflects the requested id, if any; and `req.params.relationship` reflects the relationship name, in the event that the user is requesting a relationship url.
