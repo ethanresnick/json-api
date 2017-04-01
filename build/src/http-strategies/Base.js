@@ -122,45 +122,62 @@ var BaseStrategy = (function () {
         }
 
         if (hasBody(req)) {
-          if (!isReadableStream(req)) {
-            return reject(new _typesAPIError2["default"](500, undefined, "Request body could not be parsed. Make sure other no other middleware has already parsed the request body."));
-          }
 
           it.contentType = req.headers["content-type"];
           var typeParsed = _contentType2["default"].parse(req);
 
-          var bodyParserOptions = {};
-          bodyParserOptions.encoding = typeParsed.parameters.charset || "utf8";
-          bodyParserOptions.limit = "1mb";
-          if (req.headers["content-length"] && !isNaN(req.headers["content-length"])) {
-            bodyParserOptions.length = req.headers["content-length"];
-          }
+          if (isReadableStream(req)) {
 
-          // The req has not yet been read, so let's read it
-          (0, _rawBody2["default"])(req, bodyParserOptions, function (err, string) {
-            if (err) {
-              reject(err);
+            var bodyParserOptions = {};
+            bodyParserOptions.encoding = typeParsed.parameters.charset || "utf8";
+            bodyParserOptions.limit = "1mb";
+            if (req.headers["content-length"] && !isNaN(req.headers["content-length"])) {
+              bodyParserOptions.length = req.headers["content-length"];
             }
 
-            // Even though we passed the hasBody check, the body could still be
-            // empty, so we check the length. (We can't check this before doing
-            // getRawBody because, while Content-Length: 0 signals an empty body,
-            // there's no similar in-advance clue for detecting empty bodies when
-            // Transfer-Encoding: chunked is being used.)
-            else if (string.length === 0) {
-                it.hasBody = false;
-                it.body = "";
-                resolve(it);
-              } else {
-                try {
-                  it.hasBody = true;
-                  it.body = JSON.parse(string);
-                  resolve(it);
-                } catch (error) {
-                  reject(new _typesAPIError2["default"](400, undefined, "Request contains invalid JSON."));
-                }
+            // The req has not yet been read, so let's read it
+            (0, _rawBody2["default"])(req, bodyParserOptions, function (err, string) {
+              if (err) {
+                reject(err);
               }
-          });
+
+              // Even though we passed the hasBody check, the body could still be
+              // empty, so we check the length. (We can't check this before doing
+              // getRawBody because, while Content-Length: 0 signals an empty body,
+              // there's no similar in-advance clue for detecting empty bodies when
+              // Transfer-Encoding: chunked is being used.)
+              else if (string.length === 0) {
+                  it.hasBody = false;
+                  it.body = "";
+                  return resolve(it);
+                } else {
+                  try {
+                    it.hasBody = true;
+                    it.body = JSON.parse(string);
+                    return resolve(it);
+                  } catch (error) {
+                    reject(new _typesAPIError2["default"](400, undefined, "Request contains invalid JSON."));
+                  }
+                }
+            });
+          }
+          // The request has been read, but the rawBody property has been set
+          else if (!req.rawBody) {
+              it.hasBody = true;
+              it.body = JSON.parse(rawBody);
+              it.rawBody = req.rawBody;
+              return resolve(it);
+            }
+            // The request has been read, but the body has been set
+            else if (typeof req.body === 'object') {
+                it.hasBody = true;
+                it.body = req.body;
+                return resolve(it);
+              }
+              // The request has been read, but neither req.body or req.rawBody have been set
+              else {
+                  return reject(new _typesAPIError2["default"](500, undefined, "Request body could not be parsed. If other middleware has parsed the body, make sure to set the body or rawBody properties on the request object."));
+                }
         } else {
           it.hasBody = false;
           it.body = undefined;
