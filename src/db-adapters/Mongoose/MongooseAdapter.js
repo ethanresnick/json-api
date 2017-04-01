@@ -503,19 +503,28 @@ export default class MongooseAdapter {
         return new FieldTypeDocumentation("Id", false);
       }
 
-
-      const typeOptions = schemaType.options.type;
-      const holdsArray = Array.isArray(typeOptions);
-
-      const baseType = holdsArray ? typeOptions[0].ref : typeOptions.name;
+      const holdsArray = Array.isArray(schemaType.options.type);
       const refModelName = util.getReferencedModelName(model, path);
 
-      return !refModelName ?
-        new FieldTypeDocumentation(baseType, holdsArray) :
-        new RelationshipTypeDocumentation(
+      if (refModelName) {
+        return new RelationshipTypeDocumentation(
           holdsArray, refModelName, this.getType(refModelName, pluralizer)
         );
+      }
 
+      const typeOptions = holdsArray
+        ? schemaType.options.type[0]
+        : schemaType.options.type;
+
+      const isEmbeddedDocument = [
+        "SchemaType", "DocumentArray"
+      ].includes(schemaType.constructor.name);
+
+      const baseType = isEmbeddedDocument
+        ? "EmbeddedDocument"
+        : typeOptions.name;
+
+      return new FieldTypeDocumentation(baseType, holdsArray);
     };
 
     model.schema.eachPath((name, type) => {
