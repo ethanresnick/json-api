@@ -291,6 +291,8 @@ var APIController = (function () {
 
               if (response.status !== 204) {
                 response.body = new _typesDocument2["default"](response.primary, response.included, undefined, registry.urlTemplates(), request.uri).get(true);
+              } else {
+                response.contentType = "text/plain";
               }
 
               return context$3$0.abrupt("return", response);
