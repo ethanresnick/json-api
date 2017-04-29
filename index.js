@@ -28,7 +28,8 @@ module.exports = {
     Documentation: {
       Field: require('./build/src/types/Documentation/Field'),
       FieldType: require('./build/src/types/Documentation/FieldType')
-    }
+    },
+    RelationshipObject: require('./build/src/types/RelationshipObject')
   },
   controllers: {
     API: require('./build/src/controllers/API'),
