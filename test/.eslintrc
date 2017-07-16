@@ -1,7 +1,0 @@
-{
-  // disable this rule in the test directory. See:
-  // https://github.com/eslint/eslint/issues/2102
-  "rules": {
-    "no-unused-expressions": 0
-  }
-}

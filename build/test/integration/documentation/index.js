@@ -1,58 +1,53 @@
 "use strict";
-
-var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
-
-var _chai = require("chai");
-
-var _appAgent = require("../../app/agent");
-
-var _appAgent2 = _interopRequireDefault(_appAgent);
-
-describe("Fetching JSON Documentation", function () {
-  var res = undefined,
-      Agent = undefined;
-
-  before(function (done) {
-    _appAgent2["default"].then(function (A) {
-      Agent = A;
-      return Agent.request("GET", "/").accept("application/vnd.api+json").promise();
-    }, done).then(function (response) {
-      res = response;
-      done();
-    })["catch"](done);
-  });
-
-  describe("Content Type", function () {
-    it("should be JSON API", function () {
-      (0, _chai.expect)(res.headers["content-type"]).to.equal("application/vnd.api+json");
+Object.defineProperty(exports, "__esModule", { value: true });
+const chai_1 = require("chai");
+const agent_1 = require("../../app/agent");
+describe("Fetching JSON Documentation", () => {
+    let res, Agent;
+    before(done => {
+        agent_1.default.then(A => {
+            Agent = A;
+            return Agent.request("GET", "/")
+                .accept("application/vnd.api+json")
+                .promise();
+        }, done).then(response => {
+            res = response;
+            done();
+        }).catch(done);
     });
-  });
-
-  describe("Document Structure", function () {
-    it("should transform type info", function () {
-      // the default transform dasherizes key names, so we just check for that.
-      (0, _chai.expect)("friendly-name" in res.body.data[0].attributes.fields[0]).to.be["true"];
+    describe("Content Type", () => {
+        it("should be JSON API", () => {
+            chai_1.expect(res.headers["content-type"]).to.equal("application/vnd.api+json");
+        });
     });
-  });
+    describe("Document Structure", () => {
+        it("should transform type info", () => {
+            chai_1.expect("friendly-name" in res.body.data[0].attributes.fields[0]).to.be.true;
+        });
+    });
 });
-
-describe("Fetching HTML Documentation", function () {
-  var res = undefined,
-      Agent = undefined;
-
-  before(function (done) {
-    _appAgent2["default"].then(function (A) {
-      Agent = A;
-      return Agent.request("GET", "/").accept("text/*").promise();
-    }, done).then(function (response) {
-      res = response;
-      done();
-    })["catch"](done);
-  });
-
-  describe("Content Type", function () {
-    it("should be HTML", function () {
-      (0, _chai.expect)(res.headers["content-type"]).to.equal("text/html; charset=utf-8");
+describe("Fetching HTML Documentation", () => {
+    let res, Agent;
+    before(done => {
+        agent_1.default.then(A => {
+            Agent = A;
+            return Agent.request("GET", "/")
+                .accept("text/*")
+                .promise();
+        }, (e) => {
+            console.log(e);
+            done(e);
+        }).then(response => {
+            res = response;
+            done();
+        }).catch((e) => {
+            console.log(e);
+            done(e);
+        });
     });
-  });
+    describe("Content Type", () => {
+        it("should be HTML", () => {
+            chai_1.expect(res.headers["content-type"]).to.equal("text/html; charset=utf-8");
+        });
+    });
 });

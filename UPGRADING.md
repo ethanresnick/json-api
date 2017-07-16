@@ -1,3 +1,15 @@
+# 3.0 Breaking Changes
+
+### Global
+- As of 3.0, this library requires at least Node v6. 
+- Q.Promise's have been replaced with standard ES6 Promises in various places throughout the API.
+
+### Response
+- Response.headers.vary and Response.headers.location are not defined, rather than having a null value, if those headers aren't needed for the response.
+
+### Koa Adapter
+- User-defined transform functions--namely, beforeRender and beforeSave on resource type descriptions, and transformTypeInfo on (subclasses of) the Documentation controller--are now called with slightly different arguments when the Koa adapter is in use. Previously, these functions were called with the whole Koa context object as their second-to-last argument, and undefined as their last argument. Now, the second to last argument is just Koa's request object (`ctx.request`) and the last argument is Koa's response (`ctx.response`). This matches how the express adapter works.
+
 # 2.14 -> 2.15 Breaking Changes  (Not Semver until 3.0)
 ### ResourceTypeRegistry
 - All resource descriptions must now be passed at the time of construction, as an object whose keys are the type names. Passing an array to the constructor is no longer supported.

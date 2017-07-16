@@ -1,68 +1,69 @@
 "use strict";
-
-var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
-
-var _chai = require("chai");
-
-var _appAgent = require("../../app/agent");
-
-var _appAgent2 = _interopRequireDefault(_appAgent);
-
-var _fixturesCreation = require("../fixtures/creation");
-
-var _fixturesUpdates = require("../fixtures/updates");
-
-_appAgent2["default"].then(function (Agent) {
-  describe("Content Negotiation", function () {
-    // "Servers MUST respond with a 415 Unsupported Media Type status code if a
-    //  request specifies the header Content-Type: application/vnd.api+json with
-    //  any media type parameters."
-    it("must reject parameterized content-type", function (done) {
-      Agent.request("POST", "/organizations").type("application/vnd.api+json;ext=blah").send({ "data": _fixturesCreation.VALID_ORG_RESOURCE_NO_ID }).promise().then(function () {
-        done(new Error("Should not run!"));
-      }, function (err) {
-        (0, _chai.expect)(err.status).to.equal(415);
-        (0, _chai.expect)(err.response.body.errors).to.be.an("array");
-        (0, _chai.expect)(err.response.body.errors[0].title).to.equal("Invalid Media Type Parameter(s)");
-        done();
-      })["catch"](done);
+Object.defineProperty(exports, "__esModule", { value: true });
+const chai = require("chai");
+const agent_1 = require("../../app/agent");
+const creation_1 = require("../fixtures/creation");
+const updates_1 = require("../fixtures/updates");
+const { expect } = chai;
+agent_1.default.then((Agent) => {
+    describe("Content Negotiation", () => {
+        it("must reject parameterized content-type", (done) => {
+            Agent.request("POST", "/organizations")
+                .type("application/vnd.api+json;ext=blah")
+                .send({ "data": creation_1.VALID_ORG_RESOURCE_NO_ID })
+                .promise()
+                .then(() => {
+                done(new Error("Should not run!"));
+            }, (err) => {
+                expect(err.status).to.equal(415);
+                expect(err.response.body.errors).to.be.an("array");
+                expect(err.response.body.errors[0].title).to.equal("Invalid Media Type Parameter(s)");
+                done();
+            }).catch(done);
+        });
+        it("must accept charset parameter", (done) => {
+            Agent.request("POST", "/organizations")
+                .type("application/vnd.api+json;charset=utf-8")
+                .send({ "data": creation_1.VALID_ORG_RESOURCE_NO_ID })
+                .promise()
+                .then((res) => {
+                expect(res.status).to.equal(201);
+                done();
+            }, done).catch(done);
+        });
+        it("must prefer sending JSON API media type, if its acceptable", (done) => {
+            Agent.request("POST", "/organizations")
+                .accept("application/vnd.api+json, application/json")
+                .send({ "data": creation_1.VALID_ORG_RESOURCE_NO_ID })
+                .type("application/vnd.api+json")
+                .promise()
+                .then((res) => {
+                expect(res.status).to.equal(201);
+                expect(res.headers["content-type"]).to.equal("application/vnd.api+json");
+                done();
+            }, done).catch(done);
+        });
+        it.skip("should use the json-api media type for errors if no json accepted, even if not acceptable", (done) => {
+            Agent.request("GET", "/organizations/unknown-id")
+                .accept("text/html")
+                .promise()
+                .then(() => {
+                done(new Error("Should not run, since this request should be a 404"));
+            }, (err) => {
+                expect(err.response.headers["content-type"]).to.equal("application/vnd.api+json");
+                done();
+            }).catch(done);
+        });
+        it("must accept unparameterized json api content-type", (done) => {
+            Agent.request("PATCH", "/organizations/54419d550a5069a2129ef254")
+                .type("application/vnd.api+json")
+                .send({ "data": updates_1.VALID_ORG_STATE_GOVT_PATCH })
+                .promise()
+                .then((res) => {
+                expect(res.status).to.be.within(200, 204);
+                expect(res.body.data).to.not.be.undefined;
+                done();
+            }, done).catch(done);
+        });
     });
-
-    // Spec ignored due to issues with Firefox automatically adding charset parameter
-    // See: https://github.com/ethanresnick/json-api/issues/78
-    it("must accept charset parameter", function (done) {
-      Agent.request("POST", "/organizations").type("application/vnd.api+json;charset=utf-8").send({ "data": _fixturesCreation.VALID_ORG_RESOURCE_NO_ID }).promise().then(function (res) {
-        (0, _chai.expect)(res.status).to.equal(201);
-        done();
-      }, done)["catch"](done);
-    });
-
-    // "Servers MUST send all JSON API data in response documents with the
-    //  header Content-Type: application/vnd.api+json without any media type
-    //  parameters."
-    it("must prefer sending JSON API media type, if its acceptable", function (done) {
-      Agent.request("POST", "/organizations").accept("application/vnd.api+json, application/json").send({ "data": _fixturesCreation.VALID_ORG_RESOURCE_NO_ID }).type("application/vnd.api+json").promise().then(function (res) {
-        (0, _chai.expect)(res.status).to.equal(201);
-        (0, _chai.expect)(res.headers["content-type"]).to.equal("application/vnd.api+json");
-        done();
-      }, done)["catch"](done);
-    });
-
-    it.skip("should use the json-api media type for errors if no json accepted, even if not acceptable", function (done) {
-      Agent.request("GET", "/organizations/unknown-id").accept("text/html").promise().then(function () {
-        done(new Error("Should not run, since this request should be a 404"));
-      }, function (err) {
-        (0, _chai.expect)(err.response.headers["content-type"]).to.equal("application/vnd.api+json");
-        done();
-      })["catch"](done);
-    });
-
-    it("must accept unparameterized json api content-type", function (done) {
-      Agent.request("PATCH", "/organizations/54419d550a5069a2129ef254").type("application/vnd.api+json").send({ "data": _fixturesUpdates.VALID_ORG_STATE_GOVT_PATCH }).promise().then(function (res) {
-        (0, _chai.expect)(res.status).to.be.within(200, 204);
-        (0, _chai.expect)(res.body.data).to.not.be.undefined;
-        done();
-      }, done)["catch"](done);
-    });
-  });
-}).done();
+});

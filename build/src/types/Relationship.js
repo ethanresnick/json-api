@@ -1,31 +1,14 @@
 "use strict";
-
-var _createClass = require("babel-runtime/helpers/create-class")["default"];
-
-var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default"];
-
-var _Object$assign = require("babel-runtime/core-js/object/assign")["default"];
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var Relationship = (function () {
-  function Relationship(linkage, relatedURITemplate, selfURITemplate) {
-    _classCallCheck(this, Relationship);
-
-    _Object$assign(this, { linkage: linkage, relatedURITemplate: relatedURITemplate, selfURITemplate: selfURITemplate });
-  }
-
-  _createClass(Relationship, [{
-    key: "empty",
-    value: function empty() {
-      this.linkage.empty();
+Object.defineProperty(exports, "__esModule", { value: true });
+class Relationship {
+    constructor(linkage, relatedURITemplate = undefined, selfURITemplate = undefined) {
+        Object.assign(this, { linkage, relatedURITemplate, selfURITemplate });
     }
-  }]);
-
-  return Relationship;
-})();
-
-exports["default"] = Relationship;
-module.exports = exports["default"];
+    empty() {
+        if (!this.linkage) {
+            throw new Error("Relationship has no linkage");
+        }
+        this.linkage.empty();
+    }
+}
+exports.default = Relationship;

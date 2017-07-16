@@ -1,180 +1,107 @@
 "use strict";
-
-var _createClass = require("babel-runtime/helpers/create-class")["default"];
-
-var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default"];
-
-var _Object$assign = require("babel-runtime/core-js/object/assign")["default"];
-
-var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _Linkage = require("./Linkage");
-
-var _Linkage2 = _interopRequireDefault(_Linkage);
-
-var _Resource = require("./Resource");
-
-var _Resource2 = _interopRequireDefault(_Resource);
-
-var _Collection = require("./Collection");
-
-var _Collection2 = _interopRequireDefault(_Collection);
-
-var _utilTypeHandling = require("../util/type-handling");
-
-var _utilArrays = require("../util/arrays");
-
-var _urlTemplate = require("url-template");
-
-var _urlTemplate2 = _interopRequireDefault(_urlTemplate);
-
-var Document = (function () {
-  function Document(primaryOrErrors, included, meta, urlTemplates, reqURI) {
-    _classCallCheck(this, Document);
-
-    // validate meta
-    var _ref = [primaryOrErrors, included, reqURI];
-    this.primaryOrErrors = _ref[0];
-    this.included = _ref[1];
-    this.reqURI = _ref[2];
-    if (meta !== undefined) {
-      if (typeof meta === "object" && !Array.isArray(meta)) {
-        this.meta = meta;
-      } else {
-        throw new Error("Meta information must be an object");
-      }
-    }
-
-    // parse all the templates once on construction.
-    this.urlTemplates = (0, _utilTypeHandling.mapObject)(urlTemplates || {}, function (templatesForType) {
-      return (0, _utilTypeHandling.mapObject)(templatesForType, _urlTemplate2["default"].parse.bind(_urlTemplate2["default"]));
-    });
-
-    this.reqURI = reqURI;
-  }
-
-  _createClass(Document, [{
-    key: "get",
-    value: function get(stringify) {
-      var _this = this;
-
-      var doc = {};
-
-      if (this.meta) doc.meta = this.meta;
-
-      // TODO: top-level related link.
-      if (this.reqURI) {
-        doc.links = { "self": this.reqURI };
-      }
-
-      if (this.primaryOrErrors instanceof _Collection2["default"] || this.primaryOrErrors instanceof _Resource2["default"]) {
-        doc.data = (0, _utilTypeHandling.mapResources)(this.primaryOrErrors, function (resource) {
-          return resourceToJSON(resource, _this.urlTemplates);
-        });
-      } else if (this.primaryOrErrors instanceof _Linkage2["default"]) {
-        doc.data = linkageToJSON(this.primaryOrErrors);
-      } else if (this.primaryOrErrors === null) {
-        doc.data = this.primaryOrErrors;
-      }
-
-      // it's either resource, a collection, linkage, null, or errors...
-      else {
-          doc.errors = this.primaryOrErrors.map(errorToJSON);
+Object.defineProperty(exports, "__esModule", { value: true });
+const templating = require("url-template");
+const Linkage_1 = require("./Linkage");
+const Resource_1 = require("./Resource");
+const Collection_1 = require("./Collection");
+const type_handling_1 = require("../util/type-handling");
+const arrays_1 = require("../util/arrays");
+class Document {
+    constructor(primaryOrErrors, included = undefined, meta = undefined, urlTemplates = {}, reqURI = undefined) {
+        [this.primaryOrErrors, this.included, this.reqURI] = [primaryOrErrors, included, reqURI];
+        if (meta !== undefined) {
+            if (typeof meta === "object" && !Array.isArray(meta)) {
+                this.meta = meta;
+            }
+            else {
+                throw new Error("Meta information must be an object");
+            }
         }
-
-      if (this.included && this.included instanceof _Collection2["default"]) {
-        doc.included = (0, _utilArrays.arrayUnique)(this.included.resources).map(function (resource) {
-          return resourceToJSON(resource, _this.urlTemplates);
+        this.urlTemplates = type_handling_1.mapObject(urlTemplates, (templatesForType) => {
+            return type_handling_1.mapObject(templatesForType, templating.parse.bind(templating));
         });
-      }
-
-      return stringify ? JSON.stringify(doc) : doc;
+        this.reqURI = reqURI;
     }
-  }]);
-
-  return Document;
-})();
-
-exports["default"] = Document;
-
-function linkageToJSON(linkage) {
-  return linkage && linkage.value;
+    get(stringify = false) {
+        let doc = {};
+        if (this.meta)
+            doc.meta = this.meta;
+        if (this.reqURI) {
+            doc.links = { "self": this.reqURI };
+        }
+        if (this.primaryOrErrors instanceof Collection_1.default || this.primaryOrErrors instanceof Resource_1.default) {
+            doc.data = type_handling_1.mapResources(this.primaryOrErrors, (resource) => {
+                return resourceToJSON(resource, this.urlTemplates);
+            });
+        }
+        else if (this.primaryOrErrors instanceof Linkage_1.default) {
+            doc.data = this.primaryOrErrors.toJSON();
+        }
+        else if (this.primaryOrErrors === null) {
+            doc.data = this.primaryOrErrors;
+        }
+        else {
+            doc.errors = this.primaryOrErrors.map(errorToJSON);
+        }
+        if (this.included && this.included instanceof Collection_1.default) {
+            doc.included = arrays_1.arrayUnique(this.included.resources).map((resource) => {
+                return resourceToJSON(resource, this.urlTemplates);
+            });
+        }
+        return stringify ? JSON.stringify(doc) : doc;
+    }
 }
-
+exports.default = Document;
 function relationshipToJSON(relationship, urlTemplates, templateData) {
-  var result = {};
-
-  if (relationship.linkage) {
-    result.data = linkageToJSON(relationship.linkage);
-  }
-
-  // Add urls that we can.
-  if (urlTemplates[templateData.ownerType]) {
-    var relatedUrlTemplate = relationship.relatedURITemplate ? _urlTemplate2["default"].parse(relationship.relatedURITemplate) : urlTemplates[templateData.ownerType].related;
-
-    var selfUrlTemplate = relationship.selfURITemplate ? _urlTemplate2["default"].parse(relationship.selfURITemplate) : urlTemplates[templateData.ownerType].relationship;
-
-    if (relatedUrlTemplate || selfUrlTemplate) {
-      result.links = {};
+    let result = {};
+    if (relationship.linkage) {
+        result.data = relationship.linkage.toJSON();
     }
-
-    if (relatedUrlTemplate) {
-      result.links.related = relatedUrlTemplate.expand(templateData);
+    if (urlTemplates[templateData.ownerType]) {
+        const relatedUrlTemplate = relationship.relatedURITemplate ?
+            templating.parse(relationship.relatedURITemplate) :
+            urlTemplates[templateData.ownerType].related;
+        const selfUrlTemplate = relationship.selfURITemplate ?
+            templating.parse(relationship.selfURITemplate) :
+            urlTemplates[templateData.ownerType].relationship;
+        if (relatedUrlTemplate || selfUrlTemplate) {
+            result.links = {};
+        }
+        if (relatedUrlTemplate) {
+            result.links.related = relatedUrlTemplate.expand(templateData);
+        }
+        if (selfUrlTemplate) {
+            result.links.self = selfUrlTemplate.expand(templateData);
+        }
     }
-
-    if (selfUrlTemplate) {
-      result.links.self = selfUrlTemplate.expand(templateData);
-    }
-  }
-
-  return result;
+    return result;
 }
-
 function resourceToJSON(resource, urlTemplates) {
-  var json = {};
-  json.id = resource.id;
-  json.type = resource.type;
-  json.attributes = resource.attrs;
-
-  if (resource.meta && !(0, _utilTypeHandling.objectIsEmpty)(resource.meta)) {
-    json.meta = resource.meta;
-  }
-
-  // use type, id, meta and attrs for template data, even though building
-  // links from attr values is usually stupid (but there are cases for it).
-  var templateData = _Object$assign({}, json);
-  var selfTemplate = urlTemplates[resource.type] && urlTemplates[resource.type].self;
-
-  if (!(0, _utilTypeHandling.objectIsEmpty)(resource.links) || selfTemplate) {
-    json.links = {};
-    if (selfTemplate) {
-      json.links.self = selfTemplate.expand(templateData);
+    let json = {
+        id: resource.id,
+        type: resource.type,
+        attributes: resource.attrs
+    };
+    if (resource.meta && !type_handling_1.objectIsEmpty(resource.meta)) {
+        json.meta = resource.meta;
     }
-  }
-
-  if (!(0, _utilTypeHandling.objectIsEmpty)(resource.relationships)) {
-    json.relationships = {};
-
-    for (var path in resource.relationships) {
-      var linkTemplateData = { "ownerType": json.type, "ownerId": json.id, "path": path };
-      json.relationships[path] = relationshipToJSON(resource.relationships[path], urlTemplates, linkTemplateData);
+    let templateData = Object.assign({}, json);
+    let selfTemplate = urlTemplates[resource.type] && urlTemplates[resource.type].self;
+    if (!type_handling_1.objectIsEmpty(resource.links) || selfTemplate) {
+        json.links = {};
+        if (selfTemplate) {
+            json.links.self = selfTemplate.expand(templateData);
+        }
     }
-  }
-
-  return json;
+    if (!type_handling_1.objectIsEmpty(resource.relationships)) {
+        json.relationships = {};
+        for (let path in resource.relationships) {
+            let linkTemplateData = { "ownerType": json.type, "ownerId": json.id, "path": path };
+            json.relationships[path] = relationshipToJSON(resource.relationships[path], urlTemplates, linkTemplateData);
+        }
+    }
+    return json;
 }
-
 function errorToJSON(error) {
-  var res = {};
-  for (var key in error) {
-    if (error.hasOwnProperty(key)) {
-      res[key] = error[key];
-    }
-  }
-  return res;
+    return error.toJSON();
 }
-module.exports = exports["default"];

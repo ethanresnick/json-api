@@ -1,95 +1,69 @@
 "use strict";
-
-var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
-
-var _chai = require("chai");
-
-var _chai2 = _interopRequireDefault(_chai);
-
-var _srcStepsPreQueryParseRequestPrimary = require("../../../../src/steps/pre-query/parse-request-primary");
-
-var _srcStepsPreQueryParseRequestPrimary2 = _interopRequireDefault(_srcStepsPreQueryParseRequestPrimary);
-
-var _srcTypesResource = require("../../../../src/types/Resource");
-
-var _srcTypesResource2 = _interopRequireDefault(_srcTypesResource);
-
-var _srcTypesCollection = require("../../../../src/types/Collection");
-
-var _srcTypesCollection2 = _interopRequireDefault(_srcTypesCollection);
-
-var _srcTypesLinkage = require("../../../../src/types/Linkage");
-
-var _srcTypesLinkage2 = _interopRequireDefault(_srcTypesLinkage);
-
-var _srcTypesRelationship = require("../../../../src/types/Relationship");
-
-var _srcTypesRelationship2 = _interopRequireDefault(_srcTypesRelationship);
-
-var expect = _chai2["default"].expect;
-
-describe("Resource Parser", function () {
-  describe.skip("Parsing Linkage", function () {
-    it.skip("should read in the incoming json correctly", function () {});
-
-    it.skip("should reject invalid linkage", function () {
-      //linkage who's value is true, or {"id": ""}
+Object.defineProperty(exports, "__esModule", { value: true });
+const chai = require("chai");
+const parse_request_primary_1 = require("../../../../src/steps/pre-query/parse-request-primary");
+const Resource_1 = require("../../../../src/types/Resource");
+const Collection_1 = require("../../../../src/types/Collection");
+const Linkage_1 = require("../../../../src/types/Linkage");
+const Relationship_1 = require("../../../../src/types/Relationship");
+const expect = chai.expect;
+describe("Resource Parser", () => {
+    describe.skip("Parsing Linkage", () => {
+        it.skip("should read in the incoming json correctly", () => {
+            console.log("see https://github.com/json-api/json-api/issues/482");
+        });
+        it.skip("should reject invalid linkage", () => {
+        });
     });
-  });
-
-  describe("Parsing a Collection", function () {
-    it("should resolve with a Collection object", function (done) {
-      (0, _srcStepsPreQueryParseRequestPrimary2["default"])([]).then(function (collection) {
-        expect(collection).to.be["instanceof"](_srcTypesCollection2["default"]);
-        done();
-      }, done);
+    describe("Parsing a Collection", () => {
+        it("should resolve with a Collection object", (done) => {
+            parse_request_primary_1.default([]).then((collection) => {
+                expect(collection).to.be.instanceof(Collection_1.default);
+                done();
+            }, done);
+        });
     });
-  });
-
-  describe("Parsing a single Resource", function () {
-    it("should resolve with a resource object", function (done) {
-      (0, _srcStepsPreQueryParseRequestPrimary2["default"])({ "type": "tests", "id": "1" }).then(function (resource) {
-        expect(resource).to.be["instanceof"](_srcTypesResource2["default"]);
-        done();
-      }, done);
+    describe("Parsing a single Resource", () => {
+        it("should resolve with a resource object", (done) => {
+            parse_request_primary_1.default({ "type": "tests", "id": "1" }).then((resource) => {
+                expect(resource).to.be.instanceof(Resource_1.default);
+                done();
+            }, done);
+        });
+        it("should load up the id, type, and attributes", (done) => {
+            let json = {
+                "id": "21", "type": "people",
+                "attributes": { "name": "bob", "isBob": true }
+            };
+            parse_request_primary_1.default(json).then((resource) => {
+                expect(resource.id).to.equal("21");
+                expect(resource.type).to.equal("people");
+                expect(resource.attrs).to.deep.equal({ "name": "bob", "isBob": true });
+                done();
+            }, done);
+        });
+        it("should reject invalid resources", (done) => {
+            parse_request_primary_1.default({ "id": "1" }).then(() => { }, (err) => {
+                expect(err.detail).to.match(/type.*required/);
+                done();
+            });
+        });
+        it("should create Relationship/Linkage for each link", (done) => {
+            const parents = [
+                { "type": "people", "id": "1" }, { "type": "people", "id": "2" }
+            ];
+            const json = {
+                "id": "3", "type": "people",
+                "relationships": {
+                    "parents": { "data": parents }
+                }
+            };
+            parse_request_primary_1.default(json).then((resource) => {
+                expect(resource.relationships.parents).to.be.instanceof(Relationship_1.default);
+                expect(resource.relationships.parents.linkage).to.be.instanceof(Linkage_1.default);
+                expect(resource.relationships.parents.linkage.value).to.deep.equal(parents);
+                done();
+            }, done);
+        });
     });
-
-    it("should load up the id, type, and attributes", function (done) {
-      var json = {
-        "id": "21", "type": "people",
-        "attributes": { "name": "bob", "isBob": true }
-      };
-
-      (0, _srcStepsPreQueryParseRequestPrimary2["default"])(json).then(function (resource) {
-        expect(resource.id).to.equal("21");
-        expect(resource.type).to.equal("people");
-        expect(resource.attrs).to.deep.equal({ "name": "bob", "isBob": true });
-        done();
-      }, done);
-    });
-
-    it("should reject invalid resources", function (done) {
-      (0, _srcStepsPreQueryParseRequestPrimary2["default"])({ "id": "1" }).then(function () {}, function (err) {
-        expect(err.detail).to.match(/type.*required/);
-        done();
-      });
-    });
-
-    it("should create Relationship/Linkage for each link", function (done) {
-      var parents = [{ "type": "people", "id": "1" }, { "type": "people", "id": "2" }];
-      var json = {
-        "id": "3", "type": "people",
-        "relationships": {
-          "parents": { "data": parents }
-        }
-      };
-
-      (0, _srcStepsPreQueryParseRequestPrimary2["default"])(json).then(function (resource) {
-        expect(resource.relationships.parents).to.be["instanceof"](_srcTypesRelationship2["default"]);
-        expect(resource.relationships.parents.linkage).to.be["instanceof"](_srcTypesLinkage2["default"]);
-        expect(resource.relationships.parents.linkage.value).to.deep.equal(parents);
-        done();
-      }, done);
-    });
-  });
 });
