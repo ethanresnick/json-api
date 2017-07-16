@@ -14,7 +14,7 @@ const Resource_1 = require("../types/Resource");
 class DocumentationController {
     constructor(registry, apiInfo, templatePath, dasherizeJSONKeys = true) {
         this.registry = registry;
-        const defaultTempPath = "../../../templates/documentation.jade";
+        const defaultTempPath = "../../templates/documentation.jade";
         this.template = templatePath || path.resolve(__dirname, defaultTempPath);
         this.dasherizeJSONKeys = dasherizeJSONKeys;
         let data = Object.assign({}, apiInfo, { resourcesMap: {} });
