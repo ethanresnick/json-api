@@ -67,7 +67,7 @@ function parseFields(fieldsParam) {
   let fields;
   if(typeof fieldsParam === "object") {
     fields = {};
-    let isField = (it) => !arrayContains(["id", "type"], it);
+    let isField = (it) => !["id", "type"].includes(it);
 
     for(let type in fieldsParam) {
       let provided = parseCommaSeparatedParam(fieldsParam[type]) || [];

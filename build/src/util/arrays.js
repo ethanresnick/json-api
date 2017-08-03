@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 function arrayUnique(array) {
-    return array.filter((a, b, c) => c.indexOf(a, b + 1) < 0);
+    return Array.from(new Set(array).values());
 }
 exports.arrayUnique = arrayUnique;
 function arrayValuesMatch(array1, array2) {
@@ -10,11 +10,6 @@ function arrayValuesMatch(array1, array2) {
 }
 exports.arrayValuesMatch = arrayValuesMatch;
 function arrayContains(arr, value) {
-    if (!Number.isNaN(value)) {
-        return arr.indexOf(value) !== -1;
-    }
-    else {
-        return arr.some(Number.isNaN) === true;
-    }
+    return arr.includes(value);
 }
 exports.arrayContains = arrayContains;

@@ -6,12 +6,10 @@ exports.SealedResponse = Response_1.Response;
 const Document_1 = require("../types/Document");
 const Collection_1 = require("../types/Collection");
 const APIError_1 = require("../types/APIError");
-const requestValidators = require("../steps/http/validate-request");
+const _0_validate_request_1 = require("../steps/0-validate-request");
+const _1_convert_request_to_query_list_1 = require("../steps/1-convert-request-to-query-list");
 const negotiate_content_type_1 = require("../steps/http/content-negotiation/negotiate-content-type");
-const validate_content_type_1 = require("../steps/http/content-negotiation/validate-content-type");
 const label_to_ids_1 = require("../steps/pre-query/label-to-ids");
-const parse_request_primary_1 = require("../steps/pre-query/parse-request-primary");
-const validate_document_1 = require("../steps/pre-query/validate-document");
 const validate_resources_1 = require("../steps/pre-query/validate-resources");
 const apply_transform_1 = require("../steps/apply-transform");
 const do_get_1 = require("../steps/do-query/do-get");
@@ -25,21 +23,19 @@ class APIController {
     handle(request, frameworkReq, frameworkRes) {
         let response = new Response_1.default();
         let registry = this.registry;
+        return (_0_validate_request_1.default([])(request)
+            .then(_1_convert_request_to_query_list_1.default));
         return co(function* () {
             try {
-                yield requestValidators.checkMethod(request);
-                yield requestValidators.checkBodyExistence(request);
-                response.contentType = yield negotiate_content_type_1.default(request.accepts, ["application/vnd.api+json"]);
+                response.contentType = yield negotiate_content_type_1.default(request.headers.accepts, ["application/vnd.api+json"]);
                 response.headers.vary = "Accept";
-                if (!registry.hasType(request.type)) {
-                    throw new APIError_1.default(404, undefined, `${request.type} is not a valid type.`);
+                if (!registry.hasType(request.frameworkParams.type)) {
+                    throw new APIError_1.default(404, undefined, `${request.frameworkParams.type} is not a valid type.`);
                 }
-                if (request.hasBody) {
-                    yield validate_content_type_1.default(request, this.constructor.supportedExt);
-                    yield validate_document_1.default(request.body);
-                    let parsedPrimary = yield parse_request_primary_1.default(request.body.data, request.aboutRelationship);
-                    if (!request.aboutRelationship) {
-                        yield validate_resources_1.default(request.type, parsedPrimary, registry);
+                if (typeof request.body !== "undefined") {
+                    let parsedPrimary = yield parseRequestPrimary(request.body.data, Boolean(request.frameworkParams.relationship));
+                    if (!request.frameworkParams.relationship) {
+                        yield validate_resources_1.default(request.frameworkParams.type, parsedPrimary, registry);
                     }
                     request.primary = yield apply_transform_1.default(parsedPrimary, "beforeSave", registry, frameworkReq, frameworkRes);
                 }

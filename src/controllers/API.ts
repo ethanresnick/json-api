@@ -1,6 +1,8 @@
 import co = require("co");
+import { IncomingMessage } from "http";
 
 import ResourceTypeRegistry from '../ResourceTypeRegistry';
+import {Request} from '../types/index';
 // This is typescript voodoo. Sealed response actually refers to the *un*sealed
 // class, but it's the appropriate type name in the sense that that same type is
 // used as the return value when a *sealed* response is created through ValueObject()
@@ -12,14 +14,12 @@ import APIError from "../types/APIError";
 
 export { SealedResponse };
 
-import * as requestValidators from "../steps/http/validate-request";
-import negotiateContentType from "../steps/http/content-negotiation/negotiate-content-type";
-import validateContentType from "../steps/http/content-negotiation/validate-content-type";
+import validateRequest from "../steps/0-validate-request";
+import convertRequestToQueryList from "../steps/1-convert-request-to-query-list";
 
+import negotiateContentType from "../steps/http/content-negotiation/negotiate-content-type";
 
 import labelToIds from "../steps/pre-query/label-to-ids";
-import parseRequestPrimary from "../steps/pre-query/parse-request-primary";
-import validateRequestDocument from "../steps/pre-query/validate-document";
 import validateRequestResources from "../steps/pre-query/validate-resources";
 import applyTransform from "../steps/apply-transform";
 
@@ -45,24 +45,23 @@ class APIController {
    * @param {Object} frameworkRes Theoretically, the response objcet generated
    *     by your http framework but, like with frameworkReq, it can be anything.
    */
-  handle(request, frameworkReq, frameworkRes) {
+  handle(request: Request, frameworkReq: IncomingMessage, frameworkRes) {
     let response = new Response();
     let registry = this.registry;
+
+    return (
+      validateRequest([])(request)
+        .then(convertRequestToQueryList)
+    );
 
     // Kick off the chain for generating the response.
     return co(function*() {
       try {
-        // check that a valid method is in use
-        yield requestValidators.checkMethod(request);
-
-        // throw if the body is supposed to be present but isn't (or vice-versa).
-        yield requestValidators.checkBodyExistence(request);
-
         // Try to negotiate the content type (may fail, and we may need to
         // deviate from the negotiated value if we have to return an error
         // body, rather than our expected response).
         response.contentType = yield negotiateContentType(
-          request.accepts, ["application/vnd.api+json"]
+          request.headers.accepts, ["application/vnd.api+json"]
         );
 
         // No matter what, though, we're varying on Accept. See:
@@ -70,22 +69,19 @@ class APIController {
         response.headers.vary = "Accept";
 
         // If the type requested in the endpoint hasn't been registered, we 404.
-        if(!registry.hasType(request.type)) {
-          throw new APIError(404, undefined, `${request.type} is not a valid type.`);
+        if(!registry.hasType(request.frameworkParams.type)) {
+          throw new APIError(404, undefined, `${request.frameworkParams.type} is not a valid type.`);
         }
 
         // If the request has a body, validate it and parse its resources.
-        if(request.hasBody) {
-          yield validateContentType(request, this.constructor.supportedExt);
-          yield validateRequestDocument(request.body);
-
+        if(typeof request.body !== "undefined") {
           let parsedPrimary = yield parseRequestPrimary(
-            request.body.data, request.aboutRelationship
+            request.body.data, Boolean(request.frameworkParams.relationship)
           );
 
           // validate the request's resources.
-          if(!request.aboutRelationship) {
-            yield validateRequestResources(request.type, parsedPrimary, registry);
+          if(!request.frameworkParams.relationship) {
+            yield validateRequestResources(request.frameworkParams.type, parsedPrimary, registry);
           }
 
           request.primary = yield applyTransform(

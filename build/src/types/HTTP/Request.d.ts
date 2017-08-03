@@ -1,9 +1,9 @@
-export declare class Request {
+export default class Request {
     hasBody: boolean | null;
     needsBody: boolean | null;
     body: string | undefined;
-    method: string | null;
-    uri: string | null;
+    method: string;
+    uri: string;
     contentType: string | null;
     accepts: string | null;
     ext: string[];
@@ -16,8 +16,3 @@ export declare class Request {
     queryParams: object;
     constructor();
 }
-declare const _default: {
-    (initial?: Partial<Request> | undefined): Request;
-    new (initial?: Partial<Request> | undefined): Request;
-};
-export default _default;

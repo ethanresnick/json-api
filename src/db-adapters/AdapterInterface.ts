@@ -6,10 +6,9 @@ export interface AdapterInstance<T extends new (...args) => any> {
   delete(parentType: any, idOrIds: any): any;
   addToRelationship(type: any, id: any, relationshipPath: any, newLinkage: any): any;
   removeFromRelationship(type: any, id: any, relationshipPath: any, linkageToRemove: any): any;
-  getModel(modelName)
+  getModel(modelName): any;
   getTypesAllowedInCollection(parentType: any): any;
   getRelationshipNames(type: any): any;
-
 };
 
 export interface AdapterClass {

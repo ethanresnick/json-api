@@ -26,6 +26,19 @@ export function deleteNested(path, object) {
 }
 
 /**
+ * Note that this is only safe with chars in the BMP.
+ * See: https://mathiasbynens.be/notes/javascript-unicode
+ */
+export const stripLeadingBMPChar = (char) => (string) => { 
+  // The below works because, though string[0] could be a surrogate,
+  // it will only === char if it's not: "the ranges for the 
+  // high surrogates, low surrogates, and valid BMP characters 
+  // are disjoint, [so] it is not possible for a surrogate to 
+  // match a BMP character".
+  return string[0] === char ? string.slice(1) : string;
+};
+
+/**
  * Returns whether one array's items are a subset of those in the other.
  * Both array's elements are assumed to be unique.
  */

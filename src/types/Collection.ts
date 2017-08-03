@@ -1,7 +1,7 @@
 import Resource from './Resource';
 
 export default class Collection {
-  public resources: Resource[];
+  private resources: Resource[];
 
   constructor(resources: Resource[] = []) {
     this.resources = resources;
@@ -17,5 +17,9 @@ export default class Collection {
 
   add(resource) {
     this.resources.push(resource);
+  }
+
+  [Symbol.iterator]() {
+    return this.resources.values();
   }
 }

@@ -1,12 +1,12 @@
-import Q = require("q");
+import { ValidatedRequest } from "../../types";
 import APIError from "../../types/APIError";
 import Resource from "../../types/Resource";
 import Relationship from "../../types/Relationship";
 import Linkage from "../../types/Linkage";
 import Collection from "../../types/Collection";
 
-export default function(data, parseAsLinkage = false) {
-  return Q.Promise<Linkage|Collection|Resource>(function(resolve, reject) {
+export default function parsePrimaryData(data: ValidatedRequest["body"]["data"], parseAsLinkage: boolean) {
+  return new Promise<Linkage|Collection|Resource>(function(resolve, reject) {
     try {
       if(parseAsLinkage) {
         resolve(linkageFromJSON(data));
@@ -35,16 +35,16 @@ export default function(data, parseAsLinkage = false) {
   });
 }
 
+function linkageFromJSON(json) {
+  return new Linkage(json);
+}
+
 function relationshipFromJSON(json) {
   if (typeof json.data === "undefined") {
     throw new APIError(400, undefined, `Missing relationship linkage.`);
   }
 
   return new Relationship(linkageFromJSON(json.data));
-}
-
-function linkageFromJSON(json) {
-  return new Linkage(json);
 }
 
 function resourceFromJSON(json) {

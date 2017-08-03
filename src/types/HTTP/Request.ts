@@ -1,11 +1,11 @@
-import {ValueObject} from "../../util/type-handling";
+import { Request as RequestType } from '../index';
 
-export class Request {
+export default class Request {
   public hasBody: boolean | null;
   public needsBody: boolean | null;
   public body: string | undefined;
-  public method: string | null;
-  public uri: string | null;
+  public method: string;
+  public uri: string;
   public contentType: string | null;
   public accepts: string | null;
   public ext: string[];
@@ -79,5 +79,3 @@ export class Request {
     this.queryParams = {};
   }
 }
-
-export default ValueObject(Request);

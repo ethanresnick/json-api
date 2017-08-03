@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const type_handling_1 = require("../../util/type-handling");
 class Request {
     constructor() {
         this.hasBody = null;
@@ -20,5 +19,4 @@ class Request {
         this.queryParams = {};
     }
 }
-exports.Request = Request;
-exports.default = type_handling_1.ValueObject(Request);
+exports.default = Request;

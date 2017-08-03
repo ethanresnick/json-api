@@ -1,11 +1,13 @@
 import qs = require("qs");
+import url = require("url");
+import deepFreeze = require("deep-freeze");
 import contentType = require("content-type");
 import getRawBody = require("raw-body");
+import { IncomingMessage } from "http";
 import APIError from "../types/APIError";
-import Request, { Request as UnsealedRequest } from "../types/HTTP/Request";
+import { Request } from "../types/index";
 import APIController from "../controllers/API";
 import DocsController from "../controllers/Documentation";
-export { UnsealedRequest };
 
 /**
  * This controller is the base for http strategy classes. It's built around
@@ -48,110 +50,99 @@ export default class BaseStrategy {
    * can be passed, otherwise the query parameters will be inferred from the
    * IncomingMessage url property and parsed using the qs node module.
    *
-   * @param {http.IncomingMessage} req original request object from core node module http
+   * @param {http.IncomingMessage} req original request object from node's http module
    * @param {string} protocol
    * @param {string} host
-   * @param {Object} params object containing url parameters
+   * @param {Object} params object containing url parameters. See Request type for details.
    * @param {Object} [query] object containing query parameters
    */
-  buildRequestObject(req, protocol, host, params, query?){
-    const config = this.config;
+  async buildRequestObject(req: IncomingMessage, protocol: string, host: string, 
+    params: Request['frameworkParams'], query?): Promise<Request> {
+  
+    const contentTypeParsed = contentType.parse(req.headers["content-type"]);
+    const uriParsed = url.parse(<string>req.url, false, false);
 
-    return new Promise<UnsealedRequest>(function(resolve, reject) {
-      let it = new Request();
-
-      // Handle route & query params
-      if(query) {
-        it.queryParams = query;
-      }
-      else if(req.url.indexOf("?") !== -1) {
-        // TODO: what if there's more than one ?, like an unescaped one in the query string?
-        // I think that's technically invalid, but we should handle it.
-        it.queryParams = qs.parse(req.url.split("?")[1]);
-      }
-
-      it.allowLabel        = !!(params.idOrLabel && !params.id);
-      it.idOrIds           = params.id || params.idOrLabel;
-      it.type              = params.type;
-      it.aboutRelationship = !!params.relationship;
-      it.relationship      = params.related || params.relationship;
-
-      // Handle HTTP/Conneg.
-      protocol  = protocol || (req.connection.encrypted ? "https" : "http");
-      host      = host || req.headers.host;
-
-      it.uri     = protocol + "://" + host + req.url;
-      it.method  = req.method.toLowerCase();
-      it.accepts = req.headers.accept;
-
+    const method = (() => {
+      const usedMethod = (<string>req.method).toLowerCase();
+      const requestedMethod = String(req.headers["x-http-method-override"] || "").toLowerCase();
+      
       // Support Verb tunneling, but only for PATCH and only if user turns it on.
       // Turning on any tunneling automatically could be a security issue.
-      let requestedMethod = (req.headers["x-http-method-override"] || "").toLowerCase();
-      if(config.tunnel && it.method === "post" && requestedMethod === "patch") {
-        it.method = "patch";
+      if(requestedMethod) {
+        if(this.config.tunnel && usedMethod === 'post' && requestedMethod === 'patch') {
+          return 'patch';
+        }
+        
+        throw new APIError(400, undefined, `Cannot tunnel to the method "${requestedMethod.toUpperCase()}".`);
       }
-      else if(requestedMethod) {
-        reject(
-          new APIError(400, undefined, `Cannot tunnel to the method "${requestedMethod.toUpperCase()}".`)
+
+      return usedMethod;
+    })();
+
+    const bodyString: string | undefined = await (() => {
+      if(!hasBody(req)) {
+        return Promise.resolve(undefined);
+      }
+
+      if(!isReadableStream(req)) {
+        if(typeof (<any>req).body === 'string') {
+          return Promise.resolve(<string>(<any>req).body);
+        }
+        
+        return Promise.reject(
+          new APIError(500, undefined, "Request could not be parsed, and no previously parsed body was found.")
         );
       }
 
-      if(hasBody(req)) {
-        if(!isReadableStream(req)) {
-          return reject(
-            new APIError(500, undefined, "Request body could not be parsed. Make sure other no other middleware has already parsed the request body.")
-          );
-        }
+      // Handle a client sending multiple content-length headers, 
+      // though this is technically an HTTP spec violation.
+      const contentLength: string | undefined =
+        (Array.isArray(req.headers["content-length"])
+          ? (<string[]>req.headers["content-length"])[0]
+          : <string | undefined>req.headers["content-length"]);
 
-        it.contentType  = req.headers["content-type"];
-        const typeParsed = contentType.parse(req);
+      return getRawBody(req, {
+        encoding: contentTypeParsed.parameters.charset || "utf-8",
+        limit: "1mb",
+        length: contentLength && !isNaN(<any>contentLength) ? contentLength : null
+      })
+    })();
 
-        let bodyParserOptions: (getRawBody.Options & { encoding: string}) = {
-          encoding: typeParsed.parameters.charset || "utf8",
-          limit: "1mb"
-        };
-
-        if(req.headers["content-length"] && !isNaN(req.headers["content-length"])) {
-          bodyParserOptions.length = req.headers["content-length"];
-        }
-
-        // The req has not yet been read, so let's read it
-        getRawBody(req, bodyParserOptions, function(err, string) {
-          if(err) {
-            reject(err);
-          }
-
-          // Even though we passed the hasBody check, the body could still be
-          // empty, so we check the length. (We can't check this before doing
-          // getRawBody because, while Content-Length: 0 signals an empty body,
-          // there's no similar in-advance clue for detecting empty bodies when
-          // Transfer-Encoding: chunked is being used.)
-          else if(string.length === 0) {
-            it.hasBody = false;
-            it.body = "";
-            resolve(it);
-          }
-
-          else {
-            try {
-              it.hasBody = true;
-              it.body = JSON.parse(string);
-              resolve(it);
-            }
-            catch (error) {
-              reject(
-                new APIError(400, undefined, "Request contains invalid JSON.")
-              );
-            }
-          }
-        });
+    const bodyParsed = (() => {
+      // Even though we passed the hasBody check, the body could still be
+      // empty, which we want to treat as no body, so we check the length. 
+      // (We can't check this before doing getRawBody because, while 
+      // Content-Length: 0 signals an empty body, there's no similar 
+      // in-advance clue for detecting empty bodies when
+      // Transfer-Encoding: chunked is being used.)
+      try {
+        return !bodyString || bodyString.length === 0 
+          ? undefined 
+          : JSON.parse(bodyString);
       }
-
-      else {
-        it.hasBody = false;
-        it.body = undefined;
-        resolve(it);
+      catch(e) {
+        throw new APIError(400, undefined, "Request contains invalid JSON.");
       }
+    })();
+
+    // We want to deep freeze the request (as a nice guarantee to offer),
+    // but we need to exclude the frameworkReq from that process, as that
+    // object must stay mutable. Fastest way to do that is below.
+    return <Request>Object.freeze({
+      uri: Object.freeze({
+        protocol: protocol || ((<any>req.connection).encrypted ? "https" : "http"),
+        host,
+        pathname: uriParsed.pathname,
+        queryParams: query || (uriParsed.query ? qs.parse(uriParsed.query) : {})
+      }),
+      method,
+      body: deepFreeze(bodyParsed),
+      headers: Object.freeze({
+        contentType: contentTypeParsed,
+        accepts: req.headers.accept
+      }),
+      frameworkParams: Object.freeze(params),
+      frameworkReq: req
     });
   }
 }

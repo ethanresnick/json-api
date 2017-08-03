@@ -4,6 +4,13 @@
 - As of 3.0, this library requires at least Node v6. 
 - Q.Promise's have been replaced with standard ES6 Promises in various places throughout the API.
 
+### Resource Descriptions
+- labelMappers may now return a (promise for) a partial query and an isSingular flag, rather than an id or array of ids. 
+
+### Subtypes
+- Subtypes will soon be rendered with their parent type in the `type` key, and the subtype in a `meta.labels` key.
+  See comment on the Query type in src/types/index.ts
+
 ### Response
 - Response.headers.vary and Response.headers.location are not defined, rather than having a null value, if those headers aren't needed for the response.
 

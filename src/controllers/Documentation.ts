@@ -5,7 +5,7 @@ import Negotiator = require("negotiator");
 import dasherize = require("dasherize");
 import mapValues = require("lodash/object/mapValues");
 
-import ResourceTypeRegistry, { DefaultIncludes, ResourceTypeInfo } from "../ResourceTypeRegistry";
+import ResourceTypeRegistry, { DefaultIncludes, Info } from "../ResourceTypeRegistry";
 import Response, { Response as UnsealedResponse } from "../types/HTTP/Response";
 import Document from "../types/Document";
 import Collection from "../types/Collection";
@@ -127,8 +127,8 @@ export default class DocumentationController {
         plural: string
       },
       defaultIncludes?: DefaultIncludes,
-      example?: ResourceTypeInfo['example'],
-      description?: ResourceTypeInfo['description'],
+      example?: Info['example'],
+      description?: Info['description'],
       parentType: string,
       childTypes: string[]
     };

@@ -1,13 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const Q = require("q");
 const APIError_1 = require("../../types/APIError");
 const Resource_1 = require("../../types/Resource");
 const Relationship_1 = require("../../types/Relationship");
 const Linkage_1 = require("../../types/Linkage");
 const Collection_1 = require("../../types/Collection");
-function default_1(data, parseAsLinkage = false) {
-    return Q.Promise(function (resolve, reject) {
+function parsePrimaryData(data, parseAsLinkage) {
+    return new Promise(function (resolve, reject) {
         try {
             if (parseAsLinkage) {
                 resolve(linkageFromJSON(data));
@@ -31,15 +30,15 @@ function default_1(data, parseAsLinkage = false) {
         }
     });
 }
-exports.default = default_1;
+exports.default = parsePrimaryData;
+function linkageFromJSON(json) {
+    return new Linkage_1.default(json);
+}
 function relationshipFromJSON(json) {
     if (typeof json.data === "undefined") {
         throw new APIError_1.default(400, undefined, `Missing relationship linkage.`);
     }
     return new Relationship_1.default(linkageFromJSON(json.data));
-}
-function linkageFromJSON(json) {
-    return new Linkage_1.default(json);
 }
 function resourceFromJSON(json) {
     let relationships = json.relationships || {};

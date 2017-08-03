@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const APIError_1 = require("../../types/APIError");
-const arrays_1 = require("../../util/arrays");
 function default_1(requestContext, responseContext, registry) {
     let type = requestContext.type;
     let adapter = registry.dbAdapter(type);
@@ -43,7 +42,7 @@ function parseFields(fieldsParam) {
     let fields;
     if (typeof fieldsParam === "object") {
         fields = {};
-        let isField = (it) => !arrays_1.arrayContains(["id", "type"], it);
+        let isField = (it) => !["id", "type"].includes(it);
         for (let type in fieldsParam) {
             let provided = parseCommaSeparatedParam(fieldsParam[type]) || [];
             fields[type] = provided.filter(isField);
