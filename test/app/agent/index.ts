@@ -14,13 +14,9 @@ export default appPromise.then(function(app: Application) {
   const host = process.env.HOST || "127.0.0.1";
   const baseUrl = "http://" + host + ":" + port;
 
-  const appListenPromise = new Promise((resolve, reject) => {
-    app.listen(Number(port), host, function(err) {
-      err ? reject(err) : resolve();
-    });
-  });
-
-  return appListenPromise.then((app: any) => {
+  return new Promise((resolve, reject) => {
+    app.listen(Number(port), host, (err) => { err ? reject(err) : resolve() });
+  }).then(() => {
     return {
       request(method, url) {
         const req = superagent[method.toLowerCase()](baseUrl + url).buffer(true);

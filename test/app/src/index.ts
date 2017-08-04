@@ -7,7 +7,7 @@ export { Express } from "express";
 /**
  * Export a promise for the app.
  */
-export default database.then(function(dbModule) {
+export default database.then(function(dbModule): Express {
   const adapter = new API.dbAdapters.Mongoose(dbModule.models());
   const registry = new API.ResourceTypeRegistry({
     "people": require("./resource-descriptions/people"),

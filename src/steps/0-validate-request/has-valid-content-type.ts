@@ -27,7 +27,7 @@ export default function hasValidContentType({headers, body}: Request): Promise<v
     const typeParams = {...headers.contentType.parameters};
     delete (<any>typeParams).charset;
 
-    if(!objectIsEmpty(headers.contentType.parameters)) {
+    if(!objectIsEmpty(typeParams)) {
       const detail =
         "The request's Content-Type must be application/vnd.api+json, with " +
         "no parameters. But the Content-Type you provided contained the " +
