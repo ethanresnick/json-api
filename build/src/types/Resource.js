@@ -57,7 +57,7 @@ function validateFieldGroup(group, otherFields, isAttributes = false) {
     if (typeof group.id !== "undefined" || typeof group.type !== "undefined") {
         throw new Error("`type` and `id` cannot be used as attribute or relationship names.");
     }
-    for (let field in group) {
+    for (const field in group) {
         if (isAttributes) {
             validateComplexAttribute(group[field]);
         }
@@ -71,7 +71,7 @@ function validateComplexAttribute(attrOrAttrPart) {
         if (typeof attrOrAttrPart.relationships !== "undefined" || typeof attrOrAttrPart.links !== "undefined") {
             throw new Error('Complex attributes may not have "relationships" or "links" keys.');
         }
-        for (let key in attrOrAttrPart) {
+        for (const key in attrOrAttrPart) {
             validateComplexAttribute(attrOrAttrPart[key]);
         }
     }

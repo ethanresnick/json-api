@@ -41,8 +41,8 @@ class MongooseAdapter {
             includePaths = includePaths.map((it) => it.split("."));
             includePaths.forEach((pathParts) => {
                 if (!arrays_1.arrayContains(refPaths, pathParts[0])) {
-                    let title = "Invalid include path.";
-                    let detail = `Resources of type "${type}" don't have a(n) "${pathParts[0]}" relationship.`;
+                    const title = "Invalid include path.";
+                    const detail = `Resources of type "${type}" don't have a(n) "${pathParts[0]}" relationship.`;
                     throw new APIError_1.default(400, undefined, title, detail);
                 }
                 if (pathParts.length > 1) {
@@ -51,13 +51,13 @@ class MongooseAdapter {
                 populatedPaths.push(pathParts[0]);
                 queryBuilder.populate(pathParts[0]);
             });
-            let includedResources = [];
+            const includedResources = [];
             primaryDocumentsPromise = Q(queryBuilder.exec()).then((docs) => {
                 type_handling_1.forEachArrayOrVal(docs, (doc) => {
                     if (!doc)
                         return;
                     populatedPaths.forEach((path) => {
-                        let refDocs = Array.isArray(doc[path]) ? doc[path] : [doc[path]];
+                        const refDocs = Array.isArray(doc[path]) ? doc[path] : [doc[path]];
                         refDocs.forEach((it) => {
                             if (it) {
                                 includedResources.push(this.constructor.docToResource(it, pluralizer, fields));
@@ -79,12 +79,12 @@ class MongooseAdapter {
     }
     create(parentType, resourceOrCollection) {
         const resourcesByType = type_handling_1.groupResourcesByType(resourceOrCollection);
-        let creationPromises = [];
-        let setIdWithGenerator = (doc) => { doc._id = this.idGenerator(doc); };
-        for (let type in resourcesByType) {
-            let model = this.getModel(this.constructor.getModelName(type));
-            let resources = resourcesByType[type];
-            let docObjects = resources.map(util.resourceToDocObject);
+        const creationPromises = [];
+        const setIdWithGenerator = (doc) => { doc._id = this.idGenerator(doc); };
+        for (const type in resourcesByType) {
+            const model = this.getModel(this.constructor.getModelName(type));
+            const resources = resourcesByType[type];
+            const docObjects = resources.map(util.resourceToDocObject);
             if (typeof this.idGenerator === "function") {
                 type_handling_1.forEachArrayOrVal(docObjects, setIdWithGenerator);
             }
@@ -120,12 +120,12 @@ class MongooseAdapter {
                 const idOrIdsAsArray = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
                 const docIdOrIdsAsArray = Array.isArray(docs) ? docs.map(it => it.id) : [docs.id];
                 if (!arrays_1.arrayValuesMatch(idOrIdsAsArray, docIdOrIdsAsArray)) {
-                    let title = "Some of the resources you're trying to update could not be found.";
+                    const title = "Some of the resources you're trying to update could not be found.";
                     throw new APIError_1.default(404, undefined, title);
                 }
             }
             type_handling_1.forEachArrayOrVal(docs, (currDoc) => {
-                let newResource = changeSets[currDoc.id];
+                const newResource = changeSets[currDoc.id];
                 const currDocModel = currDoc.constructor;
                 const currentModelName = currDocModel.modelName;
                 const newModelName = this.constructor.getModelName(newResource.type, singular);
@@ -141,7 +141,7 @@ class MongooseAdapter {
             });
             return Promise.all(successfulSavesPromises);
         }).then((docs) => {
-            let makeCollection = resourceOrCollection instanceof Collection_1.default;
+            const makeCollection = resourceOrCollection instanceof Collection_1.default;
             return this.constructor.docsToResourceOrCollection(docs, makeCollection, plural);
         }).catch(util.errorHandler);
     }
@@ -164,30 +164,30 @@ class MongooseAdapter {
         }).catch(util.errorHandler);
     }
     addToRelationship(type, id, relationshipPath, newLinkage) {
-        let model = this.getModel(this.constructor.getModelName(type));
-        let update = {
+        const model = this.getModel(this.constructor.getModelName(type));
+        const update = {
             $addToSet: {
                 [relationshipPath]: { $each: newLinkage.value.map(it => it.id) }
             }
         };
-        let options = { runValidators: true };
+        const options = { runValidators: true };
         return Q.ninvoke(model, "findOneAndUpdate", { "_id": id }, update, options)
             .catch(util.errorHandler);
     }
     removeFromRelationship(type, id, relationshipPath, linkageToRemove) {
-        let model = this.getModel(this.constructor.getModelName(type));
-        let update = {
+        const model = this.getModel(this.constructor.getModelName(type));
+        const update = {
             $pullAll: {
                 [relationshipPath]: linkageToRemove.value.map(it => it.id)
             }
         };
-        let options = { runValidators: true };
+        const options = { runValidators: true };
         return Q.ninvoke(model, "findOneAndUpdate", { "_id": id }, update, options)
             .catch(util.errorHandler);
     }
     getModel(modelName) {
         if (!this.models[modelName]) {
-            let err = new Error(`The model "${modelName}" has not been registered with the MongooseAdapter.`);
+            const err = new Error(`The model "${modelName}" has not been registered with the MongooseAdapter.`);
             err.status = 404;
             throw err;
         }
@@ -198,7 +198,7 @@ class MongooseAdapter {
         return [parentType].concat(this.constructor.getChildTypes(parentModel, this.inflector.plural));
     }
     getRelationshipNames(type) {
-        let model = this.getModel(this.constructor.getModelName(type, this.inflector.singular));
+        const model = this.getModel(this.constructor.getModelName(type, this.inflector.singular));
         return util.getReferencePaths(model);
     }
     static docsToResourceOrCollection(docs, makeCollection, pluralizer, fields) {
@@ -210,16 +210,16 @@ class MongooseAdapter {
         return makeCollection ? new Collection_1.default(docs) : docs[0];
     }
     static docToResource(doc, pluralizer = pluralize.plural, fields) {
-        let type = this.getType(doc.constructor.modelName, pluralizer);
-        let refPaths = util.getReferencePaths(doc.constructor);
-        let schemaOptions = doc.constructor.schema.options;
+        const type = this.getType(doc.constructor.modelName, pluralizer);
+        const refPaths = util.getReferencePaths(doc.constructor);
+        const schemaOptions = doc.constructor.schema.options;
         let attrs = doc.toJSON({ virtuals: true, getters: true });
         delete attrs.id;
         delete attrs._id;
         delete attrs[schemaOptions.versionKey];
         delete attrs[schemaOptions.discriminatorKey];
         if (fields && fields[type]) {
-            let newAttrs = {};
+            const newAttrs = {};
             fields[type].forEach((field) => {
                 if (attrs[field]) {
                     newAttrs[field] = attrs[field];
@@ -227,15 +227,15 @@ class MongooseAdapter {
             });
             attrs = newAttrs;
         }
-        let relationships = {};
-        let getProp = (obj, part) => obj[part];
+        const relationships = {};
+        const getProp = (obj, part) => obj[part];
         refPaths.forEach((path) => {
             if (fields && fields[type] && !arrays_1.arrayContains(fields[type], path)) {
                 return;
             }
-            let pathParts = path.split(".");
+            const pathParts = path.split(".");
             let jsonValAtPath = pathParts.reduce(getProp, attrs);
-            let referencedType = this.getReferencedType(doc.constructor, path);
+            const referencedType = this.getReferencedType(doc.constructor, path);
             misc_1.deleteNested(path, attrs);
             let isToOneRelationship = false;
             if (!Array.isArray(jsonValAtPath)) {
@@ -259,7 +259,7 @@ class MongooseAdapter {
         return new Resource_1.default(type, doc.id, attrs, relationships);
     }
     static getModelName(type, singularizer = pluralize.singular) {
-        let words = type.split("-");
+        const words = type.split("-");
         words[words.length - 1] = singularizer(words[words.length - 1]);
         return words.map((it) => it.charAt(0).toUpperCase() + it.slice(1)).join("");
     }
@@ -308,8 +308,8 @@ class MongooseAdapter {
             else if (type.options.default && typeof type.options.default !== "function") {
                 defaultVal = type.options.default;
             }
-            let baseTypeOptions = Array.isArray(type.options.type) ? type.options.type[0] : type.options;
-            let validationRules = {
+            const baseTypeOptions = Array.isArray(type.options.type) ? type.options.type[0] : type.options;
+            const validationRules = {
                 required: !!type.options.required,
                 oneOf: baseTypeOptions.enum ? type.enumValues || (type.caster && type.caster.enumValues) : undefined,
                 max: type.options.max || undefined
@@ -319,7 +319,7 @@ class MongooseAdapter {
             });
             schemaFields.push(new Field_1.default(name, fieldType, validationRules, this.toFriendlyName(name), defaultVal));
         });
-        for (let virtual in virtuals) {
+        for (const virtual in virtuals) {
             if (virtual === "id") {
                 continue;
             }

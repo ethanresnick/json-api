@@ -4,8 +4,8 @@ const chai_1 = require("chai");
 const utils = require("../../../src/util/misc");
 describe("Utility methods", () => {
     describe("deleteNested", () => {
-        let obj = { "contact": { "phone": "310" }, "top-level": true };
-        let deletion = utils.deleteNested("contact.phone", obj);
+        const obj = { "contact": { "phone": "310" }, "top-level": true };
+        const deletion = utils.deleteNested("contact.phone", obj);
         it("should delete a nested property when present", () => {
             chai_1.expect(obj.contact.phone).to.equal(undefined);
         });

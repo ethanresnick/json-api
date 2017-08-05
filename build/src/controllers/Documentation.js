@@ -17,19 +17,19 @@ class DocumentationController {
         const defaultTempPath = "../../templates/documentation.jade";
         this.template = templatePath || path.resolve(__dirname, defaultTempPath);
         this.dasherizeJSONKeys = dasherizeJSONKeys;
-        let data = Object.assign({}, apiInfo, { resourcesMap: {} });
+        const data = Object.assign({}, apiInfo, { resourcesMap: {} });
         this.registry.typeNames().forEach((typeName) => {
             data.resourcesMap[typeName] = this.getTypeInfo(typeName);
         });
         this.templateData = data;
     }
     handle(request, frameworkReq, frameworkRes) {
-        let response = new Response_1.default();
-        let negotiator = new Negotiator({ headers: { accept: request.accepts } });
-        let contentType = negotiator.mediaType(["text/html", "application/vnd.api+json"]);
+        const response = new Response_1.default();
+        const negotiator = new Negotiator({ headers: { accept: request.accepts } });
+        const contentType = negotiator.mediaType(["text/html", "application/vnd.api+json"]);
         response.contentType = contentType;
         response.headers.vary = "Accept";
-        let templateData = _.cloneDeep(this.templateData, cloneCustomizer);
+        const templateData = _.cloneDeep(this.templateData, cloneCustomizer);
         templateData.resourcesMap = mapValues(templateData.resourcesMap, (typeInfo, typeName) => {
             return this.transformTypeInfo(typeName, typeInfo, request, response, frameworkReq, frameworkRes);
         });
@@ -37,8 +37,8 @@ class DocumentationController {
             response.body = jade.renderFile(this.template, templateData);
         }
         else {
-            let descriptionResources = new Collection_1.default();
-            for (let type in templateData.resourcesMap) {
+            const descriptionResources = new Collection_1.default();
+            for (const type in templateData.resourcesMap) {
                 descriptionResources.add(new Resource_1.default("jsonapi-descriptions", type, templateData.resourcesMap[type]));
             }
             response.body = (new Document_1.default(descriptionResources)).get(true);
@@ -53,9 +53,9 @@ class DocumentationController {
         const schema = adapter.constructor.getStandardizedSchema(model);
         const ucFirst = (v) => v.charAt(0).toUpperCase() + v.slice(1);
         schema.forEach((field) => {
-            let pathInfo = (info && info.fields && info.fields[field.name]) || {};
-            let overrideableKeys = ["friendlyName", "kind", "description"];
-            for (let key in pathInfo) {
+            const pathInfo = (info && info.fields && info.fields[field.name]) || {};
+            const overrideableKeys = ["friendlyName", "kind", "description"];
+            for (const key in pathInfo) {
                 if (overrideableKeys.indexOf(key) > -1 || !(key in field)) {
                     field[key] = pathInfo[key];
                 }
@@ -64,7 +64,7 @@ class DocumentationController {
                 }
             }
         });
-        let result = {
+        const result = {
             name: {
                 "model": modelName,
                 "singular": adapter.constructor.toFriendlyName(modelName),
@@ -74,7 +74,7 @@ class DocumentationController {
             parentType: this.registry.parentType(type),
             childTypes: adapter.constructor.getChildTypes(model)
         };
-        let defaultIncludes = this.registry.defaultIncludes(type);
+        const defaultIncludes = this.registry.defaultIncludes(type);
         if (defaultIncludes)
             result.defaultIncludes = defaultIncludes;
         if (info && info.example)
@@ -93,14 +93,14 @@ class DocumentationController {
 exports.default = DocumentationController;
 function cloneCustomizer(value) {
     if (isCustomObject(value)) {
-        let state = _.cloneDeep(value);
+        const state = _.cloneDeep(value);
         Object.setPrototypeOf(state, Object.getPrototypeOf(value));
         Object.defineProperty(state, "constructor", {
             "writable": true,
             "enumerable": false,
             "value": value.constructor
         });
-        for (let key in state) {
+        for (const key in state) {
             if (isCustomObject(value[key])) {
                 state[key] = _.cloneDeep(value[key], cloneCustomizer);
             }

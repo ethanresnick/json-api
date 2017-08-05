@@ -8,25 +8,25 @@ const Collection_1 = require("../../../src/types/Collection");
 describe("Utility methods", () => {
     describe("mapResources", () => {
         it("should call the map function on a single resource", () => {
-            let mapper = sinon.spy((it) => it);
-            let resource = new Resource_1.default("tests", "43");
+            const mapper = sinon.spy((it) => it);
+            const resource = new Resource_1.default("tests", "43");
             utils.mapResources(resource, mapper);
             chai_1.expect(mapper.calledOnce).to.be.true;
             chai_1.expect(mapper.calledWith(resource)).to.be.true;
         });
         it("should call the map function on each resource in a collection", () => {
-            let mapper = sinon.spy((it) => it);
-            let resources = [new Resource_1.default("tests", "43"), new Resource_1.default("tests", "44")];
-            let collection = new Collection_1.default(resources);
+            const mapper = sinon.spy((it) => it);
+            const resources = [new Resource_1.default("tests", "43"), new Resource_1.default("tests", "44")];
+            const collection = new Collection_1.default(resources);
             utils.mapResources(collection, mapper);
             chai_1.expect(mapper.callCount).to.equal(2);
             chai_1.expect(mapper.calledWith(resources[0])).to.be.true;
             chai_1.expect(mapper.calledWith(resources[1])).to.be.true;
         });
         it("should return the mapped output", () => {
-            let mapper = sinon.spy((it) => it.id);
-            let resources = [new Resource_1.default("tests", "43"), new Resource_1.default("tests", "44")];
-            let collection = new Collection_1.default(resources);
+            const mapper = sinon.spy((it) => it.id);
+            const resources = [new Resource_1.default("tests", "43"), new Resource_1.default("tests", "44")];
+            const collection = new Collection_1.default(resources);
             chai_1.expect(utils.mapResources(collection, mapper)).to.deep.equal(["43", "44"]);
             chai_1.expect(utils.mapResources(resources[0], mapper)).to.equal("43");
         });
@@ -42,25 +42,25 @@ describe("Utility methods", () => {
     });
     describe("ValueObject", () => {
         describe("the constructor function it produces", () => {
-            let x = function x() {
+            const x = function x() {
                 this.allowedProp = null;
                 Object.defineProperty(this, "otherValidProp", { writable: true, enumerable: true });
             };
-            let WrappedConstructor = utils.ValueObject(x);
+            const WrappedConstructor = utils.ValueObject(x);
             it("should use provided initial values", () => {
-                let it = WrappedConstructor({ allowedProp: "14" });
+                const it = WrappedConstructor({ allowedProp: "14" });
                 chai_1.expect(it.allowedProp).to.equal("14");
             });
             it("should ignore initial values for unknown property names", () => {
-                let it = WrappedConstructor({ notAValidProperty: "14" });
+                const it = WrappedConstructor({ notAValidProperty: "14" });
                 chai_1.expect(it.notAValidProperty).to.be.undefined;
             });
             it("should prevent adding new properties to the object", () => {
-                let it = WrappedConstructor();
+                const it = WrappedConstructor();
                 chai_1.expect(() => it.notAValidContextProperty = 4).to.throw(TypeError);
             });
             it("should allow the values of existing properties to change", () => {
-                let it = WrappedConstructor();
+                const it = WrappedConstructor();
                 it.allowedProp = 9;
                 it.otherValidProp = 7;
                 chai_1.expect(it.allowedProp).to.equal(9);

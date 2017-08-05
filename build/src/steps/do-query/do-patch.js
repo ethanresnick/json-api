@@ -12,18 +12,18 @@ function default_1(requestContext, responseContext, registry) {
     let changedResourceOrCollection;
     if (primary instanceof Collection_1.default) {
         if (requestContext.idOrIds && !Array.isArray(requestContext.idOrIds)) {
-            let title = "You can't replace a single resource with a collection.";
+            const title = "You can't replace a single resource with a collection.";
             throw new APIError_1.default(400, undefined, title);
         }
         changedResourceOrCollection = primary;
     }
     else if (primary instanceof Resource_1.default) {
         if (!requestContext.idOrIds) {
-            let title = "You must provide an array of resources to do a bulk update.";
+            const title = "You must provide an array of resources to do a bulk update.";
             throw new APIError_1.default(400, undefined, title);
         }
         else if (requestContext.idOrIds !== primary.id) {
-            let title = "The id of the resource you provided doesn't match that in the URL.";
+            const title = "The id of the resource you provided doesn't match that in the URL.";
             throw new APIError_1.default(400, undefined, title);
         }
         changedResourceOrCollection = primary;

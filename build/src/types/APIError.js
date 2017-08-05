@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-let nonEnumerable = { writable: true, enumerable: false };
+const nonEnumerable = { writable: true, enumerable: false };
 class APIError extends Error {
     constructor(...args) {
         super();

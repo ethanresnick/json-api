@@ -5,8 +5,8 @@ const Q = require("q");
 const validate_content_type_1 = require("../../../../../src/steps/http/content-negotiation/validate-content-type");
 const { expect } = chai;
 describe("validateContentType", () => {
-    let invalidMock = { contentType: "application/json", ext: [] };
-    let validMock = { contentType: "application/vnd.api+json", ext: [] };
+    const invalidMock = { contentType: "application/json", ext: [] };
+    const validMock = { contentType: "application/vnd.api+json", ext: [] };
     it("should return a promise", () => {
         expect(Q.isPromise(validate_content_type_1.default(validMock))).to.be.true;
     });

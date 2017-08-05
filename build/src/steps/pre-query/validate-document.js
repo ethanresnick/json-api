@@ -3,8 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const APIError_1 = require("../../types/APIError");
 function default_1(body) {
     return new Promise(function (resolve, reject) {
-        let ownProp = Object.prototype.hasOwnProperty;
-        let errMessage = "Request body is not a valid JSON API document.";
+        const ownProp = Object.prototype.hasOwnProperty;
+        const errMessage = "Request body is not a valid JSON API document.";
         if (typeof body !== "object" || !ownProp.call(body, "data")) {
             reject(new APIError_1.default(400, null, errMessage));
         }

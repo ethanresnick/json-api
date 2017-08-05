@@ -42,7 +42,7 @@ function linkageFromJSON(json) {
     return new Linkage_1.default(json);
 }
 function resourceFromJSON(json) {
-    let relationships = json.relationships || {};
+    const relationships = json.relationships || {};
     let key;
     try {
         for (key in relationships) {

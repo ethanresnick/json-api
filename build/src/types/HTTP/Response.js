@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const type_handling_1 = require("../../util/type-handling");
-let propDesc = { writable: true, enumerable: true };
+const propDesc = { writable: true, enumerable: true };
 class Response {
     constructor() {
         this.ext = [];

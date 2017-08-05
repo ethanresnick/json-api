@@ -31,7 +31,7 @@ describe("Resource Parser", () => {
             }, done);
         });
         it("should load up the id, type, and attributes", (done) => {
-            let json = {
+            const json = {
                 "id": "21", "type": "people",
                 "attributes": { "name": "bob", "isBob": true }
             };

@@ -19,7 +19,7 @@ class BaseStrategy {
     buildRequestObject(req, protocol, host, params, query) {
         const config = this.config;
         return new Promise(function (resolve, reject) {
-            let it = new Request_1.default();
+            const it = new Request_1.default();
             if (query) {
                 it.queryParams = query;
             }
@@ -36,7 +36,7 @@ class BaseStrategy {
             it.uri = protocol + "://" + host + req.url;
             it.method = req.method.toLowerCase();
             it.accepts = req.headers.accept;
-            let requestedMethod = (req.headers["x-http-method-override"] || "").toLowerCase();
+            const requestedMethod = (req.headers["x-http-method-override"] || "").toLowerCase();
             if (config.tunnel && it.method === "post" && requestedMethod === "patch") {
                 it.method = "patch";
             }
@@ -49,7 +49,7 @@ class BaseStrategy {
                 }
                 it.contentType = req.headers["content-type"];
                 const typeParsed = contentType.parse(req);
-                let bodyParserOptions = {
+                const bodyParserOptions = {
                     encoding: typeParsed.parameters.charset || "utf8",
                     limit: "1mb"
                 };

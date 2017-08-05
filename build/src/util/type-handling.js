@@ -3,10 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Collection_1 = require("../types/Collection");
 function ValueObject(ConstructorFn) {
     return function (initialValues) {
-        let obj = new ConstructorFn();
-        let hasOwnProp = Object.prototype.hasOwnProperty;
+        const obj = new ConstructorFn();
+        const hasOwnProp = Object.prototype.hasOwnProperty;
         if (initialValues) {
-            for (let key in obj) {
+            for (const key in obj) {
                 if (hasOwnProp.call(obj, key) && hasOwnProp.call(initialValues, key)) {
                     obj[key] = initialValues[key];
                 }
@@ -17,8 +17,8 @@ function ValueObject(ConstructorFn) {
 }
 exports.ValueObject = ValueObject;
 function objectIsEmpty(obj) {
-    let hasOwnProperty = Object.prototype.hasOwnProperty;
-    for (let key in obj) {
+    const hasOwnProperty = Object.prototype.hasOwnProperty;
+    for (const key in obj) {
         if (hasOwnProperty.call(obj, key))
             return false;
     }
@@ -26,8 +26,8 @@ function objectIsEmpty(obj) {
 }
 exports.objectIsEmpty = objectIsEmpty;
 function mapObject(obj, mapFn) {
-    let mappedObj = Object.assign({}, obj);
-    for (let key in mappedObj) {
+    const mappedObj = Object.assign({}, obj);
+    for (const key in mappedObj) {
         mappedObj[key] = mapFn(obj[key]);
     }
     return mappedObj;

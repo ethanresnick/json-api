@@ -8,7 +8,7 @@ describe("Mongoose Adapter", () => {
     describe("its instances methods", () => {
         describe("getModel", () => {
             it("should throw an exception for unknown models", () => {
-                let adapter = new MongooseAdapter_1.default({});
+                const adapter = new MongooseAdapter_1.default({});
                 chai_1.expect(() => { adapter.getModel("x"); }).to.throw(/model .+ has not been registered/);
             });
         });
@@ -24,24 +24,24 @@ describe("Mongoose Adapter", () => {
         };
         describe("getType", () => {
             it("should lowercase & pluralize the model name; use dashes in camelCased names", () => {
-                for (let type in typesToModelNames) {
+                for (const type in typesToModelNames) {
                     chai_1.expect(MongooseAdapter_1.default.getType(typesToModelNames[type])).to.equal(type);
                 }
             });
             it("should use a custom pluralize if provided", () => {
-                let pluralize = () => "customplural";
+                const pluralize = () => "customplural";
                 chai_1.expect(MongooseAdapter_1.default.getType("TestModel", pluralize)).to.equal("customplural");
             });
         });
         describe("getModelName", () => {
             it("should reverse getType", () => {
-                for (let type in typesToModelNames) {
-                    let modelName = typesToModelNames[type];
+                for (const type in typesToModelNames) {
+                    const modelName = typesToModelNames[type];
                     chai_1.expect(MongooseAdapter_1.default.getModelName(type)).to.equal(modelName);
                 }
             });
             it("should use a custom singularizer if provided", () => {
-                let singularize = () => "customsingular";
+                const singularize = () => "customsingular";
                 chai_1.expect(MongooseAdapter_1.default.getModelName("test-models", singularize)).to.equal("TestCustomsingular");
             });
         });

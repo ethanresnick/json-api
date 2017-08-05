@@ -4,7 +4,7 @@ const chai_1 = require("chai");
 const APIError_1 = require("../../../src/types/APIError");
 describe("Error Objects", () => {
     describe("validation", () => {
-        let er = new APIError_1.default(300, 1401);
+        const er = new APIError_1.default(300, 1401);
         it("should coerce the status to a string", () => {
             chai_1.expect(er.status === "300").to.be.true;
         });
@@ -14,7 +14,7 @@ describe("Error Objects", () => {
     });
     describe("the fromError helper", () => {
         it("should pass APIError instances through as is", () => {
-            let error = new APIError_1.default();
+            const error = new APIError_1.default();
             chai_1.expect(APIError_1.default.fromError(error)).to.equal(error);
         });
         it("should use the error's statusCode val as status iff status not defined", () => {

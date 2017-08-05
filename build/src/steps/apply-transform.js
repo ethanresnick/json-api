@@ -8,7 +8,7 @@ function default_1(toTransform, mode, registry, frameworkReq, frameworkRes) {
     }
     else if (toTransform instanceof Collection_1.default) {
         return Promise.all(toTransform.resources.map((it) => transform(it, frameworkReq, frameworkRes, mode, registry))).then((transformed) => {
-            let resources = transformed.filter((it) => it !== undefined);
+            const resources = transformed.filter((it) => it !== undefined);
             return new Collection_1.default(resources);
         });
     }
@@ -18,9 +18,9 @@ function default_1(toTransform, mode, registry, frameworkReq, frameworkRes) {
 }
 exports.default = default_1;
 function transform(resource, req, res, transformMode, registry) {
-    let transformFn = registry[transformMode](resource.type);
-    let superFn = (resource, req, res) => {
-        let parentType = registry.parentType(resource.type);
+    const transformFn = registry[transformMode](resource.type);
+    const superFn = (resource, req, res) => {
+        const parentType = registry.parentType(resource.type);
         if (!parentType || !registry[transformMode](parentType)) {
             return resource;
         }
@@ -31,6 +31,6 @@ function transform(resource, req, res, transformMode, registry) {
     if (!transformFn) {
         return Promise.resolve(resource);
     }
-    let transformed = transformFn(resource, req, res, superFn);
+    const transformed = transformFn(resource, req, res, superFn);
     return Promise.resolve(transformed);
 }

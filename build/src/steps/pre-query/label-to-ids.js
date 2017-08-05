@@ -3,10 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Q = require("q");
 function default_1(type, labelOrId, registry, frameworkReq) {
     return Q.Promise(function (resolve, reject) {
-        let adapter = registry.dbAdapter(type);
-        let model = adapter.getModel(adapter.constructor.getModelName(type));
-        let labelMappers = registry.labelMappers(type);
-        let labelMapper = labelMappers && labelMappers[labelOrId];
+        const adapter = registry.dbAdapter(type);
+        const model = adapter.getModel(adapter.constructor.getModelName(type));
+        const labelMappers = registry.labelMappers(type);
+        const labelMapper = labelMappers && labelMappers[labelOrId];
         if (typeof labelMapper === "function") {
             Q(labelMapper(model, frameworkReq)).then(resolve, reject);
         }

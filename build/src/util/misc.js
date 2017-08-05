@@ -2,11 +2,11 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 function deleteNested(path, object) {
     try {
-        let pathParts = path.split(".");
-        let lastPartIndex = pathParts.length - 1;
-        let lastPart = pathParts[lastPartIndex];
-        let containingParts = pathParts.slice(0, lastPartIndex);
-        let container = containingParts.reduce(((obj, part) => obj[part]), object);
+        const pathParts = path.split(".");
+        const lastPartIndex = pathParts.length - 1;
+        const lastPart = pathParts[lastPartIndex];
+        const containingParts = pathParts.slice(0, lastPartIndex);
+        const container = containingParts.reduce(((obj, part) => obj[part]), object);
         if (container.hasOwnProperty(lastPart)) {
             delete container[lastPart];
             return true;

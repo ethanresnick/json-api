@@ -23,8 +23,8 @@ class APIController {
         this.registry = registry;
     }
     handle(request, frameworkReq, frameworkRes) {
-        let response = new Response_1.default();
-        let registry = this.registry;
+        const response = new Response_1.default();
+        const registry = this.registry;
         return co(function* () {
             try {
                 yield requestValidators.checkMethod(request);
@@ -37,16 +37,16 @@ class APIController {
                 if (request.hasBody) {
                     yield validate_content_type_1.default(request, this.constructor.supportedExt);
                     yield validate_document_1.default(request.body);
-                    let parsedPrimary = yield parse_request_primary_1.default(request.body.data, request.aboutRelationship);
+                    const parsedPrimary = yield parse_request_primary_1.default(request.body.data, request.aboutRelationship);
                     if (!request.aboutRelationship) {
                         yield validate_resources_1.default(request.type, parsedPrimary, registry);
                     }
                     request.primary = yield apply_transform_1.default(parsedPrimary, "beforeSave", registry, frameworkReq, frameworkRes);
                 }
                 if (request.idOrIds && request.allowLabel) {
-                    let mappedLabel = yield label_to_ids_1.default(request.type, request.idOrIds, registry, frameworkReq);
+                    const mappedLabel = yield label_to_ids_1.default(request.type, request.idOrIds, registry, frameworkReq);
                     request.idOrIds = mappedLabel;
-                    let mappedIsEmptyArray = Array.isArray(mappedLabel) && !mappedLabel.length;
+                    const mappedIsEmptyArray = Array.isArray(mappedLabel) && !mappedLabel.length;
                     if (mappedLabel === null || mappedLabel === undefined || mappedIsEmptyArray) {
                         response.primary = (mappedLabel) ? new Collection_1.default() : null;
                     }
@@ -68,8 +68,8 @@ class APIController {
                 }
             }
             catch (errors) {
-                let errorsArr = Array.isArray(errors) ? errors : [errors];
-                let apiErrors = errorsArr.map(APIError_1.default.fromError);
+                const errorsArr = Array.isArray(errors) ? errors : [errors];
+                const apiErrors = errorsArr.map(APIError_1.default.fromError);
                 if (response.contentType !== "application/json") {
                     response.contentType = "application/vnd.api+json";
                 }
@@ -89,7 +89,7 @@ class APIController {
         });
     }
     static responseFromExternalError(errors, requestAccepts) {
-        let response = new Response_1.default();
+        const response = new Response_1.default();
         response.errors = (Array.isArray(errors) ? errors : [errors])
             .map(APIError_1.default.fromError.bind(APIError_1.default));
         response.status = pickStatus(response.errors.map((v) => Number(v.status)));
