@@ -1,7 +1,7 @@
-# 3.0 Breaking Changes
+# 2.15 -> 2.16 Breaking Changes  (Not Semver until 3.0)
 
 ### Global
-- As of 3.0, this library requires at least Node v6. 
+- This library now requires at least Node v6. 
 - Q.Promise's have been replaced with standard ES6 Promises in various places throughout the API.
 
 ### Response
