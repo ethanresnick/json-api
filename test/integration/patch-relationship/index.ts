@@ -1,16 +1,19 @@
 import {expect} from "chai";
 import AgentPromise from "../../app/agent";
 import { VALID_ORG_RELATIONSHIP_PATCH, VALID_ORG_RELATIONSHIP_EMPTY_PATCH } from "../fixtures/updates";
+import { VALID_ORG_RESOURCE_NO_ID } from "../fixtures/creation";
 
 describe("Patching a relationship", () => {
   let Agent, orgId;
   before(done => {
     AgentPromise.then(A => {
       Agent = A;
-      return Agent.request("GET", "/organizations")
+      return Agent.request("POST", "/organizations")
+        .type("application/vnd.api+json")
+        .send({"data": VALID_ORG_RESOURCE_NO_ID })
         .promise()
-        .then(response => {
-          orgId = response.body.data[0].id;
+        .then((response) => {
+          orgId = response.body.data.id;
         });
     }).then(done, done);
   });

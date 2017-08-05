@@ -20,10 +20,14 @@ export const VALID_ORG_RESOURCE_NO_ID = {
   }
 };
 
-export const VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER = {"extraMember": true, ...VALID_ORG_RESOURCE_NO_ID
+export const VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER = {
+  ...VALID_ORG_RESOURCE_NO_ID,  
+  "extraMember": true
 };
 
-export const ORG_RESOURCE_CLIENT_ID = {"id": "53f54dd98d1e62ff12539db3", ...VALID_ORG_RESOURCE_NO_ID
+export const ORG_RESOURCE_CLIENT_ID = {
+  ...VALID_ORG_RESOURCE_NO_ID,
+  "id": "53f54dd98d1e62ff12539db3"
 };
 
 export const VALID_SCHOOL_RESOURCE_NO_ID = {
