@@ -40,12 +40,12 @@ describe("Fetching HTML Documentation", () => {
         .accept("text/*")
         .promise();
     }, (e) => {
-      console.log(e); done(e); 
+      console.log(e); done(e);
     }).then(response => {
       res = response;
       done();
     }).catch((e) => {
-      console.log(e); done(e); 
+      console.log(e); done(e);
     });
   });
 

@@ -9,15 +9,15 @@ describe("Resource type", () => {
     });
 
     it("should prevent setting type to emptly/null", () => {
-      let r = new Resource("type", "133123", {});
+      const r = new Resource("type", "133123", {});
       expect(() => { r.type = <any>undefined; }).to.throw(/type.*required/);
       expect(() => { r.type = ""; }).to.throw(/type.*required/);
       expect(() => { r.type = <any>null; }).to.throw(/type.*required/);
     });
 
     it("should coerce type to a string, as required", () => {
-      let r = new Resource(<any>true);
-      let r2 = new Resource(<any>1);
+      const r = new Resource(<any>true);
+      const r2 = new Resource(<any>1);
       expect(r.type).to.equal("true");
       expect(r2.type).to.equal("1");
     });
@@ -30,13 +30,13 @@ describe("Resource type", () => {
     });
 
     it("should coerce ids to strings, as required by the spec", () => {
-      let r = new Resource("type", <any>19339, {});
+      const r = new Resource("type", <any>19339, {});
       expect(r.id === "19339").to.be.true;
     });
 
     it("should reject non-object attrs", () => {
       // allow construction with no/empty attributes
-      let valid  = new Resource("type", "id");
+      const valid  = new Resource("type", "id");
       new Resource("pyt", "id", {});
 
       // just don't allow setting attributes to a non-object.

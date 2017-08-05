@@ -3,7 +3,7 @@ import APIError from "../../../src/types/APIError";
 
 describe("Error Objects", () => {
   describe("validation", () => {
-    let er = new APIError(300, 1401);
+    const er = new APIError(300, 1401);
 
     it("should coerce the status to a string", () => {
       expect(er.status === "300").to.be.true;
@@ -16,7 +16,7 @@ describe("Error Objects", () => {
 
   describe("the fromError helper", () => {
     it("should pass APIError instances through as is", () => {
-      let error = new APIError();
+      const error = new APIError();
       expect(APIError.fromError(error)).to.equal(error);
     });
 

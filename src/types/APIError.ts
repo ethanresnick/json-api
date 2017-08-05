@@ -1,4 +1,4 @@
-let nonEnumerable = {writable: true, enumerable: false};
+const nonEnumerable = {writable: true, enumerable: false};
 
 export type APIErrorJSON = {
   status?: string;
@@ -60,7 +60,9 @@ export default class APIError extends Error {
   }
 
   toJSON(): APIErrorJSON {
-    return Object.assign({}, this);
+    // Intentionally not using {...this}. 
+    // See https://github.com/Microsoft/TypeScript/issues/10727
+    return Object.assign({}, this); //tslint:disable-line:prefer-object-spread
   }
 
   /**

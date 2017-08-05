@@ -3,8 +3,8 @@ import * as utils from "../../../src/util/misc";
 
 describe("Utility methods", () => {
   describe("deleteNested", () => {
-    let obj = {"contact": {"phone": "310"}, "top-level": true};
-    let deletion = utils.deleteNested("contact.phone", obj);
+    const obj = {"contact": {"phone": "310"}, "top-level": true};
+    const deletion = utils.deleteNested("contact.phone", obj);
 
     it("should delete a nested property when present", () => {
       expect(obj.contact.phone).to.equal(undefined);

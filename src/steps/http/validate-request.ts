@@ -2,7 +2,7 @@ import APIError from "../../types/APIError";
 
 export function checkBodyExistence(requestContext) {
   return new Promise(function(resolve, reject) {
-    let needsBody =
+    const needsBody =
       ["post", "patch"].indexOf(requestContext.method) !== -1 ||
       (requestContext.method === "delete" && requestContext.aboutRelationship) ||
       (requestContext.method === "delete" && !requestContext.idOrIds && requestContext.ext.indexOf("bulk") !== -1);
@@ -25,7 +25,7 @@ export function checkBodyExistence(requestContext) {
 
 export function checkMethod({method}) {
   if(["patch", "post", "delete", "get"].indexOf(method) === -1) {
-    let detail = `The method "${method}" is not supported.` + (method === "put" ? " See http://jsonapi.org/faq/#wheres-put" : "");
+    const detail = `The method "${method}" is not supported.` + (method === "put" ? " See http://jsonapi.org/faq/#wheres-put" : "");
 
     return Promise.reject(new APIError(
       405,

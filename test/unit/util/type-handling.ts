@@ -7,17 +7,17 @@ import Collection from "../../../src/types/Collection";
 describe("Utility methods", () => {
   describe("mapResources", () => {
     it("should call the map function on a single resource", () => {
-      let mapper = sinon.spy((it) => it);
-      let resource = new Resource("tests", "43");
+      const mapper = sinon.spy((it) => it);
+      const resource = new Resource("tests", "43");
       utils.mapResources(resource, mapper);
       expect(mapper.calledOnce).to.be.true;
       expect(mapper.calledWith(resource)).to.be.true;
     });
 
     it("should call the map function on each resource in a collection", () => {
-      let mapper = sinon.spy((it) => it);
-      let resources = [new Resource("tests", "43"), new Resource("tests", "44")];
-      let collection = new Collection(resources);
+      const mapper = sinon.spy((it) => it);
+      const resources = [new Resource("tests", "43"), new Resource("tests", "44")];
+      const collection = new Collection(resources);
 
       utils.mapResources(collection, mapper);
       expect(mapper.callCount).to.equal(2);
@@ -26,9 +26,9 @@ describe("Utility methods", () => {
     });
 
     it("should return the mapped output", () => {
-      let mapper = sinon.spy((it) => it.id);
-      let resources = [new Resource("tests", "43"), new Resource("tests", "44")];
-      let collection = new Collection(resources);
+      const mapper = sinon.spy((it) => it.id);
+      const resources = [new Resource("tests", "43"), new Resource("tests", "44")];
+      const collection = new Collection(resources);
 
       expect(utils.mapResources(collection, mapper)).to.deep.equal(["43", "44"]);
       expect(utils.mapResources(resources[0], mapper)).to.equal("43");
@@ -54,32 +54,32 @@ describe("Utility methods", () => {
         (): void;
       };
 
-      let x = <newableX>function x() {
+      const x = <newableX>function x() {
         this.allowedProp = null;
         Object.defineProperty(this, "otherValidProp", {writable: true, enumerable: true});
       };
 
       /*eslint-disable new-cap */
-      let WrappedConstructor = utils.ValueObject(x);
+      const WrappedConstructor = utils.ValueObject(x);
       /*eslint-enable */
 
       it("should use provided initial values", () => {
-        let it = WrappedConstructor({allowedProp: "14"});
+        const it = WrappedConstructor({allowedProp: "14"});
         expect(it.allowedProp).to.equal("14");
       });
 
       it("should ignore initial values for unknown property names", () => {
-        let it = WrappedConstructor(<any>{notAValidProperty: "14"});
+        const it = WrappedConstructor(<any>{notAValidProperty: "14"});
         expect((<any>it).notAValidProperty).to.be.undefined;
       });
 
       it("should prevent adding new properties to the object", () => {
-        let it = WrappedConstructor();
+        const it = WrappedConstructor();
         expect(() => (<any>it).notAValidContextProperty = 4).to.throw(TypeError);
       });
 
       it("should allow the values of existing properties to change", () => {
-        let it = WrappedConstructor();
+        const it = WrappedConstructor();
         it.allowedProp = 9;
         it.otherValidProp = 7; //check Object.defineProperty props too.
         expect(it.allowedProp).to.equal(9);

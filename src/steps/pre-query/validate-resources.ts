@@ -10,9 +10,9 @@ export default function(endpointParentType, resourceOrCollection, registry) {
     const resourcesByType = groupResourcesByType(resourceOrCollection);
 
     if(!isSubsetOf(allowedTypes, Object.keys(resourcesByType))) {
-      let title = "Some of the resources you provided are of a type that " +
+      const title = "Some of the resources you provided are of a type that " +
                   "doesn't belong in this collection.";
-      let detail = `Valid types for this collection are: ${allowedTypes.join(", ")}.`;
+      const detail = `Valid types for this collection are: ${allowedTypes.join(", ")}.`;
 
       reject(new APIError(400, undefined, title, detail));
     }
@@ -22,12 +22,12 @@ export default function(endpointParentType, resourceOrCollection, registry) {
       // adapter to decide how to handle that, depending on the model. But,
       // if there are paths that must be relationship names listed under the
       // attributes, that's a case that we can identify here and throw for.
-      for(let type in resourcesByType) {
-        let resources = resourcesByType[type];
-        let relationshipNames = adapter.getRelationshipNames(type);
+      for(const type in resourcesByType) {
+        const resources = resourcesByType[type];
+        const relationshipNames = adapter.getRelationshipNames(type);
 
         /*eslint-disable no-loop-func */
-        let invalid = resources.some((resource) => {
+        const invalid = resources.some((resource) => {
           return relationshipNames.some((relationshipName) => {
             return typeof resource.attrs[relationshipName] !== "undefined";
           });
@@ -35,7 +35,7 @@ export default function(endpointParentType, resourceOrCollection, registry) {
         /*eslint-enable no-loop-func */
 
         if(invalid) {
-          let title = "Relationship fields must be specified under the `relationships` key.";
+          const title = "Relationship fields must be specified under the `relationships` key.";
           return reject(new APIError(400, undefined, title));
         }
       }

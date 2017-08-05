@@ -91,7 +91,7 @@ describe("Fetching Collection", () => {
       });
 
       it("should have Jane above John", () => {
-        let johnJaneList = res.body.data.map((it) => it.attributes.name).filter((it) => {
+        const johnJaneList = res.body.data.map((it) => it.attributes.name).filter((it) => {
           return ["John Smith", "Jane Doe"].indexOf(it) > -1;
         });
         expect(johnJaneList[0]).to.equal("Jane Doe");
@@ -111,7 +111,7 @@ describe("Fetching Collection", () => {
       });
 
       it("Should have John above Jane", () => {
-        let johnJaneList = res.body.data.map((it) => it.attributes.name).filter((it) => {
+        const johnJaneList = res.body.data.map((it) => it.attributes.name).filter((it) => {
           return ["John", "Jane"].indexOf(it.substring(0, 4)) > -1;
         });
         expect(johnJaneList[0]).to.equal("John Smith");

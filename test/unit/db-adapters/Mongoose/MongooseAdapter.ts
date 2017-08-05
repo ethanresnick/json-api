@@ -7,7 +7,7 @@ describe("Mongoose Adapter", () => {
   describe("its instances methods", () => {
     describe("getModel", () => {
       it("should throw an exception for unknown models", () => {
-        let adapter = new MongooseAdapter({});
+        const adapter = new MongooseAdapter({});
         expect(() => { adapter.getModel("x"); }).to.throw(/model .+ has not been registered/);
       });
     });
@@ -25,27 +25,27 @@ describe("Mongoose Adapter", () => {
 
     describe("getType", () => {
       it("should lowercase & pluralize the model name; use dashes in camelCased names", () => {
-        for(let type in typesToModelNames) {
+        for(const type in typesToModelNames) {
           expect(MongooseAdapter.getType(typesToModelNames[type])).to.equal(type);
         }
       });
 
       it("should use a custom pluralize if provided", () => {
-        let pluralize = () => "customplural";
+        const pluralize = () => "customplural";
         expect(MongooseAdapter.getType("TestModel", pluralize)).to.equal("customplural");
       });
     });
 
     describe("getModelName", () => {
       it("should reverse getType", () => {
-        for(let type in typesToModelNames) {
-          let modelName = typesToModelNames[type];
+        for(const type in typesToModelNames) {
+          const modelName = typesToModelNames[type];
           expect(MongooseAdapter.getModelName(type)).to.equal(modelName);
         }
       });
 
       it("should use a custom singularizer if provided", () => {
-        let singularize = () => "customsingular";
+        const singularize = () => "customsingular";
         expect(MongooseAdapter.getModelName("test-models", singularize)).to.equal("TestCustomsingular");
       });
     });

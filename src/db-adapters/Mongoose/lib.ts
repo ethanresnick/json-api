@@ -11,8 +11,8 @@ export function errorHandler(err) {
   const errors: APIError[] = [];
   //Convert validation errors collection to something reasonable
   if(err.errors) {
-    for(let errKey in err.errors) {
-      let thisError = err.errors[errKey];
+    for(const errKey in err.errors) {
+      const thisError = err.errors[errKey];
       errors.push(
         new APIError(
           (err.name === "ValidationError") ? 400 : (thisError.status || 500),
@@ -37,7 +37,7 @@ export function errorHandler(err) {
 }
 
 export function getReferencePaths(model) {
-  let paths: string[] = [];
+  const paths: string[] = [];
   model.schema.eachPath((name, type) => {
     if(isReferencePath(type)) paths.push(name);
   });
@@ -45,13 +45,13 @@ export function getReferencePaths(model) {
 }
 
 export function isReferencePath(schemaType) {
-  let options = (schemaType.caster || schemaType).options;
+  const options = (schemaType.caster || schemaType).options;
   return options && options.ref !== undefined;
 }
 
 export function getReferencedModelName(model, path) {
-  let schemaType = model.schema.path(path);
-  let schemaOptions = (schemaType.caster || schemaType).options;
+  const schemaType = model.schema.path(path);
+  const schemaOptions = (schemaType.caster || schemaType).options;
   return schemaOptions && schemaOptions.ref;
 }
 
@@ -64,10 +64,10 @@ export function getReferencedModelName(model, path) {
  * be what we want to do).
  */
 export function resourceToDocObject(resource): object {
-  let res = Object.assign({}, resource.attrs);
-  let getId = (it) => it.id;
-  for(let key in resource.relationships) {
-    let linkage = resource.relationships[key].linkage.value;
+  const res = {...resource.attrs};
+  const getId = (it) => it.id;
+  for(const key in resource.relationships) {
+    const linkage = resource.relationships[key].linkage.value;
 
     // handle linkage when set explicitly for empty relationships
     if(linkage === null || (Array.isArray(linkage) && linkage.length === 0)) {

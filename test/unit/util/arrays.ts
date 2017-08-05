@@ -4,23 +4,23 @@ import * as utils from "../../../src/util/arrays";
 describe("Utility methods", () => {
   describe("arrayUnique", () => {
     it("should remove duplicate primitive values", () => {
-      let uniqueSorted = utils.arrayUnique(["2", true, "bob", "2"]).sort();
+      const uniqueSorted = utils.arrayUnique(["2", true, "bob", "2"]).sort();
       expect(uniqueSorted).to.deep.equal(["2", true, "bob"].sort());
     });
 
     it("should not coerce types", () => {
-      let uniqueSorted = utils.arrayUnique(["2", true, "true", 2]).sort();
+      const uniqueSorted = utils.arrayUnique(["2", true, "true", 2]).sort();
       expect(uniqueSorted).to.deep.equal(["2", true, "true", 2].sort());
     });
 
     it("should compare objects by identity, not contents", () => {
-      let arr1 = [];
-      let arr2 = [];
+      const arr1 = [];
+      const arr2 = [];
       expect(utils.arrayUnique([arr1, arr2])).to.have.length(2);
     });
 
     it("should remove duplicate objects", () => {
-      let r = {};
+      const r = {};
       expect(utils.arrayUnique([r, r])).to.have.length(1);
     });
   });

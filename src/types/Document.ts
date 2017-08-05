@@ -59,7 +59,7 @@ export default class Document {
   get(stringify: true): string;
   get(stringify: false): DocumentJSON;
   get(stringify: boolean = false) {
-    let doc = <DocumentJSON>{};
+    const doc = <DocumentJSON>{};
 
     if(this.meta) doc.meta = this.meta;
 
@@ -98,7 +98,7 @@ export default class Document {
 }
 
 function relationshipToJSON(relationship, urlTemplates, templateData): RelationshipJSON {
-  let result = <RelationshipJSON>{};
+  const result = <RelationshipJSON>{};
 
   if(relationship.linkage) {
     result.data = relationship.linkage.toJSON();
@@ -131,7 +131,7 @@ function relationshipToJSON(relationship, urlTemplates, templateData): Relations
 }
 
 function resourceToJSON(resource, urlTemplates): ResourceJSON {
-  let json = <ResourceJSON>{
+  const json = <ResourceJSON>{
     id: resource.id,
     type: resource.type,
     attributes: resource.attrs
@@ -143,8 +143,8 @@ function resourceToJSON(resource, urlTemplates): ResourceJSON {
 
   // use type, id, meta and attrs for template data, even though building
   // links from attr values is usually stupid (but there are cases for it).
-  let templateData = Object.assign({}, json);
-  let selfTemplate = urlTemplates[resource.type] && urlTemplates[resource.type].self;
+  const templateData = {...json};
+  const selfTemplate = urlTemplates[resource.type] && urlTemplates[resource.type].self;
 
   if(!objectIsEmpty(resource.links) || selfTemplate) {
     json.links = {};
@@ -156,8 +156,8 @@ function resourceToJSON(resource, urlTemplates): ResourceJSON {
   if(!objectIsEmpty(resource.relationships)) {
     json.relationships = {};
 
-    for(let path in resource.relationships) {
-      let linkTemplateData = {"ownerType": json.type, "ownerId": json.id, "path": path};
+    for(const path in resource.relationships) {
+      const linkTemplateData = {"ownerType": json.type, "ownerId": json.id, "path": path};
       json.relationships[path] = relationshipToJSON(resource.relationships[path], urlTemplates, linkTemplateData);
     }
   }

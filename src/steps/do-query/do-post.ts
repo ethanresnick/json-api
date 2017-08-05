@@ -6,9 +6,9 @@ import Linkage from "../../types/Linkage";
 import {forEachResources} from "../../util/type-handling";
 
 export default function(requestContext, responseContext, registry) {
-  let primary = requestContext.primary;
-  let type    = requestContext.type;
-  let adapter = registry.dbAdapter(type);
+  const primary = requestContext.primary;
+  const type    = requestContext.type;
+  const adapter = registry.dbAdapter(type);
 
   // We're going to do an adapter.create, below, EXCEPT if we're adding to
   // an existing toMany relationship, which uses a different adapter method.
@@ -29,7 +29,7 @@ export default function(requestContext, responseContext, registry) {
   }
 
   else {
-    let noClientIds = "Client-generated ids are not supported.";
+    const noClientIds = "Client-generated ids are not supported.";
     forEachResources(primary, (it) => {
       if(it.id) throw new APIError(403, undefined, noClientIds);
     });
@@ -40,10 +40,10 @@ export default function(requestContext, responseContext, registry) {
 
       // We can only generate a Location url for a single resource.
       if(created instanceof Resource) {
-        let templates = registry.urlTemplates(created.type);
-        let template = templates && templates.self;
+        const templates = registry.urlTemplates(created.type);
+        const template = templates && templates.self;
         if(template) {
-          let templateData = Object.assign({"id": created.id}, created.attrs);
+          const templateData = {"id": created.id, ...created.attrs};
           responseContext.headers.location = templating.parse(template).expand(templateData);
         }
       }

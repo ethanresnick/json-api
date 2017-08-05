@@ -46,8 +46,8 @@ class APIController {
    *     by your http framework but, like with frameworkReq, it can be anything.
    */
   handle(request, frameworkReq, frameworkRes) {
-    let response = new Response();
-    let registry = this.registry;
+    const response = new Response();
+    const registry = this.registry;
 
     // Kick off the chain for generating the response.
     return co(function*() {
@@ -79,7 +79,7 @@ class APIController {
           yield validateContentType(request, this.constructor.supportedExt);
           yield validateRequestDocument(request.body);
 
-          let parsedPrimary = yield parseRequestPrimary(
+          const parsedPrimary = yield parseRequestPrimary(
             request.body.data, request.aboutRelationship
           );
 
@@ -95,7 +95,7 @@ class APIController {
 
         // Map label to idOrIds, if applicable.
         if(request.idOrIds && request.allowLabel) {
-          let mappedLabel = yield labelToIds(
+          const mappedLabel = yield labelToIds(
             request.type, request.idOrIds, registry, frameworkReq
           );
 
@@ -105,7 +105,7 @@ class APIController {
           // if our new ids are null/undefined or an empty array, we can set
           // the primary resources too! (Note: one could argue that we should
           // 404 rather than return null when the label matches no ids.)
-          let mappedIsEmptyArray = Array.isArray(mappedLabel) && !mappedLabel.length;
+          const mappedIsEmptyArray = Array.isArray(mappedLabel) && !mappedLabel.length;
 
           if(mappedLabel === null || mappedLabel === undefined || mappedIsEmptyArray) {
             response.primary = (mappedLabel) ? new Collection() : null;
@@ -140,8 +140,8 @@ class APIController {
       // unexpected (and so uncaught and not transformed) in one of prior steps
       // or the user couldn't throw an APIError for compatibility with other code.
       catch (errors) {
-        let errorsArr = Array.isArray(errors) ? errors : [errors];
-        let apiErrors = errorsArr.map(APIError.fromError);
+        const errorsArr = Array.isArray(errors) ? errors : [errors];
+        const apiErrors = errorsArr.map(APIError.fromError);
 
         // Leave the error response's content type as JSON if we negotiated
         // for that, but otherwise force it to JSON API, since that's the only
@@ -193,7 +193,7 @@ class APIController {
    * @param {string} requestAccepts Request's Accepts header
    */
   static responseFromExternalError(errors: Error | APIError | Error[] | APIError[] , requestAccepts) {
-    let response = new Response();
+    const response = new Response();
 
     // Convert errors to an array (if it was singular), and then to APIErrors
     // (if we were given normal Errors).

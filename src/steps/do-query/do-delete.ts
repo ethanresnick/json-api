@@ -2,8 +2,8 @@ import APIError from "../../types/APIError";
 import Collection from "../../types/Collection";
 
 export default function(request, response, registry) {
-  let type    = request.type;
-  let adapter = registry.dbAdapter(type);
+  const type    = request.type;
+  const adapter = registry.dbAdapter(type);
 
   if(request.aboutRelationship) {
     if(Array.isArray(request.idOrIds)) {
@@ -21,16 +21,16 @@ export default function(request, response, registry) {
 
   else if(!request.idOrIds && request.ext.indexOf("bulk") !== -1) {
     if(!(request.primary instanceof Collection)) {
-      let title = "You must provide an array of objects to do a bulk delete.";
+      const title = "You must provide an array of objects to do a bulk delete.";
       throw new APIError(400, undefined, title);
     }
 
     if(!request.primary.resources.every((it) => typeof it.id !== "undefined")) {
-      let title = "Every object provided for a bulk delete must contain a `type` and `id`.";
+      const title = "Every object provided for a bulk delete must contain a `type` and `id`.";
       throw new APIError(400, undefined, title);
     }
 
-    let ids = request.primary.resources.map((it) => it.id);
+    const ids = request.primary.resources.map((it) => it.id);
     return adapter.delete(request.type, ids).then(() => {
       response.status = 204;
     });

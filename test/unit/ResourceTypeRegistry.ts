@@ -6,7 +6,7 @@ chai.use(chaiSubset);
 const expect = chai.expect;
 const makeGetterTest = function(value, type, methodName) {
   return function() {
-    let registry = new ResourceTypeRegistry({
+    const registry = new ResourceTypeRegistry({
       [type]: {
         [methodName]: value
       }

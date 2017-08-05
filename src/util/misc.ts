@@ -5,11 +5,11 @@
  */
 export function deleteNested(path, object) {
   try {
-    let pathParts = path.split(".");
-    let lastPartIndex = pathParts.length - 1;
-    let lastPart = pathParts[lastPartIndex];
-    let containingParts = pathParts.slice(0, lastPartIndex);
-    let container = containingParts.reduce(((obj, part) => obj[part]), object);
+    const pathParts = path.split(".");
+    const lastPartIndex = pathParts.length - 1;
+    const lastPart = pathParts[lastPartIndex];
+    const containingParts = pathParts.slice(0, lastPartIndex);
+    const container = containingParts.reduce(((obj, part) => obj[part]), object);
 
     if(container.hasOwnProperty(lastPart)) {
       delete container[lastPart];
@@ -59,8 +59,8 @@ export function pseudoTopSort(nodes, edges: {[from: string]: {[to: string]: true
   // Do some defensive copying, in case the caller didn't.
   roots = roots.slice();
   nodes = nodes.slice();
-  edges = Object.assign({}, edges);
-  for(const key in edges) { edges[key] = Object.assign({}, edges[key]); }
+  edges = {...edges};
+  for(const key in edges) { edges[key] = {...edges[key]}; }
 
   // "L = Empty list that will contain the sorted elements"
   const sortResult: string[] = [];

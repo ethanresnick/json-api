@@ -29,7 +29,7 @@ export default class DocumentationController {
 
     // compute template data on construction
     // (it never changes, so this makes more sense than doing it per request)
-    let data = {
+    const data = {
       ...apiInfo,
       resourcesMap: {}
     };
@@ -44,16 +44,16 @@ export default class DocumentationController {
   }
 
   handle(request, frameworkReq, frameworkRes) {
-    let response = new Response();
-    let negotiator = new Negotiator({headers: {accept: request.accepts}});
-    let contentType = negotiator.mediaType(["text/html", "application/vnd.api+json"]);
+    const response = new Response();
+    const negotiator = new Negotiator({headers: {accept: request.accepts}});
+    const contentType = negotiator.mediaType(["text/html", "application/vnd.api+json"]);
 
     // set content type as negotiated & vary on accept.
     response.contentType = contentType;
     response.headers.vary = "Accept";
 
     // process templateData (just the type infos for now) for this particular request.
-    let templateData = _.cloneDeep(this.templateData, cloneCustomizer);
+    const templateData = _.cloneDeep(this.templateData, cloneCustomizer);
     templateData.resourcesMap = mapValues(templateData.resourcesMap, (typeInfo, typeName) => {
       return this.transformTypeInfo(typeName, typeInfo, request, response, frameworkReq, frameworkRes);
     });
@@ -64,10 +64,10 @@ export default class DocumentationController {
 
     else {
       // Create a collection of "jsonapi-descriptions" from the templateData
-      let descriptionResources = new Collection();
+      const descriptionResources = new Collection();
 
       // Add a description resource for each resource type to the collection.
-      for(let type in templateData.resourcesMap) {
+      for(const type in templateData.resourcesMap) {
         descriptionResources.add(
           new Resource("jsonapi-descriptions", type, templateData.resourcesMap[type])
         );
@@ -94,12 +94,12 @@ export default class DocumentationController {
 
     schema.forEach((field) => {
       // look up user defined field info on info.fields.
-      let pathInfo = (info && info.fields && info.fields[field.name]) || {};
+      const pathInfo = (info && info.fields && info.fields[field.name]) || {};
 
       // Keys that have a meaning in the default template.
-      let overrideableKeys = ["friendlyName",  "kind", "description"];
+      const overrideableKeys = ["friendlyName",  "kind", "description"];
 
-      for(let key in pathInfo) {
+      for(const key in pathInfo) {
         // allow the user to override auto-generated friendlyName and the
         // auto-generated type info, which is undefined for virtuals. Also,
         // allow them to set the description, which is always user-provided.
@@ -133,7 +133,7 @@ export default class DocumentationController {
       childTypes: string[]
     };
 
-    let result = <TypeInfo>{
+    const result = <TypeInfo>{
       name: {
         "model": modelName,
         "singular": adapter.constructor.toFriendlyName(modelName),
@@ -144,7 +144,7 @@ export default class DocumentationController {
       childTypes: adapter.constructor.getChildTypes(model)
     };
 
-    let defaultIncludes = this.registry.defaultIncludes(type);
+    const defaultIncludes = this.registry.defaultIncludes(type);
     if(defaultIncludes) result.defaultIncludes = defaultIncludes;
 
     if(info && info.example) result.example = info.example;
@@ -182,7 +182,7 @@ export default class DocumentationController {
  */
 function cloneCustomizer(value) {
   if(isCustomObject(value)) {
-    let state = _.cloneDeep(value);
+    const state = _.cloneDeep(value);
     Object.setPrototypeOf(state, Object.getPrototypeOf(value));
     Object.defineProperty(state, "constructor", {
       "writable": true,
@@ -191,7 +191,7 @@ function cloneCustomizer(value) {
     });
 
     // handle the possibiliy that a key in state was itself a non-plain object
-    for(let key in state) {
+    for(const key in state) {
       if(isCustomObject(value[key])) {
         state[key] = _.cloneDeep(value[key], cloneCustomizer);
       }

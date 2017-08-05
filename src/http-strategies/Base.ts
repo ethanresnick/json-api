@@ -38,6 +38,9 @@ export default class BaseStrategy {
 
     this.api = apiController;
     this.docs = docsController;
+
+    // Note: as of 2.4, TS will complain if we use an object spread here.
+    //tslint:disable-next-line:prefer-object-spread
     this.config = Object.assign({}, defaultOptions, options); // apply options
   }
 
@@ -58,7 +61,7 @@ export default class BaseStrategy {
     const config = this.config;
 
     return new Promise<UnsealedRequest>(function(resolve, reject) {
-      let it = new Request();
+      const it = new Request();
 
       // Handle route & query params
       if(query) {
@@ -86,7 +89,7 @@ export default class BaseStrategy {
 
       // Support Verb tunneling, but only for PATCH and only if user turns it on.
       // Turning on any tunneling automatically could be a security issue.
-      let requestedMethod = (req.headers["x-http-method-override"] || "").toLowerCase();
+      const requestedMethod = (req.headers["x-http-method-override"] || "").toLowerCase();
       if(config.tunnel && it.method === "post" && requestedMethod === "patch") {
         it.method = "patch";
       }
@@ -106,7 +109,7 @@ export default class BaseStrategy {
         it.contentType  = req.headers["content-type"];
         const typeParsed = contentType.parse(req);
 
-        let bodyParserOptions: (getRawBody.Options & { encoding: string}) = {
+        const bodyParserOptions: (getRawBody.Options & { encoding: string}) = {
           encoding: typeParsed.parameters.charset || "utf8",
           limit: "1mb"
         };

@@ -19,7 +19,7 @@ export default function<T extends Transformable>(toTransform: T, mode, registry,
     return <Promise<T>>Promise.all(toTransform.resources.map((it) =>
       transform(it, frameworkReq, frameworkRes, mode, registry)
     )).then((transformed) => {
-      let resources = <Resource[]>transformed.filter((it) => it !== undefined);
+      const resources = <Resource[]>transformed.filter((it) => it !== undefined);
       return new Collection(resources);
     });
   }
@@ -31,15 +31,15 @@ export default function<T extends Transformable>(toTransform: T, mode, registry,
 }
 
 function transform(resource: Resource, req, res, transformMode, registry): Promise<Resource|undefined> {
-  let transformFn = registry[transformMode](resource.type);
+  const transformFn = registry[transformMode](resource.type);
 
   // SuperFn is a function that the first transformer can invoke.
   // It'll return the resource passed in (i.e. do nothing) if there
   // is no parentType or the parentType doesn't define an appropriate
   // transformer. Otherwise, it'll return the result of calling
   // the parentType's transformer with the provided arguments.
-  let superFn = (resource, req, res) => { // eslint-disable-line no-shadow
-    let parentType = registry.parentType(resource.type);
+  const superFn = (resource, req, res) => { // eslint-disable-line no-shadow
+    const parentType = registry.parentType(resource.type);
 
     if(!parentType || !registry[transformMode](parentType)) {
       return resource;
@@ -54,6 +54,6 @@ function transform(resource: Resource, req, res, transformMode, registry): Promi
   }
 
   // Allow user to return a Promise or a value
-  let transformed = transformFn(resource, req, res, superFn);
+  const transformed = transformFn(resource, req, res, superFn);
   return Promise.resolve(transformed);
 }

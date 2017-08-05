@@ -1,6 +1,6 @@
 export function inherit(child, parent) {
   const __hasProp = {}.hasOwnProperty;
-  for (let key in parent) {
+  for (const key in parent) {
     if (__hasProp.call(parent, key)) child[key] = parent[key];
   }
   function Ctor() { this.constructor = child; }

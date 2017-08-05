@@ -5,8 +5,8 @@ import validate from "../../../../../src/steps/http/content-negotiation/validate
 const {expect} = chai;
 
 describe("validateContentType", () => {
-  let invalidMock = {contentType: "application/json", ext: []};
-  let validMock   = {contentType: "application/vnd.api+json", ext: []};
+  const invalidMock = {contentType: "application/json", ext: []};
+  const validMock   = {contentType: "application/vnd.api+json", ext: []};
 
   it("should return a promise", () => {
     expect(Q.isPromise(validate(validMock))).to.be.true;

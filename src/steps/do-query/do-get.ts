@@ -2,8 +2,8 @@ import APIError from "../../types/APIError";
 import {arrayContains} from "../../util/arrays";
 
 export default function(requestContext, responseContext, registry) {
-  let type    = requestContext.type;
-  let adapter = registry.dbAdapter(type);
+  const type    = requestContext.type;
+  const adapter = registry.dbAdapter(type);
   let fields, sorts, includes, filters;
 
   // Handle fields, sorts, includes and filters.
@@ -46,12 +46,12 @@ export default function(requestContext, responseContext, registry) {
       // it here is more accurate than using adapter.getRelationshipNames,
       // since we're allowing for paths that can optionally hold linkage,
       // which getRelationshipNames doesn't return.
-      let relationship = resource.relationships &&
+      const relationship = resource.relationships &&
         resource.relationships[requestContext.relationship];
 
       if(!relationship) {
-        let title = "Invalid relationship name.";
-        let detail = `${requestContext.relationship} is not a valid ` +
+        const title = "Invalid relationship name.";
+        const detail = `${requestContext.relationship} is not a valid ` +
                      `relationship name on resources of type '${type}'`;
 
         throw new APIError(404, undefined, title, detail);
@@ -67,10 +67,10 @@ function parseFields(fieldsParam) {
   let fields;
   if(typeof fieldsParam === "object") {
     fields = {};
-    let isField = (it) => !arrayContains(["id", "type"], it);
+    const isField = (it) => !arrayContains(["id", "type"], it);
 
-    for(let type in fieldsParam) {
-      let provided = parseCommaSeparatedParam(fieldsParam[type]) || [];
+    for(const type in fieldsParam) {
+      const provided = parseCommaSeparatedParam(fieldsParam[type]) || [];
       fields[type] = provided.filter(isField);
     }
   }

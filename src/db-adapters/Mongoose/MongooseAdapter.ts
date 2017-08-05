@@ -93,8 +93,8 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       includePaths.forEach((pathParts) => {
         // first, check that the include path is valid.
         if(!arrayContains(refPaths, pathParts[0])) {
-          let title = "Invalid include path.";
-          let detail = `Resources of type "${type}" don't have a(n) "${pathParts[0]}" relationship.`;
+          const title = "Invalid include path.";
+          const detail = `Resources of type "${type}" don't have a(n) "${pathParts[0]}" relationship.`;
           throw new APIError(400, undefined, title, detail);
         }
 
@@ -107,7 +107,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
         queryBuilder.populate(pathParts[0]);
       });
 
-      let includedResources: Resource[] = [];
+      const includedResources: Resource[] = [];
       primaryDocumentsPromise = Q(queryBuilder.exec()).then((docs) => {
         forEachArrayOrVal(docs, (doc) => {
           // There's no gaurantee that the doc (or every doc) was found
@@ -117,7 +117,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
           populatedPaths.forEach((path) => {
             // if it's a toOne relationship, doc[path] will be a doc or undefined;
             // if it's a toMany relationship, we have an array (or undefined).
-            let refDocs = Array.isArray(doc[path]) ? doc[path] : [doc[path]];
+            const refDocs = Array.isArray(doc[path]) ? doc[path] : [doc[path]];
             refDocs.forEach((it) => {
               // only include if it's not undefined.
               if(it) {
@@ -163,12 +163,12 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     // query for each type, as opposed to only one query for all of the
     // documents. That's unfortunately much slower, but it ensures that
     // mongoose runs all the user's hooks.
-    let creationPromises: Array<Promise<mongoose.Document[]>> = [];
-    let setIdWithGenerator = (doc) => { doc._id = this.idGenerator(doc); };
-    for(let type in resourcesByType) {
-      let model = this.getModel(this.constructor.getModelName(type));
-      let resources: Resource[] = resourcesByType[type];
-      let docObjects = resources.map(util.resourceToDocObject);
+    const creationPromises: Array<Promise<mongoose.Document[]>> = [];
+    const setIdWithGenerator = (doc) => { doc._id = this.idGenerator(doc); };
+    for(const type in resourcesByType) {
+      const model = this.getModel(this.constructor.getModelName(type));
+      const resources: Resource[] = resourcesByType[type];
+      const docObjects = resources.map(util.resourceToDocObject);
 
       if(typeof this.idGenerator === "function") {
         forEachArrayOrVal(docObjects, setIdWithGenerator);
@@ -239,13 +239,13 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
         const docIdOrIdsAsArray = Array.isArray(docs) ? docs.map(it => it.id) : [docs.id];
 
         if(!arrayValuesMatch(idOrIdsAsArray, docIdOrIdsAsArray)) {
-          let title = "Some of the resources you're trying to update could not be found.";
+          const title = "Some of the resources you're trying to update could not be found.";
           throw new APIError(404, undefined, title);
         }
       }
 
       forEachArrayOrVal(docs, (currDoc: mongoose.Document & { id: any}) => {
-        let newResource = changeSets[currDoc.id];
+        const newResource = changeSets[currDoc.id];
 
         // Allowing the type to change is a bit of a pain. If the type's
         // changed, it means the mongoose Model representing the doc must be
@@ -280,7 +280,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
 
       return Promise.all(successfulSavesPromises);
     }).then((docs) => {
-      let makeCollection = resourceOrCollection instanceof Collection;
+      const makeCollection = resourceOrCollection instanceof Collection;
       return this.constructor.docsToResourceOrCollection(docs, makeCollection, plural);
     }).catch(util.errorHandler);
   }
@@ -314,26 +314,26 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
    * Mongoose 4.0.
    */
   addToRelationship(type, id, relationshipPath, newLinkage) {
-    let model = this.getModel(this.constructor.getModelName(type));
-    let update = {
+    const model = this.getModel(this.constructor.getModelName(type));
+    const update = {
       $addToSet: {
         [relationshipPath]: { $each: newLinkage.value.map(it => it.id)}
       }
     };
-    let options = {runValidators: true};
+    const options = {runValidators: true};
 
     return Q.ninvoke(model, "findOneAndUpdate", {"_id": id}, update, options)
       .catch(util.errorHandler);
   }
 
   removeFromRelationship(type, id, relationshipPath, linkageToRemove) {
-    let model = this.getModel(this.constructor.getModelName(type));
-    let update = {
+    const model = this.getModel(this.constructor.getModelName(type));
+    const update = {
       $pullAll: {
         [relationshipPath]: linkageToRemove.value.map(it => it.id)
       }
     };
-    let options = {runValidators: true};
+    const options = {runValidators: true};
 
     return Q.ninvoke(model, "findOneAndUpdate", {"_id": id}, update, options)
       .catch(util.errorHandler);
@@ -343,7 +343,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     if(!this.models[modelName]) {
       // don't use an APIError here, since we don't want to
       // show this internals-specific method to the user.
-      let err = new Error(`The model "${modelName}" has not been registered with the MongooseAdapter.`);
+      const err = new Error(`The model "${modelName}" has not been registered with the MongooseAdapter.`);
       (<any>err).status = 404;
       throw err;
     }
@@ -365,7 +365,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
    * optionally fillable w/ relationship info; this shouldn't return those paths.
    */
   getRelationshipNames(type) {
-    let model = this.getModel(
+    const model = this.getModel(
       this.constructor.getModelName(type, this.inflector.singular)
     );
     return util.getReferencePaths(model);
@@ -400,9 +400,9 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
 
   // Useful to have this as static for calling as a utility outside this class.
   static docToResource(doc, pluralizer = pluralize.plural, fields?: object) {
-    let type = this.getType(doc.constructor.modelName, pluralizer);
-    let refPaths = util.getReferencePaths(doc.constructor);
-    let schemaOptions = doc.constructor.schema.options;
+    const type = this.getType(doc.constructor.modelName, pluralizer);
+    const refPaths = util.getReferencePaths(doc.constructor);
+    const schemaOptions = doc.constructor.schema.options;
 
     // Get and clean up attributes
     // Note: we can't use the depopulate attribute because it doesn't just
@@ -424,7 +424,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     // the schema to identify the virtual paths and then checking those against
     // fields) and add them to newAttrs.
     if(fields && fields[type]) {
-      let newAttrs = {};
+      const newAttrs = {};
       fields[type].forEach((field) => {
         if(attrs[field]) {
           newAttrs[field] = attrs[field];
@@ -434,8 +434,8 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     }
 
     // Build relationships
-    let relationships = {};
-    let getProp = (obj, part) => obj[part];
+    const relationships = {};
+    const getProp = (obj, part) => obj[part];
 
     refPaths.forEach((path) => {
       // skip if applicable
@@ -444,9 +444,9 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       }
 
       // get value at the path w/ the reference, in both the json'd + full docs.
-      let pathParts = path.split(".");
+      const pathParts = path.split(".");
       let jsonValAtPath = pathParts.reduce(getProp, attrs);
-      let referencedType = this.getReferencedType(doc.constructor, path);
+      const referencedType = this.getReferencedType(doc.constructor, path);
 
       // delete the attribute, since we're moving it to relationships
       deleteNested(path, attrs);
@@ -491,7 +491,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
   }
 
   static getModelName(type, singularizer = pluralize.singular) {
-    let words = type.split("-");
+    const words = type.split("-");
     words[words.length - 1] = singularizer(words[words.length - 1]);
     return words.map((it) => it.charAt(0).toUpperCase() + it.slice(1)).join("");
   }
@@ -562,10 +562,10 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
 
       // find the "base type's" options (used below), in case
       // we have an array of values of the same type at this path.
-      let baseTypeOptions = Array.isArray(type.options.type) ? type.options.type[0] : type.options;
+      const baseTypeOptions = Array.isArray(type.options.type) ? type.options.type[0] : type.options;
 
       // Add validation info
-      let validationRules = {
+      const validationRules = {
         required: !!type.options.required,
         oneOf: baseTypeOptions.enum ? type.enumValues || (type.caster && type.caster.enumValues) : undefined,
         max: type.options.max || undefined
@@ -584,7 +584,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       ));
     });
 
-    for(let virtual in virtuals) {
+    for(const virtual in virtuals) {
       // skip the id virtual, since we properly handled _id above.
       if(virtual === "id") {
         continue;

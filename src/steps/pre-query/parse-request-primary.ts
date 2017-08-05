@@ -48,7 +48,7 @@ function linkageFromJSON(json) {
 }
 
 function resourceFromJSON(json) {
-  let relationships = json.relationships || {};
+  const relationships = json.relationships || {};
 
   //build Relationships
   let key;

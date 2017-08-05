@@ -3,7 +3,7 @@ import { PrimaryData } from "../../types/index";
 import Collection from "../../types/Collection";
 import APIError from "../../types/APIError";
 
-let propDesc = {writable: true, enumerable: true};
+const propDesc = {writable: true, enumerable: true};
 
 export class Response {
   public ext: string[];

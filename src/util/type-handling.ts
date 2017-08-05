@@ -26,12 +26,12 @@ export function ValueObject<T extends object>(ConstructorFn: { new (): T}): Ugh<
   // a resulting function with the same API), and the original constructor could
   // be called with new so the new constructor should be called with new too.
   return <Ugh<T>>function(initialValues) {
-    let obj = new ConstructorFn();
-    let hasOwnProp = Object.prototype.hasOwnProperty;
+    const obj = new ConstructorFn();
+    const hasOwnProp = Object.prototype.hasOwnProperty;
 
     // Use initial values where possible.
     if(initialValues) {
-      for(let key in obj) {
+      for(const key in obj) {
         if(hasOwnProp.call(obj, key) && hasOwnProp.call(initialValues, key)) {
           obj[key] = initialValues[key];
         }
@@ -45,17 +45,17 @@ export function ValueObject<T extends object>(ConstructorFn: { new (): T}): Ugh<
 }
 
 export function objectIsEmpty(obj) {
-  let hasOwnProperty = Object.prototype.hasOwnProperty;
-  for (let key in obj) {
+  const hasOwnProperty = Object.prototype.hasOwnProperty;
+  for (const key in obj) {
     if (hasOwnProperty.call(obj, key)) return false;
   }
   return true;
 }
 
 export function mapObject(obj, mapFn) {
-  let mappedObj = Object.assign({}, obj);
+  const mappedObj = {...obj};
 
-  for(let key in mappedObj) {
+  for(const key in mappedObj) {
     mappedObj[key] = mapFn(obj[key]);
   }
 
