@@ -18,7 +18,7 @@ describe("Deleting a resource", () => {
             .type("application/vnd.api+json")
             .send()
             .promise();
-        }).then(done);
+        }).then(() => done());
     }).catch(done);
   });
 
