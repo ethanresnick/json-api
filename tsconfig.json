@@ -1,0 +1,23 @@
+{
+  "compileOnSave": true,
+  "compilerOptions": {
+    "lib": ["es6", "es2016.array.include", "es2015.promise", "dom"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "outDir": "./build",
+    "preserveConstEnums": true,
+    "removeComments": true,
+    "strictNullChecks": true,
+    "alwaysStrict": true,
+    "target": "es6",
+    "declaration": true
+  },
+  "exclude": [
+    "node_modules",
+    "build",
+    "config"
+  ],
+  "include": ["typings/index.d.ts", "src/**/*", "test/**/*"]
+}

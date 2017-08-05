@@ -1,8 +1,12 @@
 machine:
   node:
-    version: 4.2.4
+    version: 6.11.0
 
 test:
+  pre:
+    - npm run lint
+  override:
+    - npm run cover # generating coverage runs the tests too.
   post:
-    - make lint
-    - npm run cover_ci
+    - mv coverage $CIRCLE_ARTIFACTS
+    - bash <(curl -s https://codecov.io/bash)

@@ -1,61 +1,32 @@
 "use strict";
-
-var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
+Object.defineProperty(exports, "__esModule", { value: true });
+const express = require("express");
+const API = require("../../../src/index");
+const index_1 = require("../database/index");
+exports.default = index_1.default.then(function (dbModule) {
+    const adapter = new API.dbAdapters.Mongoose(dbModule.models());
+    const registry = new API.ResourceTypeRegistry({
+        "people": require("./resource-descriptions/people"),
+        "organizations": require("./resource-descriptions/organizations"),
+        "schools": require("./resource-descriptions/schools")
+    }, {
+        dbAdapter: adapter
+    });
+    const Docs = new API.controllers.Documentation(registry, { name: "Example API" });
+    const Controller = new API.controllers.API(registry);
+    const app = express();
+    const Front = new API.httpStrategies.Express(Controller, Docs);
+    const apiReqHandler = Front.apiRequest.bind(Front);
+    app.get("/", Front.docsRequest.bind(Front));
+    app.route("/:type(people|organizations|schools)").all(apiReqHandler);
+    app.route("/:type(people|organizations|schools)/:id")
+        .get(apiReqHandler).patch(apiReqHandler).delete(apiReqHandler);
+    app.route("/:type(people|organizations|schools)/:id/:related")
+        .get(apiReqHandler);
+    app.route("/:type(people|organizations|schools)/:id/relationships/:relationship")
+        .get(apiReqHandler).post(apiReqHandler).patch(apiReqHandler);
+    app.use(function (req, res, next) {
+        Front.sendError({ "message": "Not Found", "status": 404 }, req, res);
+    });
+    return app;
 });
-
-var _express = require("express");
-
-var _express2 = _interopRequireDefault(_express);
-
-var _index = require("../../../../index");
-
-var _index2 = _interopRequireDefault(_index);
-
-var _databaseIndex = require("../database/index");
-
-var _databaseIndex2 = _interopRequireDefault(_databaseIndex);
-
-/**
- * Export a promise for the app.
- */
-exports["default"] = _databaseIndex2["default"].then(function (dbModule) {
-  var adapter = new _index2["default"].dbAdapters.Mongoose(dbModule.models());
-  var registry = new _index2["default"].ResourceTypeRegistry({
-    "people": require("./resource-descriptions/people"),
-    "organizations": require("./resource-descriptions/organizations"),
-    "schools": require("./resource-descriptions/schools")
-  }, {
-    dbAdapter: adapter
-  });
-
-  // Initialize the automatic documentation.
-  // Note: don't do this til after you've registered all your resources.)
-  var Docs = new _index2["default"].controllers.Documentation(registry, { name: "Example API" });
-  var Controller = new _index2["default"].controllers.API(registry);
-
-  // Initialize the express app + front controller.
-  var app = (0, _express2["default"])();
-
-  var Front = new _index2["default"].httpStrategies.Express(Controller, Docs);
-  var apiReqHandler = Front.apiRequest.bind(Front);
-
-  // Now, add the routes.
-  // Note: below, express incorrectly passes requests using PUT and other
-  // unknown methods into the API Controller at some routes. We're doing this
-  // here just to test that the controller rejects them properly.
-  app.get("/", Front.docsRequest.bind(Front));
-  app.route("/:type(people|organizations|schools)").all(apiReqHandler);
-  app.route("/:type(people|organizations|schools)/:id").get(apiReqHandler).patch(apiReqHandler)["delete"](apiReqHandler);
-  app.route("/:type(people|organizations|schools)/:id/:related").get(apiReqHandler);
-  app.route("/:type(people|organizations|schools)/:id/relationships/:relationship").get(apiReqHandler).post(apiReqHandler).patch(apiReqHandler);
-
-  app.use(function (req, res, next) {
-    Front.sendError({ "message": "Not Found", "status": 404 }, req, res);
-  });
-
-  return app;
-});
-module.exports = exports["default"];

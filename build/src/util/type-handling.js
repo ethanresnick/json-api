@@ -1,174 +1,106 @@
 "use strict";
-
-var _createClass = require("babel-runtime/helpers/create-class")["default"];
-
-var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default"];
-
-var _Object$seal = require("babel-runtime/core-js/object/seal")["default"];
-
-var _Object$assign = require("babel-runtime/core-js/object/assign")["default"];
-
-var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.ValueObject = ValueObject;
-exports.objectIsEmpty = objectIsEmpty;
-exports.mapObject = mapObject;
-exports.mapResources = mapResources;
-exports.forEachResources = forEachResources;
-exports.groupResourcesByType = groupResourcesByType;
-exports.forEachArrayOrVal = forEachArrayOrVal;
-exports.Maybe = Maybe;
-
-var _typesCollection = require("../types/Collection");
-
-var _typesCollection2 = _interopRequireDefault(_typesCollection);
-
-/**
- * Takes in a constructor function that takes no arguments and returns a new one
- * that takes one argument representing initial values. These initial values
- * will be applied to the properties that exist on the object returned by the
- * input constructor function immediately post-creation. Then the object will be
- * sealed so that no properties can be added or deleted--a nice sanity check.
- */
-
+Object.defineProperty(exports, "__esModule", { value: true });
+const Collection_1 = require("../types/Collection");
 function ValueObject(ConstructorFn) {
-  return function (initialValues) {
-    var obj = new ConstructorFn();
-    var hasOwnProp = Object.prototype.hasOwnProperty;
-
-    // Use initial values where possible.
-    if (initialValues) {
-      for (var key in obj) {
-        if (hasOwnProp.call(obj, key) && hasOwnProp.call(initialValues, key)) {
-          obj[key] = initialValues[key];
+    return function (initialValues) {
+        const obj = new ConstructorFn();
+        const hasOwnProp = Object.prototype.hasOwnProperty;
+        if (initialValues) {
+            for (const key in obj) {
+                if (hasOwnProp.call(obj, key) && hasOwnProp.call(initialValues, key)) {
+                    obj[key] = initialValues[key];
+                }
+            }
         }
-      }
-    }
-
-    // Object.seal prevents any other properties from being added to the object.
-    // Every property an object needs should be set by the original constructor.
-    return _Object$seal(obj);
-  };
+        return Object.seal(obj);
+    };
 }
-
+exports.ValueObject = ValueObject;
 function objectIsEmpty(obj) {
-  var hasOwnProperty = Object.prototype.hasOwnProperty;
-  for (var key in obj) {
-    if (hasOwnProperty.call(obj, key)) return false;
-  }
-  return true;
+    const hasOwnProperty = Object.prototype.hasOwnProperty;
+    for (const key in obj) {
+        if (hasOwnProperty.call(obj, key))
+            return false;
+    }
+    return true;
 }
-
+exports.objectIsEmpty = objectIsEmpty;
 function mapObject(obj, mapFn) {
-  var mappedObj = _Object$assign({}, obj);
-
-  for (var key in mappedObj) {
-    mappedObj[key] = mapFn(obj[key]);
-  }
-
-  return mappedObj;
+    const mappedObj = Object.assign({}, obj);
+    for (const key in mappedObj) {
+        mappedObj[key] = mapFn(obj[key]);
+    }
+    return mappedObj;
 }
-
-/**
- * If `resourceOrCollection` is a collection, it applies `mapFn` to each of
- * its resources; otherwise, if `resourceOrCollection` is a single resource,
- * it applies `mapFn` just to that resource. This abstracts a common pattern.
- */
-
+exports.mapObject = mapObject;
 function mapResources(resourceOrCollection, mapFn) {
-  if (resourceOrCollection instanceof _typesCollection2["default"]) {
-    return resourceOrCollection.resources.map(mapFn);
-  } else {
-    return mapFn(resourceOrCollection);
-  }
+    if (resourceOrCollection instanceof Collection_1.default) {
+        return resourceOrCollection.resources.map(mapFn);
+    }
+    else {
+        return mapFn(resourceOrCollection);
+    }
 }
-
+exports.mapResources = mapResources;
 function forEachResources(resourceOrCollection, eachFn) {
-  /*eslint-disable no-unused-expressions */
-  if (resourceOrCollection instanceof _typesCollection2["default"]) {
-    resourceOrCollection.resources.forEach(eachFn);
-  } else {
-    return eachFn(resourceOrCollection);
-  }
-  /*eslint-enable */
+    if (resourceOrCollection instanceof Collection_1.default) {
+        resourceOrCollection.resources.forEach(eachFn);
+    }
+    else {
+        return eachFn(resourceOrCollection);
+    }
 }
-
+exports.forEachResources = forEachResources;
 function groupResourcesByType(resourceOrCollection) {
-  var resourcesByType = {};
-  if (resourceOrCollection instanceof _typesCollection2["default"]) {
-    resourceOrCollection.resources.forEach(function (it) {
-      resourcesByType[it.type] = resourcesByType[it.type] || [];
-      resourcesByType[it.type].push(it);
-    });
-  } else {
-    resourcesByType[resourceOrCollection.type] = [resourceOrCollection];
-  }
-  return resourcesByType;
+    const resourcesByType = {};
+    if (resourceOrCollection instanceof Collection_1.default) {
+        resourceOrCollection.resources.forEach((it) => {
+            resourcesByType[it.type] = resourcesByType[it.type] || [];
+            resourcesByType[it.type].push(it);
+        });
+    }
+    else {
+        resourcesByType[resourceOrCollection.type] = [resourceOrCollection];
+    }
+    return resourcesByType;
 }
-
+exports.groupResourcesByType = groupResourcesByType;
 function forEachArrayOrVal(arrayOrVal, eachFn) {
-  /*eslint-disable no-unused-expressions */
-  Array.isArray(arrayOrVal) ? arrayOrVal.forEach(eachFn) : eachFn(arrayOrVal);
-  /*eslint-enable */
+    Array.isArray(arrayOrVal) ? arrayOrVal.forEach(eachFn) : eachFn(arrayOrVal);
 }
-
-/**
- * The Maybe monad, with a totally-not-monadic unwrap() so we can
- * get out the raw value w/o needing to pass the monad everywhere.
- *
- * We also match js's convention from Promise of not requiring
- * the user's bind() to always return the monad. If a raw value
- * x is returned, it's converted to Maybe(x).
- */
-var Nothing = {
-  unwrap: function unwrap() {
-    return undefined;
-  },
-
-  bind: function bind() {
-    return this;
-  }
+exports.forEachArrayOrVal = forEachArrayOrVal;
+exports.Nothing = {
+    unwrap() {
+        return undefined;
+    },
+    bind(transform) {
+        return this;
+    }
 };
-
-exports.Nothing = Nothing;
-
-var Just = (function () {
-  function Just(x) {
-    _classCallCheck(this, Just);
-
-    this.val = x;
-  }
-
-  _createClass(Just, [{
-    key: "unwrap",
-    value: function unwrap() {
-      return this.val;
+class Just {
+    constructor(x) {
+        this.val = x;
     }
-  }, {
-    key: "bind",
-    value: function bind(transform) {
-      var transformed = transform(this.val);
-      if (transformed instanceof Just || transformed === Nothing) {
-        return transformed;
-      } else {
-        return Maybe(transformed);
-      }
+    unwrap() {
+        return this.val;
     }
-  }]);
-
-  return Just;
-})();
-
-exports.Just = Just;
-
-function Maybe(x) {
-  // Sometimes, null is a valid value, so Nothing only covers undefined.
-  if (x !== undefined) {
-    return new Just(x);
-  } else {
-    return Nothing;
-  }
+    bind(transform) {
+        const transformed = transform(this.val);
+        if (transformed instanceof Just || transformed === exports.Nothing) {
+            return transformed;
+        }
+        else {
+            return Maybe(transformed);
+        }
+    }
 }
+exports.Just = Just;
+function Maybe(x) {
+    if (x !== undefined) {
+        return new Just(x);
+    }
+    else {
+        return exports.Nothing;
+    }
+}
+exports.Maybe = Maybe;

@@ -1,45 +1,30 @@
 "use strict";
-
-var _Promise = require("babel-runtime/core-js/promise")["default"];
-
-var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.checkBodyExistence = checkBodyExistence;
-exports.checkMethod = checkMethod;
-
-var _q = require("q");
-
-var _q2 = _interopRequireDefault(_q);
-
-var _typesAPIError = require("../../types/APIError");
-
-var _typesAPIError2 = _interopRequireDefault(_typesAPIError);
-
+Object.defineProperty(exports, "__esModule", { value: true });
+const APIError_1 = require("../../types/APIError");
 function checkBodyExistence(requestContext) {
-  return _q2["default"].Promise(function (resolve, reject) {
-    var needsBody = ["post", "patch"].indexOf(requestContext.method) !== -1 || requestContext.method === "delete" && requestContext.aboutRelationship || requestContext.method === "delete" && !requestContext.idOrIds && requestContext.ext.indexOf("bulk") !== -1;
-
-    if (requestContext.hasBody === needsBody) {
-      resolve();
-    } else if (needsBody) {
-      reject(new _typesAPIError2["default"](400, undefined, "This request needs a body, but didn't have one."));
-    } else {
-      reject(new _typesAPIError2["default"](400, undefined, "This request should not have a body, but does."));
+    return new Promise(function (resolve, reject) {
+        const needsBody = ["post", "patch"].indexOf(requestContext.method) !== -1 ||
+            (requestContext.method === "delete" && requestContext.aboutRelationship) ||
+            (requestContext.method === "delete" && !requestContext.idOrIds && requestContext.ext.indexOf("bulk") !== -1);
+        if (requestContext.hasBody === needsBody) {
+            resolve();
+        }
+        else if (needsBody) {
+            reject(new APIError_1.default(400, undefined, "This request needs a body, but didn't have one."));
+        }
+        else {
+            reject(new APIError_1.default(400, undefined, "This request should not have a body, but does."));
+        }
+    });
+}
+exports.checkBodyExistence = checkBodyExistence;
+function checkMethod({ method }) {
+    if (["patch", "post", "delete", "get"].indexOf(method) === -1) {
+        const detail = `The method "${method}" is not supported.` + (method === "put" ? " See http://jsonapi.org/faq/#wheres-put" : "");
+        return Promise.reject(new APIError_1.default(405, undefined, "Method not supported.", detail));
     }
-  });
+    else {
+        return Promise.resolve();
+    }
 }
-
-function checkMethod(_ref) {
-  var method = _ref.method;
-
-  if (["patch", "post", "delete", "get"].indexOf(method) === -1) {
-    var detail = "The method \"" + method + "\" is not supported." + (method === "put" ? " See http://jsonapi.org/faq/#wheres-put" : "");
-
-    return _Promise.reject(new _typesAPIError2["default"](405, undefined, "Method not supported.", detail));
-  } else {
-    return _Promise.resolve();
-  }
-}
+exports.checkMethod = checkMethod;

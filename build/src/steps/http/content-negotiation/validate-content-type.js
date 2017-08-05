@@ -1,50 +1,26 @@
 "use strict";
-
-var _Object$keys = require("babel-runtime/core-js/object/keys")["default"];
-
-var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports["default"] = validateContentType;
-
-var _q = require("q");
-
-var _q2 = _interopRequireDefault(_q);
-
-var _contentType = require("content-type");
-
-var _contentType2 = _interopRequireDefault(_contentType);
-
-var _typesAPIError = require("../../../types/APIError");
-
-var _typesAPIError2 = _interopRequireDefault(_typesAPIError);
-
-var _utilTypeHandling = require("../../../util/type-handling");
-
+Object.defineProperty(exports, "__esModule", { value: true });
+const contentTypeParser = require("content-type");
+const APIError_1 = require("../../../types/APIError");
+const type_handling_1 = require("../../../util/type-handling");
 function validateContentType(requestContext, supportedExt) {
-  return _q2["default"].Promise(function (resolve, reject) {
-    var contentType = _contentType2["default"].parse(requestContext.contentType);
-
-    // Removed due to issues with Firefox automatically adding charset parameter
-    // See: https://github.com/ethanresnick/json-api/issues/78
-    delete contentType.parameters.charset;
-
-    // In the future, we might delegate back to the framework if the client
-    // provides a base content type other than json-api's. But, for now, we 415.
-    if (contentType.type !== "application/vnd.api+json") {
-      var detail = "The request's Content-Type must be application/vnd.api+json, " + "but you provided " + contentType.type + ".";
-
-      reject(new _typesAPIError2["default"](415, undefined, "Invalid Media Type", detail));
-    } else if (!(0, _utilTypeHandling.objectIsEmpty)(contentType.parameters)) {
-      var detail = "The request's Content-Type must be application/vnd.api+json, with " + "no parameters. But the Content-Type you provided contained the " + ("parameters: " + _Object$keys(contentType.parameters).join(", ") + ".");
-
-      reject(new _typesAPIError2["default"](415, undefined, "Invalid Media Type Parameter(s)", detail));
-    } else {
-      resolve();
-    }
-  });
+    return new Promise(function (resolve, reject) {
+        const contentType = contentTypeParser.parse(requestContext.contentType);
+        delete contentType.parameters.charset;
+        if (contentType.type !== "application/vnd.api+json") {
+            const detail = "The request's Content-Type must be application/vnd.api+json, " +
+                "but you provided " + contentType.type + ".";
+            reject(new APIError_1.default(415, undefined, "Invalid Media Type", detail));
+        }
+        else if (!type_handling_1.objectIsEmpty(contentType.parameters)) {
+            const detail = "The request's Content-Type must be application/vnd.api+json, with " +
+                "no parameters. But the Content-Type you provided contained the " +
+                `parameters: ${Object.keys(contentType.parameters).join(", ")}.`;
+            reject(new APIError_1.default(415, undefined, "Invalid Media Type Parameter(s)", detail));
+        }
+        else {
+            resolve();
+        }
+    });
 }
-
-module.exports = exports["default"];
+exports.default = validateContentType;

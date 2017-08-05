@@ -1,8 +1,8 @@
 /**
  * Peer dependencies may or may not be installed (npm@3 doesn't install them
  * automatically, and users may not need every peer dependency if they bring
- * their own adapters/strategies). So the code below only tries to require them
- * when they're asked for, as doing otherwise can cause errors.
+ * their own adapters/strategies). So the code below only loads code that needs
+ * each peer dependency when necessary, by deferring the requires behind a getter.
  */
 module.exports = {
   dbAdapters: {

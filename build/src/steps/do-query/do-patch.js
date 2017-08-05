@@ -1,63 +1,40 @@
 "use strict";
-
-var _defineProperty = require("babel-runtime/helpers/define-property")["default"];
-
-var _interopRequireDefault = require("babel-runtime/helpers/interop-require-default")["default"];
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _typesAPIError = require("../../types/APIError");
-
-var _typesAPIError2 = _interopRequireDefault(_typesAPIError);
-
-var _typesCollection = require("../../types/Collection");
-
-var _typesCollection2 = _interopRequireDefault(_typesCollection);
-
-var _typesResource = require("../../types/Resource");
-
-var _typesResource2 = _interopRequireDefault(_typesResource);
-
-var _typesRelationship = require("../../types/Relationship");
-
-var _typesRelationship2 = _interopRequireDefault(_typesRelationship);
-
-var _typesLinkage = require("../../types/Linkage");
-
-var _typesLinkage2 = _interopRequireDefault(_typesLinkage);
-
-exports["default"] = function (requestContext, responseContext, registry) {
-  var primary = requestContext.primary;
-  var type = requestContext.type;
-  var adapter = registry.dbAdapter(type);
-  var changedResourceOrCollection = undefined;
-
-  if (primary instanceof _typesCollection2["default"]) {
-    if (requestContext.idOrIds && !Array.isArray(requestContext.idOrIds)) {
-      var title = "You can't replace a single resource with a collection.";
-      throw new _typesAPIError2["default"](400, undefined, title);
+Object.defineProperty(exports, "__esModule", { value: true });
+const APIError_1 = require("../../types/APIError");
+const Collection_1 = require("../../types/Collection");
+const Resource_1 = require("../../types/Resource");
+const Relationship_1 = require("../../types/Relationship");
+const Linkage_1 = require("../../types/Linkage");
+function default_1(requestContext, responseContext, registry) {
+    const primary = requestContext.primary;
+    const type = requestContext.type;
+    const adapter = registry.dbAdapter(type);
+    let changedResourceOrCollection;
+    if (primary instanceof Collection_1.default) {
+        if (requestContext.idOrIds && !Array.isArray(requestContext.idOrIds)) {
+            const title = "You can't replace a single resource with a collection.";
+            throw new APIError_1.default(400, undefined, title);
+        }
+        changedResourceOrCollection = primary;
     }
-
-    changedResourceOrCollection = primary;
-  } else if (primary instanceof _typesResource2["default"]) {
-    if (!requestContext.idOrIds) {
-      var title = "You must provide an array of resources to do a bulk update.";
-      throw new _typesAPIError2["default"](400, undefined, title);
-    } else if (requestContext.idOrIds !== primary.id) {
-      var title = "The id of the resource you provided doesn't match that in the URL.";
-      throw new _typesAPIError2["default"](400, undefined, title);
+    else if (primary instanceof Resource_1.default) {
+        if (!requestContext.idOrIds) {
+            const title = "You must provide an array of resources to do a bulk update.";
+            throw new APIError_1.default(400, undefined, title);
+        }
+        else if (requestContext.idOrIds !== primary.id) {
+            const title = "The id of the resource you provided doesn't match that in the URL.";
+            throw new APIError_1.default(400, undefined, title);
+        }
+        changedResourceOrCollection = primary;
     }
-    changedResourceOrCollection = primary;
-  } else if (primary instanceof _typesLinkage2["default"]) {
-    changedResourceOrCollection = new _typesResource2["default"](requestContext.type, requestContext.idOrIds, undefined, _defineProperty({}, requestContext.relationship, new _typesRelationship2["default"](requestContext.primary)));
-  }
-
-  return adapter.update(type, changedResourceOrCollection).then(function (resources) {
-
-    responseContext.primary = primary instanceof _typesLinkage2["default"] ? resources.relationships[requestContext.relationship].linkage : resources;
-  });
-};
-
-module.exports = exports["default"];
+    else if (primary instanceof Linkage_1.default) {
+        changedResourceOrCollection = new Resource_1.default(requestContext.type, requestContext.idOrIds, undefined, { [requestContext.relationship]: new Relationship_1.default(requestContext.primary) });
+    }
+    return adapter.update(type, changedResourceOrCollection).then((resources) => {
+        responseContext.primary = (primary instanceof Linkage_1.default) ?
+            resources.relationships[requestContext.relationship].linkage :
+            resources;
+    });
+}
+exports.default = default_1;
