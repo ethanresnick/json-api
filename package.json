@@ -103,7 +103,7 @@
     "test:built": "export NODE_ENV=testing; mocha --recursive build/test/unit/**/*.js build/test/integration/**/**/*.js",
     "build:lintfree": "npm run clean && cpr templates build/templates && echo Using TypeScript && tsc --version && tsc --pretty",
     "build": "npm run build:lintfree && npm run lint",
-    "prepublish": "npm run test && npm run build",
+    "prepublish": "npm run test && npm run build:lintfree",
     "cover": "NODE_ENV=test nyc npm t",
     "cover:view": "npm run cover && open coverage/lcov-report/index.html",
     "watch": "npm run build -- --watch",
