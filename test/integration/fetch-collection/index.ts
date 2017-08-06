@@ -174,7 +174,6 @@ describe("Fetching Collection", () => {
     });
 
     it("Should have Jane above Doug", () => {
-      console.log(res.body.data)
       const johnJaneList = res.body.data.map((it) => it.attributes.name).filter((it) => {
         return ["Doug", "Jane"].indexOf(it.substring(0, 4)) > -1;
       });
