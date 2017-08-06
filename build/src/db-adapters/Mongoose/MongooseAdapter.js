@@ -21,19 +21,31 @@ class MongooseAdapter {
         this.inflector = inflector || pluralize;
         this.idGenerator = idGenerator;
     }
-    find(type, idOrIds, fields, sorts, filters, includePaths) {
+    find(type, idOrIds, fields, sorts, filters, includePaths, offset, limit) {
         const model = this.getModel(this.constructor.getModelName(type));
         const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
         const pluralizer = this.inflector.plural;
+        const isPaginating = typeof idOrIds !== 'string' &&
+            (typeof offset !== 'undefined' || typeof limit !== 'undefined');
+        const isFiltering = typeof filters === "object" && !Array.isArray(filters);
         let primaryDocumentsPromise, includedResourcesPromise = Q(null);
         const queryBuilder = mode === 'findOne'
             ? model[mode](idQuery)
             : model[mode](idQuery);
+        const collectionSizePromise = isPaginating
+            ? model.count(isFiltering ? filters : undefined).exec()
+            : Promise.resolve(null);
         if (Array.isArray(sorts)) {
             queryBuilder.sort(sorts.join(" "));
         }
-        if (typeof filters === "object" && !Array.isArray(filters)) {
+        if (isFiltering) {
             queryBuilder.where(filters);
+        }
+        if (offset) {
+            queryBuilder.skip(offset);
+        }
+        if (limit) {
+            queryBuilder.limit(limit);
         }
         if (includePaths) {
             const populatedPaths = [];
@@ -75,7 +87,7 @@ class MongooseAdapter {
         return Q.all([primaryDocumentsPromise.then((it) => {
                 const makeCollection = !idOrIds || Array.isArray(idOrIds) ? true : false;
                 return this.constructor.docsToResourceOrCollection(it, makeCollection, pluralizer, fields);
-            }), includedResourcesPromise]).catch(util.errorHandler);
+            }), includedResourcesPromise, collectionSizePromise]).catch(util.errorHandler);
     }
     create(parentType, resourceOrCollection) {
         const resourcesByType = type_handling_1.groupResourcesByType(resourceOrCollection);

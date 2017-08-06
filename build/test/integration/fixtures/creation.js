@@ -20,8 +20,8 @@ exports.VALID_ORG_RESOURCE_NO_ID = {
         }
     }
 };
-exports.VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER = Object.assign({ "extraMember": true }, exports.VALID_ORG_RESOURCE_NO_ID);
-exports.ORG_RESOURCE_CLIENT_ID = Object.assign({ "id": "53f54dd98d1e62ff12539db3" }, exports.VALID_ORG_RESOURCE_NO_ID);
+exports.VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER = Object.assign({}, exports.VALID_ORG_RESOURCE_NO_ID, { "extraMember": true });
+exports.ORG_RESOURCE_CLIENT_ID = Object.assign({}, exports.VALID_ORG_RESOURCE_NO_ID, { "id": "53f54dd98d1e62ff12539db3" });
 exports.VALID_SCHOOL_RESOURCE_NO_ID = {
     "type": "schools",
     "attributes": {

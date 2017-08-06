@@ -1,6 +1,6 @@
 export interface AdapterInstance<T extends new (...args) => any> {
     constructor: T;
-    find(type: any, idOrIds: any, fields: any, sorts: any, filters: any, includePaths: any): any;
+    find(type: any, idOrIds: any, fields: any, sorts: any, filters: any, includePaths: any, offset: any, limit: any): any;
     create(parentType: any, resourceOrCollection: any): any;
     update(parentType: any, resourceOrCollection: any): any;
     delete(parentType: any, idOrIds: any): any;

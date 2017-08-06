@@ -51,6 +51,7 @@ class APIController {
                         response.primary = (mappedLabel) ? new Collection_1.default() : null;
                     }
                 }
+                response.meta = {};
                 if (typeof response.primary === "undefined") {
                     switch (request.method) {
                         case "get":
@@ -83,7 +84,7 @@ class APIController {
             response.primary = yield apply_transform_1.default(response.primary, "beforeRender", registry, frameworkReq, frameworkRes);
             response.included = yield apply_transform_1.default(response.included, "beforeRender", registry, frameworkReq, frameworkRes);
             if (response.status !== 204) {
-                response.body = new Document_1.default(response.primary, response.included, undefined, registry.urlTemplates(), request.uri).get(true);
+                response.body = new Document_1.default(response.primary, response.included, response.meta, registry.urlTemplates(), request.uri).get(true);
             }
             return response;
         });
