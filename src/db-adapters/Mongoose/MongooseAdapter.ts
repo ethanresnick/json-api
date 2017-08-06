@@ -40,15 +40,25 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
    * documents, as happens below. If it's undefined, though, we're not filtering
    * by id and should return all documents.
    */
-  find(type, idOrIds: string | string[] | undefined, fields, sorts, filters, includePaths) {
+  find(type, idOrIds: string | string[] | undefined, fields, sorts, filters, includePaths, offset, limit) {
     const model = this.getModel(this.constructor.getModelName(type));
     const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
     const pluralizer = this.inflector.plural;
+    const isPaginating = typeof idOrIds !== 'string' && 
+      (typeof offset !== 'undefined' || typeof limit !== 'undefined');
+    const isFiltering = typeof filters === "object" && !Array.isArray(filters);
+
     let primaryDocumentsPromise, includedResourcesPromise = Q(null);
 
     const queryBuilder = mode === 'findOne' // ternary is a hack for TS compiler
       ? model[mode](idQuery)
       : model[mode](idQuery);
+
+    // a promised query result that counts how many results we'd have if 
+    // we weren't paginating. this just resolves to null when we aren't paginating.
+    const collectionSizePromise = isPaginating 
+      ? model.count(isFiltering ? filters : undefined).exec()
+      : Promise.resolve(null);
 
     // do sorting
     if(Array.isArray(sorts)) {
@@ -59,8 +69,16 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     // note that there's a non-trivial risk of sql-like injection here.
     // we're mostly protected by the fact that we're treating the filter's
     // value as a single string, though, and not parsing as JSON.
-    if(typeof filters === "object" && !Array.isArray(filters)) {
+    if(isFiltering) {
       queryBuilder.where(filters);
+    }
+
+    if(offset) {
+      queryBuilder.skip(offset);
+    }
+
+    if(limit) {
+      queryBuilder.limit(limit);
     }
 
     // in an ideal world, we'd use mongoose here to filter the fields before
@@ -144,7 +162,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     return Q.all([primaryDocumentsPromise.then((it) => {
       const makeCollection = !idOrIds || Array.isArray(idOrIds) ? true : false;
       return this.constructor.docsToResourceOrCollection(it, makeCollection, pluralizer, fields);
-    }), includedResourcesPromise]).catch(util.errorHandler);
+    }), includedResourcesPromise, collectionSizePromise]).catch(util.errorHandler);
   }
 
   /**

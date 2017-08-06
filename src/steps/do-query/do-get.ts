@@ -4,7 +4,7 @@ import {arrayContains} from "../../util/arrays";
 export default function(requestContext, responseContext, registry) {
   const type    = requestContext.type;
   const adapter = registry.dbAdapter(type);
-  let fields, sorts, includes, filters;
+  let fields, sorts, includes, filters, offset, limit;
 
   // Handle fields, sorts, includes and filters.
   if(!requestContext.aboutRelationship) {
@@ -19,10 +19,24 @@ export default function(requestContext, responseContext, registry) {
       includes = registry.defaultIncludes(type);
     }
 
+    // Attempting to paginate a single resource request
+    if(requestContext.queryParams.page && typeof requestContext.idOrIds === 'string') {
+      throw new APIError(400, undefined, "Pagination is not supported on requests for a single resource.");
+    }
+
+    else if(requestContext.queryParams.page) {
+      offset = parseIntegerParam(requestContext.queryParams.page.offset);
+      limit = parseIntegerParam(requestContext.queryParams.page.limit);
+    }
+
     return adapter
-      .find(type, requestContext.idOrIds, fields, sorts, filters, includes)
-      .then((resources) => {
-        [responseContext.primary, responseContext.included] = resources;
+      .find(type, requestContext.idOrIds, fields, sorts, filters, includes, offset, limit)
+      .then(([primary, included, collectionSizeOrNull]) => {
+        responseContext.primary = primary;
+        responseContext.included = included;
+        if(collectionSizeOrNull != null) {
+          responseContext.meta.total = collectionSizeOrNull;
+        }
       });
   }
 
@@ -34,6 +48,10 @@ export default function(requestContext, responseContext, registry) {
   //   have a links key.
   // - sorts don't apply beacuse that's only for resource collections.
   else {
+    if(requestContext.queryParams.page) {
+      throw new APIError(400, undefined, "Pagination is not supported on requests for resource linkage.");
+    }
+
     if(Array.isArray(requestContext.idOrIds)) {
       throw new APIError(
         400, undefined,
@@ -79,4 +97,8 @@ function parseFields(fieldsParam) {
 
 function parseCommaSeparatedParam(it) {
   return it ? it.split(",").map(decodeURIComponent) : undefined;
+}
+
+function parseIntegerParam(it) {
+  return it ? parseInt(it, 10) : undefined;
 }
