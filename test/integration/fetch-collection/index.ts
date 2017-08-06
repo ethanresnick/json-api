@@ -164,7 +164,7 @@ describe("Fetching Collection", () => {
 
   describe("Fetching Descended Sorted by Name with Offset and Limit", () => {
     before(done => {
-      Agent.request("GET", "/people?order=-name&page[offset]=1&page[limit]=3")
+      Agent.request("GET", "/people?sort=-name&page[offset]=1&page[limit]=3")
         .accept("application/vnd.api+json")
         .promise()
         .then(response => {
@@ -173,10 +173,13 @@ describe("Fetching Collection", () => {
         }).catch(done);
     });
 
-    it("Should have ", () => {
-      expect(res.body.data.map((it) => it.attributes.name)).to.deep.equal([
-        "Jane Doe", "Doug Wilson"
-      ]);
+    it("Should have Jane above Doug", () => {
+      console.log(res.body.data)
+      const johnJaneList = res.body.data.map((it) => it.attributes.name).filter((it) => {
+        return ["Doug", "Jane"].indexOf(it.substring(0, 4)) > -1;
+      });
+      expect(johnJaneList[0]).to.equal("Jane Doe");
+      expect(johnJaneList[1]).to.equal("Doug Wilson");
     });
   });
 });
