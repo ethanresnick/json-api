@@ -112,6 +112,9 @@ class APIController {
           }
         }
 
+        // Add an empty meta object to start. Some of our methods below may fill this in.
+        response.meta = {};
+
         // Actually fulfill the request!
         // If we've already populated the primary resources, which is possible
         // because the label may have mapped to no id(s), we don't need to query.
@@ -177,7 +180,7 @@ class APIController {
         // or the doMETHOD functions above. How to handle that?
         response.body = new Document(
           <any>response.primary, response.included,
-          undefined, registry.urlTemplates(), request.uri
+          response.meta, registry.urlTemplates(), request.uri
         ).get(true);
       }
 

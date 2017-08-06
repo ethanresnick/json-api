@@ -14,6 +14,7 @@ export class Response {
   public body: string | null;
   public primary: undefined | PrimaryData;
   public included: undefined | Collection;
+  public meta: object | undefined;
 
   constructor() {
     // The JSON-API extensions used to formulate the response,
