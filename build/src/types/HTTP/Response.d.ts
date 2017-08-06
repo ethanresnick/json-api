@@ -12,6 +12,7 @@ export declare class Response {
     body: string | null;
     primary: undefined | PrimaryData;
     included: undefined | Collection;
+    meta: object | undefined;
     constructor();
 }
 declare const _default: {

@@ -5,7 +5,7 @@ const arrays_1 = require("../../util/arrays");
 function default_1(requestContext, responseContext, registry) {
     const type = requestContext.type;
     const adapter = registry.dbAdapter(type);
-    let fields, sorts, includes, filters;
+    let fields, sorts, includes, filters, offset, limit;
     if (!requestContext.aboutRelationship) {
         fields = parseFields(requestContext.queryParams.fields);
         sorts = parseCommaSeparatedParam(requestContext.queryParams.sort);
@@ -15,13 +15,27 @@ function default_1(requestContext, responseContext, registry) {
         if (!includes) {
             includes = registry.defaultIncludes(type);
         }
+        if (requestContext.queryParams.page && typeof requestContext.idOrIds === 'string') {
+            throw new APIError_1.default(400, undefined, "Pagination is not supported on requests for a single resource.");
+        }
+        else if (requestContext.queryParams.page) {
+            offset = parseIntegerParam(requestContext.queryParams.page.offset);
+            limit = parseIntegerParam(requestContext.queryParams.page.limit);
+        }
         return adapter
-            .find(type, requestContext.idOrIds, fields, sorts, filters, includes)
-            .then((resources) => {
-            [responseContext.primary, responseContext.included] = resources;
+            .find(type, requestContext.idOrIds, fields, sorts, filters, includes, offset, limit)
+            .then(([primary, included, collectionSizeOrNull]) => {
+            responseContext.primary = primary;
+            responseContext.included = included;
+            if (collectionSizeOrNull != null) {
+                responseContext.meta.total = collectionSizeOrNull;
+            }
         });
     }
     else {
+        if (requestContext.queryParams.page) {
+            throw new APIError_1.default(400, undefined, "Pagination is not supported on requests for resource linkage.");
+        }
         if (Array.isArray(requestContext.idOrIds)) {
             throw new APIError_1.default(400, undefined, "You can only request the linkage for one resource at a time.");
         }
@@ -53,4 +67,7 @@ function parseFields(fieldsParam) {
 }
 function parseCommaSeparatedParam(it) {
     return it ? it.split(",").map(decodeURIComponent) : undefined;
+}
+function parseIntegerParam(it) {
+    return it ? parseInt(it, 10) : undefined;
 }

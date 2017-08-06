@@ -10,7 +10,7 @@ describe("Creating Resources", () => {
         before(done => {
             agent_1.default.then((A) => {
                 Agent = A;
-                Agent.request("POST", "/organizations")
+                return Agent.request("POST", "/organizations")
                     .type("application/vnd.api+json")
                     .send({ "data": creation_1.VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER, "extra": false })
                     .promise()

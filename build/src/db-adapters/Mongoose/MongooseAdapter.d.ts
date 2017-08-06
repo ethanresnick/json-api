@@ -19,7 +19,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     constructor(models?: {
         [modelName: string]: mongoose.Model<any>;
     }, inflector?: any, idGenerator?: any);
-    find(type: any, idOrIds: string | string[] | undefined, fields: any, sorts: any, filters: any, includePaths: any): Q.Promise<void>;
+    find(type: any, idOrIds: string | string[] | undefined, fields: any, sorts: any, filters: any, includePaths: any, offset: any, limit: any): Q.Promise<void>;
     create(parentType: any, resourceOrCollection: any): Promise<void | Resource | Collection>;
     update(parentType: any, resourceOrCollection: any): Q.Promise<void>;
     delete(parentType: any, idOrIds: any): Q.Promise<void> | Q.Promise<{}>;

@@ -3,15 +3,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const chai_1 = require("chai");
 const agent_1 = require("../../app/agent");
 const updates_1 = require("../fixtures/updates");
+const creation_1 = require("../fixtures/creation");
 describe("Patching a relationship", () => {
     let Agent, orgId;
     before(done => {
         agent_1.default.then(A => {
             Agent = A;
-            return Agent.request("GET", "/organizations")
+            return Agent.request("POST", "/organizations")
+                .type("application/vnd.api+json")
+                .send({ "data": creation_1.VALID_ORG_RESOURCE_NO_ID })
                 .promise()
-                .then(response => {
-                orgId = response.body.data[0].id;
+                .then((response) => {
+                orgId = response.body.data.id;
             });
         }).then(done, done);
     });

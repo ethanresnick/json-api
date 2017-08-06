@@ -22,6 +22,7 @@ export declare const VALID_ORG_RESOURCE_NO_ID: {
     };
 };
 export declare const VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER: {
+    "extraMember": boolean;
     "type": string;
     "attributes": {
         "name": string;
@@ -35,9 +36,9 @@ export declare const VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER: {
             }[];
         };
     };
-    "extraMember": boolean;
 };
 export declare const ORG_RESOURCE_CLIENT_ID: {
+    "id": string;
     "type": string;
     "attributes": {
         "name": string;
@@ -51,7 +52,6 @@ export declare const ORG_RESOURCE_CLIENT_ID: {
             }[];
         };
     };
-    "id": string;
 };
 export declare const VALID_SCHOOL_RESOURCE_NO_ID: {
     "type": string;
