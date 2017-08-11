@@ -1,4 +1,4 @@
-export interface AdapterInstance<T extends new (...args) => any> {
+export interface AdapterInstance<T extends new (...args: any[]) => any> {
     constructor: T;
     find(type: any, idOrIds: any, fields: any, sorts: any, filters: any, includePaths: any, offset: any, limit: any): any;
     create(parentType: any, resourceOrCollection: any): any;
@@ -12,7 +12,7 @@ export interface AdapterInstance<T extends new (...args) => any> {
 }
 export interface AdapterClass {
     new (...args: any[]): AdapterInstance<{
-        new (...args): any;
+        new (...args: any[]): any;
     }>;
     getStandardizedSchema(model: any, pluralizer: any): any;
     getChildTypes(type: string): string[];
