@@ -1,4 +1,15 @@
 "use strict";
+const Collection_1 = require("./types/Collection");
+const Document_1 = require("./types/Document");
+const APIError_1 = require("./types/APIError");
+const Resource_1 = require("./types/Resource");
+const Relationship_1 = require("./types/Relationship");
+const Linkage_1 = require("./types/Linkage");
+const Field_1 = require("./types/Documentation/Field");
+const FieldType_1 = require("./types/Documentation/FieldType");
+const API_1 = require("./controllers/API");
+const Documentation_1 = require("./controllers/Documentation");
+const ResourceTypeRegistry_1 = require("./ResourceTypeRegistry");
 module.exports = {
     dbAdapters: {
         get Mongoose() {
@@ -14,20 +25,20 @@ module.exports = {
         }
     },
     types: {
-        Collection: require('./types/Collection').default,
-        Document: require('./types/Document').default,
-        Error: require('./types/APIError').default,
-        Resource: require('./types/Resource').default,
-        Relationship: require('./types/Relationship').default,
-        Linkage: require('./types/Linkage'),
+        Collection: Collection_1.default,
+        Document: Document_1.default,
+        Error: APIError_1.default,
+        Resource: Resource_1.default,
+        Relationship: Relationship_1.default,
+        Linkage: Linkage_1.default,
         Documentation: {
-            Field: require('./types/Documentation/Field').default,
-            FieldType: require('./types/Documentation/FieldType').default
+            Field: Field_1.default,
+            FieldType: FieldType_1.default
         }
     },
     controllers: {
-        API: require('./controllers/API').default,
-        Documentation: require('./controllers/Documentation').default
+        API: API_1.default,
+        Documentation: Documentation_1.default
     },
-    ResourceTypeRegistry: require('./ResourceTypeRegistry').default
+    ResourceTypeRegistry: ResourceTypeRegistry_1.default
 };

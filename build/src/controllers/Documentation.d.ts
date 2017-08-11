@@ -5,7 +5,7 @@ export default class DocumentationController {
     private template;
     private dasherizeJSONKeys;
     private templateData;
-    constructor(registry: any, apiInfo: any, templatePath: any, dasherizeJSONKeys?: boolean);
+    constructor(registry: any, apiInfo: any, templatePath?: undefined, dasherizeJSONKeys?: boolean);
     handle(request: any, frameworkReq: any, frameworkRes: any): Promise<UnsealedResponse>;
     getTypeInfo(type: any): {
         name: {

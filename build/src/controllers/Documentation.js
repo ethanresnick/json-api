@@ -12,7 +12,7 @@ const Document_1 = require("../types/Document");
 const Collection_1 = require("../types/Collection");
 const Resource_1 = require("../types/Resource");
 class DocumentationController {
-    constructor(registry, apiInfo, templatePath, dasherizeJSONKeys = true) {
+    constructor(registry, apiInfo, templatePath = undefined, dasherizeJSONKeys = true) {
         this.registry = registry;
         const defaultTempPath = "../../templates/documentation.jade";
         this.template = templatePath || path.resolve(__dirname, defaultTempPath);
