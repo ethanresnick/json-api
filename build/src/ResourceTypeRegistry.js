@@ -12,7 +12,7 @@ const globalResourceDefaults = Immutable.fromJS({
 });
 const typesKey = Symbol();
 class ResourceTypeRegistry {
-    constructor(typeDescriptions = {}, descriptionDefaults = {}) {
+    constructor(typeDescriptions = Object.create(null), descriptionDefaults = {}) {
         this[typesKey] = {};
         descriptionDefaults = globalResourceDefaults.mergeDeep(descriptionDefaults);
         const nodes = [], roots = [], edges = {};

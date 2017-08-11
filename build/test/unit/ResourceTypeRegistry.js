@@ -28,10 +28,10 @@ describe("ResourceTypeRegistry", function () {
     describe("constructor", () => {
         it("should register provided resource descriptions", () => {
             const registry = new ResourceTypeRegistry_1.default({
-                "someType": { info: "provided to constructor" }
+                "someType": { info: { "description": "provided to constructor" } }
             });
             expect(registry.type("someType")).to.be.an('object');
-            expect(registry.type("someType").info).to.equal("provided to constructor");
+            expect(registry.type("someType").info.description).to.equal("provided to constructor");
         });
         it("should merge descriptionDefaults into resource description", () => {
             const registry = new ResourceTypeRegistry_1.default({
@@ -44,7 +44,7 @@ describe("ResourceTypeRegistry", function () {
         });
         it("should give the description precedence over the provided default", () => {
             const someTypeDesc = {
-                info: "overriding the default",
+                info: { "example": "overriding the default" },
                 beforeSave: () => { },
                 beforeRender: () => { },
                 urlTemplates: { "path": "test template" }
@@ -52,7 +52,7 @@ describe("ResourceTypeRegistry", function () {
             const registry = new ResourceTypeRegistry_1.default({
                 "someType": someTypeDesc
             }, {
-                info: "provided as default"
+                info: { "description": "provided as default" }
             });
             const output = registry.type("someType");
             expect(output.info).to.deep.equal(someTypeDesc.info);
@@ -130,8 +130,8 @@ describe("ResourceTypeRegistry", function () {
     });
     describe("parentType", () => {
         const registry = new ResourceTypeRegistry_1.default({
-            "b": { "parentType": "a", "info": { "x": true } },
-            "a": { "info": { "y": false } }
+            "b": { "parentType": "a" },
+            "a": {}
         });
         it("should be a getter for a type for a type's parentType", () => {
             expect(registry.parentType("b")).to.equal("a");
