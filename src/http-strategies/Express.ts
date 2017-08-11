@@ -23,7 +23,7 @@ import Base from "./Base";
  *    can set this option to false to have this code just pass on to Express.
  */
 export default class ExpressStrategy extends Base {
-  constructor(apiController, docsController, options) {
+  constructor(apiController, docsController, options?) {
     super(apiController, docsController, options);
   }
 

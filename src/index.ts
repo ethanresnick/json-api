@@ -3,36 +3,56 @@
  * automatically, and users may not need every peer dependency if they bring
  * their own adapters/strategies). So the code below only loads code that needs
  * each peer dependency when necessary, by deferring the requires behind a getter.
+ *
+ * The imports for the getter-protected values (i.e., MongooseAdapter, KoaStrategy,
+ * etc.) just bring in type information; they're not part of the compiled output.
  */
+import MongooseAdapter from "./db-adapters/Mongoose/MongooseAdapter";
+import ExpressStrategy from "./http-strategies/Express";
+import KoaStrategy from "./http-strategies/Koa";
+
+// These imports are part of the compiled output and aren't lazy loaded.
+import Collection from './types/Collection'
+import Document from './types/Document'
+import Error from './types/APIError'
+import Resource from './types/Resource'
+import Relationship from './types/Relationship'
+import Linkage from './types/Linkage'
+import Field from './types/Documentation/Field'
+import FieldType from './types/Documentation/FieldType'
+import API from './controllers/API'
+import Documentation from './controllers/Documentation'
+import ResourceTypeRegistry from './ResourceTypeRegistry'
+
 export= {
   dbAdapters: {
     get Mongoose() {
-      return require('./db-adapters/Mongoose/MongooseAdapter').default
+      return <typeof MongooseAdapter>require('./db-adapters/Mongoose/MongooseAdapter').default
     }
   },
   httpStrategies: {
     get Express() {
-      return require('./http-strategies/Express').default
+      return <typeof ExpressStrategy>require('./http-strategies/Express').default
     },
     get Koa() {
-      return require('./http-strategies/Koa').default
+      return <typeof KoaStrategy>require('./http-strategies/Koa').default
     }
   },
   types: {
-    Collection: require('./types/Collection').default,
-    Document: require('./types/Document').default,
-    Error: require('./types/APIError').default,
-    Resource: require('./types/Resource').default,
-    Relationship: require('./types/Relationship').default,
-    Linkage: require('./types/Linkage'),
+    Collection,
+    Document,
+    Error,
+    Resource,
+    Relationship,
+    Linkage,
     Documentation: {
-      Field: require('./types/Documentation/Field').default,
-      FieldType: require('./types/Documentation/FieldType').default
+      Field,
+      FieldType
     }
   },
   controllers: {
-    API: require('./controllers/API').default,
-    Documentation: require('./controllers/Documentation').default
+    API,
+    Documentation
   },
-  ResourceTypeRegistry: require('./ResourceTypeRegistry').default
+  ResourceTypeRegistry
 };

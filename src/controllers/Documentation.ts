@@ -19,7 +19,7 @@ export default class DocumentationController {
   private dasherizeJSONKeys: boolean;
   private templateData: object;
 
-  constructor(registry, apiInfo, templatePath, dasherizeJSONKeys = true) {
+  constructor(registry, apiInfo, templatePath = undefined, dasherizeJSONKeys = true) {
     this.registry = registry;
 
     const defaultTempPath = "../../templates/documentation.jade";
