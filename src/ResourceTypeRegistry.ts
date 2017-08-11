@@ -1,6 +1,7 @@
 import Immutable = require("immutable");
 import {pseudoTopSort} from "./util/misc";
 import {Maybe} from "./util/type-handling";
+import { AdapterInstance } from "./db-adapters/AdapterInterface";
 
 /**
  * A private array of properties that will be used by the class below to
@@ -24,14 +25,32 @@ const globalResourceDefaults = Immutable.fromJS({
 
 const typesKey = Symbol();
 
+export type URLTemplates = {
+  [type: string]: {
+    [linkName: string]: string
+  }
+}
 
 export type ResourceTypeInfo = {
   fields?: {[fieldName: string]: any}
   example?: string,
   description?: string
-};
+}
 
-export type DefaultIncludes = string[];
+export type ResourceTypeDescription = {
+  dbAdapter?: AdapterInstance<any>,
+  info?: ResourceTypeInfo,
+  defaultIncludes?: string[],
+  parentType?: string,
+  urlTemplates?: URLTemplates[keyof URLTemplates],
+  beforeSave?: Function,
+  beforeRender?: Function,
+  labelMappers?: { [label: string]: any }
+}
+
+export type ResourceTypeDescriptions = {
+  [typeName: string]: ResourceTypeDescription
+}
 
 /**
  * To fulfill a JSON API request, you often need to know about all the resources
@@ -44,7 +63,10 @@ export type DefaultIncludes = string[];
  * its JSON API type and has a number of properties defining it.
  */
 export default class ResourceTypeRegistry {
-  constructor(typeDescriptions: object = {}, descriptionDefaults: object|Immutable.Map<string, any> = {}) {
+  constructor(
+    typeDescriptions: ResourceTypeDescriptions = Object.create(null),
+    descriptionDefaults: object|Immutable.Map<string, any> = {}
+  ) {
     this[typesKey] = {};
     descriptionDefaults = globalResourceDefaults.mergeDeep(descriptionDefaults);
 
@@ -125,16 +147,16 @@ export default class ResourceTypeRegistry {
     }, {});
   }
 
-
-  dbAdapter(type) {
+  // Note: type signature's lying here; this could be undefined.
+  dbAdapter(type): AdapterInstance<any> {
     return doGet("dbAdapter", type);
   }
 
-  beforeSave(type): Function | undefined {
+  beforeSave(type): ResourceTypeDescription['beforeSave'] | undefined {
     return doGet("beforeSave", type);
   }
 
-  beforeRender(type): Function | undefined {
+  beforeRender(type): ResourceTypeDescription['beforeRender'] | undefined {
     return doGet("beforeRender", type);
   }
 
@@ -142,24 +164,22 @@ export default class ResourceTypeRegistry {
     return doGet("behavior", type);
   }
 
-  labelMappers(type) {
+  labelMappers(type): ResourceTypeDescription['labelMappers'] | undefined {
     return doGet("labelMappers", type);
   }
 
-  defaultIncludes(type): DefaultIncludes {
+  defaultIncludes(type): ResourceTypeDescription['defaultIncludes'] | undefined {
     return doGet("defaultIncludes", type);
  }
 
-  info(type): ResourceTypeInfo | undefined {
+  info(type): ResourceTypeDescription['info'] | undefined {
     return doGet("info", type);
   }
 
-  parentType(type): string {
+  parentType(type): ResourceTypeDescription['parentType'] | undefined {
     return doGet("parentType", type);
   }
 }
-
-export type URLTemplates = { [type: string]: { [linkName: string]: string} };
 
 autoGetterProps.forEach((propName) => {
   ResourceTypeRegistry.prototype[propName] = makeGetter(propName);

@@ -35,17 +35,17 @@ describe("ResourceTypeRegistry", function() {
   describe("constructor", () => {
     it("should register provided resource descriptions", () => {
       const registry = new ResourceTypeRegistry({
-        "someType": { info: "provided to constructor" }
+        "someType": { info: { "description": "provided to constructor" } }
       });
 
       expect(registry.type("someType")).to.be.an('object');
-      expect(registry.type("someType").info).to.equal("provided to constructor");
+      expect(registry.type("someType").info.description).to.equal("provided to constructor");
     });
 
     it("should merge descriptionDefaults into resource description", () => {
       const registry = new ResourceTypeRegistry({
         "someType": {}
-      }, {
+      }, <object>{
         info: "provided as default"
       });
 
@@ -55,7 +55,7 @@ describe("ResourceTypeRegistry", function() {
 
     it("should give the description precedence over the provided default", () => {
       const someTypeDesc = {
-        info: "overriding the default",
+        info: {"example": "overriding the default"},
         beforeSave: () => {},
         beforeRender: () => {},
         urlTemplates: {"path": "test template"}
@@ -63,8 +63,8 @@ describe("ResourceTypeRegistry", function() {
 
       const registry = new ResourceTypeRegistry({
         "someType": someTypeDesc
-      }, {
-        info: "provided as default"
+      }, <object>{
+        info: { "description": "provided as default" }
       });
 
       const output = registry.type("someType");
@@ -76,7 +76,7 @@ describe("ResourceTypeRegistry", function() {
     });
 
     it("should give description and resource defaults precedence over global defaults", () => {
-      const registry = new ResourceTypeRegistry({
+      const registry = new ResourceTypeRegistry(<any>{
         "testType": {
           "behaviors": {
             "dasherizeOutput": {
@@ -85,7 +85,7 @@ describe("ResourceTypeRegistry", function() {
           }
         },
         "testType2": {}
-      }, {
+      }, <object>{
         "behaviors": {
           "dasherizeOutput": {"enabled": false, "exceptions": []}
         }
@@ -102,10 +102,10 @@ describe("ResourceTypeRegistry", function() {
 
   it("Should allow null/undefined to overwrite all defaults", () => {
     const registry = new ResourceTypeRegistry({
-      "testType": {
+      "testType": <any>{
         "behaviors": null
       }
-    }, {
+    }, <object>{
       "behaviors": {
         "dasherizeOutput": {"enabled": false, "exceptions": []}
       }
@@ -173,8 +173,8 @@ describe("ResourceTypeRegistry", function() {
 
   describe("parentType", () => {
     const registry = new ResourceTypeRegistry({
-      "b": {"parentType": "a", "info": {"x": true}},
-      "a": {"info": {"y": false}}
+      "b": {"parentType": "a"},
+      "a": {}
     });
 
     it("should be a getter for a type for a type's parentType", () => {
