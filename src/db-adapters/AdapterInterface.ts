@@ -13,7 +13,7 @@ export interface AdapterInstance<T extends new (...args: any[]) => any> {
 };
 
 export interface AdapterClass {
-  new (...args): AdapterInstance<{new (...args: any[]): any}>;
+  new (...args: any[]): AdapterInstance<{new (...args: any[]): any}>;
   getStandardizedSchema(model: any, pluralizer: any): any;
   getChildTypes(type: string): string[];
 }
