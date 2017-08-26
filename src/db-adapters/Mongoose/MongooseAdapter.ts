@@ -16,6 +16,7 @@ import FieldDocumentation from "../../types/Documentation/Field";
 import FieldTypeDocumentation from "../../types/Documentation/FieldType";
 import RelationshipTypeDocumentation from "../../types/Documentation/RelationshipType";
 import { Adapter } from '../AdapterInterface';
+import { Sort } from "../../types/index";
 
 export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> {
   // Workaround for https://github.com/Microsoft/TypeScript/issues/3841.
@@ -40,11 +41,20 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
    * documents, as happens below. If it's undefined, though, we're not filtering
    * by id and should return all documents.
    */
-  find(type, idOrIds: string | string[] | undefined, fields, sorts, filters, includePaths, offset, limit) {
+  find(
+    type: string,
+    idOrIds: string | string[] | undefined,
+    fields?: { [type: string]: string[] },
+    sorts?: Sort[],
+    filters?: any,
+    includePaths?: string[],
+    offset?: number,
+    limit?: number
+  ) {
     const model = this.getModel(this.constructor.getModelName(type));
     const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
     const pluralizer = this.inflector.plural;
-    const isPaginating = typeof idOrIds !== 'string' && 
+    const isPaginating = typeof idOrIds !== 'string' &&
       (typeof offset !== 'undefined' || typeof limit !== 'undefined');
     const isFiltering = typeof filters === "object" && !Array.isArray(filters);
 
@@ -54,15 +64,17 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       ? model[mode](idQuery)
       : model[mode](idQuery);
 
-    // a promised query result that counts how many results we'd have if 
+    // a promised query result that counts how many results we'd have if
     // we weren't paginating. this just resolves to null when we aren't paginating.
-    const collectionSizePromise = isPaginating 
+    const collectionSizePromise = isPaginating
       ? model.count(isFiltering ? filters : undefined).exec()
       : Promise.resolve(null);
 
     // do sorting
     if(Array.isArray(sorts)) {
-      queryBuilder.sort(sorts.join(" "));
+      queryBuilder.sort(
+        sorts.map(it => (it.direction === 'DESC' ? '-' : '') + it.field).join(" ")
+      );
     }
 
     // filter out invalid records with simple fields equality.
@@ -107,8 +119,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       const populatedPaths: string[] = [];
       const refPaths = util.getReferencePaths(model);
 
-      includePaths = includePaths.map((it) => it.split("."));
-      includePaths.forEach((pathParts) => {
+      includePaths.map((it) => it.split(".")).forEach((pathParts) => {
         // first, check that the include path is valid.
         if(!arrayContains(refPaths, pathParts[0])) {
           const title = "Invalid include path.";

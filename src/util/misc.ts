@@ -40,6 +40,19 @@ export function isPlainObject(obj) {
 }
 
 /**
+ * Note that this is only safe with chars in the BMP.
+ * See: https://mathiasbynens.be/notes/javascript-unicode
+ */
+export const stripLeadingBMPChar = (char) => (string) => {
+  // The below works because, though string[0] could be a surrogate,
+  // it will only === char if it's not: "the ranges for the
+  // high surrogates, low surrogates, and valid BMP characters
+  // are disjoint, [so] it is not possible for a surrogate to
+  // match a BMP character".
+  return string[0] === char ? string.slice(1) : string;
+};
+
+/**
  * Perform a pseudo-topological sort on the provided graph. Pseudo because it
  * assumes that each node only has 0 or 1 incoming edges, as is the case with
  * graphs for parent-child inheritance hierarchies (w/o multiple inheritance).

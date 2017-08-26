@@ -1,36 +1,30 @@
 import APIError from "../../types/APIError";
-import {arrayContains} from "../../util/arrays";
+import parseQueryParams from "../../util/parse-query-params";
 
 export default function(requestContext, responseContext, registry) {
   const type    = requestContext.type;
   const adapter = registry.dbAdapter(type);
-  let fields, sorts, includes, filters, offset, limit;
 
   // Handle fields, sorts, includes and filters.
   if(!requestContext.aboutRelationship) {
-    fields = parseFields(requestContext.queryParams.fields);
-    sorts  = parseCommaSeparatedParam(requestContext.queryParams.sort);
-    // just support a "simple" filtering strategy for now.
-    filters = requestContext.queryParams.filter &&
-                requestContext.queryParams.filter.simple;
-    includes = parseCommaSeparatedParam(requestContext.queryParams.include);
-
-    if(!includes) {
-      includes = registry.defaultIncludes(type);
-    }
-
     // Attempting to paginate a single resource request
     if(requestContext.queryParams.page && typeof requestContext.idOrIds === 'string') {
       throw new APIError(400, undefined, "Pagination is not supported on requests for a single resource.");
     }
 
-    else if(requestContext.queryParams.page) {
-      offset = parseIntegerParam(requestContext.queryParams.page.offset);
-      limit = parseIntegerParam(requestContext.queryParams.page.limit);
-    }
+    const {
+      include = registry.defaultIncludes(type),
+      page: {offset = undefined, limit = undefined} = {},
+      fields,
+      sort
+    } = parseQueryParams(requestContext.queryParams);
+
+    // just support a "simple" filtering strategy for now.
+    const filters = requestContext.queryParams.filter &&
+      requestContext.queryParams.filter.simple;
 
     return adapter
-      .find(type, requestContext.idOrIds, fields, sorts, filters, includes, offset, limit)
+      .find(type, requestContext.idOrIds, fields, sort, filters, include, offset, limit)
       .then(([primary, included, collectionSizeOrNull]) => {
         responseContext.primary = primary;
         responseContext.included = included;
@@ -79,26 +73,4 @@ export default function(requestContext, responseContext, registry) {
     });
   }
 
-}
-
-function parseFields(fieldsParam) {
-  let fields;
-  if(typeof fieldsParam === "object") {
-    fields = {};
-    const isField = (it) => !arrayContains(["id", "type"], it);
-
-    for(const type in fieldsParam) {
-      const provided = parseCommaSeparatedParam(fieldsParam[type]) || [];
-      fields[type] = provided.filter(isField);
-    }
-  }
-  return fields;
-}
-
-function parseCommaSeparatedParam(it) {
-  return it ? it.split(",").map(decodeURIComponent) : undefined;
-}
-
-function parseIntegerParam(it) {
-  return it ? parseInt(it, 10) : undefined;
 }
