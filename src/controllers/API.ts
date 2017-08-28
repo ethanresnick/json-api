@@ -191,7 +191,7 @@ class APIController {
    * @param {} errors Error or array of errors
    * @param {string} requestAccepts Request's Accepts header
    */
-  static responseFromExternalError(errors: Error | APIError | Error[] | APIError[] , requestAccepts) {
+  static responseFromExternalError(errors: Error | APIError | Error[] | APIError[], requestAccepts) {
     const response = new Response();
 
     // Convert errors to an array (if it was singular), and then to APIErrors
