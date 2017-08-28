@@ -54,7 +54,6 @@
     "@types/ramda": "^0.24.4",
     "@types/raw-body": "^2.1.4",
     "@types/url-template": "^2.0.27",
-    "co": "4.5.x",
     "content-type": "1.x.x",
     "dasherize": "2.0.x",
     "debug": "^2.6.8",

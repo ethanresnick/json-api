@@ -57,7 +57,7 @@ export default class BaseStrategy {
    * @param {Object} params object containing url parameters
    * @param {Object} [query] object containing query parameters
    */
-  buildRequestObject(req, protocol, host, params, query?){
+  protected buildRequestObject(req, protocol, host, params, query?){
     const config = this.config;
 
     return new Promise<UnsealedRequest>(function(resolve, reject) {
