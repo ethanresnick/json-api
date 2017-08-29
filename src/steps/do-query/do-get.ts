@@ -15,7 +15,7 @@ export default function(requestContext, responseContext, registry, query) {
   }
 
   else {
-    return adapter.find(query).spread((resource) => {
+    return adapter.find(query).then(([resource]) => {
       // 404 if the requested relationship is not a relationship path. Doing
       // it here is more accurate than using adapter.getRelationshipNames,
       // since we're allowing for paths that can optionally hold linkage,
