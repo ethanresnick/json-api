@@ -14,16 +14,22 @@ import * as requestValidators from "../steps/http/validate-request";
 import negotiateContentType from "../steps/http/content-negotiation/negotiate-content-type";
 import validateContentType from "../steps/http/content-negotiation/validate-content-type";
 
-
 import labelToIds from "../steps/pre-query/label-to-ids";
 import parseRequestPrimary from "../steps/pre-query/parse-request-primary";
 import validateRequestDocument from "../steps/pre-query/validate-document";
 import validateRequestResources from "../steps/pre-query/validate-resources";
 import applyTransform from "../steps/apply-transform";
 
+import makeGET from "../steps/make-query/make-get";
 import doGET from "../steps/do-query/do-get";
+
+import makePOST from "../steps/make-query/make-post";
 import doPOST from "../steps/do-query/do-post";
+
+import makePATCH from "../steps/make-query/make-patch";
 import doPATCH from "../steps/do-query/do-patch";
+
+import makeDELETE from "../steps/make-query/make-delete";
 import doDELETE from "../steps/do-query/do-delete";
 
 class APIController {
@@ -65,6 +71,7 @@ class APIController {
       // No matter what, though, we're varying on Accept. See:
       // https://github.com/ethanresnick/json-api/issues/22
       response.headers.vary = "Accept";
+
 
       // If the type requested in the endpoint hasn't been registered, we 404.
       if(!registry.hasType(request.type)) {
@@ -118,19 +125,19 @@ class APIController {
       if(typeof response.primary === "undefined") {
         switch(request.method) {
           case "get":
-            await doGET(request, response, registry);
+            await doGET(request, response, registry, makeGET(request, registry));
             break;
 
           case "post":
-            await doPOST(request, response, registry);
+            await doPOST(request, response, registry, makePOST(request, registry));
             break;
 
           case "patch":
-            await doPATCH(request, response, registry);
+            await doPATCH(request, response, registry, makePATCH(request, registry));
             break;
 
           case "delete":
-            await doDELETE(request, response, registry);
+            await doDELETE(request, response, registry, makeDELETE(request, registry));
         }
       }
     }

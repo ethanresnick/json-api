@@ -67,6 +67,7 @@ export default class BaseStrategy {
       if(query) {
         it.queryParams = query;
       }
+
       else if(req.url.indexOf("?") !== -1) {
         // TODO: what if there's more than one ?, like an unescaped one in the query string?
         // I think that's technically invalid, but we should handle it.

@@ -16,7 +16,7 @@ import FieldDocumentation from "../../types/Documentation/Field";
 import FieldTypeDocumentation from "../../types/Documentation/FieldType";
 import RelationshipTypeDocumentation from "../../types/Documentation/RelationshipType";
 import { Adapter } from '../AdapterInterface';
-import { Sort } from "../../types/index";
+import { WhereCriteria } from "../../types/Query";
 
 export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> {
   // Workaround for https://github.com/Microsoft/TypeScript/issues/3841.
@@ -41,16 +41,26 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
    * documents, as happens below. If it's undefined, though, we're not filtering
    * by id and should return all documents.
    */
-  find(
-    type: string,
-    idOrIds: string | string[] | undefined,
-    fields?: { [type: string]: string[] },
-    sorts?: Sort[],
-    filters?: any,
-    includePaths?: string[],
-    offset?: number,
-    limit?: number
-  ) {
+  find(query: any) {
+    if(query.method !== 'find') {
+      throw new Error("Invalid Query");
+    }
+
+    const {
+      using: type,
+      populates: includePaths,
+      criteria: {
+        select: fields,
+        sort: sorts,
+        offset,
+        limit,
+        where,
+        custom: filters
+      }
+    } = query
+
+    const idOrIds = getIdOrIdsFromCriteria(where);
+
     const model = this.getModel(this.constructor.getModelName(type));
     const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
     const pluralizer = this.inflector.plural;
@@ -63,6 +73,8 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     const queryBuilder = mode === 'findOne' // ternary is a hack for TS compiler
       ? model[mode](idQuery)
       : model[mode](idQuery);
+
+    // TODO: NOT THAT GETIDQUERYTYPE VALIDATES IDS. PRESERVE THAT.
 
     // a promised query result that counts how many results we'd have if
     // we weren't paginating. this just resolves to null when we aren't paginating.
@@ -170,7 +182,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       primaryDocumentsPromise = Q(queryBuilder.exec());
     }
 
-    return Q.all([primaryDocumentsPromise.then((it) => {
+    return Promise.all([primaryDocumentsPromise.then((it) => {
       const makeCollection = !idOrIds || Array.isArray(idOrIds) ? true : false;
       return this.constructor.docsToResourceOrCollection(it, makeCollection, pluralizer, fields);
     }), includedResourcesPromise, collectionSizePromise]).catch(util.errorHandler);
@@ -185,7 +197,15 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
    * @param {(Resource|Collection)} resourceOrCollection - The resource or
    *   collection of resources to create.
    */
-  create(parentType, resourceOrCollection) {
+  create(query: any) {
+    if(query.method !== 'create') {
+      throw new Error("Invalid Query");
+    }
+
+    const {
+      records: resourceOrCollection
+    } = query;
+
     const resourcesByType = groupResourcesByType(resourceOrCollection);
 
     // Note: creating the resources as we do below means that we do one
@@ -223,7 +243,16 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
    * @param {Object} resourceOrCollection - The changed Resource or Collection
    *   of resources. Should only have the fields that are changed.
    */
-  update(parentType, resourceOrCollection) {
+  update(query: any) {
+    if(query.method !== 'update') {
+      throw new Error("Invalid Query");
+    }
+
+    const {
+      using: parentType,
+      records: resourceOrCollection
+    } = query;
+
     // It'd be faster to bypass Mongoose Document creation & just have mongoose
     // send a findAndUpdate command directly to mongo, but we want Mongoose's
     // standard validation and lifecycle hooks, and so we have to find first.
@@ -314,7 +343,14 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     }).catch(util.errorHandler);
   }
 
-  delete(parentType, idOrIds) {
+  delete(query: any) {
+    if(query.method !== 'delete') {
+      throw new Error("Invalid Query");
+    }
+
+    const { using: parentType } = query;
+    const idOrIds = getIdOrIdsFromCriteria(query.criteria.where);
+
     const model = this.getModel(this.constructor.getModelName(parentType));
     const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
 
@@ -342,7 +378,18 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
    * run. But validation and the update query hooks will work if you're using
    * Mongoose 4.0.
    */
-  addToRelationship(type, id, relationshipPath, newLinkage) {
+  addToRelationship(query: any) {
+    if(query.method !== 'addToRelationship') {
+      throw new Error("Invalid Query");
+    }
+
+    const {
+      using: type,
+      resourceId: id,
+      relationshipName: relationshipPath,
+      linkage: newLinkage
+    } = query;
+
     const model = this.getModel(this.constructor.getModelName(type));
     const update = {
       $addToSet: {
@@ -355,7 +402,18 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       .catch(util.errorHandler);
   }
 
-  removeFromRelationship(type, id, relationshipPath, linkageToRemove) {
+  removeFromRelationship(query: any) {
+    if(query.method !== 'removeFromRelationship') {
+      throw new Error("Invalid Query");
+    }
+
+    const {
+      using: type,
+      resourceId: id,
+      relationshipName: relationshipPath,
+      linkage: linkageToRemove
+    } = query;
+
     const model = this.getModel(this.constructor.getModelName(type));
     const update = {
       $pullAll: {
@@ -694,4 +752,9 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
   static idIsValid(id) {
     return typeof id === "string" && /^[0-9a-fA-F]{24}$/.test(id);
   }
+}
+
+function getIdOrIdsFromCriteria(where: WhereCriteria['where']) {
+  const idQueryStandard = where.and && where.and[0]['id'];
+  return (idQueryStandard && idQueryStandard.in) || idQueryStandard;
 }
