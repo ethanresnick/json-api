@@ -1,5 +1,4 @@
 import chai = require("chai");
-import Q = require("q");
 import * as requestValidators from "../../../../src/steps/http/validate-request";
 
 const {expect} = chai;
@@ -7,7 +6,9 @@ const {expect} = chai;
 describe("Request Validation functions", () => {
   describe("checkBodyExistence", () => {
     it("should return a promise", () => {
-      expect(Q.isPromise(requestValidators.checkBodyExistence({}))).to.be.true;
+      const res = requestValidators.checkBodyExistence({});
+      expect(res instanceof Promise).to.be.true;
+      res.catch(() => {}); // don't leave an unhandled rejection.
     });
 
     it("should return a rejected promise if a POST request is missing a body", (done) => {
@@ -33,12 +34,14 @@ describe("Request Validation functions", () => {
 
     it("should resolve the promise successfully when expected body is present", (done) => {
       const contextMock = {hasBody: true, method: "patch"};
-      requestValidators.checkBodyExistence(contextMock).then(done);
+      requestValidators.checkBodyExistence(contextMock)
+        .then(() => { done() }, done);
     });
 
     it("should resolve the promise when body is expectedly absent", (done) => {
       const contextMock = {hasBody: false, needsBody: false};
-      requestValidators.checkBodyExistence(contextMock).then(done);
+      requestValidators.checkBodyExistence(contextMock)
+        .then(() => { done() }, done);
     });
   });
 });

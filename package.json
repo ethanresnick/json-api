@@ -99,8 +99,7 @@
   "scripts": {
     "clean": "rimraf build",
     "lint": "tslint --project tsconfig.json --format verbose --config node_modules/@ethanresnick/tslint-config/tslint.json",
-    "test": "export NODE_ENV=testing; mocha --compilers ts:ts-node/register --recursive test/unit/**/*.ts test/integration/**/**/*.ts",
-    "test:built": "export NODE_ENV=testing; mocha --recursive build/test/unit/**/*.js build/test/integration/**/**/*.js",
+    "test": "export NODE_ENV=testing; mocha --compilers ts:ts-node/register --recursive test/unit/**/**/*.ts test/integration/**/**/*.ts",
     "build:lintfree": "npm run clean && cpr templates build/templates && echo Using TypeScript && tsc --version && tsc --pretty",
     "build": "npm run build:lintfree && npm run lint",
     "prepublish": "npm run test && npm run build:lintfree",
