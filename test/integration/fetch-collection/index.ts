@@ -32,7 +32,7 @@ describe("Fetching Collection", () => {
     describe("Top-Level Links", () => {
       it("should contain a self link to the collection", () => {
         expect(res.body.links).to.be.an('object');
-        expect(res.body.links.self).to.match(/\:\d{1,5}\/organizations/);
+        expect(res.body.links.self).to.equal(`${Agent.baseUrl}/organizations`);
       });
     });
 

@@ -1,11 +1,18 @@
 import qs = require("qs");
 import contentType = require("content-type");
 import getRawBody = require("raw-body");
+import logger from "../util/logger";
 import APIError from "../types/APIError";
 import Request, { Request as UnsealedRequest } from "../types/HTTP/Request";
 import APIController from "../controllers/API";
 import DocsController from "../controllers/Documentation";
 export { UnsealedRequest };
+
+export type HTTPStrategyOptions = {
+  handleContentNegotiation: boolean,
+  tunnel: boolean,
+  host?: string
+};
 
 /**
  * This controller is the base for http strategy classes. It's built around
@@ -19,6 +26,12 @@ export { UnsealedRequest };
  * @param {boolean} options.tunnel Whether to turn on PATCH tunneling. See:
  *    http://jsonapi.org/recommendations/#patchless-clients
  *
+ * @param {string} options.host The host that the API is served from, as you'd
+ *    find in the HTTP Host header. This value should be provided for security,
+ *    as the value in the Host header can be set to something arbitrary by the
+ *    client. If you trust the Host header value, though, and don't provide this
+ *    option, the value in the Header will be used.
+ *
  * @param {boolean} options.handleContentNegotiation If the JSON API library
  *    can't produce a representation for the response that the client can
  *    `Accept`, should it return 406 or should it hand the request back to
@@ -28,20 +41,25 @@ export { UnsealedRequest };
 export default class BaseStrategy {
   protected api: APIController;
   protected docs: DocsController;
-  protected config: { handleContentNegotiation: boolean, tunnel: boolean };
+  protected config: HTTPStrategyOptions;
 
-  constructor(apiController: APIController, docsController: DocsController, options: object) {
-    const defaultOptions = {
-      tunnel: false,
-      handleContentNegotiation: true
-    };
-
+  constructor(apiController: APIController, docsController: DocsController, options: HTTPStrategyOptions) {
     this.api = apiController;
     this.docs = docsController;
 
-    // Note: as of 2.4, TS will complain if we use an object spread here.
-    //tslint:disable-next-line:prefer-object-spread
-    this.config = Object.assign({}, defaultOptions, options); // apply options
+    this.config = {
+      tunnel: false,
+      handleContentNegotiation: true,
+      ...options
+    };
+
+    if(typeof options === 'object' && options != null && !options.host) {
+      logger.warn(
+        "Unsafe: missing `host` option in http strategy. This is unsafe " +
+        "unless you have reason to trust the (X-Forwarded-)Host header."
+      );
+    }
+
   }
 
   /**
@@ -82,7 +100,7 @@ export default class BaseStrategy {
 
       // Handle HTTP/Conneg.
       protocol  = protocol || (req.connection.encrypted ? "https" : "http");
-      host      = host || req.headers.host;
+      host      = config.host || host;
 
       it.uri     = protocol + "://" + host + req.url;
       it.method  = req.method.toLowerCase();

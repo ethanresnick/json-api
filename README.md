@@ -45,9 +45,12 @@ Check out the [full, working example repo](http://github.com/ethanresnick/json-a
   // Initialize the automatic documentation.
   var DocsController = new API.controllers.Documentation(registry, {name: 'Example API'});
 
+  // Tell the lib the host name our API is served from; needed for security.
+  var opts = { host: 'example.com' }
+
   // Set up our controllers
   var APIController = new API.controllers.API(registry);
-  var Front = new API.httpStrategies.Express(APIController, DocsController);
+  var Front = new API.httpStrategies.Express(APIController, DocsController, opts);
   var requestHandler = Front.apiRequest.bind(Front);
 
   // Add routes for basic list, read, create, update, delete operations

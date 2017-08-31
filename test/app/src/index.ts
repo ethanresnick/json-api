@@ -25,7 +25,9 @@ export default database.then(function(dbModule) {
   // Initialize the express app + front controller.
   const app: Express = express();
 
-  const Front = new API.httpStrategies.Express(Controller, Docs);
+  const port = process.env.PORT || "3000";
+  const host = process.env.HOST || "127.0.0.1";
+  const Front = new API.httpStrategies.Express(Controller, Docs, { host: host + ":" + port });
   const apiReqHandler = Front.apiRequest.bind(Front);
 
   // Now, add the routes.

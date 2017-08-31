@@ -1,3 +1,7 @@
+# 3.0.0-alpha
+### Koa + Express Strategies
+- You should now provide a Host option when initializing the strategy, for security. See example in README. If you're running your API using express 4 on a Host that includes a port number you **must** now provide this option.
+
 # 2.15 -> 2.16 Breaking Changes  (Not Semver until 3.0)
 
 ### Global

@@ -15,6 +15,12 @@ import Base from "./Base";
  * @param {boolean} options.tunnel Whether to turn on PATCH tunneling. See:
  *    http://jsonapi.org/recommendations/#patchless-clients
  *
+ * @param {string} options.host The host that the API is served from, as you'd
+ *    find in the HTTP Host header. This value should be provided for security,
+ *    as the value in the Host header can be set to something arbitrary by the
+ *    client. If you trust the Host header value, though, and don't provide this
+ *    option, the value in the Header will be used.
+ *
  * @param {boolean} options.handleContentNegotiation If the JSON API library
  *    can't produce a representation for the response that the client can
  *    `Accept`, should it return 406 or should it hand the request back to
@@ -32,8 +38,11 @@ export default class ExpressStrategy extends Base {
   // DELETE /:type, GET /:type/:id/links/:relationship,
   // PATCH /:type/:id/links/:relationship, POST /:type/:id/links/:relationship,
   // and DELETE /:type/:id/links/:relationship.
+  // Note: this will ignore any port number if you're using Express 4.
+  // See: https://expressjs.com/en/guide/migrating-5.html#req.host
+  // The workaround is to use the host configuration option.
   apiRequest(req, res, next) {
-    this.buildRequestObject(req, req.protocol, req.get("Host"), req.params, req.query).then((requestObject) => {
+    this.buildRequestObject(req, req.protocol, req.host, req.params, req.query).then((requestObject) => {
       return this.api.handle(requestObject, req, res).then((responseObject) => {
         this.sendResources(responseObject, res, next);
       });
@@ -43,8 +52,11 @@ export default class ExpressStrategy extends Base {
   }
 
   // For requests for the documentation.
+  // Note: this will ignore any port number if you're using Express 4.
+  // See: https://expressjs.com/en/guide/migrating-5.html#req.host
+  // The workaround is to use the host configuration option.
   docsRequest(req, res, next) {
-    this.buildRequestObject(req, req.protocol, req.get("Host"), req.params, req.query).then((requestObject) => {
+    this.buildRequestObject(req, req.protocol, req.host, req.params, req.query).then((requestObject) => {
       return this.docs.handle(requestObject, req, res).then((responseObject) => {
         this.sendResources(responseObject, res, next);
       });
