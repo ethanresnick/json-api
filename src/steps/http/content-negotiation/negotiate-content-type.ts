@@ -1,4 +1,3 @@
-import Q = require("q");
 import Negotiator = require("negotiator");
 import APIError from "../../../types/APIError";
 import {objectIsEmpty} from "../../../util/type-handling";
@@ -17,7 +16,7 @@ import {objectIsEmpty} from "../../../util/type-handling";
  *    or false if no acceptable one exists.
  */
 export default function(acceptHeader, availableBaseTypes) {
-  return Q.Promise<string>(function(resolve, reject) {
+  return new Promise<string>(function(resolve, reject) {
     const negotiator = new Negotiator({headers: {accept: acceptHeader}});
     const hasParams = (it) => !objectIsEmpty(it.parameters);
 

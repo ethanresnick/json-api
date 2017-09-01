@@ -1,4 +1,3 @@
-import Q = require("q");
 import mongoose = require("mongoose");
 import fixtures = require("node-mongoose-fixtures");
 
@@ -41,22 +40,32 @@ fixtures.save("all", {
  * Export a promise for an object that can get the models and load
  * and reset the fixtures.
  */
-export default Q.ninvoke(mongoose, "connect", "mongodb://localhost/integration-test")
-  .then(function() {
-    return {
-      models() {
-        return models;
-      },
-      instance() {
-        return mongoose;
-      },
-      fixturesRemoveAll() {
-        return Q.npost(fixtures, "reset", []);
-      },
-      fixturesReset() {
-        return this.fixturesRemoveAll().then(function() {
-          return Q.nfcall(fixtures, "all");
+export default mongoose.connect(
+  "mongodb://localhost/integration-test",
+  { useMongoClient: true}
+).then(function() {
+  return {
+    models() {
+      return models;
+    },
+    instance() {
+      return mongoose;
+    },
+    fixturesRemoveAll() {
+      return new Promise((resolve, reject) => {
+        fixtures.reset((err, res) => {
+          err ? reject(err) : resolve(res)
+        })
+      });
+    },
+    fixturesReset() {
+      return this.fixturesRemoveAll().then(function() {
+        return new Promise((resolve, reject) => {
+          fixtures("all", (err, res) => {
+            err ? reject(err) : resolve(res)
+          })
         });
-      }
-    };
-  });
+      });
+    }
+  };
+});

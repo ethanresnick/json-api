@@ -1,4 +1,9 @@
 # 3.0.0-alpha
+### Global
+- Q.Promise's have been replaced with standard ES6 Promises in various places throughout the API.
+
+### Mongoose Behavior/MongooseAdapter
+- The adapter now requires at least Mongoose v4.2.0, and is only tested with Mongoose 4.7.0 and up. (Previously, it used required 4.0.x).
 ### Koa + Express Strategies
 - You should now provide a Host option when initializing the strategy, for security. See example in README. If you're running your API using express 4 on a Host that includes a port number you **must** now provide this option.
 

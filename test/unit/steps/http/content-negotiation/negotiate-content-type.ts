@@ -9,7 +9,7 @@ describe("negotiateContentType", () => {
     negotiate(accept, ["application/vnd.api+json"]).then((contentType) => {
       expect(contentType).to.equal("application/vnd.api+json");
       done();
-    }, done).done();
+    }).catch(done);
   });
 
   it("should 406 if all json api parameter instances are parameterized, even if there's a valid alternative", (done) => {
@@ -17,7 +17,7 @@ describe("negotiateContentType", () => {
     negotiate(accept, ["application/vnd.api+json"]).then(done, (err) => {
       expect(err.status).to.equal("406");
       done();
-    }).done();
+    }).catch(done);
   });
 
   it("should allow parameterized json api media ranges as long as not all are parameterized", (done) => {
@@ -29,7 +29,7 @@ describe("negotiateContentType", () => {
       else {
         done(new Error("Should have negotiated JSON API base type"));
       }
-    }, done).done();
+    }).catch(done);
   });
 
   it("should resolve with a non-json-api type when its the highest priority + supported by the endpoint", (done) => {
@@ -41,7 +41,7 @@ describe("negotiateContentType", () => {
       else {
         done(new Error("Expected HTML"));
       }
-    }, done).done();
+    }).catch(done);
   });
 
   it("should resolve with json-api type if that's the highest priority, even if the endpoint supports an alternative", (done) => {
@@ -53,7 +53,7 @@ describe("negotiateContentType", () => {
       else {
         done(new Error("Expected Json API content type."));
       }
-    }, done).done();
+    }).catch(done);
   });
 
   it("should use json if client accepts only json", (done) => {
@@ -65,6 +65,6 @@ describe("negotiateContentType", () => {
       else {
         done(new Error("Expected JSON Content Type"));
       }
-    }, done);
+    }).catch(done);
   });
 });

@@ -1,4 +1,3 @@
-import Q = require("q");
 import mongodb = require("mongodb");
 import mongoose = require("mongoose");
 import pluralize = require("pluralize");
@@ -68,7 +67,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       (typeof offset !== 'undefined' || typeof limit !== 'undefined');
     const isFiltering = typeof filters === "object" && !Array.isArray(filters);
 
-    let primaryDocumentsPromise, includedResourcesPromise = Q(null);
+    let primaryDocumentsPromise, includedResourcesPromise;
 
     const queryBuilder = mode === 'findOne' // ternary is a hack for TS compiler
       ? model[mode](idQuery)
@@ -149,7 +148,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       });
 
       const includedResources: Resource[] = [];
-      primaryDocumentsPromise = Q(queryBuilder.exec()).then((docs) => {
+      primaryDocumentsPromise = Promise.resolve(queryBuilder.exec()).then((docs) => {
         forEachArrayOrVal(docs, (doc) => {
           // There's no gaurantee that the doc (or every doc) was found
           // and we can't populate paths on a non-existent doc.
@@ -179,7 +178,8 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     }
 
     else {
-      primaryDocumentsPromise = Q(queryBuilder.exec());
+      primaryDocumentsPromise = Promise.resolve(queryBuilder.exec());
+      includedResourcesPromise = Promise.resolve(null);
     }
 
     return Promise.all([primaryDocumentsPromise.then((it) => {
@@ -281,7 +281,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       ? model[mode](idQuery)
       : model[mode](idQuery);
 
-    return Q(queryBuilder.exec()).then((docs) => {
+    return Promise.resolve(queryBuilder.exec()).then((docs) => {
       const successfulSavesPromises: Promise<mongoose.Document>[] = [];
 
       // if some ids were invalid/deleted/not found, we can't let *any* update
@@ -355,16 +355,16 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
 
     if(!idOrIds) {
-      return Q.Promise((resolve, reject) => {
-        reject(new APIError(400, undefined, "You must specify some resources to delete"));
-      });
+      return Promise.reject(
+        new APIError(400, undefined, "You must specify some resources to delete")
+      );
     }
 
     const queryBuilder = mode === 'findOne' // ternary is a hack for TS compiler
       ? model[mode](idQuery)
       : model[mode](idQuery);
 
-    return Q(queryBuilder.exec()).then((docs) => {
+    return Promise.resolve(queryBuilder.exec()).then((docs) => {
       if(!docs) throw new APIError(404, undefined, "No matching resource found.");
       forEachArrayOrVal(docs, (it) => { it.remove(); });
       return docs;
@@ -398,7 +398,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     };
     const options = {runValidators: true};
 
-    return Q.ninvoke(model, "findOneAndUpdate", {"_id": id}, update, options)
+    return model.findOneAndUpdate({"_id": id}, update, options).exec()
       .catch(util.errorHandler);
   }
 
@@ -422,7 +422,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     };
     const options = {runValidators: true};
 
-    return Q.ninvoke(model, "findOneAndUpdate", {"_id": id}, update, options)
+    return model.findOneAndUpdate({"_id": id}, update, options).exec()
       .catch(util.errorHandler);
   }
 

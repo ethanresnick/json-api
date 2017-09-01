@@ -1,4 +1,3 @@
-import Q = require("q");
 import APIError from "../../types/APIError";
 import Resource from "../../types/Resource";
 import Relationship from "../../types/Relationship";
@@ -6,7 +5,7 @@ import Linkage from "../../types/Linkage";
 import Collection from "../../types/Collection";
 
 export default function(data, parseAsLinkage = false) {
-  return Q.Promise<Linkage|Collection|Resource>(function(resolve, reject) {
+  return new Promise<Linkage|Collection|Resource>(function(resolve, reject) {
     try {
       if(parseAsLinkage) {
         resolve(linkageFromJSON(data));

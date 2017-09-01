@@ -1,10 +1,8 @@
-import Q = require("q");
 import Db from "../app/database";
-Q.longStackSupport = true;
 
 before((done) => {
   Db.then((module) => {
-    module.fixturesReset().then((data) => {
+    return module.fixturesReset().then((data) => {
       // Trigger other tests.
       // Note: we must load these after the fixtures finish, since even
       // _describing_ the require()d tests needs the fixtures: the App
@@ -18,7 +16,7 @@ before((done) => {
       require("./delete-resource");
       require("./documentation");
       done();
-    }).done();
+    });
   }).catch(done);
 });
 
