@@ -2,8 +2,8 @@ import mongodb = require("mongodb");
 import mongoose = require("mongoose");
 import pluralize = require("pluralize");
 
-import {arrayContains, arrayValuesMatch} from "../../util/arrays";
-import {deleteNested} from "../../util/misc";
+import { arrayContains } from "../../util/arrays";
+import { deleteNested } from "../../util/misc";
 import {forEachArrayOrVal, mapResources, groupResourcesByType} from "../../util/type-handling";
 import * as util from "./lib";
 import Resource, { ResourceWithId } from "../../types/Resource";
@@ -152,7 +152,9 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
         forEachArrayOrVal(docs, (doc) => {
           // There's no gaurantee that the doc (or every doc) was found
           // and we can't populate paths on a non-existent doc.
-          if(!doc) return;
+          if(!doc) {
+            return;
+          }
 
           populatedPaths.forEach((path) => {
             // if it's a toOne relationship, doc[path] will be a doc or undefined;
@@ -214,6 +216,8 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     // mongoose runs all the user's hooks.
     const creationPromises: Array<Promise<mongoose.Document[]>> = [];
     const setIdWithGenerator = (doc) => { doc._id = this.idGenerator(doc); };
+
+    // tslint:disable-next-line:forin
     for(const type in resourcesByType) {
       const model = this.getModel(this.constructor.getModelName(type));
       const resources: Resource[] = resourcesByType[type];
@@ -349,7 +353,6 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     }
 
     const { using: parentType } = query;
-    const idOrIds = getIdOrIdsFromCriteria(query.criteria.where);
 
     const model = this.getModel(this.constructor.getModelName(parentType));
     const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
@@ -553,17 +556,16 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
 
       let linkage: typeof Linkage.prototype.value = [];
       jsonValAtPath.forEach((docOrIdOrNull) => {
-        let idOrNull;
+        // if docOrIdOrNull has an ._id key, it's a document
+        const idOrNull = (docOrIdOrNull && docOrIdOrNull._id)
+          // so the id (if it exists) is in ._id as an ObjectId
+          ? String(docOrIdOrNull._id)
 
-        // if it has an ._id key, it's a document.
-        if(docOrIdOrNull && docOrIdOrNull._id) {
-          idOrNull = String(docOrIdOrNull._id);
-        }
-
-        else {
-          // Even though we did toJSON(), id may be an ObjectId. (lame.)
-          idOrNull = docOrIdOrNull ? String(docOrIdOrNull) : null;
-        }
+          // otherwise, we're dealing with an id directly (if we
+          // don't have null), but we still need to convert to a
+          // string because, even though we did toJSON(), id may
+          // be an ObjectId. (lame.)
+          : docOrIdOrNull ? String(docOrIdOrNull) : null;
 
         linkage.push(idOrNull ? {type: referencedType, id: idOrNull} : null);
       });
@@ -593,7 +595,9 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
   }
 
   static getChildTypes(model, pluralizer = pluralize.plural) {
-    if(!model.discriminators) return [];
+    if(!model.discriminators) {
+      return [];
+    }
 
     return Object.keys(model.discriminators).map(it => this.getType(it, pluralizer));
   }
@@ -720,7 +724,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
   static getIdQueryType(id: string): ["findOne", {_id: string}];
   static getIdQueryType(id: undefined): ["find", {}];
   static getIdQueryType(): ["find", {}];*/
-  static getIdQueryType(idOrIds: string | string[] | undefined = undefined) {
+  static getIdQueryType(idOrIds: string | string[] | undefined) {
     type result =
       ["findOne", {_id: string}] | // one resource
       ["find", {_id: {$in: string[]}}] | // set of resources

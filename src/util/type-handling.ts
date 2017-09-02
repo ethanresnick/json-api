@@ -88,7 +88,7 @@ export function forEachResources(resourceOrCollection, eachFn) {
 }
 
 export function groupResourcesByType(resourceOrCollection) {
-  const resourcesByType = {};
+  const resourcesByType = Object.create(null);
   if(resourceOrCollection instanceof Collection) {
     resourceOrCollection.resources.forEach((it) => {
       resourcesByType[it.type] = resourcesByType[it.type] || [];

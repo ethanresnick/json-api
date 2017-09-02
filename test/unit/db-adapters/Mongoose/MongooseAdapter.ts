@@ -70,7 +70,7 @@ describe("Mongoose Adapter", () => {
 
     describe("getIdQueryType", () => {
       it("should handle empty input", () => {
-        const res = MongooseAdapter.getIdQueryType();
+        const res = MongooseAdapter.getIdQueryType(undefined);
         expect(res[0]).to.equal("find");
         expect(res[1]).to.deep.equal({});
       });
