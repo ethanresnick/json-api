@@ -8,13 +8,27 @@ function OrganizationSchema() {
   this.add({
     name: {
       type: String,
-      required: true
+      required: true,
+      set: (it) => it.toUpperCase()
     },
     description: {
       type: String
     },
+    reversed: {
+      type: String
+    },
     liaisons: [{ref: "Person", type: ObjectId}],
     modified: Date
+  });
+
+  this.virtual('virtualName').get(function() {
+    return this.name + ' (virtualized)';
+  });
+
+  this.virtual('echo').set(function(v) {
+    this.reversed = v && v.split("").reverse().join("");
+  }).get(function() {
+    return this.reversed && this.reversed.split("").reverse().join("");
   });
 }
 
