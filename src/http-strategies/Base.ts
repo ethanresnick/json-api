@@ -149,7 +149,7 @@ export default class BaseStrategy {
         }
 
         it.contentType  = req.headers["content-type"];
-        const typeParsed = contentType.parse(req);
+        const typeParsed = it.contentType && contentType.parse(req);
 
         const bodyParserOptions: (getRawBody.Options & { encoding: string}) = {
           encoding: typeParsed.parameters.charset || "utf8",

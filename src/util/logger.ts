@@ -10,7 +10,7 @@ const loggers = {
 
 // Bind each logger to the corresponding console method.
 objectEntries(loggers).forEach(([name, logger]) => {
-  logger.log = (<any>console)[name].bind(console);
+  logger.log = console[<keyof typeof loggers>name].bind(console);
 })
 
 export default loggers;
