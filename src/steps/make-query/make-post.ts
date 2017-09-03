@@ -1,6 +1,8 @@
 import APIError from "../../types/APIError";
 import Linkage from "../../types/Linkage";
 import {forEachResources} from "../../util/type-handling";
+import CreateQuery from "../../types/Query/CreateQuery";
+import AddToRelationshipQuery from '../../types/Query/AddToRelationshipQuery';
 
 export default function(request, registry) {
   const primary = request.primary;
@@ -17,13 +19,12 @@ export default function(request, registry) {
       );
     }
 
-    return {
+    return new AddToRelationshipQuery({
       using: type,
-      method: "addToRelationship",
       resourceId: request.idOrIds,
       relationshipName: request.relationship,
       linkage: primary
-    };
+    });
   }
 
   else {
@@ -32,10 +33,9 @@ export default function(request, registry) {
       if(it.id) throw new APIError(403, undefined, noClientIds);
     });
 
-    return {
+    return new CreateQuery({
       using: type,
-      method: "create",
       records: primary
-    };
+    });
   }
 }

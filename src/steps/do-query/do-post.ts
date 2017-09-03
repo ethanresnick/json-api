@@ -1,5 +1,6 @@
 import templating = require("url-template");
 import Resource from "../../types/Resource";
+import AddToRelationshipQuery from '../../types/Query/AddToRelationshipQuery';
 
 export default function(requestContext, responseContext, registry, query) {
   const type    = requestContext.type;
@@ -7,13 +8,13 @@ export default function(requestContext, responseContext, registry, query) {
 
   // We're going to do an adapter.create, below, EXCEPT if we're adding to
   // an existing toMany relationship, which uses a different adapter method.
-  if(query.method === 'addToRelationship') {
-    return adapter.addToRelationship(query).then(() => {
+  if(query instanceof AddToRelationshipQuery) {
+    return adapter.doQuery(query).then(() => {
       responseContext.status = 204;
     });
   }
 
-  return adapter.create(query).then((created) => {
+  return adapter.doQuery(query).then((created) => {
     responseContext.primary = created;
     responseContext.status = 201;
 

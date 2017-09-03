@@ -1,12 +1,9 @@
-import { getIdQueryType } from "./query-helpers";
 import APIError from "../../types/APIError";
-import { Constraint } from "../../types/Query";
-import parseQueryParams from "../../util/parse-query-params";
+import FindQuery from "../../types/Query/FindQuery";
+import parseQueryParams from "./parse-query-params";
 
 export default function(request, registry) {
   const type = request.type;
-  const [idCriteria, singular] = getIdQueryType(request.idOrIds);
-
   // Handle fields, sorts, includes and filters.
   if(!request.aboutRelationship) {
     // Attempting to paginate a single resource request
@@ -18,30 +15,20 @@ export default function(request, registry) {
       include = registry.defaultIncludes(type),
       page: {offset = undefined, limit = undefined} = {},
       fields,
-      sort
+      sort,
+      filter
     } = parseQueryParams(request.queryParams);
 
-    return {
+    return new FindQuery({
       using: type,
-      method: "find",
+      idOrIds: request.idOrIds,
       populates: include,
-      singular,
-      criteria: {
-        select: fields,
-        sort,
-        offset,
-        limit,
-        where: {
-          and: [{
-            ...<Constraint>idCriteria
-          }],
-          or: undefined
-        },
-        // just support a "simple" filtering strategy for now.
-        custom: request.queryParams.filter &&
-          request.queryParams.filter.simple
-      }
-    };
+      select: fields,
+      sort,
+      filters: filter,
+      offset,
+      limit
+    });
   }
 
   // the user's asking for linkage. In this case:
@@ -66,23 +53,12 @@ export default function(request, registry) {
       );
     }
 
-    return {
+    return new FindQuery({
       using: type,
-      method: "find",
       singular: true,
       populates: [],
-      criteria: {
-        where: {
-          and: [{
-            ...<Constraint>idCriteria
-          }],
-          or: undefined
-        },
-        // just support a "simple" filtering strategy for now.
-        custom: request.queryParams.filter &&
-          request.queryParams.filter.simple
-      }
-    };
+      idOrIds: request.idOrIds
+    });
   }
 
 }

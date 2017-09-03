@@ -2,6 +2,7 @@
 // aren't part of the class's public interface. Don't use them in your own
 // code, as their APIs are subject to change.
 import APIError from "../../types/APIError";
+import { FieldConstraint, Predicate } from "../../types/index";
 
 /**
  * Takes any error that resulted from the above operations throws an array of
@@ -53,6 +54,39 @@ export function getReferencedModelName(model, path) {
   const schemaType = model.schema.path(path);
   const schemaOptions = (schemaType.caster || schemaType).options;
   return schemaOptions && schemaOptions.ref;
+}
+
+export function toMongoCriteria(constraintOrPredicate: FieldConstraint | Predicate) {
+  const mongoOperator = "$" +
+    (constraintOrPredicate.operator === 'neq' // mongo calls neq $ne instead
+      ? 'ne'
+      : constraintOrPredicate.operator);
+
+  switch(constraintOrPredicate.operator) {
+    case "and":
+    case "or":
+      // Below, we do a length check because mongo doesn't support and/or/nor
+      // predicates with no constraints to check (makes sense). For $and,
+      // if we wanted to use comma separated values for implicit AND we could:
+      // Object.assign({}, ...constraintOrPredicate.value.map(handle))
+      // Instead, though, we use the same rules as $or, because the implicit
+      // AND doesn't work in all cases; see https://docs.mongodb.com/manual/reference/operator/query/and/
+      return !constraintOrPredicate.value.length
+        ? {}
+        : {
+            [mongoOperator]: constraintOrPredicate.value.map(toMongoCriteria)
+          };
+
+    case "eq":
+      return { [constraintOrPredicate.field]: constraintOrPredicate.value };
+
+    default:
+      return {
+        [constraintOrPredicate.field]: {
+          [mongoOperator]: constraintOrPredicate.value
+        }
+      }
+  }
 }
 
 /**

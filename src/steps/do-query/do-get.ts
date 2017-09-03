@@ -5,7 +5,7 @@ export default function(requestContext, responseContext, registry, query) {
   const adapter = registry.dbAdapter(type);
 
   if(!requestContext.aboutRelationship) {
-    return adapter.find(query).then(([primary, included, collectionSizeOrNull]) => {
+    return adapter.doQuery(query).then(([primary, included, collectionSizeOrNull]) => {
       responseContext.primary = primary;
       responseContext.included = included;
       if(collectionSizeOrNull != null) {
@@ -15,7 +15,7 @@ export default function(requestContext, responseContext, registry, query) {
   }
 
   else {
-    return adapter.find(query).then(([resource]) => {
+    return adapter.doQuery(query).then(([resource]) => {
       // 404 if the requested relationship is not a relationship path. Doing
       // it here is more accurate than using adapter.getRelationshipNames,
       // since we're allowing for paths that can optionally hold linkage,

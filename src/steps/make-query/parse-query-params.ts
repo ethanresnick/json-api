@@ -1,8 +1,10 @@
 import R = require("ramda");
-import { isValidMemberName } from "./json-api";
-import { stripLeadingBMPChar } from "./misc";
-import { Sort } from '../types/index';
-import APIError from "../types/APIError";
+import { isValidMemberName } from "../../util/json-api";
+import { stripLeadingBMPChar } from "../../util/misc";
+import { Sort } from '../../types/index';
+import APIError from "../../types/APIError";
+import parseFilterParam from "./filter-parser";
+import { FieldConstraint, Predicate, BinaryOpts, UnaryOpts } from "../../types/index";
 
 // the shape of values in req.queryParams, pre + post parsing.
 export type StringListParam = string[];
@@ -17,7 +19,7 @@ export type ParsedQueryParams = {
   include?: StringListParam;
   sort?: Sort[];
   page?: ScopedParam;
-  filter?: ScopedParam;
+  filter?: (FieldConstraint | Predicate)[];
   fields?: ScopedStringListParam;
 }
 
@@ -26,9 +28,16 @@ export default function(params: RawParams): ParsedQueryParams {
     include: parseCommaSeparatedParamString,
     sort: R.pipe(parseCommaSeparatedParamString, R.map(parseSortField)),
     page: R.pipe(parseScopedParam, R.map((it: any) => parseInt(String(it), 10))),
-    filter: parseScopedParam,
+    filter: parseFilterParam.bind(null, UnaryOpts, BinaryOpts),
     fields: parseFieldsParam
   };
+
+  if(params.filter && typeof params.filter !== 'string') {
+    throw new Error(
+      `Expected filter params to be an unparsed string at this point.
+       Check if you're using the old object format, which would've been parsed earlier by qs.`
+    );
+  }
 
   return R.mapObjIndexed((v: any, paramName: string) => {
     return (!R.has(paramName, paramsToParserFns))

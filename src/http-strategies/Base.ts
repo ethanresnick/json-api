@@ -80,16 +80,39 @@ export default class BaseStrategy {
 
     return new Promise<UnsealedRequest>(function(resolve, reject) {
       const it = new Request();
+      const queryStartIndex = req.url.indexOf("?");
+      const hasQuery = queryStartIndex !== -1;
+      const rawQueryString = hasQuery && req.url.substr(queryStartIndex + 1);
 
       // Handle route & query params
       if(query) {
         it.queryParams = query;
       }
 
-      else if(req.url.indexOf("?") !== -1) {
-        // TODO: what if there's more than one ?, like an unescaped one in the query string?
-        // I think that's technically invalid, but we should handle it.
-        it.queryParams = qs.parse(req.url.split("?")[1]);
+      else if(hasQuery) {
+        it.queryParams = qs.parse(rawQueryString);
+      }
+
+      // Replace the parsed value for the filter param.
+      // We need to do this because the default parsers prematurely decode
+      // the entire parameter's value, whereas the encoded vs unencoded bits
+      // are significant to our parser.
+      // Note that we take the last occurrence of a param called filter and
+      // find the value there, rather than trying to concat them all into an
+      // array, which our format doesn't support.
+      if(hasQuery) {
+        const filterParamVal = rawQueryString.split('&').reduce((acc, paramString) => {
+          const [rawKey, rawValue] = splitSingleQueryParamString(paramString);
+          return rawKey === 'filter' ? rawValue : acc;
+        }, undefined);
+
+        if(filterParamVal) {
+          if(it.queryParams) {
+            it.queryParams['filter'] = filterParamVal;
+          } else {
+            it.queryParams = { filter: filterParamVal };
+          }
+        }
       }
 
       it.allowLabel        = !!(params.idOrLabel && !params.id);
@@ -184,4 +207,16 @@ function hasBody(req) {
 
 function isReadableStream(req) {
   return typeof req._readableState === "object" && req._readableState.endEmitted === false;
+}
+
+function splitSingleQueryParamString(paramString) {
+  const bracketEqualsPos = paramString.indexOf(']=');
+  const delimiterPos = bracketEqualsPos === -1
+    ? paramString.indexOf('=')
+    : bracketEqualsPos + 1;
+
+  // returning [undecoded key, undecoded value]
+  return (delimiterPos === -1)
+    ? [paramString, '']
+    : [paramString.slice(0, delimiterPos), paramString.slice(delimiterPos + 1)];
 }

@@ -3,6 +3,7 @@ import Collection from "../../types/Collection";
 import Resource from "../../types/Resource";
 import Relationship from "../../types/Relationship";
 import Linkage from "../../types/Linkage";
+import UpdateQuery from '../../types/Query/UpdateQuery';
 
 export default function(request, registry) {
   const primary = request.primary;
@@ -39,9 +40,8 @@ export default function(request, registry) {
     );
   }
 
-  return {
+  return new UpdateQuery({
     using: type,
-    method: "update",
-    records: changedResourceOrCollection
-  };
+    patch: changedResourceOrCollection
+  });
 }

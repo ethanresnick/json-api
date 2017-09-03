@@ -15,7 +15,12 @@ import FieldDocumentation from "../../types/Documentation/Field";
 import FieldTypeDocumentation from "../../types/Documentation/FieldType";
 import RelationshipTypeDocumentation from "../../types/Documentation/RelationshipType";
 import { Adapter } from '../AdapterInterface';
-import { WhereCriteria } from "../../types/Query";
+import CreateQuery from "../../types/Query/CreateQuery";
+import FindQuery from "../../types/Query/FindQuery";
+import DeleteQuery from "../../types/Query/DeleteQuery";
+import UpdateQuery from "../../types/Query/UpdateQuery";
+import AddToRelationshipQuery from "../../types/Query/AddToRelationshipQuery";
+import RemoveFromRelationshipQuery from "../../types/Query/RemoveFromRelationshipQuery";
 
 export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> {
   // Workaround for https://github.com/Microsoft/TypeScript/issues/3841.
@@ -33,39 +38,35 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
   }
 
   /**
-   * Returns a Promise for an array of two items: the primary resources (either
-   * a single Resource or a Collection) and the included resources, as an array.
+   * Returns a Promise for an array of 3 items: the primary resources (either
+   * a single Resource or a Collection); the included resources, as an array;
+   * and the size of the full collection, if the primary resources represent
+   * a paginated view of some collection.
    *
    * Note: The correct behavior if idOrIds is an empty array is to return no
    * documents, as happens below. If it's undefined, though, we're not filtering
    * by id and should return all documents.
    */
-  find(query: any) {
-    if(query.method !== 'find') {
-      throw new Error("Invalid Query");
-    }
-
+  find(query: FindQuery) {
     const {
       using: type,
       populates: includePaths,
-      criteria: {
-        select: fields,
-        sort: sorts,
-        offset,
-        limit,
-        where,
-        custom: filters
-      }
+      select: fields,
+      sort: sorts,
+      offset,
+      limit,
     } = query
 
-    const idOrIds = getIdOrIdsFromCriteria(where);
+    const idOrIds = query.getIdOrIds();
+    const otherFilters = query.getFilters(true);
+    const isFiltering = otherFilters.value.length > 0;
+    const mongofiedFilters = util.toMongoCriteria(otherFilters);
 
     const model = this.getModel(this.constructor.getModelName(type));
     const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
     const pluralizer = this.inflector.plural;
     const isPaginating = typeof idOrIds !== 'string' &&
       (typeof offset !== 'undefined' || typeof limit !== 'undefined');
-    const isFiltering = typeof filters === "object" && !Array.isArray(filters);
 
     let primaryDocumentsPromise, includedResourcesPromise;
 
@@ -73,12 +74,10 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       ? model[mode](idQuery)
       : model[mode](idQuery);
 
-    // TODO: NOT THAT GETIDQUERYTYPE VALIDATES IDS. PRESERVE THAT.
-
     // a promised query result that counts how many results we'd have if
     // we weren't paginating. this just resolves to null when we aren't paginating.
     const collectionSizePromise = isPaginating
-      ? model.count(isFiltering ? filters : undefined).exec()
+      ? model.count(mongofiedFilters).exec()
       : Promise.resolve(null);
 
     // do sorting
@@ -93,7 +92,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     // we're mostly protected by the fact that we're treating the filter's
     // value as a single string, though, and not parsing as JSON.
     if(isFiltering) {
-      queryBuilder.where(filters);
+      queryBuilder.where(mongofiedFilters);
     }
 
     if(offset) {
@@ -199,15 +198,8 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
    * @param {(Resource|Collection)} resourceOrCollection - The resource or
    *   collection of resources to create.
    */
-  create(query: any) {
-    if(query.method !== 'create') {
-      throw new Error("Invalid Query");
-    }
-
-    const {
-      records: resourceOrCollection
-    } = query;
-
+  create(query: CreateQuery) {
+    const { records: resourceOrCollection } = query;
     const resourcesByType = groupResourcesByType(resourceOrCollection);
 
     // Note: creating the resources as we do below means that we do one
@@ -247,16 +239,8 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
    * @param {Object} resourceOrCollection - The changed Resource or Collection
    *   of resources. Should only have the fields that are changed.
    */
-  update(query: any) {
-    if(query.method !== 'update') {
-      throw new Error("Invalid Query");
-    }
-
-    const {
-      using: parentType,
-      records: resourceOrCollection
-    } = query;
-
+  update(query: UpdateQuery) {
+    const { using: parentType, patch: resourceOrCollection } = query;
     const singular = this.inflector.singular;
     const plural = this.inflector.plural;
 
@@ -310,12 +294,9 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     }).catch(util.errorHandler);
   }
 
-  delete(query: any) {
-    if(query.method !== 'delete') {
-      throw new Error("Invalid Query");
-    }
-
+  delete(query: DeleteQuery) {
     const { using: parentType } = query;
+    const idOrIds = query.getIdOrIds();
 
     const model = this.getModel(this.constructor.getModelName(parentType));
     const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
@@ -331,7 +312,10 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       : model[mode](idQuery);
 
     return Promise.resolve(queryBuilder.exec()).then((docs) => {
-      if(!docs) throw new APIError(404, undefined, "No matching resource found.");
+      if(!docs) {
+        throw new APIError(404, undefined, "No matching resource found.");
+      }
+
       forEachArrayOrVal(docs, (it) => { it.remove(); });
       return docs;
     }).catch(util.errorHandler);
@@ -344,11 +328,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
    * run. But validation and the update query hooks will work if you're using
    * Mongoose 4.0.
    */
-  addToRelationship(query: any) {
-    if(query.method !== 'addToRelationship') {
-      throw new Error("Invalid Query");
-    }
-
+  addToRelationship(query: AddToRelationshipQuery) {
     const {
       using: type,
       resourceId: id,
@@ -368,11 +348,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       .catch(util.errorHandler);
   }
 
-  removeFromRelationship(query: any) {
-    if(query.method !== 'removeFromRelationship') {
-      throw new Error("Invalid Query");
-    }
-
+  removeFromRelationship(query: RemoveFromRelationshipQuery) {
     const {
       using: type,
       resourceId: id,
@@ -422,6 +398,26 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       this.constructor.getModelName(type, this.inflector.singular)
     );
     return util.getReferencePaths(model);
+  }
+
+  doQuery(
+    query: CreateQuery | FindQuery | UpdateQuery | DeleteQuery |
+      AddToRelationshipQuery | RemoveFromRelationshipQuery
+  ) {
+    const method = (
+      (query instanceof CreateQuery && this.create) ||
+      (query instanceof FindQuery && this.find) ||
+      (query instanceof DeleteQuery && this.delete) ||
+      (query instanceof UpdateQuery && this.update) ||
+      (query instanceof AddToRelationshipQuery && this.addToRelationship) ||
+      (query instanceof RemoveFromRelationshipQuery && this.removeFromRelationship)
+    );
+
+    if(!method) {
+      throw new Error("Unexpected query type.");
+    }
+
+    return method.call(this, query);
   }
 
   /**
@@ -698,7 +694,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
         return ["find", {_id: {"$in": idOrIds}}, idOrIds];
       }
 
-      else if(typeof idOrIds === "string") {
+      else if(typeof idOrIds === "string" && idOrIds) {
         return ["findOne", {_id: idOrIds}, [idOrIds]];
       }
 
@@ -719,9 +715,4 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
   static idIsValid(id) {
     return typeof id === "string" && /^[0-9a-fA-F]{24}$/.test(id);
   }
-}
-
-function getIdOrIdsFromCriteria(where: WhereCriteria['where']) {
-  const idQueryStandard = where.and && where.and[0]['id'];
-  return (idQueryStandard && idQueryStandard.in) || idQueryStandard;
 }

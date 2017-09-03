@@ -1,7 +1,7 @@
 import APIError from "../../types/APIError";
 import Collection from "../../types/Collection";
-import { DeleteQuery, Constraint } from "../../types/Query";
-import { getIdQueryType } from "./query-helpers";
+import DeleteQuery from "../../types/Query/DeleteQuery";
+import RemoveFromRelationshipQuery from "../../types/Query/RemoveFromRelationshipQuery";
 
 export default function(request, registry) {
   const type = request.type;
@@ -13,13 +13,12 @@ export default function(request, registry) {
         "You can only remove resources from the linkage of one resource at a time."
       );
     }
-    return {
+    return new RemoveFromRelationshipQuery({
       using: type,
-      method: "removeFromRelationship",
       resourceId: request.idOrIds,
       relationshipName: request.relationship,
       linkage: request.primary
-    }
+    });
   }
 
   // Bulk delete
@@ -36,27 +35,10 @@ export default function(request, registry) {
     }
   }
 
-  const [idCriteria] =
-    getIdQueryType(
-      bulkDelete
-        ? request.primary.resources.map((it) => it.id)
-        : request.idOrIds
-    );
-
-  console.log(
-    new DeleteQuery({ using: type }).andWhere(<Constraint>idCriteria)
-  );
-
-  return {
+  return new DeleteQuery({
     using: type,
-    method: "delete",
-    criteria: {
-      where: {
-        and: [{
-          ...<Constraint>idCriteria
-        }],
-        or: undefined
-      }
-    }
-  };
+    idOrIds: bulkDelete
+      ? request.primary.resources.map((it) => it.id)
+      : request.idOrIds
+  });
 }
