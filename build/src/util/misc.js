@@ -29,6 +29,9 @@ function isPlainObject(obj) {
     return typeof obj === "object" && !(Array.isArray(obj) || obj === null);
 }
 exports.isPlainObject = isPlainObject;
+exports.stripLeadingBMPChar = (char) => (string) => {
+    return string[0] === char ? string.slice(1) : string;
+};
 function pseudoTopSort(nodes, edges, roots) {
     roots = roots.slice();
     nodes = nodes.slice();

@@ -11,6 +11,7 @@ export declare const VALID_ORG_RESOURCE_NO_ID: {
     "attributes": {
         "name": string;
         "modified": string;
+        "echo": string;
     };
     "relationships": {
         "liaisons": {
@@ -27,6 +28,7 @@ export declare const VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER: {
     "attributes": {
         "name": string;
         "modified": string;
+        "echo": string;
     };
     "relationships": {
         "liaisons": {
@@ -43,6 +45,7 @@ export declare const ORG_RESOURCE_CLIENT_ID: {
     "attributes": {
         "name": string;
         "modified": string;
+        "echo": string;
     };
     "relationships": {
         "liaisons": {

@@ -1,13 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const Q = require("q");
 const APIError_1 = require("../../types/APIError");
 const Resource_1 = require("../../types/Resource");
 const Relationship_1 = require("../../types/Relationship");
 const Linkage_1 = require("../../types/Linkage");
 const Collection_1 = require("../../types/Collection");
 function default_1(data, parseAsLinkage = false) {
-    return Q.Promise(function (resolve, reject) {
+    return new Promise(function (resolve, reject) {
         try {
             if (parseAsLinkage) {
                 resolve(linkageFromJSON(data));

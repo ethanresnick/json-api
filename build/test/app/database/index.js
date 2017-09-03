@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const Q = require("q");
 const mongoose = require("mongoose");
 const fixtures = require("node-mongoose-fixtures");
 const person_1 = require("./models/person");
@@ -31,8 +30,7 @@ fixtures.save("all", {
         { name: "State College", description: "Just your average state college." }
     ]
 });
-exports.default = Q.ninvoke(mongoose, "connect", "mongodb://localhost/integration-test")
-    .then(function () {
+exports.default = mongoose.connect("mongodb://localhost/integration-test", { useMongoClient: true }).then(function () {
     return {
         models() {
             return models;
@@ -41,11 +39,19 @@ exports.default = Q.ninvoke(mongoose, "connect", "mongodb://localhost/integratio
             return mongoose;
         },
         fixturesRemoveAll() {
-            return Q.npost(fixtures, "reset", []);
+            return new Promise((resolve, reject) => {
+                fixtures.reset((err, res) => {
+                    err ? reject(err) : resolve(res);
+                });
+            });
         },
         fixturesReset() {
             return this.fixturesRemoveAll().then(function () {
-                return Q.nfcall(fixtures, "all");
+                return new Promise((resolve, reject) => {
+                    fixtures("all", (err, res) => {
+                        err ? reject(err) : resolve(res);
+                    });
+                });
             });
         }
     };

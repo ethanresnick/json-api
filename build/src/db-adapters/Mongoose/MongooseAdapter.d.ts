@@ -1,7 +1,5 @@
 /// <reference types="mongoose" />
 /// <reference types="pluralize" />
-/// <reference types="q" />
-import Q = require("q");
 import mongodb = require("mongodb");
 import mongoose = require("mongoose");
 import pluralize = require("pluralize");
@@ -9,6 +7,12 @@ import Resource from "../../types/Resource";
 import Collection from "../../types/Collection";
 import FieldDocumentation from "../../types/Documentation/Field";
 import { Adapter } from '../AdapterInterface';
+import CreateQuery from "../../types/Query/CreateQuery";
+import FindQuery from "../../types/Query/FindQuery";
+import DeleteQuery from "../../types/Query/DeleteQuery";
+import UpdateQuery from "../../types/Query/UpdateQuery";
+import AddToRelationshipQuery from "../../types/Query/AddToRelationshipQuery";
+import RemoveFromRelationshipQuery from "../../types/Query/RemoveFromRelationshipQuery";
 export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> {
     "constructor": typeof MongooseAdapter;
     models: {
@@ -19,15 +23,16 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     constructor(models?: {
         [modelName: string]: mongoose.Model<any>;
     }, inflector?: any, idGenerator?: any);
-    find(type: any, idOrIds: string | string[] | undefined, fields: any, sorts: any, filters: any, includePaths: any, offset: any, limit: any): Q.Promise<void>;
-    create(parentType: any, resourceOrCollection: any): Promise<void | Resource | Collection>;
-    update(parentType: any, resourceOrCollection: any): Q.Promise<void>;
-    delete(parentType: any, idOrIds: any): Q.Promise<void> | Q.Promise<{}>;
-    addToRelationship(type: any, id: any, relationshipPath: any, newLinkage: any): Q.Promise<void>;
-    removeFromRelationship(type: any, id: any, relationshipPath: any, linkageToRemove: any): Q.Promise<void>;
+    find(query: FindQuery): Promise<void | [any, any, number | null]>;
+    create(query: CreateQuery): Promise<void | Resource | Collection>;
+    update(query: UpdateQuery): Promise<void | Resource | Collection>;
+    delete(query: DeleteQuery): Promise<any>;
+    addToRelationship(query: AddToRelationshipQuery): Promise<any>;
+    removeFromRelationship(query: RemoveFromRelationshipQuery): Promise<any>;
     getModel(modelName: any): mongoose.Model<any>;
     getTypesAllowedInCollection(parentType: any): any[];
     getRelationshipNames(type: any): string[];
+    doQuery(query: CreateQuery | FindQuery | UpdateQuery | DeleteQuery | AddToRelationshipQuery | RemoveFromRelationshipQuery): any;
     static docsToResourceOrCollection(docs: any, makeCollection: any, pluralizer: any, fields?: object): Collection | Resource;
     static docToResource(doc: any, pluralizer?: (word: string) => string, fields?: object): Resource;
     static getModelName(type: any, singularizer?: (word: string) => string): any;
@@ -36,7 +41,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     static getChildTypes(model: any, pluralizer?: (word: string) => string): string[];
     static getStandardizedSchema(model: any, pluralizer?: (word: string) => string): FieldDocumentation[];
     static toFriendlyName(pathOrModelName: string): string;
-    static getIdQueryType(idOrIds?: string | string[] | undefined): ["findOne", {
+    static getIdQueryType(idOrIds: string | string[] | undefined): ["findOne", {
         _id: string;
     }] | ["find", {
         _id: {

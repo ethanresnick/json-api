@@ -1,6 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const co = require("co");
 const Response_1 = require("../types/HTTP/Response");
 exports.SealedResponse = Response_1.Response;
 const Document_1 = require("../types/Document");
@@ -14,18 +21,22 @@ const parse_request_primary_1 = require("../steps/pre-query/parse-request-primar
 const validate_document_1 = require("../steps/pre-query/validate-document");
 const validate_resources_1 = require("../steps/pre-query/validate-resources");
 const apply_transform_1 = require("../steps/apply-transform");
+const make_get_1 = require("../steps/make-query/make-get");
 const do_get_1 = require("../steps/do-query/do-get");
+const make_post_1 = require("../steps/make-query/make-post");
 const do_post_1 = require("../steps/do-query/do-post");
+const make_patch_1 = require("../steps/make-query/make-patch");
 const do_patch_1 = require("../steps/do-query/do-patch");
+const make_delete_1 = require("../steps/make-query/make-delete");
 const do_delete_1 = require("../steps/do-query/do-delete");
 class APIController {
     constructor(registry) {
         this.registry = registry;
     }
     handle(request, frameworkReq, frameworkRes) {
-        const response = new Response_1.default();
-        const registry = this.registry;
-        return co(function* () {
+        return __awaiter(this, void 0, void 0, function* () {
+            const response = new Response_1.default();
+            const registry = this.registry;
             try {
                 yield requestValidators.checkMethod(request);
                 yield requestValidators.checkBodyExistence(request);
@@ -55,16 +66,16 @@ class APIController {
                 if (typeof response.primary === "undefined") {
                     switch (request.method) {
                         case "get":
-                            yield do_get_1.default(request, response, registry);
+                            yield do_get_1.default(request, response, registry, make_get_1.default(request, registry));
                             break;
                         case "post":
-                            yield do_post_1.default(request, response, registry);
+                            yield do_post_1.default(request, response, registry, make_post_1.default(request, registry));
                             break;
                         case "patch":
-                            yield do_patch_1.default(request, response, registry);
+                            yield do_patch_1.default(request, response, registry, make_patch_1.default(request, registry));
                             break;
                         case "delete":
-                            yield do_delete_1.default(request, response, registry);
+                            yield do_delete_1.default(request, response, registry, make_delete_1.default(request, registry));
                     }
                 }
             }

@@ -8,7 +8,7 @@ class ExpressStrategy extends Base_1.default {
         super(apiController, docsController, options);
     }
     apiRequest(req, res, next) {
-        this.buildRequestObject(req, req.protocol, req.get("Host"), req.params, req.query).then((requestObject) => {
+        this.buildRequestObject(req, req.protocol, req.host, req.params, req.query).then((requestObject) => {
             return this.api.handle(requestObject, req, res).then((responseObject) => {
                 this.sendResources(responseObject, res, next);
             });
@@ -17,7 +17,7 @@ class ExpressStrategy extends Base_1.default {
         });
     }
     docsRequest(req, res, next) {
-        this.buildRequestObject(req, req.protocol, req.get("Host"), req.params, req.query).then((requestObject) => {
+        this.buildRequestObject(req, req.protocol, req.host, req.params, req.query).then((requestObject) => {
             return this.docs.handle(requestObject, req, res).then((responseObject) => {
                 this.sendResources(responseObject, res, next);
             });

@@ -27,7 +27,7 @@ describe("Fetching Collection", () => {
         describe("Top-Level Links", () => {
             it("should contain a self link to the collection", () => {
                 chai_1.expect(res.body.links).to.be.an('object');
-                chai_1.expect(res.body.links.self).to.match(/\:\d{1,5}\/organizations/);
+                chai_1.expect(res.body.links.self).to.equal(`${Agent.baseUrl}/organizations`);
             });
         });
         describe("Resource Objects/Primary Data", () => {

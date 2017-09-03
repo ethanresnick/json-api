@@ -61,10 +61,10 @@ describe("Mongoose Adapter", () => {
             });
         });
         describe("getIdQueryType", () => {
-            it("should handle null input", () => {
-                const res = MongooseAdapter_1.default.getIdQueryType();
+            it("should handle empty input", () => {
+                const res = MongooseAdapter_1.default.getIdQueryType(undefined);
                 chai_1.expect(res[0]).to.equal("find");
-                chai_1.expect(res[1]).to.be.undefined;
+                chai_1.expect(res[1]).to.deep.equal({});
             });
             describe("string", () => {
                 it("should throw on invalid input", () => {
@@ -86,8 +86,8 @@ describe("Mongoose Adapter", () => {
                     const res = MongooseAdapter_1.default.getIdQueryType(["552c5e1c604d41e5836bb174", "552c5e1c604d41e5836bb175"]);
                     chai_1.expect(res[0]).to.equal("find");
                     chai_1.expect(res[1]._id.$in).to.be.an('array');
-                    chai_1.expect(res[1].$in[0]).to.equal("552c5e1c604d41e5836bb174");
-                    chai_1.expect(res[1].$in[1]).to.equal("552c5e1c604d41e5836bb175");
+                    chai_1.expect(res[1]._id.$in[0]).to.equal("552c5e1c604d41e5836bb174");
+                    chai_1.expect(res[1]._id.$in[1]).to.equal("552c5e1c604d41e5836bb175");
                 });
             });
         });

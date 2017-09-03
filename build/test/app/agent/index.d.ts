@@ -1,5 +1,4 @@
-/// <reference types="q" />
-declare const _default: Q.Promise<{
+declare const _default: Promise<{
     request(method: any, url: any): any;
     superagent: any;
     baseUrl: string;

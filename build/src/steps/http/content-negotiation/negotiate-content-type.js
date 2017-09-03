@@ -1,11 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const Q = require("q");
 const Negotiator = require("negotiator");
 const APIError_1 = require("../../../types/APIError");
 const type_handling_1 = require("../../../util/type-handling");
 function default_1(acceptHeader, availableBaseTypes) {
-    return Q.Promise(function (resolve, reject) {
+    return new Promise(function (resolve, reject) {
         const negotiator = new Negotiator({ headers: { accept: acceptHeader } });
         const hasParams = (it) => !type_handling_1.objectIsEmpty(it.parameters);
         const endpointSupportsJsonApi = availableBaseTypes.indexOf("application/vnd.api+json") !== -1;

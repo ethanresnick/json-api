@@ -60,6 +60,16 @@ describe("Creating Resources", () => {
                 });
             });
         });
+        describe("Setters and virtuals", () => {
+            it("should run setters on create", () => {
+                chai_1.expect(createdResource.attributes.name).to.equal(creation_1.VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER.attributes.name.toUpperCase());
+                chai_1.expect(createdResource.attributes.echo).to.equal(creation_1.VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER.attributes.echo);
+            });
+            it("should show virtuals in the response", () => {
+                chai_1.expect(createdResource.attributes.virtualName).to.equal(creation_1.VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER.attributes.name.toUpperCase() + ' (virtualized)');
+                chai_1.expect(createdResource.attributes.reversed).to.equal(creation_1.VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER.attributes.echo.split("").reverse().join(""));
+            });
+        });
         describe("The Created Resource", () => {
             it("should be returned in the body", () => {
                 chai_1.expect(createdResource).to.be.an("object");

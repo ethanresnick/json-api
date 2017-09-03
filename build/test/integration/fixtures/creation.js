@@ -12,7 +12,8 @@ exports.VALID_ORG_RESOURCE_NO_ID = {
     "type": "organizations",
     "attributes": {
         "name": "Test Organization",
-        "modified": "2015-01-01T00:00:00.000Z"
+        "modified": "2015-01-01T00:00:00.000Z",
+        "echo": "Hello!"
     },
     "relationships": {
         "liaisons": {

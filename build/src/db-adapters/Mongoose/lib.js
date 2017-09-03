@@ -35,6 +35,30 @@ function getReferencedModelName(model, path) {
     return schemaOptions && schemaOptions.ref;
 }
 exports.getReferencedModelName = getReferencedModelName;
+function toMongoCriteria(constraintOrPredicate) {
+    const mongoOperator = "$" +
+        (constraintOrPredicate.operator === 'neq'
+            ? 'ne'
+            : constraintOrPredicate.operator);
+    switch (constraintOrPredicate.operator) {
+        case "and":
+        case "or":
+            return !constraintOrPredicate.value.length
+                ? {}
+                : {
+                    [mongoOperator]: constraintOrPredicate.value.map(toMongoCriteria)
+                };
+        case "eq":
+            return { [constraintOrPredicate.field]: constraintOrPredicate.value };
+        default:
+            return {
+                [constraintOrPredicate.field]: {
+                    [mongoOperator]: constraintOrPredicate.value
+                }
+            };
+    }
+}
+exports.toMongoCriteria = toMongoCriteria;
 function resourceToDocObject(resource) {
     const res = Object.assign({}, resource.attrs);
     const getId = (it) => it.id;

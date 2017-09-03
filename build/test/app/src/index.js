@@ -15,7 +15,9 @@ exports.default = index_1.default.then(function (dbModule) {
     const Docs = new API.controllers.Documentation(registry, { name: "Example API" });
     const Controller = new API.controllers.API(registry);
     const app = express();
-    const Front = new API.httpStrategies.Express(Controller, Docs);
+    const port = process.env.PORT || "3000";
+    const host = process.env.HOST || "127.0.0.1";
+    const Front = new API.httpStrategies.Express(Controller, Docs, { host: host + ":" + port });
     const apiReqHandler = Front.apiRequest.bind(Front);
     app.get("/", Front.docsRequest.bind(Front));
     app.route("/:type(people|organizations|schools)").all(apiReqHandler);

@@ -9,7 +9,7 @@ export declare function objectIsEmpty(obj: any): boolean;
 export declare function mapObject(obj: any, mapFn: any): any;
 export declare function mapResources(resourceOrCollection: any, mapFn: any): any;
 export declare function forEachResources(resourceOrCollection: any, eachFn: any): any;
-export declare function groupResourcesByType(resourceOrCollection: any): {};
+export declare function groupResourcesByType(resourceOrCollection: any): any;
 export declare function forEachArrayOrVal(arrayOrVal: any, eachFn: any): void;
 export declare const Nothing: {
     unwrap(): undefined;

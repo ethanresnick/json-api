@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const Q = require("q");
 const mongoose = require("mongoose");
 const pluralize = require("pluralize");
 const arrays_1 = require("../../util/arrays");
@@ -15,31 +14,41 @@ const APIError_1 = require("../../types/APIError");
 const Field_1 = require("../../types/Documentation/Field");
 const FieldType_1 = require("../../types/Documentation/FieldType");
 const RelationshipType_1 = require("../../types/Documentation/RelationshipType");
+const CreateQuery_1 = require("../../types/Query/CreateQuery");
+const FindQuery_1 = require("../../types/Query/FindQuery");
+const DeleteQuery_1 = require("../../types/Query/DeleteQuery");
+const UpdateQuery_1 = require("../../types/Query/UpdateQuery");
+const AddToRelationshipQuery_1 = require("../../types/Query/AddToRelationshipQuery");
+const RemoveFromRelationshipQuery_1 = require("../../types/Query/RemoveFromRelationshipQuery");
 class MongooseAdapter {
     constructor(models, inflector, idGenerator) {
         this.models = models || mongoose.models;
         this.inflector = inflector || pluralize;
         this.idGenerator = idGenerator;
     }
-    find(type, idOrIds, fields, sorts, filters, includePaths, offset, limit) {
+    find(query) {
+        const { using: type, populates: includePaths, select: fields, sort: sorts, offset, limit, } = query;
+        const idOrIds = query.getIdOrIds();
+        const otherFilters = query.getFilters(true);
+        const isFiltering = otherFilters.value.length > 0;
+        const mongofiedFilters = util.toMongoCriteria(otherFilters);
         const model = this.getModel(this.constructor.getModelName(type));
         const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
         const pluralizer = this.inflector.plural;
         const isPaginating = typeof idOrIds !== 'string' &&
             (typeof offset !== 'undefined' || typeof limit !== 'undefined');
-        const isFiltering = typeof filters === "object" && !Array.isArray(filters);
-        let primaryDocumentsPromise, includedResourcesPromise = Q(null);
+        let primaryDocumentsPromise, includedResourcesPromise;
         const queryBuilder = mode === 'findOne'
             ? model[mode](idQuery)
             : model[mode](idQuery);
         const collectionSizePromise = isPaginating
-            ? model.count(isFiltering ? filters : undefined).exec()
+            ? model.count(mongofiedFilters).exec()
             : Promise.resolve(null);
         if (Array.isArray(sorts)) {
-            queryBuilder.sort(sorts.join(" "));
+            queryBuilder.sort(sorts.map(it => (it.direction === 'DESC' ? '-' : '') + it.field).join(" "));
         }
         if (isFiltering) {
-            queryBuilder.where(filters);
+            queryBuilder.where(mongofiedFilters);
         }
         if (offset) {
             queryBuilder.skip(offset);
@@ -50,8 +59,7 @@ class MongooseAdapter {
         if (includePaths) {
             const populatedPaths = [];
             const refPaths = util.getReferencePaths(model);
-            includePaths = includePaths.map((it) => it.split("."));
-            includePaths.forEach((pathParts) => {
+            includePaths.map((it) => it.split(".")).forEach((pathParts) => {
                 if (!arrays_1.arrayContains(refPaths, pathParts[0])) {
                     const title = "Invalid include path.";
                     const detail = `Resources of type "${type}" don't have a(n) "${pathParts[0]}" relationship.`;
@@ -64,10 +72,11 @@ class MongooseAdapter {
                 queryBuilder.populate(pathParts[0]);
             });
             const includedResources = [];
-            primaryDocumentsPromise = Q(queryBuilder.exec()).then((docs) => {
+            primaryDocumentsPromise = Promise.resolve(queryBuilder.exec()).then((docs) => {
                 type_handling_1.forEachArrayOrVal(docs, (doc) => {
-                    if (!doc)
+                    if (!doc) {
                         return;
+                    }
                     populatedPaths.forEach((path) => {
                         const refDocs = Array.isArray(doc[path]) ? doc[path] : [doc[path]];
                         refDocs.forEach((it) => {
@@ -82,14 +91,16 @@ class MongooseAdapter {
             includedResourcesPromise = primaryDocumentsPromise.then(() => new Collection_1.default(includedResources));
         }
         else {
-            primaryDocumentsPromise = Q(queryBuilder.exec());
+            primaryDocumentsPromise = Promise.resolve(queryBuilder.exec());
+            includedResourcesPromise = Promise.resolve(null);
         }
-        return Q.all([primaryDocumentsPromise.then((it) => {
+        return Promise.all([primaryDocumentsPromise.then((it) => {
                 const makeCollection = !idOrIds || Array.isArray(idOrIds) ? true : false;
                 return this.constructor.docsToResourceOrCollection(it, makeCollection, pluralizer, fields);
             }), includedResourcesPromise, collectionSizePromise]).catch(util.errorHandler);
     }
-    create(parentType, resourceOrCollection) {
+    create(query) {
+        const { records: resourceOrCollection } = query;
         const resourcesByType = type_handling_1.groupResourcesByType(resourceOrCollection);
         const creationPromises = [];
         const setIdWithGenerator = (doc) => { doc._id = this.idGenerator(doc); };
@@ -108,93 +119,79 @@ class MongooseAdapter {
             return this.constructor.docsToResourceOrCollection(finalDocs, makeCollection, this.inflector.plural);
         }).catch(util.errorHandler);
     }
-    update(parentType, resourceOrCollection) {
-        const model = this.getModel(this.constructor.getModelName(parentType));
+    update(query) {
+        const { using: parentType, patch: resourceOrCollection } = query;
         const singular = this.inflector.singular;
         const plural = this.inflector.plural;
-        const resourceTypes = [];
-        const changeSets = {};
-        const idOrIds = type_handling_1.mapResources(resourceOrCollection, (it) => {
-            changeSets[it.id] = it;
-            resourceTypes.push(it.type);
-            return it.id;
+        const parentModel = this.getModel(this.constructor.getModelName(parentType, singular));
+        const updateOptions = {
+            new: true,
+            runValidators: true,
+            context: 'query',
+            upsert: false
+        };
+        const updatedResourcePromiseOrPromises = type_handling_1.mapResources(resourceOrCollection, (resourceUpdate) => {
+            const newModelName = this.constructor.getModelName(resourceUpdate.type, singular);
+            const NewModelConstructor = this.getModel(newModelName);
+            const changeSet = util.resourceToDocObject(resourceUpdate);
+            const updateDoc = new NewModelConstructor(changeSet).toObject();
+            const finalUpdate = Object.keys(changeSet).reduce((acc, key) => {
+                acc[key] = updateDoc[key];
+                return acc;
+            }, {});
+            return parentModel
+                .findByIdAndUpdate(resourceUpdate.id, finalUpdate, updateOptions)
+                .exec();
         });
-        const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
-        const queryBuilder = mode === 'findOne'
-            ? model[mode](idQuery)
-            : model[mode](idQuery);
-        return Q(queryBuilder.exec()).then((docs) => {
-            const successfulSavesPromises = [];
-            if (docs === null) {
-                throw new APIError_1.default(404, undefined, "No matching resource found.");
-            }
-            else {
-                const idOrIdsAsArray = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
-                const docIdOrIdsAsArray = Array.isArray(docs) ? docs.map(it => it.id) : [docs.id];
-                if (!arrays_1.arrayValuesMatch(idOrIdsAsArray, docIdOrIdsAsArray)) {
-                    const title = "Some of the resources you're trying to update could not be found.";
-                    throw new APIError_1.default(404, undefined, title);
-                }
-            }
-            type_handling_1.forEachArrayOrVal(docs, (currDoc) => {
-                const newResource = changeSets[currDoc.id];
-                const currDocModel = currDoc.constructor;
-                const currentModelName = currDocModel.modelName;
-                const newModelName = this.constructor.getModelName(newResource.type, singular);
-                if (currentModelName !== newModelName) {
-                    const newDoc = currDoc.toObject({ virtuals: true, getters: true });
-                    const NewModelConstructor = this.getModel(newModelName);
-                    newDoc[currDocModel.schema.options.discriminatorKey] = newModelName;
-                    currDoc = new NewModelConstructor(newDoc);
-                    currDoc.isNew = false;
-                }
-                currDoc.set(util.resourceToDocObject(newResource));
-                successfulSavesPromises.push(currDoc.save());
-            });
-            return Promise.all(successfulSavesPromises);
-        }).then((docs) => {
+        const updatedResourcePromises = Array.isArray(updatedResourcePromiseOrPromises)
+            ? updatedResourcePromiseOrPromises
+            : [updatedResourcePromiseOrPromises];
+        return Promise.all(updatedResourcePromises).then((docs) => {
             const makeCollection = resourceOrCollection instanceof Collection_1.default;
             return this.constructor.docsToResourceOrCollection(docs, makeCollection, plural);
         }).catch(util.errorHandler);
     }
-    delete(parentType, idOrIds) {
+    delete(query) {
+        const { using: parentType } = query;
+        const idOrIds = query.getIdOrIds();
         const model = this.getModel(this.constructor.getModelName(parentType));
         const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
         if (!idOrIds) {
-            return Q.Promise((resolve, reject) => {
-                reject(new APIError_1.default(400, undefined, "You must specify some resources to delete"));
-            });
+            return Promise.reject(new APIError_1.default(400, undefined, "You must specify some resources to delete"));
         }
         const queryBuilder = mode === 'findOne'
             ? model[mode](idQuery)
             : model[mode](idQuery);
-        return Q(queryBuilder.exec()).then((docs) => {
-            if (!docs)
+        return Promise.resolve(queryBuilder.exec()).then((docs) => {
+            if (!docs) {
                 throw new APIError_1.default(404, undefined, "No matching resource found.");
+            }
             type_handling_1.forEachArrayOrVal(docs, (it) => { it.remove(); });
             return docs;
         }).catch(util.errorHandler);
     }
-    addToRelationship(type, id, relationshipPath, newLinkage) {
+    addToRelationship(query) {
+        const { using: type, resourceId: id, relationshipName: relationshipPath, linkage: newLinkage } = query;
         const model = this.getModel(this.constructor.getModelName(type));
         const update = {
             $addToSet: {
                 [relationshipPath]: { $each: newLinkage.value.map(it => it.id) }
             }
         };
-        const options = { runValidators: true };
-        return Q.ninvoke(model, "findOneAndUpdate", { "_id": id }, update, options)
+        const options = { runValidators: true, context: 'query' };
+        return model.findOneAndUpdate({ "_id": id }, update, options).exec()
             .catch(util.errorHandler);
     }
-    removeFromRelationship(type, id, relationshipPath, linkageToRemove) {
+    removeFromRelationship(query) {
+        const { using: type, resourceId: id, relationshipName: relationshipPath, linkage: linkageToRemove } = query;
         const model = this.getModel(this.constructor.getModelName(type));
         const update = {
             $pullAll: {
                 [relationshipPath]: linkageToRemove.value.map(it => it.id)
             }
         };
-        const options = { runValidators: true };
-        return Q.ninvoke(model, "findOneAndUpdate", { "_id": id }, update, options)
+        const options = { runValidators: true, context: 'query' };
+        return model.findOneAndUpdate({ "_id": id }, update, options).exec()
             .catch(util.errorHandler);
     }
     getModel(modelName) {
@@ -212,6 +209,18 @@ class MongooseAdapter {
     getRelationshipNames(type) {
         const model = this.getModel(this.constructor.getModelName(type, this.inflector.singular));
         return util.getReferencePaths(model);
+    }
+    doQuery(query) {
+        const method = ((query instanceof CreateQuery_1.default && this.create) ||
+            (query instanceof FindQuery_1.default && this.find) ||
+            (query instanceof DeleteQuery_1.default && this.delete) ||
+            (query instanceof UpdateQuery_1.default && this.update) ||
+            (query instanceof AddToRelationshipQuery_1.default && this.addToRelationship) ||
+            (query instanceof RemoveFromRelationshipQuery_1.default && this.removeFromRelationship));
+        if (!method) {
+            throw new Error("Unexpected query type.");
+        }
+        return method.call(this, query);
     }
     static docsToResourceOrCollection(docs, makeCollection, pluralizer, fields) {
         if (!docs || (!makeCollection && Array.isArray(docs) && docs.length === 0)) {
@@ -256,13 +265,9 @@ class MongooseAdapter {
             }
             let linkage = [];
             jsonValAtPath.forEach((docOrIdOrNull) => {
-                let idOrNull;
-                if (docOrIdOrNull && docOrIdOrNull._id) {
-                    idOrNull = String(docOrIdOrNull._id);
-                }
-                else {
-                    idOrNull = docOrIdOrNull ? String(docOrIdOrNull) : null;
-                }
+                const idOrNull = (docOrIdOrNull && docOrIdOrNull._id)
+                    ? String(docOrIdOrNull._id)
+                    : docOrIdOrNull ? String(docOrIdOrNull) : null;
                 linkage.push(idOrNull ? { type: referencedType, id: idOrNull } : null);
             });
             linkage = new Linkage_1.default(isToOneRelationship ? linkage[0] : linkage);
@@ -282,8 +287,9 @@ class MongooseAdapter {
         return this.getType(util.getReferencedModelName(model, path), pluralizer);
     }
     static getChildTypes(model, pluralizer = pluralize.plural) {
-        if (!model.discriminators)
+        if (!model.discriminators) {
             return [];
+        }
         return Object.keys(model.discriminators).map(it => this.getType(it, pluralizer));
     }
     static getStandardizedSchema(model, pluralizer = pluralize.plural) {
@@ -350,12 +356,12 @@ class MongooseAdapter {
         }
         return words.join(" ");
     }
-    static getIdQueryType(idOrIds = undefined) {
+    static getIdQueryType(idOrIds) {
         const [mode, idQuery, idsArray] = (() => {
             if (Array.isArray(idOrIds)) {
                 return ["find", { _id: { "$in": idOrIds } }, idOrIds];
             }
-            else if (typeof idOrIds === "string") {
+            else if (typeof idOrIds === "string" && idOrIds) {
                 return ["findOne", { _id: idOrIds }, [idOrIds]];
             }
             else {

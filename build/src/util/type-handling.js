@@ -52,7 +52,7 @@ function forEachResources(resourceOrCollection, eachFn) {
 }
 exports.forEachResources = forEachResources;
 function groupResourcesByType(resourceOrCollection) {
-    const resourcesByType = {};
+    const resourcesByType = Object.create(null);
     if (resourceOrCollection instanceof Collection_1.default) {
         resourceOrCollection.resources.forEach((it) => {
             resourcesByType[it.type] = resourcesByType[it.type] || [];
