@@ -257,91 +257,54 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       records: resourceOrCollection
     } = query;
 
-    // It'd be faster to bypass Mongoose Document creation & just have mongoose
-    // send a findAndUpdate command directly to mongo, but we want Mongoose's
-    // standard validation and lifecycle hooks, and so we have to find first.
-    // Note that, starting in Mongoose 4, we'll be able to run the validations
-    // on update, which should be enough, so we won't need to find first.
-    // https://github.com/Automattic/mongoose/issues/860
-    // TODO: Fix the above. Using update also provides a better concurrency model.
-    // Either that, or we need to do add a where version = ... between the find
-    // and the update to make sure we don't have conflicting changes.
-    const model = this.getModel(this.constructor.getModelName(parentType));
     const singular = this.inflector.singular;
     const plural = this.inflector.plural;
 
-    // Set up some data structures based on resourcesOrCollection
-    const resourceTypes: string[] = [];
-    const changeSets = {};
+    const parentModel = this.getModel(this.constructor.getModelName(parentType, singular));
+    //const parentModelDiscriminatorKey = parentModel && parentModel.schema
+    //  && (<any>parentModel.schema).options
+    //  && (<any>parentModel.schema).options.discriminatorKey;
 
-    const idOrIds = mapResources(resourceOrCollection, (it: ResourceWithId) => {
-      changeSets[it.id] = it;
-      resourceTypes.push(it.type);
-      return it.id;
-    });
+    const updateOptions = {
+      new: true,
+      runValidators: true,
+      context: 'query',
+      upsert: false
+    };
 
-    const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
-    const queryBuilder = mode === 'findOne' // ternary is a hack for TS compiler
-      ? model[mode](idQuery)
-      : model[mode](idQuery);
+    const updatedResourcePromiseOrPromises =
+      mapResources(resourceOrCollection, (resourceUpdate: ResourceWithId) => {
+        const newModelName = this.constructor.getModelName(resourceUpdate.type, singular);
+        const NewModelConstructor = this.getModel(newModelName);
+        const changeSet = util.resourceToDocObject(resourceUpdate);
 
-    return Promise.resolve(queryBuilder.exec()).then((docs) => {
-      const successfulSavesPromises: Promise<mongoose.Document>[] = [];
+        // run the fields to change through the doc constructor so mongoose
+        // will run any setters, but then remove any keys for which the doc
+        // constructor set defaults, to create the final update.
+        const updateDoc = new NewModelConstructor(changeSet).toObject();
+        const finalUpdate = Object.keys(changeSet).reduce((acc, key) => {
+          acc[key] = updateDoc[key];
+          return acc;
+        }, {
+          // The user may have attempted to change the resource's `type`,
+          // so we try to update the type in the db as well.
+          // Note: this is currently ignored by mongoose :(
+          // See https://github.com/Automattic/mongoose/issues/5613
+          // ...(parentModelDiscriminatorKey
+          //   ? { [parentModelDiscriminatorKey]: newModelName }
+          //   : undefined)
+        });
 
-      // if some ids were invalid/deleted/not found, we can't let *any* update
-      // succeed. this is the beginning of our simulation of transactions.
-      // There are two types of invalid cases here: we looked up one or more
-      // docs and got none back (i.e. docs === null) or we looked up an array of
-      // docs and got back docs that were missing some requested ids.
-      if(docs === null) {
-        throw new APIError(404, undefined, "No matching resource found.");
-      }
-      else {
-        const idOrIdsAsArray = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
-        const docIdOrIdsAsArray = Array.isArray(docs) ? docs.map(it => it.id) : [docs.id];
-
-        if(!arrayValuesMatch(idOrIdsAsArray, docIdOrIdsAsArray)) {
-          const title = "Some of the resources you're trying to update could not be found.";
-          throw new APIError(404, undefined, title);
-        }
-      }
-
-      forEachArrayOrVal(docs, (currDoc: mongoose.Document & { id: any}) => {
-        const newResource = changeSets[currDoc.id];
-
-        // Allowing the type to change is a bit of a pain. If the type's
-        // changed, it means the mongoose Model representing the doc must be
-        // different too. So we have to get the data from the old doc with
-        // .toObject(), change its discriminator, and then create an instance
-        // of the new model with that data. We also have to mark that new
-        // instance as not representing a new document, so that mongoose will
-        // do an update query rather than a save. Finally, we have to do all
-        // this before updating other attributes, so that they're correctly
-        // marked as modified when changed.
-        const currDocModel = (<mongoose.Model<any>>currDoc.constructor);
-        const currentModelName = currDocModel.modelName;
-        const newModelName = this.constructor.getModelName(newResource.type, singular);
-        if(currentModelName !== newModelName) {
-          const newDoc = currDoc.toObject({virtuals: true, getters: true});
-          const NewModelConstructor = this.getModel(newModelName);
-
-          // TODO: is schema.options.discriminatorKey always defined?
-          // Is this a/the most public interface through which we can access it?
-          newDoc[<string>(<any>currDocModel.schema).options.discriminatorKey] = newModelName;
-
-          // replace the currDoc with our new creation.
-          currDoc = new NewModelConstructor(newDoc);
-          currDoc.isNew = false;
-        }
-
-        // update all attributes and links provided, ignoring type/meta/id.
-        currDoc.set(util.resourceToDocObject(newResource));
-
-        successfulSavesPromises.push(currDoc.save());
+        return parentModel
+          .findByIdAndUpdate(resourceUpdate.id, finalUpdate, updateOptions)
+          .exec();
       });
 
-      return Promise.all(successfulSavesPromises);
-    }).then((docs) => {
+    const updatedResourcePromises = Array.isArray(updatedResourcePromiseOrPromises)
+      ? updatedResourcePromiseOrPromises
+      : [updatedResourcePromiseOrPromises];
+
+    return Promise.all(updatedResourcePromises).then((docs) => {
       const makeCollection = resourceOrCollection instanceof Collection;
       return this.constructor.docsToResourceOrCollection(docs, makeCollection, plural);
     }).catch(util.errorHandler);
