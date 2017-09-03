@@ -362,7 +362,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
         [relationshipPath]: { $each: newLinkage.value.map(it => it.id)}
       }
     };
-    const options = {runValidators: true};
+    const options = {runValidators: true, context: 'query'};
 
     return model.findOneAndUpdate({"_id": id}, update, options).exec()
       .catch(util.errorHandler);
@@ -386,7 +386,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
         [relationshipPath]: linkageToRemove.value.map(it => it.id)
       }
     };
-    const options = {runValidators: true};
+    const options = {runValidators: true, context: 'query'};
 
     return model.findOneAndUpdate({"_id": id}, update, options).exec()
       .catch(util.errorHandler);
