@@ -7,6 +7,7 @@ import Response, { Response as SealedResponse } from "../types/HTTP/Response";
 import Document from "../types/Document";
 import Collection from "../types/Collection";
 import APIError from "../types/APIError";
+import logger from '../util/logger';
 
 export { SealedResponse };
 
@@ -159,7 +160,9 @@ class APIController {
 
       // Set the other key fields on the response
       response.errors = response.errors.concat(apiErrors);
-      //console.log("API CONTROLLER ERRORS", errorsArr[0], errorsArr[0].stack);
+      errorsArr.forEach(err => {
+        logger.info("API Controller caught error", err, err.stack);
+      });
     }
 
     // If we have errors, which could have come from prior steps not just
