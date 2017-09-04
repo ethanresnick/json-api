@@ -263,11 +263,14 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
         const changeSet = util.resourceToDocObject(resourceUpdate);
 
         // run the fields to change through the doc constructor so mongoose
-        // will run any setters, but then remove any keys for which the doc
-        // constructor set defaults, to create the final update.
-        const updateDoc = new NewModelConstructor(changeSet).toObject();
-        const finalUpdate = Object.keys(changeSet).reduce((acc, key) => {
-          acc[key] = updateDoc[key];
+        // will run any setters, but then remove any keys that weren't changed
+        // by the update itself (i.e., keys for which the doc constructor set
+        // defaults), to create the final update.
+        const updateDoc = NewModelConstructor.hydrate({}).set(changeSet);
+        const modifiedPaths = updateDoc.modifiedPaths();
+        const updateDocObject = updateDoc.toObject();
+        const finalUpdate = modifiedPaths.reduce((acc, key) => {
+          acc[key] = updateDocObject[key];
           return acc;
         }, {
           // The user may have attempted to change the resource's `type`,

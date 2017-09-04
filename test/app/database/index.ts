@@ -10,6 +10,7 @@ const ObjectId = mongoose.Types.ObjectId;
 const govtId = ObjectId("54419d550a5069a2129ef254");
 const smithId = ObjectId("53f54dd98d1e62ff12539db2");
 const doeId = ObjectId("53f54dd98d1e62ff12539db3");
+const echoOrgId = ObjectId("59ac9c0ecc4c356fcda65202");
 /*eslint-enable new-cap */
 
 const OrganizationModel = OrganizationModelSchema.model;
@@ -28,7 +29,8 @@ fixtures.save("all", {
     { name: "Doug Wilson", gender: "male" }
   ],
   Organization: [
-    {name: "State Government", description: "Representing the good people.", liaisons: [doeId, smithId], _id: govtId}
+    {name: "State Government", description: "Representing the good people.", liaisons: [doeId, smithId], _id: govtId},
+    {name: "Org whose echo prop I'll change", reversed: "Test", _id: echoOrgId, liaisons: [doeId], modified: new Date("2015-01-01")}
   ],
   School: [
     {name: "City College", description: "Just your average local college.", liaisons: [smithId]},
