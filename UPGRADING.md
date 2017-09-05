@@ -1,6 +1,7 @@
 # 3.0.0-alpha
 ### Global
 - Q.Promise has been replaced with the standard ES6 Promise throughout the API.
+- It's now possible to transform the query that the library builds from the request before that query is run, to support all sorts of advanced use cases. See an example [here](https://github.com/ethanresnick/json-api/blob/c418ebf0411774d61f74ff8752228d3a995e5456/test/app/src/index.ts#L35).
 
 ### Mongoose Behavior/MongooseAdapter
 - The adapter now requires at least Mongoose v4.2.0, and is only tested with Mongoose 4.7.0 and up. (Previously, it used required 4.0.x).
