@@ -1,15 +1,15 @@
-export type QueryOptions = { using: string };
+export type QueryOptions = { type: string };
 
 abstract class Query {
-  protected query: { using: string };
+  protected query: { type: string };
 
   constructor(opts: QueryOptions) {
-    if(!opts.using) {
+    if(!opts.type) {
       throw new Error("`using` option is required.");
     }
 
     this.query = {
-      using: opts.using
+      type: opts.type
     }
   }
 
@@ -21,8 +21,14 @@ abstract class Query {
     return clone;
   }
 
-  get using() {
-    return this.query.using;
+  get type() {
+    return this.query.type;
+  }
+
+  forType(type: string) {
+    const res = this.clone();
+    res.query = { ...res.query, using: type };
+    return res;
   }
 }
 

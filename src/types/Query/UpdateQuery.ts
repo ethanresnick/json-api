@@ -8,12 +8,12 @@ export type UpdateQueryOptions = QueryOptions & {
 
 export default class UpdateQuery extends Query {
   protected query: {
-    readonly using: QueryOptions['using'];
+    readonly type: QueryOptions['type'];
     readonly patch: UpdateQueryOptions['patch'];
   };
 
   constructor(opts: UpdateQueryOptions) {
-    super({ using: opts.using });
+    super({ type: opts.type });
 
     this.query = {
       ...this.query,

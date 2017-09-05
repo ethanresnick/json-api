@@ -3,33 +3,33 @@ import { assertKeysTruthy } from "./utils";
 import Linkage from '../Linkage';
 
 export type RemoveFromRelationshipQueryOptions = QueryOptions & {
-  resourceId: string | number,
+  id: string | number,
   relationshipName: string,
   linkage: Linkage
 }
 
 export default class RemoveFromRelationshipQuery extends Query {
   protected query: {
-    readonly using: QueryOptions['using'];
-    readonly resourceId: RemoveFromRelationshipQueryOptions['resourceId'];
+    readonly type: QueryOptions['type'];
+    readonly id: RemoveFromRelationshipQueryOptions['id'];
     readonly relationshipName: RemoveFromRelationshipQueryOptions['relationshipName'];
     readonly linkage: RemoveFromRelationshipQueryOptions['linkage'];
   };
 
   constructor(opts: RemoveFromRelationshipQueryOptions) {
-    super({ using: opts.using });
-    assertKeysTruthy(["resourceId", "relationshipName"], opts);
+    super({ type: opts.type });
+    assertKeysTruthy(["id", "relationshipName"], opts);
 
     this.query = {
       ...this.query,
-      resourceId: opts.resourceId,
+      id: opts.id,
       relationshipName: opts.relationshipName,
       linkage: opts.linkage
     };
   }
 
-  get resourceId() {
-    return this.query.resourceId;
+  get id() {
+    return this.query.id;
   }
 
   get relationshipName() {

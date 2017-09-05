@@ -14,8 +14,8 @@ export default function(request, registry) {
       );
     }
     return new RemoveFromRelationshipQuery({
-      using: type,
-      resourceId: request.idOrIds,
+      type: type,
+      id: request.idOrIds,
       relationshipName: request.relationship,
       linkage: request.primary
     });
@@ -36,7 +36,7 @@ export default function(request, registry) {
   }
 
   return new DeleteQuery({
-    using: type,
+    type,
     idOrIds: bulkDelete
       ? request.primary.resources.map((it) => it.id)
       : request.idOrIds

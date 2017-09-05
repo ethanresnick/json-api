@@ -20,8 +20,8 @@ export default function(request, registry) {
     }
 
     return new AddToRelationshipQuery({
-      using: type,
-      resourceId: request.idOrIds,
+      type,
+      id: request.idOrIds,
       relationshipName: request.relationship,
       linkage: primary
     });
@@ -34,7 +34,7 @@ export default function(request, registry) {
     });
 
     return new CreateQuery({
-      using: type,
+      type,
       records: primary
     });
   }

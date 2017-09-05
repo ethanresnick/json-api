@@ -20,7 +20,7 @@ export default function(request, registry) {
     } = parseQueryParams(request.queryParams);
 
     return new FindQuery({
-      using: type,
+      type,
       idOrIds: request.idOrIds,
       populates: include,
       select: fields,
@@ -54,7 +54,7 @@ export default function(request, registry) {
     }
 
     return new FindQuery({
-      using: type,
+      type,
       singular: true,
       populates: [],
       idOrIds: request.idOrIds

@@ -49,7 +49,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
    */
   find(query: FindQuery) {
     const {
-      using: type,
+      type,
       populates: includePaths,
       select: fields,
       sort: sorts,
@@ -240,7 +240,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
    *   of resources. Should only have the fields that are changed.
    */
   update(query: UpdateQuery) {
-    const { using: parentType, patch: resourceOrCollection } = query;
+    const { type: parentType, patch: resourceOrCollection } = query;
     const singular = this.inflector.singular;
     const plural = this.inflector.plural;
 
@@ -298,7 +298,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
   }
 
   delete(query: DeleteQuery) {
-    const { using: parentType } = query;
+    const { type: parentType } = query;
     const idOrIds = query.getIdOrIds();
 
     const model = this.getModel(this.constructor.getModelName(parentType));
@@ -332,17 +332,12 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
    * Mongoose 4.0.
    */
   addToRelationship(query: AddToRelationshipQuery) {
-    const {
-      using: type,
-      resourceId: id,
-      relationshipName: relationshipPath,
-      linkage: newLinkage
-    } = query;
+    const { type, id, relationshipName, linkage: newLinkage } = query;
 
     const model = this.getModel(this.constructor.getModelName(type));
     const update = {
       $addToSet: {
-        [relationshipPath]: { $each: newLinkage.value.map(it => it.id)}
+        [relationshipName]: { $each: newLinkage.value.map(it => it.id)}
       }
     };
     const options = {runValidators: true, context: 'query'};
@@ -352,17 +347,12 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
   }
 
   removeFromRelationship(query: RemoveFromRelationshipQuery) {
-    const {
-      using: type,
-      resourceId: id,
-      relationshipName: relationshipPath,
-      linkage: linkageToRemove
-    } = query;
+    const { type, id, relationshipName, linkage: linkageToRemove } = query;
 
     const model = this.getModel(this.constructor.getModelName(type));
     const update = {
       $pullAll: {
-        [relationshipPath]: linkageToRemove.value.map(it => it.id)
+        [relationshipName]: linkageToRemove.value.map(it => it.id)
       }
     };
     const options = {runValidators: true, context: 'query'};

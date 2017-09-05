@@ -41,7 +41,7 @@ export default function(request, registry) {
   }
 
   return new UpdateQuery({
-    using: type,
+    type,
     patch: changedResourceOrCollection
   });
 }
