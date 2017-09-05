@@ -9,4 +9,10 @@ const schema = new mongoose.Schema({
   }
 });
 
+schema.virtual('virtualName').get(function() {
+  return this.name + ' (virtualized)';
+}).set(function(v) {
+  this.name = v.substr(0, v.lastIndexOf(' (virtualized)'));
+});
+
 export default mongoose.model("Person", schema);
