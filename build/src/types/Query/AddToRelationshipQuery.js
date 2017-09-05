@@ -4,12 +4,12 @@ const Query_1 = require("./Query");
 const utils_1 = require("./utils");
 class AddToRelationshipQuery extends Query_1.default {
     constructor(opts) {
-        super({ using: opts.using });
+        super({ type: opts.type });
         utils_1.assertKeysTruthy(["resourceId", "relationshipName"], opts);
-        this.query = Object.assign({}, this.query, { resourceId: opts.resourceId, relationshipName: opts.relationshipName, linkage: opts.linkage });
+        this.query = Object.assign({}, this.query, { id: opts.id, relationshipName: opts.relationshipName, linkage: opts.linkage });
     }
-    get resourceId() {
-        return this.query.resourceId;
+    get id() {
+        return this.query.id;
     }
     get relationshipName() {
         return this.query.relationshipName;

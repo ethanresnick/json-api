@@ -6,7 +6,7 @@ export declare type UpdateQueryOptions = QueryOptions & {
 };
 export default class UpdateQuery extends Query {
     protected query: {
-        readonly using: QueryOptions['using'];
+        readonly type: QueryOptions['type'];
         readonly patch: UpdateQueryOptions['patch'];
     };
     constructor(opts: UpdateQueryOptions);

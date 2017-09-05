@@ -18,7 +18,7 @@ function OrganizationSchema() {
             type: String
         },
         liaisons: [{ ref: "Person", type: ObjectId }],
-        modified: Date
+        modified: { type: Date, default: new Date() }
     });
     this.virtual('virtualName').get(function () {
         return this.name + ' (virtualized)';

@@ -9,4 +9,9 @@ const schema = new mongoose.Schema({
         enum: ["male", "female", "other"]
     }
 });
+schema.virtual('virtualName').get(function () {
+    return this.name + ' (virtualized)';
+}).set(function (v) {
+    this.name = v.substr(0, v.lastIndexOf(' (virtualized)'));
+});
 exports.default = mongoose.model("Person", schema);

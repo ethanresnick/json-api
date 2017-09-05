@@ -2,11 +2,11 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 class Query {
     constructor(opts) {
-        if (!opts.using) {
+        if (!opts.type) {
             throw new Error("`using` option is required.");
         }
         this.query = {
-            using: opts.using
+            type: opts.type
         };
     }
     clone() {
@@ -14,8 +14,13 @@ class Query {
         clone.query = this.query;
         return clone;
     }
-    get using() {
-        return this.query.using;
+    get type() {
+        return this.query.type;
+    }
+    forType(type) {
+        const res = this.clone();
+        res.query = Object.assign({}, res.query, { using: type });
+        return res;
     }
 }
 exports.default = Query;

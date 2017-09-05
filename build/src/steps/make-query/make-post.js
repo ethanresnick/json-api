@@ -13,8 +13,8 @@ function default_1(request, registry) {
             throw new APIError_1.default(400, undefined, "To add to a to-many relationship, you must POST an array of linkage objects.");
         }
         return new AddToRelationshipQuery_1.default({
-            using: type,
-            resourceId: request.idOrIds,
+            type,
+            id: request.idOrIds,
             relationshipName: request.relationship,
             linkage: primary
         });
@@ -26,7 +26,7 @@ function default_1(request, registry) {
                 throw new APIError_1.default(403, undefined, noClientIds);
         });
         return new CreateQuery_1.default({
-            using: type,
+            type,
             records: primary
         });
     }

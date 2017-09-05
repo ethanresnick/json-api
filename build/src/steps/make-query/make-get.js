@@ -11,7 +11,7 @@ function default_1(request, registry) {
         }
         const { include = registry.defaultIncludes(type), page: { offset = undefined, limit = undefined } = {}, fields, sort, filter } = parse_query_params_1.default(request.queryParams);
         return new FindQuery_1.default({
-            using: type,
+            type,
             idOrIds: request.idOrIds,
             populates: include,
             select: fields,
@@ -29,7 +29,7 @@ function default_1(request, registry) {
             throw new APIError_1.default(400, undefined, "You can only request the linkage for one resource at a time.");
         }
         return new FindQuery_1.default({
-            using: type,
+            type,
             singular: true,
             populates: [],
             idOrIds: request.idOrIds

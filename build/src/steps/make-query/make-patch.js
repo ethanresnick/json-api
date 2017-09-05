@@ -32,7 +32,7 @@ function default_1(request, registry) {
         changedResourceOrCollection = new Resource_1.default(request.type, request.idOrIds, undefined, { [request.relationship]: new Relationship_1.default(request.primary) });
     }
     return new UpdateQuery_1.default({
-        using: type,
+        type,
         patch: changedResourceOrCollection
     });
 }

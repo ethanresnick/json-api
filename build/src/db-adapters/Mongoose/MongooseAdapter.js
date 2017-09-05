@@ -27,7 +27,7 @@ class MongooseAdapter {
         this.idGenerator = idGenerator;
     }
     find(query) {
-        const { using: type, populates: includePaths, select: fields, sort: sorts, offset, limit, } = query;
+        const { type, populates: includePaths, select: fields, sort: sorts, offset, limit, } = query;
         const idOrIds = query.getIdOrIds();
         const otherFilters = query.getFilters(true);
         const isFiltering = otherFilters.value.length > 0;
@@ -120,7 +120,7 @@ class MongooseAdapter {
         }).catch(util.errorHandler);
     }
     update(query) {
-        const { using: parentType, patch: resourceOrCollection } = query;
+        const { type: parentType, patch: resourceOrCollection } = query;
         const singular = this.inflector.singular;
         const plural = this.inflector.plural;
         const parentModel = this.getModel(this.constructor.getModelName(parentType, singular));
@@ -134,9 +134,11 @@ class MongooseAdapter {
             const newModelName = this.constructor.getModelName(resourceUpdate.type, singular);
             const NewModelConstructor = this.getModel(newModelName);
             const changeSet = util.resourceToDocObject(resourceUpdate);
-            const updateDoc = new NewModelConstructor(changeSet).toObject();
-            const finalUpdate = Object.keys(changeSet).reduce((acc, key) => {
-                acc[key] = updateDoc[key];
+            const updateDoc = NewModelConstructor.hydrate({}).set(changeSet);
+            const modifiedPaths = updateDoc.modifiedPaths();
+            const updateDocObject = updateDoc.toObject();
+            const finalUpdate = modifiedPaths.reduce((acc, key) => {
+                acc[key] = updateDocObject[key];
                 return acc;
             }, {});
             return parentModel
@@ -152,7 +154,7 @@ class MongooseAdapter {
         }).catch(util.errorHandler);
     }
     delete(query) {
-        const { using: parentType } = query;
+        const { type: parentType } = query;
         const idOrIds = query.getIdOrIds();
         const model = this.getModel(this.constructor.getModelName(parentType));
         const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
@@ -171,11 +173,11 @@ class MongooseAdapter {
         }).catch(util.errorHandler);
     }
     addToRelationship(query) {
-        const { using: type, resourceId: id, relationshipName: relationshipPath, linkage: newLinkage } = query;
+        const { type, id, relationshipName, linkage: newLinkage } = query;
         const model = this.getModel(this.constructor.getModelName(type));
         const update = {
             $addToSet: {
-                [relationshipPath]: { $each: newLinkage.value.map(it => it.id) }
+                [relationshipName]: { $each: newLinkage.value.map(it => it.id) }
             }
         };
         const options = { runValidators: true, context: 'query' };
@@ -183,11 +185,11 @@ class MongooseAdapter {
             .catch(util.errorHandler);
     }
     removeFromRelationship(query) {
-        const { using: type, resourceId: id, relationshipName: relationshipPath, linkage: linkageToRemove } = query;
+        const { type, id, relationshipName, linkage: linkageToRemove } = query;
         const model = this.getModel(this.constructor.getModelName(type));
         const update = {
             $pullAll: {
-                [relationshipPath]: linkageToRemove.value.map(it => it.id)
+                [relationshipName]: linkageToRemove.value.map(it => it.id)
             }
         };
         const options = { runValidators: true, context: 'query' };

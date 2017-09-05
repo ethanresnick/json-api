@@ -66,7 +66,7 @@ class BaseStrategy {
                     return reject(new APIError_1.default(500, undefined, "Request body could not be parsed. Make sure other no other middleware has already parsed the request body."));
                 }
                 it.contentType = req.headers["content-type"];
-                const typeParsed = contentType.parse(req);
+                const typeParsed = it.contentType && contentType.parse(req);
                 const bodyParserOptions = {
                     encoding: typeParsed.parameters.charset || "utf8",
                     limit: "1mb"

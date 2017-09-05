@@ -7,15 +7,6 @@ class ExpressStrategy extends Base_1.default {
     constructor(apiController, docsController, options) {
         super(apiController, docsController, options);
     }
-    apiRequest(req, res, next) {
-        this.buildRequestObject(req, req.protocol, req.host, req.params, req.query).then((requestObject) => {
-            return this.api.handle(requestObject, req, res).then((responseObject) => {
-                this.sendResources(responseObject, res, next);
-            });
-        }).catch((err) => {
-            this.sendError(err, req, res);
-        });
-    }
     docsRequest(req, res, next) {
         this.buildRequestObject(req, req.protocol, req.host, req.params, req.query).then((requestObject) => {
             return this.docs.handle(requestObject, req, res).then((responseObject) => {
@@ -54,6 +45,24 @@ class ExpressStrategy extends Base_1.default {
     sendError(errors, req, res) {
         API_1.default.responseFromExternalError(errors, req.headers.accept).then((responseObject) => this.sendResources(responseObject, res, () => { })).catch((err) => {
             res.status(err.status).send(err.message);
+        });
+    }
+    apiRequest(req, res, next) {
+        return this.apiRequestWithTransform(undefined, req, res, next);
+    }
+    transformedAPIRequest(queryTransform) {
+        return this.apiRequestWithTransform.bind(this, queryTransform);
+    }
+    apiRequestWithTransform(queryTransform, req, res, next) {
+        queryTransform = queryTransform && queryTransform.length > 1
+            ? queryTransform.bind(undefined, req)
+            : queryTransform;
+        this.buildRequestObject(req, req.protocol, req.host, req.params, req.query).then((requestObject) => {
+            return this.api.handle(requestObject, req, res, queryTransform).then((responseObject) => {
+                this.sendResources(responseObject, res, next);
+            });
+        }).catch((err) => {
+            this.sendError(err, req, res);
         });
     }
 }

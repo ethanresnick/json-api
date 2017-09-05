@@ -13,6 +13,7 @@ exports.SealedResponse = Response_1.Response;
 const Document_1 = require("../types/Document");
 const Collection_1 = require("../types/Collection");
 const APIError_1 = require("../types/APIError");
+const logger_1 = require("../util/logger");
 const requestValidators = require("../steps/http/validate-request");
 const negotiate_content_type_1 = require("../steps/http/content-negotiation/negotiate-content-type");
 const validate_content_type_1 = require("../steps/http/content-negotiation/validate-content-type");
@@ -33,7 +34,7 @@ class APIController {
     constructor(registry) {
         this.registry = registry;
     }
-    handle(request, frameworkReq, frameworkRes) {
+    handle(request, frameworkReq, frameworkRes, queryTransform) {
         return __awaiter(this, void 0, void 0, function* () {
             const response = new Response_1.default();
             const registry = this.registry;
@@ -64,18 +65,27 @@ class APIController {
                 }
                 response.meta = {};
                 if (typeof response.primary === "undefined") {
+                    queryTransform = queryTransform || ((it) => it);
                     switch (request.method) {
-                        case "get":
-                            yield do_get_1.default(request, response, registry, make_get_1.default(request, registry));
+                        case "get": {
+                            const query = queryTransform(make_get_1.default(request, registry));
+                            yield do_get_1.default(request, response, registry, query);
                             break;
-                        case "post":
-                            yield do_post_1.default(request, response, registry, make_post_1.default(request, registry));
+                        }
+                        case "post": {
+                            const query = queryTransform(make_post_1.default(request, registry));
+                            yield do_post_1.default(request, response, registry, query);
                             break;
-                        case "patch":
-                            yield do_patch_1.default(request, response, registry, make_patch_1.default(request, registry));
+                        }
+                        case "patch": {
+                            const query = queryTransform(make_patch_1.default(request, registry));
+                            yield do_patch_1.default(request, response, registry, query);
                             break;
-                        case "delete":
-                            yield do_delete_1.default(request, response, registry, make_delete_1.default(request, registry));
+                        }
+                        case "delete": {
+                            const query = queryTransform(make_delete_1.default(request, registry));
+                            yield do_delete_1.default(request, response, registry, query);
+                        }
                     }
                 }
             }
@@ -86,6 +96,9 @@ class APIController {
                     response.contentType = "application/vnd.api+json";
                 }
                 response.errors = response.errors.concat(apiErrors);
+                errorsArr.forEach(err => {
+                    logger_1.default.info("API Controller caught error", err, err.stack);
+                });
             }
             if (response.errors.length) {
                 response.status = pickStatus(response.errors.map((v) => Number(v.status)));

@@ -11,8 +11,8 @@ function default_1(request, registry) {
             throw new APIError_1.default(400, undefined, "You can only remove resources from the linkage of one resource at a time.");
         }
         return new RemoveFromRelationshipQuery_1.default({
-            using: type,
-            resourceId: request.idOrIds,
+            type: type,
+            id: request.idOrIds,
             relationshipName: request.relationship,
             linkage: request.primary
         });
@@ -29,7 +29,7 @@ function default_1(request, registry) {
         }
     }
     return new DeleteQuery_1.default({
-        using: type,
+        type,
         idOrIds: bulkDelete
             ? request.primary.resources.map((it) => it.id)
             : request.idOrIds

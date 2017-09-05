@@ -1,12 +1,13 @@
 export declare type QueryOptions = {
-    using: string;
+    type: string;
 };
 declare abstract class Query {
     protected query: {
-        using: string;
+        type: string;
     };
     constructor(opts: QueryOptions);
     protected clone(): any;
-    readonly using: string;
+    readonly type: string;
+    forType(type: string): any;
 }
 export default Query;

@@ -9,6 +9,8 @@ const ObjectId = mongoose.Types.ObjectId;
 const govtId = ObjectId("54419d550a5069a2129ef254");
 const smithId = ObjectId("53f54dd98d1e62ff12539db2");
 const doeId = ObjectId("53f54dd98d1e62ff12539db3");
+const echoOrgId = ObjectId("59ac9c0ecc4c356fcda65202");
+const genderPersonId = ObjectId("59af14d3bbd18cd55ea08ea1");
 const OrganizationModel = organization_1.default.model;
 const OrganizationSchema = organization_1.default.schema;
 const models = {
@@ -20,10 +22,12 @@ fixtures.save("all", {
     Person: [
         { name: "John Smith", email: "jsmith@gmail.com", gender: "male", _id: smithId },
         { name: "Jane Doe", gender: "female", _id: doeId },
-        { name: "Doug Wilson", gender: "male" }
+        { name: "Doug Wilson", gender: "male" },
+        { name: "Jordi Jones", _id: genderPersonId, gender: "other" }
     ],
     Organization: [
-        { name: "State Government", description: "Representing the good people.", liaisons: [doeId, smithId], _id: govtId }
+        { name: "State Government", description: "Representing the good people.", liaisons: [doeId, smithId], _id: govtId },
+        { name: "Org whose echo prop I'll change", reversed: "Test", _id: echoOrgId, liaisons: [doeId], modified: new Date("2015-01-01") }
     ],
     School: [
         { name: "City College", description: "Just your average local college.", liaisons: [smithId] },
