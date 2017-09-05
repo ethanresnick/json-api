@@ -1,6 +1,6 @@
 # 3.0.0-alpha
 ### Global
-- Q.Promise's have been replaced with standard ES6 Promises in various places throughout the API.
+- Q.Promise has been replaced with the standard ES6 Promise throughout the API.
 
 ### Mongoose Behavior/MongooseAdapter
 - The adapter now requires at least Mongoose v4.2.0, and is only tested with Mongoose 4.7.0 and up. (Previously, it used required 4.0.x).
