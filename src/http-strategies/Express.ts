@@ -33,24 +33,6 @@ export default class ExpressStrategy extends Base {
     super(apiController, docsController, options);
   }
 
-  // For requests like GET /:type, GET /:type/:id/:relationship,
-  // POST /:type PATCH /:type/:id, PATCH /:type, DELETE /:type/:idOrLabel,
-  // DELETE /:type, GET /:type/:id/links/:relationship,
-  // PATCH /:type/:id/links/:relationship, POST /:type/:id/links/:relationship,
-  // and DELETE /:type/:id/links/:relationship.
-  // Note: this will ignore any port number if you're using Express 4.
-  // See: https://expressjs.com/en/guide/migrating-5.html#req.host
-  // The workaround is to use the host configuration option.
-  apiRequest(req, res, next) {
-    this.buildRequestObject(req, req.protocol, req.host, req.params, req.query).then((requestObject) => {
-      return this.api.handle(requestObject, req, res).then((responseObject) => {
-        this.sendResources(responseObject, res, next);
-      });
-    }).catch((err) => {
-      this.sendError(err, req, res);
-    });
-  }
-
   // For requests for the documentation.
   // Note: this will ignore any port number if you're using Express 4.
   // See: https://expressjs.com/en/guide/migrating-5.html#req.host
@@ -115,6 +97,37 @@ export default class ExpressStrategy extends Base {
     });
   }
 
+  apiRequest(req, res, next) {
+    return this.apiRequestWithTransform(undefined, req, res, next);
+  }
+
+  transformedAPIRequest(queryTransform) {
+    return this.apiRequestWithTransform.bind(this, queryTransform);
+  }
+
+  // For requests like GET /:type, GET /:type/:id/:relationship,
+  // POST /:type PATCH /:type/:id, PATCH /:type, DELETE /:type/:idOrLabel,
+  // DELETE /:type, GET /:type/:id/links/:relationship,
+  // PATCH /:type/:id/links/:relationship, POST /:type/:id/links/:relationship,
+  // and DELETE /:type/:id/links/:relationship.
+  // Note: this will ignore any port number if you're using Express 4.
+  // See: https://expressjs.com/en/guide/migrating-5.html#req.host
+  // The workaround is to use the host configuration option.
+  private apiRequestWithTransform(queryTransform, req, res, next) {
+    // Support query transform functions where the query is the only argument,
+    // but also ones that expect (req, query).
+    queryTransform = queryTransform && queryTransform.length > 1
+      ? queryTransform.bind(undefined, req)
+      : queryTransform;
+
+    this.buildRequestObject(req, req.protocol, req.host, req.params, req.query).then((requestObject) => {
+      return this.api.handle(requestObject, req, res, queryTransform).then((responseObject) => {
+        this.sendResources(responseObject, res, next);
+      });
+    }).catch((err) => {
+      this.sendError(err, req, res);
+    });
+  }
   /**
    * @TODO Uses this ExpressStrategy to create an express app with
    * preconfigured routes that can be mounted as a subapp.

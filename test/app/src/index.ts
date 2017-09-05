@@ -13,7 +13,7 @@ export default database.then(function(dbModule) {
     "people": require("./resource-descriptions/people"),
     "organizations": require("./resource-descriptions/organizations"),
     "schools": require("./resource-descriptions/schools")
-  }, {
+  }, <object>{
     dbAdapter: adapter
   });
 
@@ -30,6 +30,12 @@ export default database.then(function(dbModule) {
   const Front = new API.httpStrategies.Express(Controller, Docs, { host: host + ":" + port });
   const apiReqHandler = Front.apiRequest.bind(Front);
 
+  // Apply a query transform to a request so we can test query transforms.
+  // we'll use them here as a faster alternative to old-style label mappers.
+  app.get('/:type(people)/non-binary',
+    Front.transformedAPIRequest((req, query) =>
+      query.andWhere({field: "gender", operator: "nin", value: ["male", "female"]})));
+
   // Now, add the routes.
   // Note: below, express incorrectly passes requests using PUT and other
   // unknown methods into the API Controller at some routes. We're doing this
@@ -38,7 +44,7 @@ export default database.then(function(dbModule) {
   app.route("/:type(people|organizations|schools)").all(apiReqHandler);
   app.route("/:type(people|organizations|schools)/:id")
     .get(apiReqHandler).patch(apiReqHandler).delete(apiReqHandler);
-  app.route("/:type(people|organizations|schools)/:id/:related")
+  app.route("/:type(organizations|schools)/:id/:related") // not supported yet.
     .get(apiReqHandler);
   app.route("/:type(people|organizations|schools)/:id/relationships/:relationship")
     .get(apiReqHandler).post(apiReqHandler).patch(apiReqHandler);

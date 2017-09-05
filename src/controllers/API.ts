@@ -4,6 +4,7 @@ import ResourceTypeRegistry from '../ResourceTypeRegistry';
 // used as the return value when a *sealed* response is created through ValueObject()
 // because TS doesn't have the concept of a Sealed type.
 import Response, { Response as SealedResponse } from "../types/HTTP/Response";
+import Query from "../types/Query/Query";
 import Document from "../types/Document";
 import Collection from "../types/Collection";
 import APIError from "../types/APIError";
@@ -50,7 +51,7 @@ class APIController {
    * @param {Object} frameworkRes Theoretically, the response objcet generated
    *     by your http framework but, like with frameworkReq, it can be anything.
    */
-  async handle(request, frameworkReq, frameworkRes) {
+  async handle(request, frameworkReq, frameworkRes, queryTransform?: (q: Query) => Query) {
     const response = new Response();
     const registry = this.registry;
 
@@ -124,21 +125,31 @@ class APIController {
       // If we've already populated the primary resources, which is possible
       // because the label may have mapped to no id(s), we don't need to query.
       if(typeof response.primary === "undefined") {
+        queryTransform = queryTransform || ((it: any) => it);
+
         switch(request.method) {
-          case "get":
-            await doGET(request, response, registry, makeGET(request, registry));
+          case "get": {
+            const query = queryTransform(makeGET(request, registry));
+            await doGET(request, response, registry, query);
             break;
+          }
 
-          case "post":
-            await doPOST(request, response, registry, makePOST(request, registry));
+          case "post": {
+            const query = queryTransform(makePOST(request, registry));
+            await doPOST(request, response, registry, query);
             break;
+          }
 
-          case "patch":
-            await doPATCH(request, response, registry, makePATCH(request, registry));
+          case "patch": {
+            const query = queryTransform(makePATCH(request, registry));
+            await doPATCH(request, response, registry, query);
             break;
+          }
 
-          case "delete":
-            await doDELETE(request, response, registry, makeDELETE(request, registry));
+          case "delete": {
+            const query = queryTransform(makeDELETE(request, registry));
+            await doDELETE(request, response, registry, query);
+          }
         }
       }
     }

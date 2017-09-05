@@ -114,8 +114,7 @@ describe("Fetching Collection", () => {
         const johnJaneList = res.body.data.map((it) => it.attributes.name).filter((it) => {
           return ["John", "Jane"].indexOf(it.substring(0, 4)) > -1;
         });
-        expect(johnJaneList[0]).to.equal("John Smith");
-        expect(johnJaneList[1]).to.equal("Jane Doe");
+        expect(johnJaneList).to.deep.equal(["John Smith", "Jane Doe"]);
       });
     });
   });
@@ -131,38 +130,18 @@ describe("Fetching Collection", () => {
         }).catch(done);
     });
 
-    it("Should have John above Jane", () => {
-      expect(res.body.data.map((it) => it.attributes.name)).to.deep.equal([
+    it("Should have Doug before John; both before Jane", () => {
+      const johnJaneDougList = res.body.data.map((it) => it.attributes.name).filter((it) => {
+        return ["John", "Jane", "Doug"].indexOf(it.substring(0, 4)) > -1;
+      });
+
+      expect(johnJaneDougList).to.deep.equal([
         "Doug Wilson", "John Smith", "Jane Doe"
       ]);
     });
   });
 
-  describe("Fetching with Offset and Limit", () => {
-    before(done => {
-      Agent.request("GET", "/people?page[offset]=1&page[limit]=1")
-        .accept("application/vnd.api+json")
-        .promise()
-        .then(response => {
-          res = response;
-          done();
-        }).catch(done);
-    });
-
-    it("Should only have the 2nd person", () => {
-      expect(res.body.data.map((it) => it.attributes.name)).to.deep.equal([
-        "Jane Doe"
-      ]);
-    });
-
-    it("Should include the total record count", () => {
-      expect(res.body.meta).to.deep.equal({
-        total: 3
-      });
-    });
-  });
-
-  describe("Fetching Descended Sorted by Name with Offset and Limit", () => {
+  describe("Fetching with Offset and Limit (reverse name sorted for determinism)", () => {
     before(done => {
       Agent.request("GET", "/people?sort=-name&page[offset]=1&page[limit]=3")
         .accept("application/vnd.api+json")
@@ -173,12 +152,18 @@ describe("Fetching Collection", () => {
         }).catch(done);
     });
 
-    it("Should have Jane above Doug", () => {
-      const johnJaneList = res.body.data.map((it) => it.attributes.name).filter((it) => {
-        return ["Doug", "Jane"].indexOf(it.substring(0, 4)) > -1;
+    it("should only return exactly the 3 people we expect", () => {
+      expect(res.body.data.map(it => it.attributes.name)).to.deep.equal([
+        "John Smith",
+        "Jane Doe",
+        "Doug Wilson"
+      ]);
+    });
+
+    it("Should include the total record count", () => {
+      expect(res.body.meta).to.deep.equal({
+        total: 4
       });
-      expect(johnJaneList[0]).to.equal("Jane Doe");
-      expect(johnJaneList[1]).to.equal("Doug Wilson");
     });
   });
 });
