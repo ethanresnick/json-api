@@ -33,13 +33,19 @@ export default class FindQuery extends WithCriteriaQuery {
     };
   }
 
-  populate(paths) {
+  onlyPopulates(paths: string[]) {
+    const res = this.clone();
+    res.query.populates = paths.slice();
+    return res;
+  }
+
+  withPopulates(paths: string[]) {
     const res = this.clone();
     res.query.populates = res.query.populates.concat(paths);
     return res;
   }
 
-  depopulate(paths) {
+  withoutPopulates(paths: string[]) {
     const res = this.clone();
     res.query.populates = res.query.populates.filter(it => paths.indexOf(it) === -1);
     return res;
