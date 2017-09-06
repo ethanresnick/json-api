@@ -12,7 +12,7 @@ export default class FindQuery extends WithCriteriaQuery {
         readonly type: FindQueryOptions['type'];
         readonly select?: FindQueryOptions['select'];
         readonly sort?: FindQueryOptions['sort'];
-        readonly populates?: FindQueryOptions['populates'];
+        readonly populates: FindQueryOptions['populates'];
         readonly criteria: {
             readonly where: AndPredicate;
             readonly singular: boolean;
@@ -21,6 +21,8 @@ export default class FindQuery extends WithCriteriaQuery {
         };
     };
     constructor(opts: FindQueryOptions);
+    populate(paths: any): any;
+    depopulate(paths: any): any;
     readonly populates: string[] | undefined;
     readonly select: {
         [typeName: string]: string[];

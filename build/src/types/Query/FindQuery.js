@@ -14,9 +14,18 @@ class FindQuery extends WithCriteriaQuery_1.default {
     constructor(opts) {
         const { populates, select, sort } = opts, baseOpts = __rest(opts, ["populates", "select", "sort"]);
         super(baseOpts);
-        this.query = Object.assign({}, this.query, { populates,
-            select,
+        this.query = Object.assign({}, this.query, { populates: populates || [], select,
             sort });
+    }
+    populate(paths) {
+        const res = this.clone();
+        res.query.populates = res.query.populates.concat(paths);
+        return res;
+    }
+    depopulate(paths) {
+        const res = this.clone();
+        res.query.populates = res.query.populates.filter(it => paths.indexOf(it) === -1);
+        return res;
     }
     get populates() {
         return this.query.populates;
