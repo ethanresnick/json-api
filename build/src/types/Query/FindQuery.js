@@ -17,12 +17,17 @@ class FindQuery extends WithCriteriaQuery_1.default {
         this.query = Object.assign({}, this.query, { populates: populates || [], select,
             sort });
     }
-    populate(paths) {
+    onlyPopulates(paths) {
+        const res = this.clone();
+        res.query.populates = paths.slice();
+        return res;
+    }
+    withPopulates(paths) {
         const res = this.clone();
         res.query.populates = res.query.populates.concat(paths);
         return res;
     }
-    depopulate(paths) {
+    withoutPopulates(paths) {
         const res = this.clone();
         res.query.populates = res.query.populates.filter(it => paths.indexOf(it) === -1);
         return res;

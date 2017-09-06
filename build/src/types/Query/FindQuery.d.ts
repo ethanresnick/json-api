@@ -21,8 +21,9 @@ export default class FindQuery extends WithCriteriaQuery {
         };
     };
     constructor(opts: FindQueryOptions);
-    populate(paths: any): any;
-    depopulate(paths: any): any;
+    onlyPopulates(paths: string[]): any;
+    withPopulates(paths: string[]): any;
+    withoutPopulates(paths: string[]): any;
     readonly populates: string[] | undefined;
     readonly select: {
         [typeName: string]: string[];
