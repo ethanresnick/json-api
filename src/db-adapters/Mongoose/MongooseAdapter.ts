@@ -125,7 +125,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
 
     // support includes, but only a level deep for now (recursive includes,
     // especially if done in an efficient way query wise, are a pain in the ass).
-    if(includePaths) {
+    if(includePaths && includePaths.length > 0) {
       const populatedPaths: string[] = [];
       const refPaths = util.getReferencePaths(model);
 
