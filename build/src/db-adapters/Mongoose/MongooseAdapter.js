@@ -56,7 +56,7 @@ class MongooseAdapter {
         if (limit) {
             queryBuilder.limit(limit);
         }
-        if (includePaths) {
+        if (includePaths && includePaths.length > 0) {
             const populatedPaths = [];
             const refPaths = util.getReferencePaths(model);
             includePaths.map((it) => it.split(".")).forEach((pathParts) => {
