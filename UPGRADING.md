@@ -1,7 +1,7 @@
-# 3.0.0-alpha
+# 3.0.0-alpha 
+## Breaking Changes
 ### Global
 - Q.Promise has been replaced with the standard ES6 Promise throughout the API.
-- It's now possible to transform the query that the library builds from the request before that query is run, to support all sorts of advanced use cases. See an example [here](https://github.com/ethanresnick/json-api/blob/c418ebf0411774d61f74ff8752228d3a995e5456/test/app/src/index.ts#L35).
 
 ### Mongoose Behavior/MongooseAdapter
 - The adapter now requires at least Mongoose v4.2.0, and is only tested with Mongoose 4.7.0 and up. (Previously, it used required 4.0.x).
@@ -12,7 +12,13 @@
 - The `addToRelationship` and `removeFromRelationship` methods now run their validators with `this` set to the update Query, rather than to null/undefined. If you were detecting whether `this` was null/undefined, this could be a breaking change. Now, instead of checking if `this` is null, check if it isn't an instance of `Mongoose.Query`.
 
 ### Koa + Express Strategies
-- You should now provide a Host option when initializing the strategy, for security. See example in README. If you're running your API using express 4 on a Host that includes a port number you **must** now provide this option.
+- You should now provide a Host option when initializing the strategy, for security. See example in README. If you're running your API using express 4 on a host that includes a port number you **must** now provide this option.
+
+## New Features
+### Global
+- It's now possible to transform the query that the library builds from the request before that query is run, to support all sorts of advanced use cases. See an example [here](https://github.com/ethanresnick/json-api/blob/c418ebf0411774d61f74ff8752228d3a995e5456/test/app/src/index.ts#L35).
+- The beforeSave and beforeRender transform functions are now called with an additional argument that holds an object with a `request` member, whose value is the internal request object used by the JSON:API library.
+
 
 # 2.15 -> 2.16 Breaking Changes  (Not Semver until 3.0)
 
