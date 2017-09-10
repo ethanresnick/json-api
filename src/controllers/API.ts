@@ -51,7 +51,7 @@ class APIController {
    * @param {Object} frameworkRes Theoretically, the response objcet generated
    *     by your http framework but, like with frameworkReq, it can be anything.
    */
-  async handle(request, frameworkReq, frameworkRes, queryTransform?: (q: Query) => Query) {
+  async handle(request, frameworkReq, frameworkRes, queryTransform?: (q: Query) => Query | Promise<Query>) {
     const response = new Response();
     const registry = this.registry;
 
@@ -129,25 +129,25 @@ class APIController {
 
         switch(request.method) {
           case "get": {
-            const query = queryTransform(makeGET(request, registry));
+            const query = await queryTransform(makeGET(request, registry));
             await doGET(request, response, registry, query);
             break;
           }
 
           case "post": {
-            const query = queryTransform(makePOST(request, registry));
+            const query = await queryTransform(makePOST(request, registry));
             await doPOST(request, response, registry, query);
             break;
           }
 
           case "patch": {
-            const query = queryTransform(makePATCH(request, registry));
+            const query = await queryTransform(makePATCH(request, registry));
             await doPATCH(request, response, registry, query);
             break;
           }
 
           case "delete": {
-            const query = queryTransform(makeDELETE(request, registry));
+            const query = await queryTransform(makeDELETE(request, registry));
             await doDELETE(request, response, registry, query);
           }
         }
