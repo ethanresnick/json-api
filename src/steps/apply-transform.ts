@@ -1,6 +1,8 @@
 import Resource from "../types/Resource";
 import Collection from "../types/Collection";
 import Linkage from "../types/Linkage";
+import ResourceTypeRegistry from "../ResourceTypeRegistry";
+
 
 /**
  * @param toTransform Could be a single resource, a collection, a link object, or null.
@@ -8,16 +10,24 @@ import Linkage from "../types/Linkage";
 // TODO: Think about the return value here for single resources that are to be
 // ommitted from the response (and replaced with an error).
 export type Transformable = Resource | Collection | Linkage | null | undefined;
-export default function<T extends Transformable>(toTransform: T, mode, registry, frameworkReq, frameworkRes): Promise<T> {
+export type Extras = { frameworkReq: any, frameworkRes: any, request: any };
+export type TransformMode = 'beforeSave' | 'beforeRender';
+
+export default function<T extends Transformable>(
+  toTransform: T,
+  mode: TransformMode,
+  registry: ResourceTypeRegistry,
+  extras: Extras
+): Promise<T> {
   if(toTransform instanceof Resource) {
     // TODO: if transform returns undefined???
-    return <Promise<T>>transform(toTransform, frameworkReq, frameworkRes, mode, registry);
+    return <Promise<T>>transform(toTransform, mode, registry, extras);
   }
 
   else if (toTransform instanceof Collection) {
     // below, allow the user to return undefined to remove a vlaue.
     return <Promise<T>>Promise.all(toTransform.resources.map((it) =>
-      transform(it, frameworkReq, frameworkRes, mode, registry)
+      transform(it, mode, registry, extras)
     )).then((transformed) => {
       const resources = <Resource[]>transformed.filter((it) => it !== undefined);
       return new Collection(resources);
@@ -30,7 +40,11 @@ export default function<T extends Transformable>(toTransform: T, mode, registry,
   }
 }
 
-function transform(resource: Resource, req, res, transformMode, registry): Promise<Resource|undefined> {
+function transform(
+  resource: Resource,
+  transformMode: TransformMode,
+  registry: ResourceTypeRegistry,
+  extras: Extras): Promise<Resource|undefined> {
   const transformFn = registry[transformMode](resource.type);
 
   // SuperFn is a function that the first transformer can invoke.
@@ -38,14 +52,20 @@ function transform(resource: Resource, req, res, transformMode, registry): Promi
   // is no parentType or the parentType doesn't define an appropriate
   // transformer. Otherwise, it'll return the result of calling
   // the parentType's transformer with the provided arguments.
-  const superFn = (resource, req, res) => { // eslint-disable-line no-shadow
+  const superFn = (resource, req, res, extras) => { // eslint-disable-line no-shadow
     const parentType = registry.parentType(resource.type);
 
     if(!parentType || !registry[transformMode](parentType)) {
       return resource;
     }
     else {
-      return registry[transformMode](parentType)(resource, req, res, superFn);
+      return (<Function>registry[transformMode](parentType))(
+        resource,
+        req,
+        res,
+        superFn,
+        extras
+      );
     }
   };
 
@@ -54,6 +74,12 @@ function transform(resource: Resource, req, res, transformMode, registry): Promi
   }
 
   // Allow user to return a Promise or a value
-  const transformed = transformFn(resource, req, res, superFn);
+  const transformed = transformFn(
+    resource,
+    extras.frameworkReq,
+    extras.frameworkRes,
+    superFn,
+    extras
+  );
   return Promise.resolve(transformed);
 }

@@ -9,7 +9,7 @@ module.exports = {
     return resource;
   },
 
-  beforeSave: function(resource) {
+  beforeSave: function(resource, req, res) {
     resource.attrs.description = "Added a description in beforeSave";
     return resource;
   }

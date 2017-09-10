@@ -95,7 +95,10 @@ class APIController {
         }
 
         request.primary = await applyTransform(
-          parsedPrimary, "beforeSave", registry, frameworkReq, frameworkRes
+          parsedPrimary,
+          "beforeSave",
+          registry,
+          { frameworkReq, frameworkRes, request }
         );
       }
 
@@ -186,11 +189,17 @@ class APIController {
 
     // apply transforms pre-send
     response.primary = await applyTransform(
-      response.primary, "beforeRender", registry, frameworkReq, frameworkRes
+      response.primary,
+      "beforeRender",
+      registry,
+      { frameworkReq, frameworkRes, request }
     );
 
     response.included = await applyTransform(
-      response.included, "beforeRender", registry, frameworkReq, frameworkRes
+      response.included,
+      "beforeRender",
+      registry,
+      { frameworkReq, frameworkRes, request }
     );
 
     if(response.status !== 204) {

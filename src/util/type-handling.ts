@@ -33,7 +33,7 @@ export function ValueObject<T extends object>(ConstructorFn: { new (): T}): Ugh<
     if(initialValues) {
       for(const key in obj) {
         if(hasOwnProp.call(obj, key) && hasOwnProp.call(initialValues, key)) {
-          obj[key] = initialValues[key];
+          obj[key] = <T[keyof T]>initialValues[key];
         }
       }
     }
