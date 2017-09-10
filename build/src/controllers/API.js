@@ -53,7 +53,7 @@ class APIController {
                     if (!request.aboutRelationship) {
                         yield validate_resources_1.default(request.type, parsedPrimary, registry);
                     }
-                    request.primary = yield apply_transform_1.default(parsedPrimary, "beforeSave", registry, frameworkReq, frameworkRes);
+                    request.primary = yield apply_transform_1.default(parsedPrimary, "beforeSave", registry, { frameworkReq, frameworkRes, request });
                 }
                 if (request.idOrIds && request.allowLabel) {
                     const mappedLabel = yield label_to_ids_1.default(request.type, request.idOrIds, registry, frameworkReq);
@@ -68,22 +68,22 @@ class APIController {
                     queryTransform = queryTransform || ((it) => it);
                     switch (request.method) {
                         case "get": {
-                            const query = queryTransform(make_get_1.default(request, registry));
+                            const query = yield queryTransform(make_get_1.default(request, registry));
                             yield do_get_1.default(request, response, registry, query);
                             break;
                         }
                         case "post": {
-                            const query = queryTransform(make_post_1.default(request, registry));
+                            const query = yield queryTransform(make_post_1.default(request, registry));
                             yield do_post_1.default(request, response, registry, query);
                             break;
                         }
                         case "patch": {
-                            const query = queryTransform(make_patch_1.default(request, registry));
+                            const query = yield queryTransform(make_patch_1.default(request, registry));
                             yield do_patch_1.default(request, response, registry, query);
                             break;
                         }
                         case "delete": {
-                            const query = queryTransform(make_delete_1.default(request, registry));
+                            const query = yield queryTransform(make_delete_1.default(request, registry));
                             yield do_delete_1.default(request, response, registry, query);
                         }
                     }
@@ -105,8 +105,8 @@ class APIController {
                 response.body = new Document_1.default(response.errors).get(true);
                 return response;
             }
-            response.primary = yield apply_transform_1.default(response.primary, "beforeRender", registry, frameworkReq, frameworkRes);
-            response.included = yield apply_transform_1.default(response.included, "beforeRender", registry, frameworkReq, frameworkRes);
+            response.primary = yield apply_transform_1.default(response.primary, "beforeRender", registry, { frameworkReq, frameworkRes, request });
+            response.included = yield apply_transform_1.default(response.included, "beforeRender", registry, { frameworkReq, frameworkRes, request });
             if (response.status !== 204) {
                 response.body = new Document_1.default(response.primary, response.included, response.meta, registry.urlTemplates(), request.uri).get(true);
             }
