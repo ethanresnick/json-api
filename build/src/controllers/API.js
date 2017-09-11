@@ -63,7 +63,7 @@ class APIController {
                     if (!request.aboutRelationship) {
                         yield validate_resources_1.default(request.type, parsedPrimary, registry);
                     }
-                    request.primary = yield apply_transform_1.default(parsedPrimary, "beforeSave", registry, { frameworkReq, frameworkRes, request });
+                    request.primary = yield apply_transform_1.default(parsedPrimary, "beforeSave", { frameworkReq, frameworkRes, request, registry });
                 }
                 response.meta = {};
                 if (typeof response.primary === "undefined") {
@@ -107,8 +107,8 @@ class APIController {
                 response.body = new Document_1.default(response.errors).get(true);
                 return response;
             }
-            response.primary = yield apply_transform_1.default(response.primary, "beforeRender", registry, { frameworkReq, frameworkRes, request });
-            response.included = yield apply_transform_1.default(response.included, "beforeRender", registry, { frameworkReq, frameworkRes, request });
+            response.primary = yield apply_transform_1.default(response.primary, "beforeRender", { frameworkReq, frameworkRes, request, registry });
+            response.included = yield apply_transform_1.default(response.included, "beforeRender", { frameworkReq, frameworkRes, request, registry });
             if (response.status !== 204) {
                 response.body = new Document_1.default(response.primary, response.included, response.meta, registry.urlTemplates(), request.uri).get(true);
             }

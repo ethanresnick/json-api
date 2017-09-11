@@ -2,12 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const Resource_1 = require("../types/Resource");
 const Collection_1 = require("../types/Collection");
-function default_1(toTransform, mode, registry, extras) {
+function default_1(toTransform, mode, extras) {
     if (toTransform instanceof Resource_1.default) {
-        return transform(toTransform, mode, registry, extras);
+        return transform(toTransform, mode, extras);
     }
     else if (toTransform instanceof Collection_1.default) {
-        return Promise.all(toTransform.resources.map((it) => transform(it, mode, registry, extras))).then((transformed) => {
+        return Promise.all(toTransform.resources.map((it) => transform(it, mode, extras))).then((transformed) => {
             const resources = transformed.filter((it) => it !== undefined);
             return new Collection_1.default(resources);
         });
@@ -17,7 +17,8 @@ function default_1(toTransform, mode, registry, extras) {
     }
 }
 exports.default = default_1;
-function transform(resource, transformMode, registry, extras) {
+function transform(resource, transformMode, extras) {
+    const { registry } = extras;
     const transformFn = registry[transformMode](resource.type);
     const superFn = (resource, req, res, extras) => {
         const parentType = registry.parentType(resource.type);
