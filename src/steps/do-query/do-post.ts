@@ -2,21 +2,21 @@ import templating = require("url-template");
 import Resource from "../../types/Resource";
 import AddToRelationshipQuery from '../../types/Query/AddToRelationshipQuery';
 
-export default function(requestContext, responseContext, registry, query) {
-  const type    = requestContext.type;
+export default function(request, response, registry, query) {
+  const type    = request.type;
   const adapter = registry.dbAdapter(type);
 
   // We're going to do an adapter.create, below, EXCEPT if we're adding to
   // an existing toMany relationship, which uses a different adapter method.
   if(query instanceof AddToRelationshipQuery) {
     return adapter.doQuery(query).then(() => {
-      responseContext.status = 204;
+      response.status = 204;
     });
   }
 
   return adapter.doQuery(query).then((created) => {
-    responseContext.primary = created;
-    responseContext.status = 201;
+    response.primary = created;
+    response.status = 201;
 
     // We can only generate a Location url for a single resource.
     if(created instanceof Resource) {
@@ -24,7 +24,7 @@ export default function(requestContext, responseContext, registry, query) {
       const template = templates && templates.self;
       if(template) {
         const templateData = {"id": created.id, ...created.attrs};
-        responseContext.headers.location = templating.parse(template).expand(templateData);
+        response.headers.location = templating.parse(template).expand(templateData);
       }
     }
   });

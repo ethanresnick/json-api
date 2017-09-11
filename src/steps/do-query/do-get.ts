@@ -1,15 +1,15 @@
 import APIError from "../../types/APIError";
 
-export default function(requestContext, responseContext, registry, query) {
-  const type = requestContext.type;
+export default function(request, response, registry, query) {
+  const type = request.type;
   const adapter = registry.dbAdapter(type);
 
-  if(!requestContext.aboutRelationship) {
+  if(!request.aboutRelationship) {
     return adapter.doQuery(query).then(([primary, included, collectionSizeOrNull]) => {
-      responseContext.primary = primary;
-      responseContext.included = included;
+      response.primary = primary;
+      response.included = included;
       if(collectionSizeOrNull != null) {
-        responseContext.meta.total = collectionSizeOrNull;
+        response.meta.total = collectionSizeOrNull;
       }
     });
   }
@@ -21,17 +21,17 @@ export default function(requestContext, responseContext, registry, query) {
       // since we're allowing for paths that can optionally hold linkage,
       // which getRelationshipNames doesn't return.
       const relationship = resource.relationships &&
-        resource.relationships[requestContext.relationship];
+        resource.relationships[request.relationship];
 
       if(!relationship) {
         const title = "Invalid relationship name.";
-        const detail = `${requestContext.relationship} is not a valid ` +
+        const detail = `${request.relationship} is not a valid ` +
                      `relationship name on resources of type '${type}'`;
 
         throw new APIError(404, undefined, title, detail);
       }
 
-      responseContext.primary = relationship.linkage;
+      response.primary = relationship.linkage;
     });
   }
 

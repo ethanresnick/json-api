@@ -1,10 +1,10 @@
-export default function(requestContext, responseContext, registry, query) {
-  const type    = requestContext.type;
+export default function(request, response, registry, query) {
+  const type    = request.type;
   const adapter = registry.dbAdapter(type);
 
   return adapter.doQuery(query).then((resources) => {
-    responseContext.primary = (requestContext.relationship)
-      ? resources.relationships[requestContext.relationship].linkage
+    response.primary = (request.relationship)
+      ? resources.relationships[request.relationship].linkage
       : resources;
   });
 }
