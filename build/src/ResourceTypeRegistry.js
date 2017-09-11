@@ -3,13 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Immutable = require("immutable");
 const misc_1 = require("./util/misc");
 const type_handling_1 = require("./util/type-handling");
-const autoGetterProps = ["dbAdapter", "beforeSave", "beforeRender", "behaviors",
+const autoGetterProps = ["dbAdapter", "beforeSave", "beforeRender",
     "labelMappers", "defaultIncludes", "info", "parentType"];
-const globalResourceDefaults = Immutable.fromJS({
-    behaviors: {
-        dasherizeOutput: { enabled: true }
-    }
-});
+const globalResourceDefaults = Immutable.fromJS({});
 const typesKey = Symbol();
 class ResourceTypeRegistry {
     constructor(typeDescriptions = Object.create(null), descriptionDefaults = {}) {
@@ -69,7 +65,7 @@ class ResourceTypeRegistry {
         return doGet("beforeRender", type);
     }
     behaviors(type) {
-        return doGet("behavior", type);
+        return doGet("behaviors", type);
     }
     labelMappers(type) {
         return doGet("labelMappers", type);

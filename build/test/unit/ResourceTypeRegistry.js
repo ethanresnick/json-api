@@ -30,8 +30,10 @@ describe("ResourceTypeRegistry", function () {
             const registry = new ResourceTypeRegistry_1.default({
                 "someType": { info: { "description": "provided to constructor" } }
             });
-            expect(registry.type("someType")).to.be.an('object');
-            expect(registry.type("someType").info.description).to.equal("provided to constructor");
+            const resType = registry.type("someType");
+            const resTypeInfo = resType.info;
+            expect(resType).to.be.an('object');
+            expect(resTypeInfo.description).to.equal("provided to constructor");
         });
         it("should merge descriptionDefaults into resource description", () => {
             const registry = new ResourceTypeRegistry_1.default({
@@ -39,14 +41,14 @@ describe("ResourceTypeRegistry", function () {
             }, {
                 info: "provided as default"
             });
-            expect(registry.type("someType").info).to.equal("provided as default");
-            expect(registry.type("someType").behaviors).to.be.an("object");
+            const resTypeInfo = registry.type("someType").info;
+            expect(resTypeInfo).to.equal("provided as default");
         });
         it("should give the description precedence over the provided default", () => {
             const someTypeDesc = {
                 info: { "example": "overriding the default" },
-                beforeSave: () => { },
-                beforeRender: () => { },
+                beforeSave: (resource, req, res) => { return resource; },
+                beforeRender: (resource, req, res) => { return resource; },
                 urlTemplates: { "path": "test template" }
             };
             const registry = new ResourceTypeRegistry_1.default({
@@ -77,9 +79,11 @@ describe("ResourceTypeRegistry", function () {
             });
             const testTypeOutput = registry.type("testType");
             const testType2Output = registry.type("testType2");
-            expect(testTypeOutput.behaviors.dasherizeOutput.enabled).to.be.true;
-            expect(testType2Output.behaviors.dasherizeOutput.enabled).to.be.false;
-            expect(testTypeOutput.behaviors.dasherizeOutput.exceptions).to.deep.equal([]);
+            const testTypeBehaviors = testTypeOutput.behaviors;
+            const testType2Behaviors = testType2Output.behaviors;
+            expect(testTypeBehaviors.dasherizeOutput.enabled).to.be.true;
+            expect(testType2Behaviors.dasherizeOutput.enabled).to.be.false;
+            expect(testType2Behaviors.dasherizeOutput.exceptions).to.deep.equal([]);
         });
     });
     it("Should allow null/undefined to overwrite all defaults", () => {

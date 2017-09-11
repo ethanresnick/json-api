@@ -1,4 +1,5 @@
 import Immutable = require("immutable");
+import { TransformFn } from "./steps/apply-transform";
 import { AdapterInstance } from "./db-adapters/AdapterInterface";
 export declare type URLTemplates = {
     [type: string]: {
@@ -18,18 +19,19 @@ export declare type ResourceTypeDescription = {
     defaultIncludes?: string[];
     parentType?: string;
     urlTemplates?: URLTemplates[keyof URLTemplates];
-    beforeSave?: Function;
-    beforeRender?: Function;
+    beforeSave?: TransformFn;
+    beforeRender?: TransformFn;
     labelMappers?: {
         [label: string]: any;
     };
+    behaviors?: object;
 };
 export declare type ResourceTypeDescriptions = {
     [typeName: string]: ResourceTypeDescription;
 };
 export default class ResourceTypeRegistry {
     constructor(typeDescriptions?: ResourceTypeDescriptions, descriptionDefaults?: object | Immutable.Map<string, any>);
-    type(typeName: any): any;
+    type(typeName: any): ResourceTypeDescription | undefined;
     hasType(typeName: any): boolean;
     typeNames(): string[];
     urlTemplates(): URLTemplates;
