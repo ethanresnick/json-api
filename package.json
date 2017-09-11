@@ -97,7 +97,7 @@
     "lint": "tslint --project tsconfig.json --format verbose --config node_modules/@ethanresnick/tslint-config/tslint.json",
     "test": "export NODE_ENV=testing; mocha --compilers ts:ts-node/register --recursive test/unit/**/**/*.ts test/integration/**/**/*.ts",
     "build:lintfree": "npm run clean && cpr templates build/templates && echo Using TypeScript && tsc --version && tsc --pretty",
-    "build": "npm run build:lintfree && npm run lint",
+    "build": "npm run build:lintfree",
     "prepublish": "npm run test && npm run build:lintfree",
     "cover": "NODE_ENV=test nyc npm t",
     "cover:view": "npm run cover && open coverage/lcov-report/index.html",
