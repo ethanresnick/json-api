@@ -1,6 +1,5 @@
 import APIError from "../../types/APIError";
 import FindQuery from "../../types/Query/FindQuery";
-import parseQueryParams from "./parse-query-params";
 
 export default function(request, registry) {
   const type = request.type;
@@ -17,7 +16,7 @@ export default function(request, registry) {
       fields,
       sort,
       filter
-    } = parseQueryParams(request.queryParams);
+    } = request.queryParams;
 
     return new FindQuery({
       type,

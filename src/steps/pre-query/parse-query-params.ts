@@ -3,7 +3,7 @@ import { isValidMemberName } from "../../util/json-api";
 import { stripLeadingBMPChar } from "../../util/misc";
 import { Sort } from '../../types/index';
 import APIError from "../../types/APIError";
-import parseFilterParam from "./filter-parser";
+import parseFilterParam from "./filter-param-parser";
 import { FieldConstraint, Predicate, BinaryOpts, UnaryOpts } from "../../types/index";
 
 // the shape of values in req.queryParams, pre + post parsing.

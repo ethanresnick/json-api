@@ -20,6 +20,7 @@ import labelToIds from "../steps/pre-query/label-to-ids";
 import parseRequestPrimary from "../steps/pre-query/parse-request-primary";
 import validateRequestDocument from "../steps/pre-query/validate-document";
 import validateRequestResources from "../steps/pre-query/validate-resources";
+import parseQueryParams from "../steps/pre-query/parse-query-params";
 import applyTransform from "../steps/apply-transform";
 
 import makeGET from "../steps/make-query/make-get";
@@ -74,6 +75,31 @@ class APIController {
       // https://github.com/ethanresnick/json-api/issues/22
       response.headers.vary = "Accept";
 
+      // Map label to idOrIds, if applicable.
+      if(request.idOrIds && request.allowLabel) {
+        const mappedLabel = await labelToIds(
+          request.type, request.idOrIds, registry, frameworkReq
+        );
+
+        // set the idOrIds on the request context
+        request.idOrIds = mappedLabel;
+
+        // if our new ids are null/undefined or an empty array, we can set
+        // the primary resources too! (Note: one could argue that we should
+        // 404 rather than return null when the label matches no ids.)
+        const mappedIsEmptyArray = Array.isArray(mappedLabel) && !mappedLabel.length;
+
+        if(mappedLabel === null || mappedLabel === undefined || mappedIsEmptyArray) {
+          response.primary = (mappedLabel) ? new Collection() : null;
+        }
+      }
+
+      // Parse any query params and mutate the request object to have the parse results.
+      // Arguably, this could be done a bit more lazily, since we only need to
+      // first parse the params to construct get queries (atm, anyway).
+      // Still, we do this here so that any any transforms (like beforeSave)
+      // see the finished request object.
+      request.queryParams = parseQueryParams(request.queryParams);
 
       // If the type requested in the endpoint hasn't been registered, we 404.
       if(!registry.hasType(request.type)) {
@@ -100,25 +126,6 @@ class APIController {
           registry,
           { frameworkReq, frameworkRes, request }
         );
-      }
-
-      // Map label to idOrIds, if applicable.
-      if(request.idOrIds && request.allowLabel) {
-        const mappedLabel = await labelToIds(
-          request.type, request.idOrIds, registry, frameworkReq
-        );
-
-        // set the idOrIds on the request context
-        request.idOrIds = mappedLabel;
-
-        // if our new ids are null/undefined or an empty array, we can set
-        // the primary resources too! (Note: one could argue that we should
-        // 404 rather than return null when the label matches no ids.)
-        const mappedIsEmptyArray = Array.isArray(mappedLabel) && !mappedLabel.length;
-
-        if(mappedLabel === null || mappedLabel === undefined || mappedIsEmptyArray) {
-          response.primary = (mappedLabel) ? new Collection() : null;
-        }
       }
 
       // Add an empty meta object to start. Some of our methods below may fill this in.
