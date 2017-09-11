@@ -1,6 +1,9 @@
 import chai = require("chai");
 import chaiSubset = require("chai-subset");
-import ResourceTypeRegistry from "../../src/ResourceTypeRegistry";
+import ResourceTypeRegistry, {
+  ResourceTypeDescription,
+  ResourceTypeInfo
+} from "../../src/ResourceTypeRegistry";
 
 chai.use(chaiSubset);
 const expect = chai.expect;
@@ -38,8 +41,11 @@ describe("ResourceTypeRegistry", function() {
         "someType": { info: { "description": "provided to constructor" } }
       });
 
-      expect(registry.type("someType")).to.be.an('object');
-      expect(registry.type("someType").info.description).to.equal("provided to constructor");
+      const resType = <ResourceTypeDescription>registry.type("someType");
+      const resTypeInfo = <ResourceTypeInfo>resType.info;
+
+      expect(resType).to.be.an('object');
+      expect(resTypeInfo.description).to.equal("provided to constructor");
     });
 
     it("should merge descriptionDefaults into resource description", () => {
@@ -49,15 +55,17 @@ describe("ResourceTypeRegistry", function() {
         info: "provided as default"
       });
 
-      expect(registry.type("someType").info).to.equal("provided as default");
-      expect(registry.type("someType").behaviors).to.be.an("object");
+      const resTypeInfo = <ResourceTypeInfo>(<any>registry.type("someType")).info;
+
+      expect(resTypeInfo).to.equal("provided as default");
+      //expect(registry.type("someType").behaviors).to.be.an("object");
     });
 
     it("should give the description precedence over the provided default", () => {
       const someTypeDesc = {
         info: {"example": "overriding the default"},
-        beforeSave: () => {},
-        beforeRender: () => {},
+        beforeSave: (resource, req, res) => { return resource; },
+        beforeRender: (resource, req, res) => { return resource; },
         urlTemplates: {"path": "test template"}
       };
 
@@ -67,7 +75,7 @@ describe("ResourceTypeRegistry", function() {
         info: { "description": "provided as default" }
       });
 
-      const output = registry.type("someType");
+      const output = <ResourceTypeDescription>registry.type("someType");
 
       expect(output.info).to.deep.equal(someTypeDesc.info);
       expect(output.beforeSave).to.equal(someTypeDesc.beforeSave);
@@ -91,12 +99,15 @@ describe("ResourceTypeRegistry", function() {
         }
       });
 
-      const testTypeOutput = registry.type("testType");
-      const testType2Output = registry.type("testType2");
+      const testTypeOutput =  <ResourceTypeDescription>registry.type("testType");
+      const testType2Output = <ResourceTypeDescription>registry.type("testType2");
 
-      expect(testTypeOutput.behaviors.dasherizeOutput.enabled).to.be.true;
-      expect(testType2Output.behaviors.dasherizeOutput.enabled).to.be.false;
-      expect(testTypeOutput.behaviors.dasherizeOutput.exceptions).to.deep.equal([]);
+      const testTypeBehaviors = <any>testTypeOutput.behaviors;
+      const testType2Behaviors = <any>testType2Output.behaviors;
+
+      expect(testTypeBehaviors.dasherizeOutput.enabled).to.be.true;
+      expect(testType2Behaviors.dasherizeOutput.enabled).to.be.false;
+      expect(testType2Behaviors.dasherizeOutput.exceptions).to.deep.equal([]);
     });
   });
 

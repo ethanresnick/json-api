@@ -1,6 +1,7 @@
 import Immutable = require("immutable");
-import {pseudoTopSort} from "./util/misc";
-import {Maybe} from "./util/type-handling";
+import { pseudoTopSort } from "./util/misc";
+import { Maybe } from "./util/type-handling";
+import { TransformFn } from "./steps/apply-transform";
 import { AdapterInstance } from "./db-adapters/AdapterInterface";
 
 /**
@@ -9,8 +10,8 @@ import { AdapterInstance } from "./db-adapters/AdapterInterface";
  * same format. Those getters will take the name of the resource type whose
  * property is being retrieved.
  */
-const autoGetterProps = ["dbAdapter", "beforeSave", "beforeRender", "behaviors",
-  "labelMappers", "defaultIncludes", "info", "parentType"];
+const autoGetterProps = ["dbAdapter", "beforeSave", "beforeRender",
+  /*"behaviors",*/ "labelMappers", "defaultIncludes", "info", "parentType"];
 
 /**
  * Global defaults for all resource descriptions, to be merged into the
@@ -18,9 +19,9 @@ const autoGetterProps = ["dbAdapter", "beforeSave", "beforeRender", "behaviors",
  * into the values provided in each resource type description.
  */
 const globalResourceDefaults = Immutable.fromJS({
-  behaviors: {
+  /*behaviors: {
     dasherizeOutput: { enabled: true }
-  }
+  }*/
 });
 
 const typesKey = Symbol();
@@ -43,9 +44,10 @@ export type ResourceTypeDescription = {
   defaultIncludes?: string[],
   parentType?: string,
   urlTemplates?: URLTemplates[keyof URLTemplates],
-  beforeSave?: Function,
-  beforeRender?: Function,
-  labelMappers?: { [label: string]: any }
+  beforeSave?: TransformFn,
+  beforeRender?: TransformFn,
+  labelMappers?: { [label: string]: any },
+  behaviors?: object
 }
 
 export type ResourceTypeDescriptions = {
@@ -119,7 +121,7 @@ export default class ResourceTypeRegistry {
     });
   }
 
-  type(typeName) {
+  type(typeName): ResourceTypeDescription | undefined {
     return Maybe(this[typesKey][typeName]).bind(it => it.toJS()).unwrap();
   }
 
@@ -161,7 +163,7 @@ export default class ResourceTypeRegistry {
   }
 
   behaviors(type) {
-    return doGet("behavior", type);
+    return doGet("behaviors", type);
   }
 
   labelMappers(type): ResourceTypeDescription['labelMappers'] | undefined {

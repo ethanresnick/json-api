@@ -12,6 +12,17 @@ import ResourceTypeRegistry from "../ResourceTypeRegistry";
 export type Transformable = Resource | Collection | Linkage | null | undefined;
 export type Extras = { frameworkReq: any, frameworkRes: any, request: any };
 export type TransformMode = 'beforeSave' | 'beforeRender';
+export type TransformFn = (
+  resource: Resource,
+  frameworkReq: Extras['frameworkReq'],
+  frameworkRes: Extras['frameworkRes'],
+  superFn: (
+    resource: Resource,
+    req: Extras['frameworkReq'],
+    res: Extras['frameworkRes'],
+    extras: Extras) => Resource | undefined | Promise<Resource|undefined>,
+  extras: Extras
+) => Resource | undefined | Promise<Resource|undefined>
 
 export default function<T extends Transformable>(
   toTransform: T,
@@ -59,7 +70,7 @@ function transform(
       return resource;
     }
     else {
-      return (<Function>registry[transformMode](parentType))(
+      return (<TransformFn>registry[transformMode](parentType))(
         resource,
         req,
         res,
