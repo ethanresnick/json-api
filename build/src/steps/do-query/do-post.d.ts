@@ -1,1 +1,1 @@
-export default function (requestContext: any, responseContext: any, registry: any, query: any): any;
+export default function (request: any, response: any, registry: any, query: any): any;

@@ -1,29 +1,29 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const APIError_1 = require("../../types/APIError");
-function default_1(requestContext, responseContext, registry, query) {
-    const type = requestContext.type;
+function default_1(request, response, registry, query) {
+    const type = request.type;
     const adapter = registry.dbAdapter(type);
-    if (!requestContext.aboutRelationship) {
+    if (!request.aboutRelationship) {
         return adapter.doQuery(query).then(([primary, included, collectionSizeOrNull]) => {
-            responseContext.primary = primary;
-            responseContext.included = included;
+            response.primary = primary;
+            response.included = included;
             if (collectionSizeOrNull != null) {
-                responseContext.meta.total = collectionSizeOrNull;
+                response.meta.total = collectionSizeOrNull;
             }
         });
     }
     else {
         return adapter.doQuery(query).then(([resource]) => {
             const relationship = resource.relationships &&
-                resource.relationships[requestContext.relationship];
+                resource.relationships[request.relationship];
             if (!relationship) {
                 const title = "Invalid relationship name.";
-                const detail = `${requestContext.relationship} is not a valid ` +
+                const detail = `${request.relationship} is not a valid ` +
                     `relationship name on resources of type '${type}'`;
                 throw new APIError_1.default(404, undefined, title, detail);
             }
-            responseContext.primary = relationship.linkage;
+            response.primary = relationship.linkage;
         });
     }
 }

@@ -21,6 +21,7 @@ const label_to_ids_1 = require("../steps/pre-query/label-to-ids");
 const parse_request_primary_1 = require("../steps/pre-query/parse-request-primary");
 const validate_document_1 = require("../steps/pre-query/validate-document");
 const validate_resources_1 = require("../steps/pre-query/validate-resources");
+const parse_query_params_1 = require("../steps/pre-query/parse-query-params");
 const apply_transform_1 = require("../steps/apply-transform");
 const make_get_1 = require("../steps/make-query/make-get");
 const do_get_1 = require("../steps/do-query/do-get");
@@ -43,6 +44,15 @@ class APIController {
                 yield requestValidators.checkBodyExistence(request);
                 response.contentType = yield negotiate_content_type_1.default(request.accepts, ["application/vnd.api+json"]);
                 response.headers.vary = "Accept";
+                if (request.idOrIds && request.allowLabel) {
+                    const mappedLabel = yield label_to_ids_1.default(request.type, request.idOrIds, registry, frameworkReq);
+                    request.idOrIds = mappedLabel;
+                    const mappedIsEmptyArray = Array.isArray(mappedLabel) && !mappedLabel.length;
+                    if (mappedLabel === null || mappedLabel === undefined || mappedIsEmptyArray) {
+                        response.primary = (mappedLabel) ? new Collection_1.default() : null;
+                    }
+                }
+                request.queryParams = parse_query_params_1.default(request.queryParams);
                 if (!registry.hasType(request.type)) {
                     throw new APIError_1.default(404, undefined, `${request.type} is not a valid type.`);
                 }
@@ -54,14 +64,6 @@ class APIController {
                         yield validate_resources_1.default(request.type, parsedPrimary, registry);
                     }
                     request.primary = yield apply_transform_1.default(parsedPrimary, "beforeSave", registry, { frameworkReq, frameworkRes, request });
-                }
-                if (request.idOrIds && request.allowLabel) {
-                    const mappedLabel = yield label_to_ids_1.default(request.type, request.idOrIds, registry, frameworkReq);
-                    request.idOrIds = mappedLabel;
-                    const mappedIsEmptyArray = Array.isArray(mappedLabel) && !mappedLabel.length;
-                    if (mappedLabel === null || mappedLabel === undefined || mappedIsEmptyArray) {
-                        response.primary = (mappedLabel) ? new Collection_1.default() : null;
-                    }
                 }
                 response.meta = {};
                 if (typeof response.primary === "undefined") {
