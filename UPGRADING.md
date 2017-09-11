@@ -17,7 +17,7 @@
 ## New Features
 ### Global
 - It's now possible to transform the query that the library builds from the request before that query is run, to support all sorts of advanced use cases. See an example [here](https://github.com/ethanresnick/json-api/blob/c418ebf0411774d61f74ff8752228d3a995e5456/test/app/src/index.ts#L35).
-- The beforeSave and beforeRender transform functions are now called with an additional argument that holds an object with a `request` member, whose value is the internal request object used by the JSON:API library.
+- The beforeSave and beforeRender transform functions are now called with an additional argument that holds an object with a `request` member, whose value is the internal request object used by the JSON:API library, and a `registry` member, whose value is the ResourceTypeRegistry.
 
 
 # 2.15 -> 2.16 Breaking Changes  (Not Semver until 3.0)

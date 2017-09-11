@@ -123,8 +123,7 @@ class APIController {
         request.primary = await applyTransform(
           parsedPrimary,
           "beforeSave",
-          registry,
-          { frameworkReq, frameworkRes, request }
+          { frameworkReq, frameworkRes, request, registry }
         );
       }
 
@@ -198,15 +197,13 @@ class APIController {
     response.primary = await applyTransform(
       response.primary,
       "beforeRender",
-      registry,
-      { frameworkReq, frameworkRes, request }
+      { frameworkReq, frameworkRes, request, registry }
     );
 
     response.included = await applyTransform(
       response.included,
       "beforeRender",
-      registry,
-      { frameworkReq, frameworkRes, request }
+      { frameworkReq, frameworkRes, request, registry }
     );
 
     if(response.status !== 204) {

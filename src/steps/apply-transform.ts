@@ -2,6 +2,7 @@ import Resource from "../types/Resource";
 import Collection from "../types/Collection";
 import Linkage from "../types/Linkage";
 import ResourceTypeRegistry from "../ResourceTypeRegistry";
+import { Request } from '../types/HTTP/Request';
 
 
 /**
@@ -10,7 +11,12 @@ import ResourceTypeRegistry from "../ResourceTypeRegistry";
 // TODO: Think about the return value here for single resources that are to be
 // ommitted from the response (and replaced with an error).
 export type Transformable = Resource | Collection | Linkage | null | undefined;
-export type Extras = { frameworkReq: any, frameworkRes: any, request: any };
+export type Extras = {
+  frameworkReq: any,
+  frameworkRes: any,
+  request: Request,
+  registry: ResourceTypeRegistry
+};
 export type TransformMode = 'beforeSave' | 'beforeRender';
 export type TransformFn = (
   resource: Resource,
@@ -27,18 +33,17 @@ export type TransformFn = (
 export default function<T extends Transformable>(
   toTransform: T,
   mode: TransformMode,
-  registry: ResourceTypeRegistry,
   extras: Extras
 ): Promise<T> {
   if(toTransform instanceof Resource) {
     // TODO: if transform returns undefined???
-    return <Promise<T>>transform(toTransform, mode, registry, extras);
+    return <Promise<T>>transform(toTransform, mode, extras);
   }
 
   else if (toTransform instanceof Collection) {
     // below, allow the user to return undefined to remove a vlaue.
     return <Promise<T>>Promise.all(toTransform.resources.map((it) =>
-      transform(it, mode, registry, extras)
+      transform(it, mode, extras)
     )).then((transformed) => {
       const resources = <Resource[]>transformed.filter((it) => it !== undefined);
       return new Collection(resources);
@@ -54,8 +59,8 @@ export default function<T extends Transformable>(
 function transform(
   resource: Resource,
   transformMode: TransformMode,
-  registry: ResourceTypeRegistry,
   extras: Extras): Promise<Resource|undefined> {
+  const { registry } = extras;
   const transformFn = registry[transformMode](resource.type);
 
   // SuperFn is a function that the first transformer can invoke.
