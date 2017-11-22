@@ -14,6 +14,9 @@
 ### Koa + Express Strategies
 - You should now provide a Host option when initializing the strategy, for security. See example in README. If you're running your API using express 4 on a host that includes a port number you **must** now provide this option.
 
+### Document Class
+- The constructor's signature and the class methods have changed. This shouldn't be an issue unless you were manually constructing document instances. See file for details.
+
 ## New Features
 ### Global
 - It's now possible to transform the query that the library builds from the request before that query is run, to support all sorts of advanced use cases. See an example [here](https://github.com/ethanresnick/json-api/blob/c418ebf0411774d61f74ff8752228d3a995e5456/test/app/src/index.ts#L35).

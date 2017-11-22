@@ -19,8 +19,17 @@ describe("Document class", () => {
     const topLevelMeta = {"mcawesome": true};
     const urlTemplates = {"people": {"relationship": "RELATIONSHIP{ownerId}{path}"}};
 
-    const singleResourceDocJSON = new Document(person, undefined, topLevelMeta, urlTemplates).get();
-    const collectionDocJSON = new Document(people, undefined, topLevelMeta, urlTemplates).get();
+    const singleResourceDocJSON = new Document({
+      primary: person,
+      meta: topLevelMeta,
+      urlTemplates
+    }).toJSON();
+
+    const collectionDocJSON = new Document({
+      primary: people,
+      meta: topLevelMeta,
+      urlTemplates
+    }).toJSON();
 
     it("should key primary data under data, with each resource's type, id", () => {
       expect(singleResourceDocJSON.data).to.containSubset({"id": "31", "type": "people"});
@@ -31,28 +40,26 @@ describe("Document class", () => {
     });
 
     it("should represent includes as an array under `included`", () => {
-      expect((new Document(people, new Collection([person2]))).get().included)
+      const doc =
+        new Document({ primary: people, included: new Collection([person2]) });
+
+      expect(doc.toJSON().included)
         .to.containSubset([{"id": "32", "type": "people", "attributes": {"name": "ethan"}}]);
     });
 
     it("Should include a top-level self links", () => {
       const reqURI = "http://bob";
-      const doc = new Document(people, new Collection([person2]), undefined, undefined, reqURI);
-      const docJSON = doc.get();
+      const doc = new Document({ primary: people, included: new Collection([person2]), reqURI });
+      const docJSON = doc.toJSON();
 
       expect(docJSON.links).to.be.an("object");
       expect(docJSON.links && docJSON.links['self']).to.equal(reqURI);
     });
 
     it("should output top-level meta information, iff provided", () => {
-      const docWithoutMeta = new Document(people, new Collection([person2]), undefined);
+      const docWithoutMeta = new Document({ primary: people, included: new Collection([person2]) });
       expect(collectionDocJSON.meta).to.deep.equal(topLevelMeta);
-      expect(docWithoutMeta.get().meta).to.be.undefined;
-    });
-
-    it("should reject non-object meta information", () => {
-      expect(() => new Document(people, new Collection([person2]), ["bob"]))
-        .to.throw(/meta.*object/i);
+      expect(docWithoutMeta.toJSON().meta).to.be.undefined;
     });
 
     it("should output relationship linkage iff provided", () => {
