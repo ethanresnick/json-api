@@ -86,7 +86,7 @@
     "superagent": "1.2.x",
     "ts-node": "^3.3.0",
     "tslint": "^5.7.0",
-    "typescript": "^2.5.2"
+    "typescript": "^2.6.1"
   },
   "peerDependencies": {
     "mongoose": "^4.7.0",
