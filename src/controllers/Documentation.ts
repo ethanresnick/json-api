@@ -73,7 +73,7 @@ export default class DocumentationController {
         );
       }
 
-      response.body = (new Document(descriptionResources)).get(true);
+      response.body = new Document({ primary: descriptionResources }).toString();
     }
 
     return Promise.resolve(response);

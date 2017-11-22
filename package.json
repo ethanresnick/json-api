@@ -86,7 +86,7 @@
     "superagent": "1.2.x",
     "ts-node": "^3.3.0",
     "tslint": "^5.7.0",
-    "typescript": "^2.5.2"
+    "typescript": "^2.6.1"
   },
   "peerDependencies": {
     "mongoose": "^4.7.0",
@@ -95,7 +95,7 @@
   "scripts": {
     "clean": "rimraf build",
     "lint": "tslint --project tsconfig.json --format verbose --config node_modules/@ethanresnick/tslint-config/tslint.json",
-    "test": "export NODE_ENV=testing; mocha --compilers ts:ts-node/register --recursive test/unit/**/**/*.ts test/integration/**/**/*.ts",
+    "test": "export NODE_ENV=testing; mocha --compilers ts:ts-node/register --recursive test/unit/ test/integration/",
     "build:lintfree": "npm run clean && cpr templates build/templates && echo Using TypeScript && tsc --version && tsc --pretty",
     "build": "npm run build:lintfree",
     "prepublish": "npm run test && npm run build:lintfree",

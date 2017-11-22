@@ -22,7 +22,9 @@ export default function(acceptHeader, availableBaseTypes) {
 
     // If an endpoint supports JSON API's media type, it implicity
     // supports JSON too. Though we'll only respond with JSON if *necessary*.
-    const endpointSupportsJsonApi = availableBaseTypes.indexOf("application/vnd.api+json") !== -1;
+    const endpointSupportsJsonApi =
+      availableBaseTypes.indexOf("application/vnd.api+json") !== -1;
+
     const syntheticAvailableBaseTypes = endpointSupportsJsonApi
       ? ["application/json"].concat(availableBaseTypes)
       : availableBaseTypes;

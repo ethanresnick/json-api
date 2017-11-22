@@ -48,39 +48,35 @@ describe("ResourceTypeRegistry", function() {
       expect(resTypeInfo.description).to.equal("provided to constructor");
     });
 
-    it("should merge descriptionDefaults into resource description", () => {
+    it("should deep merge descriptionDefaults into resource description", () => {
       const registry = new ResourceTypeRegistry({
-        "someType": {}
+        "someType": {
+          info: { "example": "merged with the default" }
+        }
       }, <object>{
-        info: "provided as default"
+        info: { description: "provided as default" }
       });
 
       const resTypeInfo = <ResourceTypeInfo>(<any>registry.type("someType")).info;
 
-      expect(resTypeInfo).to.equal("provided as default");
-      //expect(registry.type("someType").behaviors).to.be.an("object");
+      expect(resTypeInfo).to.deep.equal({
+        example: "merged with the default",
+        description: "provided as default"
+      });
     });
 
     it("should give the description precedence over the provided default", () => {
       const someTypeDesc = {
-        info: {"example": "overriding the default"},
-        beforeSave: (resource, req, res) => { return resource; },
-        beforeRender: (resource, req, res) => { return resource; },
-        urlTemplates: {"path": "test template"}
+        beforeSave: (resource, req, res) => { return resource; }
       };
 
       const registry = new ResourceTypeRegistry({
         "someType": someTypeDesc
       }, <object>{
-        info: { "description": "provided as default" }
+        beforeSave: (resource, req, res) => { return resource; },
       });
 
-      const output = <ResourceTypeDescription>registry.type("someType");
-
-      expect(output.info).to.deep.equal(someTypeDesc.info);
-      expect(output.beforeSave).to.equal(someTypeDesc.beforeSave);
-      expect(output.beforeRender).to.equal(someTypeDesc.beforeRender);
-      expect(output.urlTemplates).to.deep.equal(someTypeDesc.urlTemplates);
+      expect(registry.type("someType")).to.equal(someTypeDesc.beforeSave);
     });
 
     it("should give description and resource defaults precedence over global defaults", () => {

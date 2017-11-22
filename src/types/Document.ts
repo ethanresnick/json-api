@@ -7,7 +7,7 @@ import { RelationshipJSON } from './Relationship';
 import {objectIsEmpty, mapResources, mapObject} from "../util/type-handling";
 import {arrayUnique} from "../util/arrays";
 import { URLTemplates } from "../ResourceTypeRegistry";
-import { PrimaryDataOrErrors, PrimaryDataJSON } from './index';
+import { PrimaryData, PrimaryDataJSON } from './index';
 
 // TODO: Make the constructor API sane in the presence of types;
 // actually define the API for this class (e.g., which fields are public?)
@@ -26,74 +26,76 @@ export type DocumentJSON = ({
   links?: object
 };
 
+export type DocumentData = {
+  meta?: object;
+  included?: Collection;
+  primary?: PrimaryData;
+  errors?: APIError[];
+  reqURI?: string;
+  urlTemplates?: URLTemplates;
+};
+
 export default class Document {
-  public meta: object | undefined;
-  public reqURI: string | undefined;
-  public included: undefined | Collection;
-  public primaryOrErrors: PrimaryDataOrErrors;
-  protected urlTemplates: URLTemplates;
+  private meta: DocumentData['meta'];
+  private included: DocumentData['included'];
+  private primary: DocumentData['primary'];
+  private errors: DocumentData['errors'];
+  private reqURI: DocumentData['reqURI'];
+  private urlTemplates: URLTemplates;
 
-  constructor(primaryOrErrors: PrimaryDataOrErrors, included: undefined | Collection = undefined, meta: object | undefined = undefined, urlTemplates: URLTemplates = {}, reqURI: string | undefined = undefined) {
-    [this.primaryOrErrors, this.included, this.reqURI] = [primaryOrErrors, included, reqURI];
+  constructor(data: DocumentData) {
+    const { urlTemplates = {}, ...restData } = data;
 
-    // validate meta
-    if(meta !== undefined) {
-      if(typeof meta === "object" && !Array.isArray(meta)) {
-        this.meta = meta;
-      }
-      else {
-        throw new Error("Meta information must be an object");
-      }
-    }
+    // Assign data members.
+    // TODO: decide what level of validation is appropriate, given typescript.
+    Object.assign(this, restData);
 
     // parse all the templates once on construction.
+    // TODO: accept parsed templates (which we probably want to store
+    // in the registry) so that we're not incurring this overhead.
     this.urlTemplates = mapObject(urlTemplates, (templatesForType) => {
       return mapObject(templatesForType, templating.parse.bind(templating));
     });
-
-    this.reqURI = reqURI;
   }
 
+  toJSON() {
+    const res = <DocumentJSON>{};
+    const data = this.primary;
 
-  get(): DocumentJSON;
-  get(stringify: true): string;
-  get(stringify: false): DocumentJSON;
-  get(stringify: boolean = false) {
-    const doc = <DocumentJSON>{};
-
-    if(this.meta) doc.meta = this.meta;
+    if(this.meta) {
+      res.meta = this.meta;
+    }
 
     // TODO: top-level related link.
     if(this.reqURI) {
-      doc.links = {"self": this.reqURI};
+      res.links = {"self": this.reqURI};
     }
 
-    if(this.primaryOrErrors instanceof Collection || this.primaryOrErrors instanceof Resource) {
-      doc.data = mapResources(this.primaryOrErrors, (resource) => {
-        return resourceToJSON(resource, this.urlTemplates);
-      });
+    if(this.errors) {
+      res.errors = this.errors.map(errorToJSON);
     }
 
-    else if(this.primaryOrErrors instanceof Linkage) {
-      doc.data = this.primaryOrErrors.toJSON();
-    }
-
-    else if(this.primaryOrErrors === null) {
-      doc.data = this.primaryOrErrors;
-    }
-
-    // it's either resource, a collection, linkage, null, or errors...
     else {
-      doc.errors = this.primaryOrErrors.map(errorToJSON);
+      res.data = data instanceof Collection || data instanceof Resource
+        ? mapResources(data, (resource) =>
+            resourceToJSON(resource, this.urlTemplates))
+
+        : (data instanceof Linkage
+            ? data.toJSON()
+            : data); // data is null in this case.
     }
 
     if(this.included && this.included instanceof Collection) {
-      doc.included = arrayUnique(this.included.resources).map((resource) => {
+      res.included = arrayUnique(this.included.resources).map((resource) => {
         return resourceToJSON(resource, this.urlTemplates);
       });
     }
 
-    return stringify ? JSON.stringify(doc) : doc;
+    return res;
+  }
+
+  toString() {
+    return JSON.stringify(this.toJSON());
   }
 }
 
@@ -106,13 +108,13 @@ function relationshipToJSON(relationship, urlTemplates, templateData): Relations
 
   // Add urls that we can.
   if(urlTemplates[templateData.ownerType]) {
-    const relatedUrlTemplate = relationship.relatedURITemplate ?
-      templating.parse(relationship.relatedURITemplate) :
-      urlTemplates[templateData.ownerType].related;
+    const relatedUrlTemplate = relationship.relatedURITemplate
+      ? templating.parse(relationship.relatedURITemplate)
+      : urlTemplates[templateData.ownerType].related;
 
-    const selfUrlTemplate = relationship.selfURITemplate ?
-      templating.parse(relationship.selfURITemplate) :
-      urlTemplates[templateData.ownerType].relationship;
+    const selfUrlTemplate = relationship.selfURITemplate
+      ? templating.parse(relationship.selfURITemplate)
+      : urlTemplates[templateData.ownerType].relationship;
 
     if(relatedUrlTemplate || selfUrlTemplate) {
       result.links = {};
@@ -161,7 +163,6 @@ function resourceToJSON(resource, urlTemplates): ResourceJSON {
       json.relationships[path] = relationshipToJSON(resource.relationships[path], urlTemplates, linkTemplateData);
     }
   }
-
 
   return json;
 }

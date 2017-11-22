@@ -5,7 +5,7 @@ import ResourceTypeRegistry from '../ResourceTypeRegistry';
 // because TS doesn't have the concept of a Sealed type.
 import Response, { Response as SealedResponse } from "../types/HTTP/Response";
 import Query from "../types/Query/Query";
-import Document from "../types/Document";
+import Document, { DocumentData } from "../types/Document";
 import Collection from "../types/Collection";
 import APIError from "../types/APIError";
 import logger from '../util/logger';
@@ -55,6 +55,9 @@ class APIController {
   async handle(request, frameworkReq, frameworkRes, queryTransform?: (q: Query) => Query | Promise<Query>) {
     const response = new Response();
     const registry = this.registry;
+    const templates = registry.urlTemplates();
+    const makeDoc = (data: DocumentData) =>
+      new Document({ reqURI: request.uri, urlTemplates: templates, ...data });
 
     // Kick off the chain for generating the response.
     try {
@@ -189,7 +192,7 @@ class APIController {
     // throwing, return here and don't bother with transforms.
     if(response.errors.length) {
       response.status = pickStatus(response.errors.map((v) => Number(v.status)));
-      response.body = new Document(response.errors).get(true);
+      response.body = makeDoc({ errors: response.errors }).toString();
       return response;
     }
 
@@ -209,10 +212,11 @@ class APIController {
     if(response.status !== 204) {
       // TODO: response.primary could be undefined here, from the transform
       // or the doMETHOD functions above. How to handle that?
-      response.body = new Document(
-        <any>response.primary, response.included,
-        response.meta, registry.urlTemplates(), request.uri
-      ).get(true);
+      response.body = makeDoc({
+        primary: <any>response.primary,
+        included: response.included,
+        meta: response.meta
+      }).toString();
     }
 
     return response;
@@ -234,7 +238,8 @@ class APIController {
       .map(<(v: any) => APIError>APIError.fromError.bind(APIError));
 
     response.status = pickStatus(response.errors.map((v) => Number(v.status)));
-    response.body = new Document(response.errors).get(true);
+    response.body =
+      new Document({ errors: response.errors }).toString();
 
     return negotiateContentType(requestAccepts, ["application/vnd.api+json"])
       .then((contentType) => {

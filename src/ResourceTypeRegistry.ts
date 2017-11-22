@@ -5,15 +5,6 @@ import { TransformFn } from "./steps/apply-transform";
 import { AdapterInstance } from "./db-adapters/AdapterInterface";
 
 /**
- * A private array of properties that will be used by the class below to
- * automatically generate simple getters for each property, all following the
- * same format. Those getters will take the name of the resource type whose
- * property is being retrieved.
- */
-const autoGetterProps = ["dbAdapter", "beforeSave", "beforeRender",
-  /*"behaviors",*/ "labelMappers", "defaultIncludes", "info", "parentType"];
-
-/**
  * Global defaults for all resource descriptions, to be merged into the
  * defaults provided to the ResourceTypeRegistry, which are in turn merged
  * into the values provided in each resource type description.
@@ -151,53 +142,40 @@ export default class ResourceTypeRegistry {
 
   // Note: type signature's lying here; this could be undefined.
   dbAdapter(type): AdapterInstance<any> {
-    return doGet("dbAdapter", type);
+    return doGet(this, "dbAdapter", type);
   }
 
   beforeSave(type): ResourceTypeDescription['beforeSave'] | undefined {
-    return doGet("beforeSave", type);
+    return doGet(this, "beforeSave", type);
   }
 
   beforeRender(type): ResourceTypeDescription['beforeRender'] | undefined {
-    return doGet("beforeRender", type);
+    return doGet(this, "beforeRender", type);
   }
 
   behaviors(type) {
-    return doGet("behaviors", type);
+    return doGet(this, "behaviors", type);
   }
 
   labelMappers(type): ResourceTypeDescription['labelMappers'] | undefined {
-    return doGet("labelMappers", type);
+    return doGet(this, "labelMappers", type);
   }
 
   defaultIncludes(type): ResourceTypeDescription['defaultIncludes'] | undefined {
-    return doGet("defaultIncludes", type);
- }
+    return doGet(this, "defaultIncludes", type);
+  }
 
   info(type): ResourceTypeDescription['info'] | undefined {
-    return doGet("info", type);
+    return doGet(this, "info", type);
   }
 
   parentType(type): ResourceTypeDescription['parentType'] | undefined {
-    return doGet("parentType", type);
+    return doGet(this, "parentType", type);
   }
 }
 
-autoGetterProps.forEach((propName) => {
-  ResourceTypeRegistry.prototype[propName] = makeGetter(propName);
-});
-
-function makeGetter(attrName) {
-  return function(type) {
-    return Maybe(this[typesKey][type])
-      .bind(it => it.get(attrName))
-      .bind(it => it instanceof Immutable.Map || it instanceof Immutable.List ? it.toJS() : it)
-      .unwrap();
-  };
-}
-
-function doGet(attrName, type) {
-  return Maybe(this[typesKey][type])
+function doGet(inst, attrName, type) {
+  return Maybe(inst[typesKey][type])
     .bind(it => it.get(attrName))
     .bind(it => it instanceof Immutable.Map || it instanceof Immutable.List ? it.toJS() : it)
     .unwrap();
