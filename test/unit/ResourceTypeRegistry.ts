@@ -76,7 +76,7 @@ describe("ResourceTypeRegistry", function() {
         beforeSave: (resource, req, res) => { return resource; },
       });
 
-      expect(registry.type("someType")).to.equal(someTypeDesc.beforeSave);
+      expect((<any>registry.type("someType")).beforeSave).to.equal(someTypeDesc.beforeSave);
     });
 
     it("should give description and resource defaults precedence over global defaults", () => {
