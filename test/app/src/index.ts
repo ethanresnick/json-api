@@ -28,6 +28,19 @@ export default database.then(function(dbModule) {
   const Front = new API.httpStrategies.Express(Controller, Docs);
   const apiReqHandler = Front.apiRequest.bind(Front);
 
+  const FrontWith406Delegation =
+    new API.httpStrategies.Express(Controller, Docs, {
+      handleContentNegotiation: false
+    });
+
+  // Add a route that delegates to next route on 406.
+  app.get('/:type(organizations)/no-id/406-delegation-test',
+    FrontWith406Delegation.apiRequest.bind(FrontWith406Delegation),
+    (req, res, next) => {
+      res.header('Content-Type', 'text/plain')
+      res.send("Hello from express");
+    })
+
   // Now, add the routes.
   // Note: below, express incorrectly passes requests using PUT and other
   // unknown methods into the API Controller at some routes. We're doing this

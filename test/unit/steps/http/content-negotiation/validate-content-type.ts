@@ -1,5 +1,4 @@
 import chai = require("chai");
-import Q = require("q");
 import validate from "../../../../../src/steps/http/content-negotiation/validate-content-type";
 
 const {expect} = chai;
@@ -9,7 +8,7 @@ describe("validateContentType", () => {
   const validMock   = {contentType: "application/vnd.api+json", ext: []};
 
   it("should return a promise", () => {
-    expect(Q.isPromise(validate(validMock))).to.be.true;
+    expect(validate(validMock) instanceof Promise).to.be.true;
   });
 
   it("should fail resquests with invalid content types with a 415", (done) => {

@@ -7,6 +7,11 @@ import APIController from "../controllers/API";
 import DocsController from "../controllers/Documentation";
 export { UnsealedRequest };
 
+export type HTTPStrategyOptions = {
+  handleContentNegotiation?: boolean,
+  tunnel?: boolean
+};
+
 /**
  * This controller is the base for http strategy classes. It's built around
  * the premise that most if not all http frameworks are built on top of the
@@ -28,20 +33,17 @@ export { UnsealedRequest };
 export default class BaseStrategy {
   protected api: APIController;
   protected docs: DocsController;
-  protected config: { handleContentNegotiation: boolean, tunnel: boolean };
+  protected config: HTTPStrategyOptions;
 
-  constructor(apiController: APIController, docsController: DocsController, options: object) {
-    const defaultOptions = {
-      tunnel: false,
-      handleContentNegotiation: true
-    };
-
+  constructor(apiController: APIController, docsController: DocsController, options?: HTTPStrategyOptions) {
     this.api = apiController;
     this.docs = docsController;
 
-    // Note: as of 2.4, TS will complain if we use an object spread here.
-    //tslint:disable-next-line:prefer-object-spread
-    this.config = Object.assign({}, defaultOptions, options); // apply options
+    this.config = {
+      tunnel: false,
+      handleContentNegotiation: true,
+      ...options
+    };
   }
 
   /**
