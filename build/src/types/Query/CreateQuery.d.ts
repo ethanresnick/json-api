@@ -7,8 +7,10 @@ export declare type CreateQueryOptions = QueryOptions & {
 export default class CreateQuery extends Query {
     protected query: {
         readonly type: QueryOptions['type'];
+        readonly returning: QueryOptions['returning'];
+        readonly catch: QueryOptions['catch'];
         readonly records: CreateQueryOptions['records'];
     };
-    constructor(opts: CreateQueryOptions);
+    constructor({records, ...baseOpts}: CreateQueryOptions);
     readonly records: Resource | Collection;
 }

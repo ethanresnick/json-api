@@ -2,10 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const APIError_1 = require("../../types/APIError");
 const Linkage_1 = require("../../types/Linkage");
+const Resource_1 = require("../../types/Resource");
 const type_handling_1 = require("../../util/type-handling");
 const CreateQuery_1 = require("../../types/Query/CreateQuery");
 const AddToRelationshipQuery_1 = require("../../types/Query/AddToRelationshipQuery");
-function default_1(request, registry) {
+const templating = require("url-template");
+function default_1(request, registry, makeDoc) {
     const primary = request.primary;
     const type = request.type;
     if (primary instanceof Linkage_1.default) {
@@ -16,7 +18,8 @@ function default_1(request, registry) {
             type,
             id: request.idOrIds,
             relationshipName: request.relationship,
-            linkage: primary
+            linkage: primary,
+            returning: () => ({ status: 204 })
         });
     }
     else {
@@ -27,7 +30,24 @@ function default_1(request, registry) {
         });
         return new CreateQuery_1.default({
             type,
-            records: primary
+            records: primary,
+            returning: (created) => {
+                const res = {
+                    status: 201,
+                    document: makeDoc({ primary: created })
+                };
+                if (created instanceof Resource_1.default) {
+                    const templates = registry.urlTemplates(created.type);
+                    const template = templates && templates.self;
+                    if (template) {
+                        const templateData = Object.assign({ "id": created.id }, created.attrs);
+                        res.headers = {
+                            Location: templating.parse(template).expand(templateData)
+                        };
+                    }
+                }
+                return res;
+            }
         });
     }
 }

@@ -1,10 +1,9 @@
 import Linkage, { LinkageJSON } from './Linkage';
 import Resource from './Resource';
 import Collection from './Collection';
-import APIError from "./APIError";
+import Document from "./Document";
 export declare type PrimaryData = Resource | Collection | null | Linkage;
 export declare type PrimaryDataJSON = Resource | Collection | null | LinkageJSON;
-export declare type PrimaryDataOrErrors = PrimaryData | APIError[];
 export declare type Sort = {
     field: string;
     direction: 'ASC' | 'DESC';
@@ -31,3 +30,18 @@ export declare type FieldConstraint = ({
 };
 export declare const BinaryOpts: string[];
 export declare const UnaryOpts: string[];
+export declare type Result = {
+    headers?: {
+        [headerName: string]: string;
+    };
+    ext?: string[];
+    status?: number;
+    document?: Document;
+};
+export declare type HTTPResponse = {
+    headers: {
+        [headerName: string]: string;
+    };
+    status: number;
+    body?: string;
+};

@@ -1,7 +1,7 @@
 import Collection from "./Collection";
-import { APIErrorJSON } from './APIError';
+import APIError, { APIErrorJSON } from './APIError';
 import { URLTemplates } from "../ResourceTypeRegistry";
-import { PrimaryDataOrErrors, PrimaryDataJSON } from './index';
+import { PrimaryData, PrimaryDataJSON } from './index';
 export declare type DocumentJSON = ({
     data: PrimaryDataJSON;
     errors: undefined;
@@ -14,14 +14,22 @@ export declare type DocumentJSON = ({
     meta?: object;
     links?: object;
 };
+export declare type DocumentData = {
+    meta?: object;
+    included?: Collection;
+    primary?: PrimaryData;
+    errors?: APIError[];
+    reqURI?: string;
+    urlTemplates?: URLTemplates;
+};
 export default class Document {
-    meta: object | undefined;
-    reqURI: string | undefined;
-    included: undefined | Collection;
-    primaryOrErrors: PrimaryDataOrErrors;
-    protected urlTemplates: URLTemplates;
-    constructor(primaryOrErrors: PrimaryDataOrErrors, included?: undefined | Collection, meta?: object | undefined, urlTemplates?: URLTemplates, reqURI?: string | undefined);
-    get(): DocumentJSON;
-    get(stringify: true): string;
-    get(stringify: false): DocumentJSON;
+    meta: DocumentData['meta'];
+    included: DocumentData['included'];
+    primary: DocumentData['primary'];
+    errors: DocumentData['errors'];
+    reqURI: DocumentData['reqURI'];
+    urlTemplates: URLTemplates;
+    constructor(data: DocumentData);
+    toJSON(): DocumentJSON;
+    toString(): string;
 }

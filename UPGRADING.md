@@ -14,12 +14,14 @@
 ### Koa + Express Strategies
 - You should now provide a Host option when initializing the strategy, for security. See example in README. If you're running your API using express 4 on a host that includes a port number you **must** now provide this option.
 
-### Document Class
-- The constructor's signature and the class methods have changed. This shouldn't be an issue unless you were manually constructing document instances. See file for details.
+### (Mostly-internal) Types
+- The `HTTP/Response` class has been removed, and replaced with object literals with a simpler format (see HTTPResponse in `src/types/index.ts`) for the new structure. This should only be observable if you were subclassing the `Documentation` controller and defining a `transformTypeInfo` function that depended on the old Response structure. The argument to your function will now match the new structure.
+- The `Document` class now has a different constructor signature and different class methods. This shouldn't be an issue unless you were manually constructing Document instances. See file for details.
+
 
 ## New Features
 ### Global
-- It's now possible to transform the query that the library builds from the request before that query is run, to support all sorts of advanced use cases. See an example [here](https://github.com/ethanresnick/json-api/blob/c418ebf0411774d61f74ff8752228d3a995e5456/test/app/src/index.ts#L35).
+- It's now possible to transform the query that the library builds from the request before that query is run, to support all sorts of advanced use cases. See an example [here](https://github.com/ethanresnick/json-api/blob/c418ebf0411774d61f74ff8752228d3a995e5456/test/app/src/index.ts#L35). It is also possible to transform how a query's result (whether it succeeds or fails) is mapped to the response by defining custom `returning` and `catch` methods on a query object (that may want to wrap the methods already there).
 - The beforeSave and beforeRender transform functions are now called with an additional argument that holds an object with a `request` member, whose value is the internal request object used by the JSON:API library, and a `registry` member, whose value is the ResourceTypeRegistry.
 
 

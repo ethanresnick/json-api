@@ -8,8 +8,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const Response_1 = require("../types/HTTP/Response");
-exports.SealedResponse = Response_1.Response;
 const Document_1 = require("../types/Document");
 const Collection_1 = require("../types/Collection");
 const APIError_1 = require("../types/APIError");
@@ -24,33 +22,29 @@ const validate_resources_1 = require("../steps/pre-query/validate-resources");
 const parse_query_params_1 = require("../steps/pre-query/parse-query-params");
 const apply_transform_1 = require("../steps/apply-transform");
 const make_get_1 = require("../steps/make-query/make-get");
-const do_get_1 = require("../steps/do-query/do-get");
 const make_post_1 = require("../steps/make-query/make-post");
-const do_post_1 = require("../steps/do-query/do-post");
 const make_patch_1 = require("../steps/make-query/make-patch");
-const do_patch_1 = require("../steps/do-query/do-patch");
 const make_delete_1 = require("../steps/make-query/make-delete");
-const do_delete_1 = require("../steps/do-query/do-delete");
 class APIController {
     constructor(registry) {
         this.registry = registry;
     }
     handle(request, frameworkReq, frameworkRes, queryTransform) {
         return __awaiter(this, void 0, void 0, function* () {
-            const response = new Response_1.default();
             const registry = this.registry;
+            const templates = registry.urlTemplates();
+            const makeDoc = (data) => new Document_1.default(Object.assign({ reqURI: request.uri, urlTemplates: templates }, data));
+            let jsonAPIResult = {};
+            let contentType;
             try {
                 yield requestValidators.checkMethod(request);
                 yield requestValidators.checkBodyExistence(request);
-                response.contentType = yield negotiate_content_type_1.default(request.accepts, ["application/vnd.api+json"]);
-                response.headers.vary = "Accept";
-                if (request.idOrIds && request.allowLabel) {
-                    const mappedLabel = yield label_to_ids_1.default(request.type, request.idOrIds, registry, frameworkReq);
+                contentType =
+                    yield negotiate_content_type_1.default(request.accepts, ["application/vnd.api+json"]);
+                const supportsLabelMapping = request.idOrIds && request.allowLabel;
+                const mappedLabel = supportsLabelMapping && (yield label_to_ids_1.default(request.type, request.idOrIds, registry, frameworkReq));
+                if (supportsLabelMapping) {
                     request.idOrIds = mappedLabel;
-                    const mappedIsEmptyArray = Array.isArray(mappedLabel) && !mappedLabel.length;
-                    if (mappedLabel === null || mappedLabel === undefined || mappedIsEmptyArray) {
-                        response.primary = (mappedLabel) ? new Collection_1.default() : null;
-                    }
                 }
                 request.queryParams = parse_query_params_1.default(request.queryParams);
                 if (!registry.hasType(request.type)) {
@@ -65,75 +59,85 @@ class APIController {
                     }
                     request.primary = yield apply_transform_1.default(parsedPrimary, "beforeSave", { frameworkReq, frameworkRes, request, registry });
                 }
-                response.meta = {};
-                if (typeof response.primary === "undefined") {
+                const query = yield (() => {
                     queryTransform = queryTransform || ((it) => it);
                     switch (request.method) {
-                        case "get": {
-                            const query = yield queryTransform(make_get_1.default(request, registry));
-                            yield do_get_1.default(request, response, registry, query);
-                            break;
-                        }
-                        case "post": {
-                            const query = yield queryTransform(make_post_1.default(request, registry));
-                            yield do_post_1.default(request, response, registry, query);
-                            break;
-                        }
-                        case "patch": {
-                            const query = yield queryTransform(make_patch_1.default(request, registry));
-                            yield do_patch_1.default(request, response, registry, query);
-                            break;
-                        }
-                        case "delete": {
-                            const query = yield queryTransform(make_delete_1.default(request, registry));
-                            yield do_delete_1.default(request, response, registry, query);
-                        }
+                        case "get":
+                            return queryTransform(make_get_1.default(request, registry, makeDoc));
+                        case "post":
+                            return queryTransform(make_post_1.default(request, registry, makeDoc));
+                        case "patch":
+                            return queryTransform(make_patch_1.default(request, registry, makeDoc));
+                        case "delete":
+                            return queryTransform(make_delete_1.default(request, registry, makeDoc));
                     }
+                })();
+                const adapter = registry.dbAdapter(request.type);
+                const labelMappedToNothing = supportsLabelMapping &&
+                    (mappedLabel == null || (Array.isArray(mappedLabel) && !mappedLabel.length));
+                const makeResultPartiallyApplied = makeResultFromErrors.bind(null, makeDoc);
+                jsonAPIResult = labelMappedToNothing
+                    ? { document: makeDoc({ primary: mappedLabel ? new Collection_1.default() : null }) }
+                    : yield adapter.doQuery(query)
+                        .then(query.returning, query.catch || makeResultPartiallyApplied);
+                if (jsonAPIResult.document) {
+                    jsonAPIResult.document.primary = yield apply_transform_1.default(jsonAPIResult.document.primary, "beforeRender", { frameworkReq, frameworkRes, request, registry });
+                    jsonAPIResult.document.included = yield apply_transform_1.default(jsonAPIResult.document.included, "beforeRender", { frameworkReq, frameworkRes, request, registry });
                 }
             }
-            catch (errors) {
-                const errorsArr = Array.isArray(errors) ? errors : [errors];
-                const apiErrors = errorsArr.map(APIError_1.default.fromError);
-                if (response.contentType !== "application/json") {
-                    response.contentType = "application/vnd.api+json";
-                }
-                response.errors = response.errors.concat(apiErrors);
+            catch (err) {
+                jsonAPIResult = makeResultFromErrors(makeDoc, err);
+                const errorsArr = Array.isArray(err) ? err : [err];
                 errorsArr.forEach(err => {
                     logger_1.default.info("API Controller caught error", err, err.stack);
                 });
             }
-            if (response.errors.length) {
-                response.status = pickStatus(response.errors.map((v) => Number(v.status)));
-                response.body = new Document_1.default(response.errors).get(true);
-                return response;
-            }
-            response.primary = yield apply_transform_1.default(response.primary, "beforeRender", { frameworkReq, frameworkRes, request, registry });
-            response.included = yield apply_transform_1.default(response.included, "beforeRender", { frameworkReq, frameworkRes, request, registry });
-            if (response.status !== 204) {
-                response.body = new Document_1.default(response.primary, response.included, response.meta, registry.urlTemplates(), request.uri).get(true);
-            }
-            return response;
+            return resultToHTTPResponse(jsonAPIResult, contentType);
         });
     }
     static responseFromExternalError(errors, requestAccepts) {
-        const response = new Response_1.default();
-        response.errors = (Array.isArray(errors) ? errors : [errors])
-            .map(APIError_1.default.fromError.bind(APIError_1.default));
-        response.status = pickStatus(response.errors.map((v) => Number(v.status)));
-        response.body = new Document_1.default(response.errors).get(true);
-        return negotiate_content_type_1.default(requestAccepts, ["application/vnd.api+json"])
-            .then((contentType) => {
-            response.contentType = (contentType.toLowerCase() === "application/json")
-                ? contentType : "application/vnd.api+json";
-            return response;
-        }, () => {
-            response.contentType = "application/vnd.api+json";
-            return response;
+        return __awaiter(this, void 0, void 0, function* () {
+            let contentType;
+            try {
+                contentType = yield negotiate_content_type_1.default(requestAccepts, ["application/vnd.api+json"]);
+            }
+            catch (e) {
+                contentType = "application/vnd.api+json";
+            }
+            return resultToHTTPResponse(makeResultFromErrors((data) => new Document_1.default(data), errors), contentType);
         });
     }
 }
 APIController.supportedExt = Object.freeze([]);
 exports.default = APIController;
+function makeResultFromErrors(makeDoc, errors) {
+    const errorsArray = (Array.isArray(errors) ? errors : [errors])
+        .map(APIError_1.default.fromError.bind(APIError_1.default));
+    const status = pickStatus(errorsArray.map((v) => Number(v.status)));
+    return {
+        document: makeDoc({ errors: errorsArray }),
+        status
+    };
+}
+function resultToHTTPResponse(response, negotiatedMediaType) {
+    const headers = Object.assign({ 'content-type': negotiatedMediaType || "application/vnd.api+json", 'vary': 'Accept' }, response.headers);
+    const status = (() => {
+        if (response.status) {
+            return response.status;
+        }
+        if (response.document) {
+            return response.document.errors
+                ? pickStatus(response.document.errors.map(it => Number(it.status)))
+                : 200;
+        }
+        return 204;
+    })();
+    return {
+        status,
+        headers,
+        body: response.document && response.document.toString()
+    };
+}
 function pickStatus(errStatuses) {
     return errStatuses[0];
 }

@@ -6,7 +6,7 @@ const Resource_1 = require("../../types/Resource");
 const Relationship_1 = require("../../types/Relationship");
 const Linkage_1 = require("../../types/Linkage");
 const UpdateQuery_1 = require("../../types/Query/UpdateQuery");
-function default_1(request, registry) {
+function default_1(request, registry, makeDoc) {
     const primary = request.primary;
     const type = request.type;
     let changedResourceOrCollection;
@@ -33,7 +33,14 @@ function default_1(request, registry) {
     }
     return new UpdateQuery_1.default({
         type,
-        patch: changedResourceOrCollection
+        patch: changedResourceOrCollection,
+        returning: (resources) => ({
+            document: makeDoc({
+                primary: request.relationship
+                    ? resources.relationships[request.relationship].linkage
+                    : resources
+            })
+        })
     });
 }
 exports.default = default_1;

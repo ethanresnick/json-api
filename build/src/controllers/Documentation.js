@@ -6,8 +6,6 @@ const jade = require("jade");
 const Negotiator = require("negotiator");
 const dasherize = require("dasherize");
 const mapValues = require("lodash/object/mapValues");
-const Response_1 = require("../types/HTTP/Response");
-exports.UnsealedResponse = Response_1.Response;
 const Document_1 = require("../types/Document");
 const Collection_1 = require("../types/Collection");
 const Resource_1 = require("../types/Resource");
@@ -24,16 +22,16 @@ class DocumentationController {
         this.templateData = data;
     }
     handle(request, frameworkReq, frameworkRes) {
-        const response = new Response_1.default();
+        const response = { headers: {}, body: undefined, status: 200 };
         const negotiator = new Negotiator({ headers: { accept: request.accepts } });
         const contentType = negotiator.mediaType(["text/html", "application/vnd.api+json"]);
-        response.contentType = contentType;
-        response.headers.vary = "Accept";
+        response.headers['content-type'] = contentType;
+        response.headers['vary'] = "Accept";
         const templateData = _.cloneDeep(this.templateData, cloneCustomizer);
         templateData.resourcesMap = mapValues(templateData.resourcesMap, (typeInfo, typeName) => {
             return this.transformTypeInfo(typeName, typeInfo, request, response, frameworkReq, frameworkRes);
         });
-        if (contentType.toLowerCase() === "text/html") {
+        if (contentType && contentType.toLowerCase() === "text/html") {
             response.body = jade.renderFile(this.template, templateData);
         }
         else {
@@ -41,7 +39,7 @@ class DocumentationController {
             for (const type in templateData.resourcesMap) {
                 descriptionResources.add(new Resource_1.default("jsonapi-descriptions", type, templateData.resourcesMap[type]));
             }
-            response.body = (new Document_1.default(descriptionResources)).get(true);
+            response.body = new Document_1.default({ primary: descriptionResources }).toString();
         }
         return Promise.resolve(response);
     }
@@ -84,7 +82,7 @@ class DocumentationController {
         return result;
     }
     transformTypeInfo(typeName, info, request, response, frameworkReq, frameworkRes) {
-        if (this.dasherizeJSONKeys && response.contentType === "application/vnd.api+json") {
+        if (this.dasherizeJSONKeys && response.headers['content-type'] === "application/vnd.api+json") {
             return dasherize(info);
         }
         return info;

@@ -1,4 +1,13 @@
 "use strict";
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) if (e.indexOf(p[i]) < 0)
+            t[p[i]] = s[p[i]];
+    return t;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const vary_1 = require("vary");
 const API_1 = require("../controllers/API");
@@ -42,26 +51,19 @@ class KoaStrategy extends Base_1.default {
         };
     }
     sendResources(responseObject, ctx) {
-        if (responseObject.headers.vary) {
-            vary_1.default(ctx.res, responseObject.headers.vary);
+        const _a = responseObject.headers, { vary } = _a, otherHeaders = __rest(_a, ["vary"]);
+        if (vary) {
+            vary_1.default(ctx.res, vary);
         }
-        if (!responseObject.contentType) {
-            if (this.config.handleContentNegotiation) {
-                ctx.status = 406;
-            }
-            else {
-                return true;
-            }
+        if (responseObject.status === 406 && !this.config.handleContentNegotiation) {
+            return true;
         }
-        else {
-            ctx.set("Content-Type", responseObject.contentType);
-            ctx.status = responseObject.status || 200;
-            if (responseObject.headers.location) {
-                ctx.set("Location", responseObject.headers.location);
-            }
-            if (responseObject.body !== null) {
-                ctx.body = new Buffer(responseObject.body);
-            }
+        ctx.status(responseObject.status || 200);
+        Object.keys(otherHeaders).forEach(k => {
+            ctx.res.set(k, otherHeaders[k]);
+        });
+        if (responseObject.body !== undefined) {
+            ctx.body = new Buffer(responseObject.body);
         }
     }
     sendError(errors, ctx) {

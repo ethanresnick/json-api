@@ -3,8 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Immutable = require("immutable");
 const misc_1 = require("./util/misc");
 const type_handling_1 = require("./util/type-handling");
-const autoGetterProps = ["dbAdapter", "beforeSave", "beforeRender",
-    "labelMappers", "defaultIncludes", "info", "parentType"];
 const globalResourceDefaults = Immutable.fromJS({});
 const typesKey = Symbol();
 class ResourceTypeRegistry {
@@ -56,44 +54,33 @@ class ResourceTypeRegistry {
         }, {});
     }
     dbAdapter(type) {
-        return doGet("dbAdapter", type);
+        return doGet(this, "dbAdapter", type);
     }
     beforeSave(type) {
-        return doGet("beforeSave", type);
+        return doGet(this, "beforeSave", type);
     }
     beforeRender(type) {
-        return doGet("beforeRender", type);
+        return doGet(this, "beforeRender", type);
     }
     behaviors(type) {
-        return doGet("behaviors", type);
+        return doGet(this, "behaviors", type);
     }
     labelMappers(type) {
-        return doGet("labelMappers", type);
+        return doGet(this, "labelMappers", type);
     }
     defaultIncludes(type) {
-        return doGet("defaultIncludes", type);
+        return doGet(this, "defaultIncludes", type);
     }
     info(type) {
-        return doGet("info", type);
+        return doGet(this, "info", type);
     }
     parentType(type) {
-        return doGet("parentType", type);
+        return doGet(this, "parentType", type);
     }
 }
 exports.default = ResourceTypeRegistry;
-autoGetterProps.forEach((propName) => {
-    ResourceTypeRegistry.prototype[propName] = makeGetter(propName);
-});
-function makeGetter(attrName) {
-    return function (type) {
-        return type_handling_1.Maybe(this[typesKey][type])
-            .bind(it => it.get(attrName))
-            .bind(it => it instanceof Immutable.Map || it instanceof Immutable.List ? it.toJS() : it)
-            .unwrap();
-    };
-}
-function doGet(attrName, type) {
-    return type_handling_1.Maybe(this[typesKey][type])
+function doGet(inst, attrName, type) {
+    return type_handling_1.Maybe(inst[typesKey][type])
         .bind(it => it.get(attrName))
         .bind(it => it instanceof Immutable.Map || it instanceof Immutable.List ? it.toJS() : it)
         .unwrap();

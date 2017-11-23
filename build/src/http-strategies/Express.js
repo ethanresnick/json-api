@@ -1,6 +1,15 @@
 "use strict";
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) if (e.indexOf(p[i]) < 0)
+            t[p[i]] = s[p[i]];
+    return t;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const vary = require("vary");
+const varyLib = require("vary");
 const API_1 = require("../controllers/API");
 const Base_1 = require("./Base");
 class ExpressStrategy extends Base_1.default {
@@ -17,29 +26,22 @@ class ExpressStrategy extends Base_1.default {
         });
     }
     sendResources(responseObject, res, next) {
-        if (responseObject.headers.vary) {
-            vary(res, responseObject.headers.vary);
+        const _a = responseObject.headers, { vary } = _a, otherHeaders = __rest(_a, ["vary"]);
+        if (vary) {
+            varyLib(res, vary);
         }
-        if (!responseObject.contentType) {
-            if (this.config.handleContentNegotiation) {
-                res.status(406).send();
-            }
-            else {
-                next();
-            }
+        if (responseObject.status === 406 && !this.config.handleContentNegotiation) {
+            return next();
+        }
+        res.status(responseObject.status || 200);
+        Object.keys(otherHeaders).forEach(k => {
+            res.set(k, otherHeaders[k]);
+        });
+        if (responseObject.body !== undefined) {
+            res.send(new Buffer(responseObject.body)).end();
         }
         else {
-            res.set("Content-Type", responseObject.contentType);
-            res.status(responseObject.status || 200);
-            if (responseObject.headers.location) {
-                res.set("Location", responseObject.headers.location);
-            }
-            if (responseObject.body !== null) {
-                res.send(new Buffer(responseObject.body)).end();
-            }
-            else {
-                res.end();
-            }
+            res.end();
         }
     }
     sendError(errors, req, res) {

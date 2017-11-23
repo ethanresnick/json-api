@@ -4,7 +4,7 @@ const APIError_1 = require("../../types/APIError");
 const Collection_1 = require("../../types/Collection");
 const DeleteQuery_1 = require("../../types/Query/DeleteQuery");
 const RemoveFromRelationshipQuery_1 = require("../../types/Query/RemoveFromRelationshipQuery");
-function default_1(request, registry) {
+function default_1(request, registry, makeDoc) {
     const type = request.type;
     if (request.aboutRelationship) {
         if (Array.isArray(request.idOrIds)) {
@@ -14,7 +14,8 @@ function default_1(request, registry) {
             type: type,
             id: request.idOrIds,
             relationshipName: request.relationship,
-            linkage: request.primary
+            linkage: request.primary,
+            returning: () => ({ status: 204 })
         });
     }
     const bulkDelete = !request.idOrIds;
@@ -32,7 +33,8 @@ function default_1(request, registry) {
         type,
         idOrIds: bulkDelete
             ? request.primary.resources.map((it) => it.id)
-            : request.idOrIds
+            : request.idOrIds,
+        returning: () => ({ status: 204 })
     });
 }
 exports.default = default_1;

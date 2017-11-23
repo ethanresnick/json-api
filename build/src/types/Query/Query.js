@@ -6,7 +6,9 @@ class Query {
             throw new Error("`using` option is required.");
         }
         this.query = {
-            type: opts.type
+            type: opts.type,
+            returning: opts.returning,
+            catch: opts.catch
         };
     }
     clone() {
@@ -16,6 +18,22 @@ class Query {
     }
     get type() {
         return this.query.type;
+    }
+    get returning() {
+        return this.query.returning;
+    }
+    get catch() {
+        return this.query.catch;
+    }
+    resultsIn(success, fail) {
+        const res = this.clone();
+        if (success) {
+            res.query.returning = success;
+        }
+        if (fail) {
+            res.query.catch = fail;
+        }
+        return res;
     }
     forType(type) {
         const res = this.clone();

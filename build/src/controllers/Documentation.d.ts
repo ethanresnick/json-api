@@ -1,12 +1,11 @@
-import { Response as UnsealedResponse } from "../types/HTTP/Response";
-export { UnsealedResponse };
+import { HTTPResponse } from "../types";
 export default class DocumentationController {
     private registry;
     private template;
     private dasherizeJSONKeys;
     private templateData;
     constructor(registry: any, apiInfo: any, templatePath?: undefined, dasherizeJSONKeys?: boolean);
-    handle(request: any, frameworkReq: any, frameworkRes: any): Promise<UnsealedResponse>;
+    handle(request: any, frameworkReq: any, frameworkRes: any): Promise<HTTPResponse>;
     getTypeInfo(type: any): {
         name: {
             model: string;

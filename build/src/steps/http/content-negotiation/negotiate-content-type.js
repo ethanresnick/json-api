@@ -7,17 +7,18 @@ function default_1(acceptHeader, availableBaseTypes) {
     return new Promise(function (resolve, reject) {
         const negotiator = new Negotiator({ headers: { accept: acceptHeader } });
         const hasParams = (it) => !type_handling_1.objectIsEmpty(it.parameters);
-        const endpointSupportsJsonApi = availableBaseTypes.indexOf("application/vnd.api+json") !== -1;
+        const jsonApiBaseType = "application/vnd.api+json";
+        const endpointSupportsJsonApi = availableBaseTypes.indexOf(jsonApiBaseType) !== -1;
         const syntheticAvailableBaseTypes = endpointSupportsJsonApi
             ? ["application/json"].concat(availableBaseTypes)
             : availableBaseTypes;
         const acceptables = negotiator.mediaTypes(undefined, { "detailed": true });
         const preferredType = negotiator.mediaType(syntheticAvailableBaseTypes);
-        const jsonApiRanges = acceptables.filter((it) => it.type.toLowerCase() === "application/vnd.api+json");
+        const jsonApiRanges = acceptables.filter((it) => it.type.toLowerCase() === jsonApiBaseType);
         if (jsonApiRanges.length && jsonApiRanges.every(hasParams)) {
             reject(new APIError_1.default(406, null, "Not Acceptable"));
         }
-        else if (preferredType.toLowerCase() !== "application/vnd.api+json") {
+        else if (preferredType && preferredType.toLowerCase() !== jsonApiBaseType) {
             resolve(preferredType);
         }
         else if (jsonApiRanges.length && endpointSupportsJsonApi) {

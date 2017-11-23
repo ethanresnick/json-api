@@ -1,4 +1,12 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose = require("mongoose");
 const pluralize = require("pluralize");
@@ -27,174 +35,186 @@ class MongooseAdapter {
         this.idGenerator = idGenerator;
     }
     find(query) {
-        const { type, populates: includePaths, select: fields, sort: sorts, offset, limit, } = query;
-        const idOrIds = query.getIdOrIds();
-        const otherFilters = query.getFilters(true);
-        const isFiltering = otherFilters.value.length > 0;
-        const mongofiedFilters = util.toMongoCriteria(otherFilters);
-        const model = this.getModel(this.constructor.getModelName(type));
-        const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
-        const pluralizer = this.inflector.plural;
-        const isPaginating = typeof idOrIds !== 'string' &&
-            (typeof offset !== 'undefined' || typeof limit !== 'undefined');
-        let primaryDocumentsPromise, includedResourcesPromise;
-        const queryBuilder = mode === 'findOne'
-            ? model[mode](idQuery)
-            : model[mode](idQuery);
-        const collectionSizePromise = isPaginating
-            ? model.count(mongofiedFilters).exec()
-            : Promise.resolve(null);
-        if (Array.isArray(sorts)) {
-            queryBuilder.sort(sorts.map(it => (it.direction === 'DESC' ? '-' : '') + it.field).join(" "));
-        }
-        if (isFiltering) {
-            queryBuilder.where(mongofiedFilters);
-        }
-        if (offset) {
-            queryBuilder.skip(offset);
-        }
-        if (limit) {
-            queryBuilder.limit(limit);
-        }
-        if (includePaths && includePaths.length > 0) {
-            const populatedPaths = [];
-            const refPaths = util.getReferencePaths(model);
-            includePaths.map((it) => it.split(".")).forEach((pathParts) => {
-                if (!arrays_1.arrayContains(refPaths, pathParts[0])) {
-                    const title = "Invalid include path.";
-                    const detail = `Resources of type "${type}" don't have a(n) "${pathParts[0]}" relationship.`;
-                    throw new APIError_1.default(400, undefined, title, detail);
-                }
-                if (pathParts.length > 1) {
-                    throw new APIError_1.default(501, undefined, "Multi-level include paths aren't yet supported.");
-                }
-                populatedPaths.push(pathParts[0]);
-                queryBuilder.populate(pathParts[0]);
-            });
-            const includedResources = [];
-            primaryDocumentsPromise = Promise.resolve(queryBuilder.exec()).then((docs) => {
-                type_handling_1.forEachArrayOrVal(docs, (doc) => {
-                    if (!doc) {
-                        return;
+        return __awaiter(this, void 0, void 0, function* () {
+            const { type, populates: includePaths, select: fields, sort: sorts, offset, limit, } = query;
+            const idOrIds = query.getIdOrIds();
+            const otherFilters = query.getFilters(true);
+            const isFiltering = otherFilters.value.length > 0;
+            const mongofiedFilters = util.toMongoCriteria(otherFilters);
+            const model = this.getModel(this.constructor.getModelName(type));
+            const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
+            const pluralizer = this.inflector.plural;
+            const isPaginating = typeof idOrIds !== 'string' &&
+                (typeof offset !== 'undefined' || typeof limit !== 'undefined');
+            let primaryDocumentsPromise, includedResourcesPromise;
+            const queryBuilder = mode === 'findOne'
+                ? model[mode](idQuery)
+                : model[mode](idQuery);
+            const collectionSizePromise = isPaginating
+                ? model.count(mongofiedFilters).exec()
+                : Promise.resolve(null);
+            if (Array.isArray(sorts)) {
+                queryBuilder.sort(sorts.map(it => (it.direction === 'DESC' ? '-' : '') + it.field).join(" "));
+            }
+            if (isFiltering) {
+                queryBuilder.where(mongofiedFilters);
+            }
+            if (offset) {
+                queryBuilder.skip(offset);
+            }
+            if (limit) {
+                queryBuilder.limit(limit);
+            }
+            if (includePaths && includePaths.length > 0) {
+                const populatedPaths = [];
+                const refPaths = util.getReferencePaths(model);
+                includePaths.map((it) => it.split(".")).forEach((pathParts) => {
+                    if (!arrays_1.arrayContains(refPaths, pathParts[0])) {
+                        const title = "Invalid include path.";
+                        const detail = `Resources of type "${type}" don't have a(n) "${pathParts[0]}" relationship.`;
+                        throw new APIError_1.default(400, undefined, title, detail);
                     }
-                    populatedPaths.forEach((path) => {
-                        const refDocs = Array.isArray(doc[path]) ? doc[path] : [doc[path]];
-                        refDocs.forEach((it) => {
-                            if (it) {
-                                includedResources.push(this.constructor.docToResource(it, pluralizer, fields));
-                            }
+                    if (pathParts.length > 1) {
+                        throw new APIError_1.default(501, undefined, "Multi-level include paths aren't yet supported.");
+                    }
+                    populatedPaths.push(pathParts[0]);
+                    queryBuilder.populate(pathParts[0]);
+                });
+                const includedResources = [];
+                primaryDocumentsPromise = Promise.resolve(queryBuilder.exec()).then((docs) => {
+                    type_handling_1.forEachArrayOrVal(docs, (doc) => {
+                        if (!doc) {
+                            return;
+                        }
+                        populatedPaths.forEach((path) => {
+                            const refDocs = Array.isArray(doc[path]) ? doc[path] : [doc[path]];
+                            refDocs.forEach((it) => {
+                                if (it) {
+                                    includedResources.push(this.constructor.docToResource(it, pluralizer, fields));
+                                }
+                            });
                         });
                     });
+                    return docs;
                 });
-                return docs;
-            });
-            includedResourcesPromise = primaryDocumentsPromise.then(() => new Collection_1.default(includedResources));
-        }
-        else {
-            primaryDocumentsPromise = Promise.resolve(queryBuilder.exec());
-            includedResourcesPromise = Promise.resolve(null);
-        }
-        return Promise.all([primaryDocumentsPromise.then((it) => {
-                const makeCollection = !idOrIds || Array.isArray(idOrIds) ? true : false;
-                return this.constructor.docsToResourceOrCollection(it, makeCollection, pluralizer, fields);
-            }), includedResourcesPromise, collectionSizePromise]).catch(util.errorHandler);
+                includedResourcesPromise = primaryDocumentsPromise.then(() => new Collection_1.default(includedResources));
+            }
+            else {
+                primaryDocumentsPromise = Promise.resolve(queryBuilder.exec());
+                includedResourcesPromise = Promise.resolve(null);
+            }
+            return Promise.all([primaryDocumentsPromise.then((it) => {
+                    const makeCollection = !idOrIds || Array.isArray(idOrIds) ? true : false;
+                    return this.constructor.docsToResourceOrCollection(it, makeCollection, pluralizer, fields);
+                }), includedResourcesPromise, collectionSizePromise]).catch(util.errorHandler);
+        });
     }
     create(query) {
-        const { records: resourceOrCollection } = query;
-        const resourcesByType = type_handling_1.groupResourcesByType(resourceOrCollection);
-        const creationPromises = [];
-        const setIdWithGenerator = (doc) => { doc._id = this.idGenerator(doc); };
-        for (const type in resourcesByType) {
-            const model = this.getModel(this.constructor.getModelName(type));
-            const resources = resourcesByType[type];
-            const docObjects = resources.map(util.resourceToDocObject);
-            if (typeof this.idGenerator === "function") {
-                type_handling_1.forEachArrayOrVal(docObjects, setIdWithGenerator);
+        return __awaiter(this, void 0, void 0, function* () {
+            const { records: resourceOrCollection } = query;
+            const resourcesByType = type_handling_1.groupResourcesByType(resourceOrCollection);
+            const creationPromises = [];
+            const setIdWithGenerator = (doc) => { doc._id = this.idGenerator(doc); };
+            for (const type in resourcesByType) {
+                const model = this.getModel(this.constructor.getModelName(type));
+                const resources = resourcesByType[type];
+                const docObjects = resources.map(util.resourceToDocObject);
+                if (typeof this.idGenerator === "function") {
+                    type_handling_1.forEachArrayOrVal(docObjects, setIdWithGenerator);
+                }
+                creationPromises.push(model.create(docObjects));
             }
-            creationPromises.push(model.create(docObjects));
-        }
-        return Promise.all(creationPromises).then((docArrays) => {
-            const makeCollection = resourceOrCollection instanceof Collection_1.default;
-            const finalDocs = docArrays.reduce((a, b) => a.concat(b), []);
-            return this.constructor.docsToResourceOrCollection(finalDocs, makeCollection, this.inflector.plural);
-        }).catch(util.errorHandler);
+            return Promise.all(creationPromises).then((docArrays) => {
+                const makeCollection = resourceOrCollection instanceof Collection_1.default;
+                const finalDocs = docArrays.reduce((a, b) => a.concat(b), []);
+                return this.constructor.docsToResourceOrCollection(finalDocs, makeCollection, this.inflector.plural);
+            }).catch(util.errorHandler);
+        });
     }
     update(query) {
-        const { type: parentType, patch: resourceOrCollection } = query;
-        const singular = this.inflector.singular;
-        const plural = this.inflector.plural;
-        const parentModel = this.getModel(this.constructor.getModelName(parentType, singular));
-        const updateOptions = {
-            new: true,
-            runValidators: true,
-            context: 'query',
-            upsert: false
-        };
-        const updatedResourcePromiseOrPromises = type_handling_1.mapResources(resourceOrCollection, (resourceUpdate) => {
-            const newModelName = this.constructor.getModelName(resourceUpdate.type, singular);
-            const NewModelConstructor = this.getModel(newModelName);
-            const changeSet = util.resourceToDocObject(resourceUpdate);
-            const updateDoc = NewModelConstructor.hydrate({}).set(changeSet);
-            const modifiedPaths = updateDoc.modifiedPaths();
-            const updateDocObject = updateDoc.toObject();
-            const finalUpdate = modifiedPaths.reduce((acc, key) => {
-                acc[key] = updateDocObject[key];
-                return acc;
-            }, {});
-            return parentModel
-                .findByIdAndUpdate(resourceUpdate.id, finalUpdate, updateOptions)
-                .exec();
+        return __awaiter(this, void 0, void 0, function* () {
+            const { type: parentType, patch: resourceOrCollection } = query;
+            const singular = this.inflector.singular;
+            const plural = this.inflector.plural;
+            const parentModel = this.getModel(this.constructor.getModelName(parentType, singular));
+            const updateOptions = {
+                new: true,
+                runValidators: true,
+                context: 'query',
+                upsert: false
+            };
+            const updatedResourcePromiseOrPromises = type_handling_1.mapResources(resourceOrCollection, (resourceUpdate) => {
+                const newModelName = this.constructor.getModelName(resourceUpdate.type, singular);
+                const NewModelConstructor = this.getModel(newModelName);
+                const changeSet = util.resourceToDocObject(resourceUpdate);
+                const updateDoc = NewModelConstructor.hydrate({}).set(changeSet);
+                const modifiedPaths = updateDoc.modifiedPaths();
+                const updateDocObject = updateDoc.toObject();
+                const finalUpdate = modifiedPaths.reduce((acc, key) => {
+                    acc[key] = updateDocObject[key];
+                    return acc;
+                }, {});
+                return parentModel
+                    .findByIdAndUpdate(resourceUpdate.id, finalUpdate, updateOptions)
+                    .exec();
+            });
+            const updatedResourcePromises = Array.isArray(updatedResourcePromiseOrPromises)
+                ? updatedResourcePromiseOrPromises
+                : [updatedResourcePromiseOrPromises];
+            return Promise.all(updatedResourcePromises).then((docs) => {
+                const makeCollection = resourceOrCollection instanceof Collection_1.default;
+                return this.constructor.docsToResourceOrCollection(docs, makeCollection, plural);
+            }).catch(util.errorHandler);
         });
-        const updatedResourcePromises = Array.isArray(updatedResourcePromiseOrPromises)
-            ? updatedResourcePromiseOrPromises
-            : [updatedResourcePromiseOrPromises];
-        return Promise.all(updatedResourcePromises).then((docs) => {
-            const makeCollection = resourceOrCollection instanceof Collection_1.default;
-            return this.constructor.docsToResourceOrCollection(docs, makeCollection, plural);
-        }).catch(util.errorHandler);
     }
     delete(query) {
-        const { type: parentType } = query;
-        const idOrIds = query.getIdOrIds();
-        const model = this.getModel(this.constructor.getModelName(parentType));
-        const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
-        if (!idOrIds) {
-            return Promise.reject(new APIError_1.default(400, undefined, "You must specify some resources to delete"));
-        }
-        const queryBuilder = mode === 'findOne'
-            ? model[mode](idQuery)
-            : model[mode](idQuery);
-        return Promise.resolve(queryBuilder.exec()).then((docs) => {
-            if (!docs) {
-                throw new APIError_1.default(404, undefined, "No matching resource found.");
+        return __awaiter(this, void 0, void 0, function* () {
+            const { type: parentType } = query;
+            const idOrIds = query.getIdOrIds();
+            const model = this.getModel(this.constructor.getModelName(parentType));
+            const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
+            if (!idOrIds) {
+                return Promise.reject(new APIError_1.default(400, undefined, "You must specify some resources to delete"));
             }
-            type_handling_1.forEachArrayOrVal(docs, (it) => { it.remove(); });
-            return docs;
-        }).catch(util.errorHandler);
+            const queryBuilder = mode === 'findOne'
+                ? model[mode](idQuery)
+                : model[mode](idQuery);
+            return Promise.resolve(queryBuilder.exec()).then((docs) => {
+                if (!docs) {
+                    throw new APIError_1.default(404, undefined, "No matching resource found.");
+                }
+                type_handling_1.forEachArrayOrVal(docs, (it) => { it.remove(); });
+                return docs;
+            }).catch(util.errorHandler);
+        });
     }
     addToRelationship(query) {
-        const { type, id, relationshipName, linkage: newLinkage } = query;
-        const model = this.getModel(this.constructor.getModelName(type));
-        const update = {
-            $addToSet: {
-                [relationshipName]: { $each: newLinkage.value.map(it => it.id) }
-            }
-        };
-        const options = { runValidators: true, context: 'query' };
-        return model.findOneAndUpdate({ "_id": id }, update, options).exec()
-            .catch(util.errorHandler);
+        return __awaiter(this, void 0, void 0, function* () {
+            const { type, id, relationshipName, linkage: newLinkage } = query;
+            const model = this.getModel(this.constructor.getModelName(type));
+            const update = {
+                $addToSet: {
+                    [relationshipName]: { $each: newLinkage.value.map(it => it.id) }
+                }
+            };
+            const options = { runValidators: true, context: 'query' };
+            return model.findOneAndUpdate({ "_id": id }, update, options).exec()
+                .catch(util.errorHandler);
+        });
     }
     removeFromRelationship(query) {
-        const { type, id, relationshipName, linkage: linkageToRemove } = query;
-        const model = this.getModel(this.constructor.getModelName(type));
-        const update = {
-            $pullAll: {
-                [relationshipName]: linkageToRemove.value.map(it => it.id)
-            }
-        };
-        const options = { runValidators: true, context: 'query' };
-        return model.findOneAndUpdate({ "_id": id }, update, options).exec()
-            .catch(util.errorHandler);
+        return __awaiter(this, void 0, void 0, function* () {
+            const { type, id, relationshipName, linkage: linkageToRemove } = query;
+            const model = this.getModel(this.constructor.getModelName(type));
+            const update = {
+                $pullAll: {
+                    [relationshipName]: linkageToRemove.value.map(it => it.id)
+                }
+            };
+            const options = { runValidators: true, context: 'query' };
+            return model.findOneAndUpdate({ "_id": id }, update, options).exec()
+                .catch(util.errorHandler);
+        });
     }
     getModel(modelName) {
         if (!this.models[modelName]) {

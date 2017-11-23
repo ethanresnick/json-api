@@ -10,6 +10,8 @@ export declare type FindQueryOptions = WithCriteriaQueryOptions & {
 export default class FindQuery extends WithCriteriaQuery {
     protected query: {
         readonly type: FindQueryOptions['type'];
+        readonly returning: FindQueryOptions['returning'];
+        readonly catch: FindQueryOptions['catch'];
         readonly select?: FindQueryOptions['select'];
         readonly sort?: FindQueryOptions['sort'];
         readonly populates: FindQueryOptions['populates'];
@@ -20,7 +22,7 @@ export default class FindQuery extends WithCriteriaQuery {
             readonly offset?: FindQueryOptions['offset'];
         };
     };
-    constructor(opts: FindQueryOptions);
+    constructor({populates, select, sort, ...baseOpts}: FindQueryOptions);
     onlyPopulates(paths: string[]): any;
     withPopulates(paths: string[]): any;
     withoutPopulates(paths: string[]): any;

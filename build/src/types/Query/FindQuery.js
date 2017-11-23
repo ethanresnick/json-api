@@ -11,8 +11,8 @@ var __rest = (this && this.__rest) || function (s, e) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const WithCriteriaQuery_1 = require("./WithCriteriaQuery");
 class FindQuery extends WithCriteriaQuery_1.default {
-    constructor(opts) {
-        const { populates, select, sort } = opts, baseOpts = __rest(opts, ["populates", "select", "sort"]);
+    constructor(_a) {
+        var { populates, select, sort } = _a, baseOpts = __rest(_a, ["populates", "select", "sort"]);
         super(baseOpts);
         this.query = Object.assign({}, this.query, { populates: populates || [], select,
             sort });
