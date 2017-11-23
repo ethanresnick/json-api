@@ -8,9 +8,16 @@ It currently integrates with [Express](http://expressjs.com/) apps that use [Mon
 This library implements all the required portions of the 1.0 spec, which is more than enough for basic CRUD. It does not yet implement some of the smaller, optional pieces, like related resource URIs.
 
 # Installation
-```$ npm install json-api```
 
-*On Versioning*: This library's major version will soon be bumped to 3.0.0, and it will use semantic versioning after that. The 2.x branch does not use semantic versioning. However, even on 2.x versions, "patch updates" (i.e. changes the version's third integer) will always be backwards-compatible. Changes to the the minor version (i.e. the second integer) on the 2.x branch may not be.
+**If you're starting a new project absolutely use the v3 beta. v2 of this library is deprecated and will only receive critical fixes.** Documentation for using and installing v3 can be found [here](https://github.com/ethanresnick/json-api/blob/v3-evolution-over-rewrite/README.md).
+
+## Using V2 (deprecated)
+
+If you still wish to install v2, you can do that with:
+
+```$ npm install json-api``` // DEPRECATED! See note above!
+
+Also, with v2, beware that the 2.x branch does not use semantic versioning. (V3+ will.) However, even on 2.x versions, "patch updates" (i.e. changes the version's third integer) will always be backwards-compatible. Changes to the the minor version (i.e. the second integer) on the 2.x branch may not be.
 
 # Example API
 Check out the [full, working example repo](http://github.com/ethanresnick/json-api-example) for all the details on building an API with this library. Or, take a look at the basic example below:
