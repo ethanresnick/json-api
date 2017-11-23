@@ -17,6 +17,13 @@ exports.default = index_1.default.then(function (dbModule) {
     const app = express();
     const Front = new API.httpStrategies.Express(Controller, Docs);
     const apiReqHandler = Front.apiRequest.bind(Front);
+    const FrontWith406Delegation = new API.httpStrategies.Express(Controller, Docs, {
+        handleContentNegotiation: false
+    });
+    app.get('/:type(organizations)/no-id/406-delegation-test', FrontWith406Delegation.apiRequest.bind(FrontWith406Delegation), (req, res, next) => {
+        res.header('Content-Type', 'text/plain');
+        res.send("Hello from express");
+    });
     app.get("/", Front.docsRequest.bind(Front));
     app.route("/:type(people|organizations|schools)").all(apiReqHandler);
     app.route("/:type(people|organizations|schools)/:id")

@@ -8,13 +8,9 @@ const Request_1 = require("../types/HTTP/Request");
 exports.UnsealedRequest = Request_1.Request;
 class BaseStrategy {
     constructor(apiController, docsController, options) {
-        const defaultOptions = {
-            tunnel: false,
-            handleContentNegotiation: true
-        };
         this.api = apiController;
         this.docs = docsController;
-        this.config = Object.assign({}, defaultOptions, options);
+        this.config = Object.assign({ tunnel: false, handleContentNegotiation: true }, options);
     }
     buildRequestObject(req, protocol, host, params, query) {
         const config = this.config;

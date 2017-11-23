@@ -6,7 +6,7 @@ export { SealedResponse };
 declare class APIController {
     private registry;
     constructor(registry: ResourceTypeRegistry);
-    handle(request: any, frameworkReq: any, frameworkRes: any): any;
+    handle(request: any, frameworkReq: any, frameworkRes: any): Promise<SealedResponse>;
     static responseFromExternalError(errors: Error | APIError | Error[] | APIError[], requestAccepts: any): Q.Promise<SealedResponse>;
     static supportedExt: ReadonlyArray<never>;
 }

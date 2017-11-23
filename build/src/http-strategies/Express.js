@@ -29,26 +29,19 @@ class ExpressStrategy extends Base_1.default {
         if (responseObject.headers.vary) {
             vary(res, responseObject.headers.vary);
         }
-        if (!responseObject.contentType) {
-            if (this.config.handleContentNegotiation) {
-                res.status(406).send();
-            }
-            else {
-                next();
-            }
+        if (responseObject.status === 406 && !this.config.handleContentNegotiation) {
+            return next();
+        }
+        res.set("Content-Type", responseObject.contentType);
+        res.status(responseObject.status || 200);
+        if (responseObject.headers.location) {
+            res.set("Location", responseObject.headers.location);
+        }
+        if (responseObject.body !== null) {
+            res.send(new Buffer(responseObject.body)).end();
         }
         else {
-            res.set("Content-Type", responseObject.contentType);
-            res.status(responseObject.status || 200);
-            if (responseObject.headers.location) {
-                res.set("Location", responseObject.headers.location);
-            }
-            if (responseObject.body !== null) {
-                res.send(new Buffer(responseObject.body)).end();
-            }
-            else {
-                res.end();
-            }
+            res.end();
         }
     }
     sendError(errors, req, res) {
