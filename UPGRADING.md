@@ -2,6 +2,7 @@
 ## Breaking Changes
 ### Global
 - Q.Promise has been replaced with the standard ES6 Promise throughout the API.
+- The way to filter results using the `?filter` parameter has changed. The new scheme, which is documented in the README, is more concise and better integrated with the query transform system.
 
 ### Mongoose Behavior/MongooseAdapter
 - The adapter now requires at least Mongoose v4.2.0, and is only tested with Mongoose 4.7.0 and up. (Previously, it used required 4.0.x).

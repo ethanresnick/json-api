@@ -3,17 +3,15 @@ json-api [![CircleCI Badge](https://circleci.com/gh/ethanresnick/json-api.png?0d
 
 This library creates a [JSON API](http://jsonapi.org/)-compliant REST API from your Node app and automatically generates API documentation.
 
-It currently integrates with [Express](http://expressjs.com/) apps that use [Mongoose](http://mongoosejs.com/) models, but it can easily be integrated with other frameworks and databases. If you want to see an integration with another stack, just open an issue!
+It currently integrates with [Express](http://expressjs.com/) or Koa apps that use [Mongoose](http://mongoosejs.com/) models, but it can easily be integrated with other frameworks and databases. If you want to see an integration with another stack, just open an issue!
 
 This library implements all the required portions of the 1.0 spec, which is more than enough for basic CRUD. It does not yet implement some of the smaller, optional pieces, like related resource URIs.
 
-# Installation
-```$ npm install json-api```
-
-*On Versioning*: This library's major version will soon be bumped to 3.0.0, and it will use semantic versioning after that. The 2.x branch does not use semantic versioning. However, even on 2.x versions, "patch updates" (i.e. changes the version's third integer) will always be backwards-compatible. Changes to the the minor version (i.e. the second integer) on the 2.x branch may not be.
+# V3 Beta Installation
+```$ npm install json-api@next```
 
 # Example API
-Check out the [full, working example repo](http://github.com/ethanresnick/json-api-example) for all the details on building an API with this library. Or, take a look at the basic example below:
+Check out the [full, working v3 example repo](https://github.com/ethanresnick/json-api-example/tree/v3-wip) for all the details on building an API with this library. Or, take a look at the basic example below:
 
 ```javascript
   var app = require('express')()
@@ -82,30 +80,40 @@ To use this library, you describe the special behavior (if any) that resources o
 
 - <a name="before-save"></a>`beforeSave` (optional): a function called on each resource provided by the client (i.e. in a `POST` or `PATCH` request) before it's sent to the adapter for saving. You can transform the data here as necessary or pre-emptively reject the request. [Usage details](https://github.com/ethanresnick/json-api-example/blob/master/src/resource-descriptions/people.js#L25).
 
-- <a name="labels"></a>`labelMappers` (optional): this lets you create urls (or, in REST terminology, resources) that map to different database items over time. For example, you could have an `/events/upcoming` resource or a `/users/me` resource. In those examples, "upcoming" and "me" are called the labels and, in labelMappers, you provide a function that maps each label to the proper database id(s) at any given time. The function can return a Promise if needed.
-
 - <a name="parentType"></a>`parentType` (optional): this allows you to designate one resource type being a sub-type of another (its `parentType`). This is often used when you have two resource types that live in the same database table/collection, and their type is determined with a discriminator key. See the [`schools` type](https://github.com/ethanresnick/json-api-example/blob/master/src/resource-descriptions/schools.js#L2) in the example repository. If a resource has a `parentType`, it inherits that type's configuration (i.e. its `urlTemplates`, `beforeSave`/`beforeRender` functions, and `info`). The only exception is that `labelMappers` are not inherited.
 
 -  <a name="info"></a>`info` (optional): this allows you to provide extra information about the resource that will be included in the documentation. Available properties are `"description"` (a string describing what resources of this type are) and `"fields"`. `"fields"` holds an object in which you can describe each field in the resource (e.g. listing validation rules). See the [example implemenation](https://github.com/ethanresnick/json-api-example/blob/master/src/resource-descriptions/schools.js) for more details.
 
-## Filtering
-This library includes basic filtering capabilities out of the box. Filters are accepted in the following form:
-```
-?filter[simple][<field_name>]=<value>
-```
-For example, to get all people with the name "John":
-```
-GET /people?filter[simple][name]=John
-```
-Also available are Mongo-specific operators, taking the following form:
-```
-?filter[simple][<field_name>][<operator>]=<value>
-```
-The `<operator>` can be set to any [Mongo query operator](http://docs.mongodb.org/manual/reference/operator/query/). For example, to get all jobs completed before June 2015:
-```
-GET /jobs?filter[simple][dateCompleted][$lt]=2015-06-01
-```
-Please note however that as these operators are Mongo-specific, they may be replaced in a future version with a more database-agnostic syntax.
+- <a name="labels"></a>`labelMappers` (**deprecated, may be removed before v3 ships**, optional): this lets you create urls (or, in REST terminology, resources) that map to different database items over time. For example, you could have an `/events/upcoming` resource or a `/users/me` resource. In those examples, "upcoming" and "me" are called the labels and, in labelMappers, you provide a function that maps each label to the proper database id(s) at any given time. The function can return a Promise if needed. **As of v3, this can be done more efficiently and concisely with query transforms. See below.**
+
+## Query Transforms
+When a request comes in, the json-api library extracts various parameters from it to build a query that will be used to fulfill the user's request.
+
+However, to support advanced use cases, you may want to transform the query that the library generates to select/update different data, or you might want to modify how the query's result (data or error) is placed into the JSON:API response. Query transforms let you do this. See an example in [here](https://github.com/ethanresnick/json-api-example/blob/v3-wip/src/index.js#L56).
+
+## Filtering & Pagination
+This library supports filtering out of the box, using a syntax that's designed to be easier to read, and much easier to write, than the  square brackets syntax used by libraries like [qs](https://github.com/ljharb/qs).
+
+For example, to include only items where the zip code is either 90210 or 10012, you'd write: 
+
+`?filter=(zip,in,(90210,10012))`. 
+
+By contrast, with the square-bracket syntax you'd have to write something like: 
+
+`?filter[zip][in][]=90210&filter[zip][in][]=100121`.
+
+In this library's format, the value of the `filter` parameter is one or more "filter constraints" listed next to each other. These constraints narrow the results to only include those that match. The format of a filter constraint is: `(fieldName,operator,value)`. For example:
+
+- `(name,eq,Bob)`: only include items where the name equals Bob
+- `(salary,gte,150000)`: only include items where the salary is greater than or equal to 150,000.
+
+As a shorthand, when the operator is "eq" (for equals), you can omit the operator entirely. E.g. `(name,Bob)` expresses the same constraint as `(name, eq,Bob)`. 
+
+The valid operators are: `eq`, `neq`, `in`, `nin`, `lt`, `gt`, `lte`, and `gte`.
+
+If the value given is an integer, a float, `null`, `true`, or `false`, it is treated as a literal; every other value is treated as a string. If you want to express a string like "true", you can explicitly put it in single quotes, e.g.: `(street,contains,'true')`.
+
+Putting it all together, to find only the people named Bob who live in the 90210 zip code, you'd do: `GET /people?filter=(name,Bob)(zip,90210)`.
 
 ## Pagination
 Pagination limit and offset parameters are accepted in the following form:
@@ -118,7 +126,9 @@ GET /people?page[offset]=50&page[limit]=25
 ```
 
 ## Routing, Authentication & Controllers
-This library gives you a Front controller (shown in the example) that can handle requests for API results or for the documentation. But the library doesn't prescribe how requests get to this controller. This allows you to use any url scheme, routing layer, or authentication system you already have in place. You just need to make sure that: `req.params.type` reflects the requested resource type; `req.params.id` or (if you want to allow labels on a request) `req.params.idOrLabel` reflects the requested id, if any; and `req.params.relationship` reflects the relationship name, in the event that the user is requesting a relationship url.
+This library gives you a Front controller (shown in the example) that can handle requests for API results or for the documentation. But the library doesn't prescribe how requests get to this controller. This allows you to use any url scheme, routing layer, or authentication system you already have in place. 
+
+You just need to make sure that: `req.params.type` reflects the requested resource type; `req.params.id` or (if you want to allow labels on a request) `req.params.idOrLabel` reflects the requested id, if any; and `req.params.relationship` reflects the relationship name, in the event that the user is requesting a relationship url. The library will read these values to help it construct the query needed to fulfill the user's request.
 
 In the example above, routing is handled with Express's built-in `app[VERB]` methods, and the three parameters are set properly using express's built-in `:param` syntax. If you're looking for something more robust, you might be interested in [Express Simple Router](https://github.com/ethanresnick/express-simple-router). For authentication, check out [Express Simple Firewall](https://github.com/ethanresnick/express-simple-firewall).
 
