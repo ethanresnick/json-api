@@ -47,7 +47,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
    * documents, as happens below. If it's undefined, though, we're not filtering
    * by id and should return all documents.
    */
-  find(query: FindQuery) {
+  async find(query: FindQuery) {
     const {
       type,
       populates: includePaths,
@@ -198,7 +198,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
    * @param {(Resource|Collection)} resourceOrCollection - The resource or
    *   collection of resources to create.
    */
-  create(query: CreateQuery) {
+  async create(query: CreateQuery) {
     const { records: resourceOrCollection } = query;
     const resourcesByType = groupResourcesByType(resourceOrCollection);
 
@@ -239,7 +239,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
    * @param {Object} resourceOrCollection - The changed Resource or Collection
    *   of resources. Should only have the fields that are changed.
    */
-  update(query: UpdateQuery) {
+  async update(query: UpdateQuery) {
     const { type: parentType, patch: resourceOrCollection } = query;
     const singular = this.inflector.singular;
     const plural = this.inflector.plural;
@@ -297,7 +297,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     }).catch(util.errorHandler);
   }
 
-  delete(query: DeleteQuery) {
+  async delete(query: DeleteQuery) {
     const { type: parentType } = query;
     const idOrIds = query.getIdOrIds();
 
@@ -331,7 +331,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
    * run. But validation and the update query hooks will work if you're using
    * Mongoose 4.0.
    */
-  addToRelationship(query: AddToRelationshipQuery) {
+  async addToRelationship(query: AddToRelationshipQuery) {
     const { type, id, relationshipName, linkage: newLinkage } = query;
 
     const model = this.getModel(this.constructor.getModelName(type));
@@ -346,7 +346,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       .catch(util.errorHandler);
   }
 
-  removeFromRelationship(query: RemoveFromRelationshipQuery) {
+  async removeFromRelationship(query: RemoveFromRelationshipQuery) {
     const { type, id, relationshipName, linkage: linkageToRemove } = query;
 
     const model = this.getModel(this.constructor.getModelName(type));

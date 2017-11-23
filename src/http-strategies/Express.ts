@@ -1,4 +1,4 @@
-import vary = require("vary");
+import varyLib = require("vary");
 import API from "../controllers/API";
 import Base, { HTTPStrategyOptions } from "./Base";
 
@@ -48,24 +48,26 @@ export default class ExpressStrategy extends Base {
   }
 
   sendResources(responseObject, res, next) {
-    if(responseObject.headers.vary) {
-      vary(res, responseObject.headers.vary);
+    const { vary, ...otherHeaders } = responseObject.headers;
+
+    if(vary) {
+      varyLib(res, vary);
     }
 
     if(responseObject.status === 406 && !this.config.handleContentNegotiation) {
       return next();
     }
 
-    res.set("Content-Type", responseObject.contentType);
     res.status(responseObject.status || 200);
 
-    if(responseObject.headers.location) {
-      res.set("Location", responseObject.headers.location);
-    }
+    Object.keys(otherHeaders).forEach(k => {
+      res.set(k, otherHeaders[k]);
+    })
 
-    if(responseObject.body !== null) {
+    if(responseObject.body !== undefined) {
       res.send(new Buffer(responseObject.body)).end();
     }
+
     else {
       res.end();
     }

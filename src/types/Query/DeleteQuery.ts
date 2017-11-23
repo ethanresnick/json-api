@@ -4,6 +4,8 @@ import { AndPredicate } from "../index";
 export default class DeleteQuery extends WithCriteriaQuery {
   protected query: {
     readonly type: WithCriteriaQueryOptions['type'];
+    readonly returning: WithCriteriaQueryOptions['returning'];
+    readonly catch: WithCriteriaQueryOptions['catch'];
     readonly criteria: {
       readonly where: AndPredicate;
       readonly singular: boolean;

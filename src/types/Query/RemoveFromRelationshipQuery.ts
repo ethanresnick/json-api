@@ -11,13 +11,16 @@ export type RemoveFromRelationshipQueryOptions = QueryOptions & {
 export default class RemoveFromRelationshipQuery extends Query {
   protected query: {
     readonly type: QueryOptions['type'];
+    readonly returning: QueryOptions['returning'];
+    readonly catch: QueryOptions['catch'];
     readonly id: RemoveFromRelationshipQueryOptions['id'];
     readonly relationshipName: RemoveFromRelationshipQueryOptions['relationshipName'];
     readonly linkage: RemoveFromRelationshipQueryOptions['linkage'];
   };
 
   constructor(opts: RemoveFromRelationshipQueryOptions) {
-    super({ type: opts.type });
+    const { id, relationshipName, linkage, ...baseOpts } = opts;
+    super(baseOpts);
     assertKeysTruthy(["id", "relationshipName"], opts);
 
     this.query = {

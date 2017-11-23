@@ -6,12 +6,10 @@ import dasherize = require("dasherize");
 import mapValues = require("lodash/object/mapValues");
 
 import ResourceTypeRegistry, { ResourceTypeDescription, ResourceTypeInfo } from "../ResourceTypeRegistry";
-import Response, { Response as UnsealedResponse } from "../types/HTTP/Response";
+import { HTTPResponse } from "../types";
 import Document from "../types/Document";
 import Collection from "../types/Collection";
 import Resource from "../types/Resource";
-
-export { UnsealedResponse };
 
 export default class DocumentationController {
   private registry: ResourceTypeRegistry;
@@ -44,13 +42,13 @@ export default class DocumentationController {
   }
 
   handle(request, frameworkReq, frameworkRes) {
-    const response = new Response();
+    const response: HTTPResponse = { headers: {}, body: undefined, status: 200 };
     const negotiator = new Negotiator({headers: {accept: request.accepts}});
     const contentType = negotiator.mediaType(["text/html", "application/vnd.api+json"]);
 
     // set content type as negotiated & vary on accept.
-    response.contentType = contentType;
-    response.headers.vary = "Accept";
+    response.headers['content-type'] = contentType;
+    response.headers['vary'] = "Accept";
 
     // process templateData (just the type infos for now) for this particular request.
     const templateData = _.cloneDeep(this.templateData, cloneCustomizer);
@@ -58,7 +56,7 @@ export default class DocumentationController {
       return this.transformTypeInfo(typeName, typeInfo, request, response, frameworkReq, frameworkRes);
     });
 
-    if(contentType.toLowerCase() === "text/html") {
+    if(contentType && contentType.toLowerCase() === "text/html") {
       response.body = jade.renderFile(this.template, templateData);
     }
 
@@ -161,7 +159,7 @@ export default class DocumentationController {
    * the groundwork for true HATEOS intro pages in the future.
    */
   transformTypeInfo(typeName, info, request, response, frameworkReq, frameworkRes) {
-    if(this.dasherizeJSONKeys && response.contentType === "application/vnd.api+json") {
+    if(this.dasherizeJSONKeys && response.headers['content-type'] === "application/vnd.api+json") {
       return dasherize(info);
     }
     return info;

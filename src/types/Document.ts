@@ -36,18 +36,19 @@ export type DocumentData = {
 };
 
 export default class Document {
-  private meta: DocumentData['meta'];
-  private included: DocumentData['included'];
-  private primary: DocumentData['primary'];
-  private errors: DocumentData['errors'];
-  private reqURI: DocumentData['reqURI'];
-  private urlTemplates: URLTemplates;
+  public meta: DocumentData['meta'];
+  public included: DocumentData['included'];
+  public primary: DocumentData['primary'];
+  public errors: DocumentData['errors'];
+  public reqURI: DocumentData['reqURI'];
+  public urlTemplates: URLTemplates;
 
   constructor(data: DocumentData) {
     const { urlTemplates = {}, ...restData } = data;
 
     // Assign data members.
-    // TODO: decide what level of validation is appropriate, given typescript.
+    // TODO: decide what level of validation/encapsulation is appropriate,
+    // given typescript.
     Object.assign(this, restData);
 
     // parse all the templates once on construction.

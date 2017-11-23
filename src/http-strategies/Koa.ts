@@ -1,4 +1,4 @@
-import vary from "vary";
+import varyLib from "vary";
 import API from "../controllers/API";
 import Base from "./Base";
 
@@ -70,22 +70,23 @@ export default class KoaStrategy extends Base {
   }
 
   sendResources(responseObject, ctx): void | true {
-    if(responseObject.headers.vary) {
-      vary(ctx.res, responseObject.headers.vary);
+    const { vary, ...otherHeaders } = responseObject.headers;
+
+    if(vary) {
+      varyLib(ctx.res, vary);
     }
 
     if(responseObject.status === 406 && !this.config.handleContentNegotiation) {
       return true;
     }
 
-    ctx.set("Content-Type", responseObject.contentType);
-    ctx.status = responseObject.status || 200;
+    ctx.status(responseObject.status || 200);
 
-    if(responseObject.headers.location) {
-      ctx.set("Location", responseObject.headers.location);
-    }
+    Object.keys(otherHeaders).forEach(k => {
+      ctx.res.set(k, otherHeaders[k]);
+    })
 
-    if(responseObject.body !== null) {
+    if(responseObject.body !== undefined) {
       ctx.body = new Buffer(responseObject.body);
     }
   }

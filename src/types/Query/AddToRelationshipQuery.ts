@@ -11,20 +11,23 @@ export type AddToRelationshipQueryOptions = QueryOptions & {
 export default class AddToRelationshipQuery extends Query {
   protected query: {
     readonly type: QueryOptions['type'];
+    readonly returning: QueryOptions['returning'];
+    readonly catch: QueryOptions['catch'];
     readonly id: AddToRelationshipQueryOptions['id'];
     readonly relationshipName: AddToRelationshipQueryOptions['relationshipName'];
     readonly linkage: AddToRelationshipQueryOptions['linkage'];
   };
 
   constructor(opts: AddToRelationshipQueryOptions) {
-    super({ type: opts.type });
-    assertKeysTruthy(["resourceId", "relationshipName"], opts);
+    const { id, relationshipName, linkage, ...baseOpts } = opts;
+    super(baseOpts);
+    assertKeysTruthy(["id", "relationshipName"], opts);
 
     this.query = {
       ...this.query,
-      id: opts.id,
-      relationshipName: opts.relationshipName,
-      linkage: opts.linkage
+      id,
+      relationshipName,
+      linkage
     };
   }
 

@@ -1,10 +1,13 @@
 import APIError from "../../types/APIError";
 import Linkage from "../../types/Linkage";
+import Resource from "../../types/Resource";
 import {forEachResources} from "../../util/type-handling";
 import CreateQuery from "../../types/Query/CreateQuery";
 import AddToRelationshipQuery from '../../types/Query/AddToRelationshipQuery';
+import { Result } from "../../types";
+import templating = require("url-template");
 
-export default function(request, registry) {
+export default function(request, registry, makeDoc) {
   const primary = request.primary;
   const type    = request.type;
 
@@ -23,7 +26,8 @@ export default function(request, registry) {
       type,
       id: request.idOrIds,
       relationshipName: request.relationship,
-      linkage: primary
+      linkage: primary,
+      returning: () => ({status: 204})
     });
   }
 
@@ -35,7 +39,27 @@ export default function(request, registry) {
 
     return new CreateQuery({
       type,
-      records: primary
+      records: primary,
+      returning: (created) => {
+        const res: Result = {
+          status: 201,
+          document: makeDoc({ primary: created })
+        };
+
+        // We can only generate a Location url for a single resource.
+        if(created instanceof Resource) {
+          const templates = registry.urlTemplates(created.type);
+          const template = templates && templates.self;
+          if(template) {
+            const templateData = {"id": created.id, ...created.attrs};
+            res.headers = {
+              Location: templating.parse(template).expand(templateData)
+            };
+          }
+        }
+
+        return res;
+      }
     });
   }
 }

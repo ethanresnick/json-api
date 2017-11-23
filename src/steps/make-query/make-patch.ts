@@ -5,7 +5,7 @@ import Relationship from "../../types/Relationship";
 import Linkage from "../../types/Linkage";
 import UpdateQuery from '../../types/Query/UpdateQuery';
 
-export default function(request, registry) {
+export default function(request, registry, makeDoc) {
   const primary = request.primary;
   const type    = request.type;
   let changedResourceOrCollection;
@@ -42,6 +42,13 @@ export default function(request, registry) {
 
   return new UpdateQuery({
     type,
-    patch: changedResourceOrCollection
+    patch: changedResourceOrCollection,
+    returning: (resources) => ({
+      document: makeDoc({
+        primary: request.relationship
+          ? resources.relationships[request.relationship].linkage
+          : resources
+      })
+    })
   });
 }

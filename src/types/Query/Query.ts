@@ -1,7 +1,16 @@
-export type QueryOptions = { type: string };
+import { Result } from '../index';
+export type QueryOptions = {
+  type: string,
+  returning: (result: any) => Result,
+  catch?: (err: any) => Result
+};
 
 abstract class Query {
-  protected query: { type: string };
+  protected query: {
+    type: QueryOptions['type'],
+    returning: QueryOptions['returning'],
+    catch?: QueryOptions['catch']
+  };
 
   constructor(opts: QueryOptions) {
     if(!opts.type) {
@@ -9,7 +18,9 @@ abstract class Query {
     }
 
     this.query = {
-      type: opts.type
+      type: opts.type,
+      returning: opts.returning,
+      catch: opts.catch
     }
   }
 
@@ -23,6 +34,27 @@ abstract class Query {
 
   get type() {
     return this.query.type;
+  }
+
+  get returning() {
+    return this.query.returning;
+  }
+
+  get catch() {
+    return this.query.catch;
+  }
+
+  resultsIn(success?: QueryOptions['returning'], fail?: QueryOptions['catch']) {
+    const res = this.clone();
+    if(success) {
+      res.query.returning = success;
+    }
+
+    if(fail) {
+      res.query.catch = fail;
+    }
+
+    return res;
   }
 
   forType(type: string) {

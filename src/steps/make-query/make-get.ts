@@ -1,8 +1,9 @@
 import APIError from "../../types/APIError";
 import FindQuery from "../../types/Query/FindQuery";
 
-export default function(request, registry) {
+export default function(request, registry, makeDoc) {
   const type = request.type;
+
   // Handle fields, sorts, includes and filters.
   if(!request.aboutRelationship) {
     // Attempting to paginate a single resource request
@@ -26,7 +27,16 @@ export default function(request, registry) {
       sort,
       filters: filter,
       offset,
-      limit
+      limit,
+      returning: ([primary, included, collectionSizeOrNull]) => ({
+        document: makeDoc({
+          primary,
+          included,
+          ...(collectionSizeOrNull != null
+            ? { meta: { total: collectionSizeOrNull } }
+            : {})
+        })
+      })
     });
   }
 
@@ -37,27 +47,49 @@ export default function(request, registry) {
   //   those in the primary data's `links` key, and this primary data doesn't
   //   have a links key.
   // - sorts don't apply beacuse that's only for resource collections.
-  else {
-    if(request.queryParams.page) {
-      throw new APIError(
-        400, undefined,
-        "Pagination is not supported on requests for resource linkage."
-      );
-    }
-
-    if(Array.isArray(request.idOrIds)) {
-      throw new APIError(
-        400, undefined,
-        "You can only request the linkage for one resource at a time."
-      );
-    }
-
-    return new FindQuery({
-      type,
-      singular: true,
-      populates: [],
-      idOrIds: request.idOrIds
-    });
+  if(request.queryParams.page) {
+    throw new APIError(
+      400, undefined,
+      "Pagination is not supported on requests for resource linkage."
+    );
   }
 
+  if(Array.isArray(request.idOrIds)) {
+    throw new APIError(
+      400, undefined,
+      "You can only request the linkage for one resource at a time."
+    );
+  }
+
+  return new FindQuery({
+    type,
+    singular: true,
+    populates: [],
+    idOrIds: request.idOrIds,
+    returning([resource]) {
+      // 404 if the requested relationship is not a relationship path. Doing
+      // it here is more accurate than using adapter.getRelationshipNames,
+      // since we're allowing for paths that can optionally hold linkage,
+      // which getRelationshipNames doesn't return.
+      const relationship = resource.relationships &&
+        resource.relationships[request.relationship];
+
+      if(!relationship) {
+        const title = "Invalid relationship name.";
+        const detail = `${request.relationship} is not a valid ` +
+                     `relationship name on resources of type '${type}'`;
+
+        return {
+          status: 404,
+          document: makeDoc({
+            primary: [new APIError(404, undefined, title, detail)]
+          })
+        };
+      }
+
+      return {
+        document: makeDoc({ primary: relationship.linkage })
+      }
+    }
+  });
 }

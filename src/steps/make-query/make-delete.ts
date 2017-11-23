@@ -3,7 +3,7 @@ import Collection from "../../types/Collection";
 import DeleteQuery from "../../types/Query/DeleteQuery";
 import RemoveFromRelationshipQuery from "../../types/Query/RemoveFromRelationshipQuery";
 
-export default function(request, registry) {
+export default function(request, registry, makeDoc) {
   const type = request.type;
 
   if(request.aboutRelationship) {
@@ -17,7 +17,8 @@ export default function(request, registry) {
       type: type,
       id: request.idOrIds,
       relationshipName: request.relationship,
-      linkage: request.primary
+      linkage: request.primary,
+      returning: () => ({ status: 204 })
     });
   }
 
@@ -39,6 +40,7 @@ export default function(request, registry) {
     type,
     idOrIds: bulkDelete
       ? request.primary.resources.map((it) => it.id)
-      : request.idOrIds
+      : request.idOrIds,
+    returning: () => ({ status: 204 })
   });
 }
