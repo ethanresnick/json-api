@@ -77,5 +77,27 @@ AgentPromise.then((Agent) => {
           done();
         }, done).catch(done);
     });
+
+    it("should by default 406 if the client can't accept json", (done) => {
+      Agent.request("GET", "/organizations")
+        .accept('text/html')
+        .promise()
+        .then(res => {
+          done(new Error("Should not run, since this request should be a 404"));
+        }, (res) => {
+          expect(res.status).to.equal(406);
+          done();
+        }).catch(done);
+    });
+
+    it("should delegate 406s to express if strategy so configured", (done) => {
+      Agent.request("GET", "/organizations/no-id/406-delegation-test")
+        .accept('text/html')
+        .promise()
+        .then(res => {
+          expect(res.text).to.equal("Hello from express");
+          done();
+        }, done).catch(done);
+    });
   });
 });

@@ -1,6 +1,6 @@
 import vary = require("vary");
 import API from "../controllers/API";
-import Base from "./Base";
+import Base, { HTTPStrategyOptions } from "./Base";
 
 /**
  * This controller receives requests directly from express and sends responses
@@ -29,7 +29,7 @@ import Base from "./Base";
  *    can set this option to false to have this code just pass on to Express.
  */
 export default class ExpressStrategy extends Base {
-  constructor(apiController, docsController, options?) {
+  constructor(apiController, docsController, options?: HTTPStrategyOptions) {
     super(apiController, docsController, options);
   }
 
@@ -52,29 +52,22 @@ export default class ExpressStrategy extends Base {
       vary(res, responseObject.headers.vary);
     }
 
-    if(!responseObject.contentType) {
-      if(this.config.handleContentNegotiation) {
-        res.status(406).send();
-      }
-      else {
-        next();
-      }
+    if(responseObject.status === 406 && !this.config.handleContentNegotiation) {
+      return next();
     }
 
+    res.set("Content-Type", responseObject.contentType);
+    res.status(responseObject.status || 200);
+
+    if(responseObject.headers.location) {
+      res.set("Location", responseObject.headers.location);
+    }
+
+    if(responseObject.body !== null) {
+      res.send(new Buffer(responseObject.body)).end();
+    }
     else {
-      res.set("Content-Type", responseObject.contentType);
-      res.status(responseObject.status || 200);
-
-      if(responseObject.headers.location) {
-        res.set("Location", responseObject.headers.location);
-      }
-
-      if(responseObject.body !== null) {
-        res.send(new Buffer(responseObject.body)).end();
-      }
-      else {
-        res.end();
-      }
+      res.end();
     }
   }
 

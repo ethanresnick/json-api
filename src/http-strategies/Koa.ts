@@ -74,25 +74,19 @@ export default class KoaStrategy extends Base {
       vary(ctx.res, responseObject.headers.vary);
     }
 
-    if(!responseObject.contentType) {
-      if(this.config.handleContentNegotiation) {
-        ctx.status = 406;
-      }
-      else {
-        return true;
-      }
+    if(responseObject.status === 406 && !this.config.handleContentNegotiation) {
+      return true;
     }
-    else {
-      ctx.set("Content-Type", responseObject.contentType);
-      ctx.status = responseObject.status || 200;
 
-      if(responseObject.headers.location) {
-        ctx.set("Location", responseObject.headers.location);
-      }
+    ctx.set("Content-Type", responseObject.contentType);
+    ctx.status = responseObject.status || 200;
 
-      if(responseObject.body !== null) {
-        ctx.body = new Buffer(responseObject.body);
-      }
+    if(responseObject.headers.location) {
+      ctx.set("Location", responseObject.headers.location);
+    }
+
+    if(responseObject.body !== null) {
+      ctx.body = new Buffer(responseObject.body);
     }
   }
 

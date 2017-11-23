@@ -9,8 +9,8 @@ import DocsController from "../controllers/Documentation";
 export { UnsealedRequest };
 
 export type HTTPStrategyOptions = {
-  handleContentNegotiation: boolean,
-  tunnel: boolean,
+  handleContentNegotiation?: boolean,
+  tunnel?: boolean,
   host?: string
 };
 
@@ -43,7 +43,7 @@ export default class BaseStrategy {
   protected docs: DocsController;
   protected config: HTTPStrategyOptions;
 
-  constructor(apiController: APIController, docsController: DocsController, options: HTTPStrategyOptions) {
+  constructor(apiController: APIController, docsController: DocsController, options?: HTTPStrategyOptions) {
     this.api = apiController;
     this.docs = docsController;
 

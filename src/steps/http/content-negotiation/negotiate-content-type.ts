@@ -19,11 +19,12 @@ export default function(acceptHeader, availableBaseTypes) {
   return new Promise<string>(function(resolve, reject) {
     const negotiator = new Negotiator({headers: {accept: acceptHeader}});
     const hasParams = (it) => !objectIsEmpty(it.parameters);
+    const jsonApiBaseType = "application/vnd.api+json";
 
     // If an endpoint supports JSON API's media type, it implicity
     // supports JSON too. Though we'll only respond with JSON if *necessary*.
     const endpointSupportsJsonApi =
-      availableBaseTypes.indexOf("application/vnd.api+json") !== -1;
+      availableBaseTypes.indexOf(jsonApiBaseType) !== -1;
 
     const syntheticAvailableBaseTypes = endpointSupportsJsonApi
       ? ["application/json"].concat(availableBaseTypes)
@@ -37,7 +38,7 @@ export default function(acceptHeader, availableBaseTypes) {
 
     // Find all the Accept clauses that specifically reference json api.
     const jsonApiRanges = acceptables.filter((it) =>
-      it.type.toLowerCase() === "application/vnd.api+json"
+      it.type.toLowerCase() === jsonApiBaseType
     );
 
     // If we do have JSON API in the Accept header and all instances
@@ -48,12 +49,12 @@ export default function(acceptHeader, availableBaseTypes) {
 
     // For everything but the JSON API media type, trust
     // negotiator to handle things correctly.
-    else if(preferredType.toLowerCase() !== "application/vnd.api+json") {
+    else if(preferredType && preferredType.toLowerCase() !== jsonApiBaseType) {
       resolve(preferredType);
     }
 
-    // Otherwise, our preferred type is non existent or json api and, if it's
-    // json api, we have it unparameterized at least once.
+    // Otherwise, our preferred type is non existent or it's json api and,
+    // if it's json api, we have it unparameterized at least once.
     else if(jsonApiRanges.length && endpointSupportsJsonApi) {
       resolve("application/vnd.api+json");
     }

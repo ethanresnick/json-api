@@ -27,7 +27,16 @@ export default database.then(function(dbModule) {
 
   const port = process.env.PORT || "3000";
   const host = process.env.HOST || "127.0.0.1";
-  const Front = new API.httpStrategies.Express(Controller, Docs, { host: host + ":" + port });
+  const Front = new API.httpStrategies.Express(Controller, Docs, {
+    host: host + ":" + port
+  });
+
+  const FrontWith406Delegation =
+    new API.httpStrategies.Express(Controller, Docs, {
+      host: host + ":" + port,
+      handleContentNegotiation: false
+    });
+
   const apiReqHandler = Front.apiRequest.bind(Front);
 
   // Apply a query transform to a request so we can test query transforms.
@@ -35,6 +44,15 @@ export default database.then(function(dbModule) {
   app.get('/:type(people)/non-binary',
     Front.transformedAPIRequest((req, query) =>
       query.andWhere({field: "gender", operator: "nin", value: ["male", "female"]})));
+
+
+  // Add a route that delegates to next route on 406.
+  app.get('/:type(organizations)/no-id/406-delegation-test',
+    FrontWith406Delegation.apiRequest.bind(FrontWith406Delegation),
+    (req, res, next) => {
+      res.header('Content-Type', 'text/plain')
+      res.send("Hello from express");
+    })
 
   // Now, add the routes.
   // Note: below, express incorrectly passes requests using PUT and other
