@@ -9,7 +9,11 @@ This library implements all the required portions of the 1.0 spec, which is more
 
 # Installation
 
-**If you're starting a new project absolutely use the v3 beta. v2 of this library is deprecated and will only receive critical fixes.** Documentation for using and installing v3 can be found [here](https://github.com/ethanresnick/json-api/blob/v3-evolution-over-rewrite/README.md).
+## Using V3
+
+**If you're starting a new project absolutely use the v3 beta. v2 of this library is deprecated and will only receive critical fixes.** 
+
+Documentation for using and installing v3 can be found [here](https://github.com/ethanresnick/json-api/blob/v3-evolution-over-rewrite/README.md).
 
 ## Using V2 (deprecated)
 
