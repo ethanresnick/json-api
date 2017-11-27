@@ -16,15 +16,14 @@ export type WithCriteriaQueryOptions = QueryOptions & {
 };
 
 export default class WithCriteriaQuery extends Query {
-  protected query: Readonly<
-    QueryOptions & {
-    criteria: Readonly<{
+  protected query: QueryOptions & {
+    criteria: {
       where: AndPredicate;
       singular: boolean;
       offset?: number;
       limit?: number;
-    }>
-   }>;
+    }
+  };
 
   constructor(opts: WithCriteriaQueryOptions) {
     super(opts);

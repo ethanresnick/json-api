@@ -1,6 +1,27 @@
 import varyLib = require("vary");
 import API from "../controllers/API";
 import Base, { HTTPStrategyOptions } from "./Base";
+import Query from "../types/Query/Query";
+import { Request } from "express";
+
+// Note: however, having one object type with both possible callback signatures
+// in it doesn't work, but splitting these function signatures into separate
+// types, and then unioning those types, does. Seems like they should be the
+// same, but whatever works. Possibly, the difference comes from the limitation
+// identified in https://github.com/Microsoft/TypeScript/issues/7294. Still,
+// this behavior is probably subject to change (e.g., might be effected by
+// https://github.com/Microsoft/TypeScript/pull/17819). However, it's the
+// approach that the express typings seem to use, so I imagine it's safe enough.
+export type QueryTransformCurried = {
+  (first: Query): Query;
+};
+
+export type QueryTransformWithReq = {
+  (first: Request, second: Query): Query
+}
+
+export type QueryTransform =
+  QueryTransformCurried | QueryTransformWithReq;
 
 /**
  * This controller receives requests directly from express and sends responses
@@ -96,7 +117,7 @@ export default class ExpressStrategy extends Base {
     return this.apiRequestWithTransform(undefined, req, res, next);
   }
 
-  transformedAPIRequest(queryTransform) {
+  transformedAPIRequest(queryTransform: QueryTransform) {
     return this.apiRequestWithTransform.bind(this, queryTransform);
   }
 

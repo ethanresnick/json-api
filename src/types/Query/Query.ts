@@ -24,7 +24,7 @@ abstract class Query {
     }
   }
 
-  protected clone() {
+  protected clone(): this {
     // We don't want to run the initialization logic/validation on clone,
     // so we just copy over the query and set up the prototype chain ourself.
     const clone = Object.create(this.constructor.prototype);

@@ -1,7 +1,10 @@
 import express = require("express");
 import API = require("../../../src/index");
 import Document from "../../../src/types/Document";
+import Collection from "../../../src/types/Collection";
 import APIError from "../../../src/types/APIError";
+import Query from "../../../src/types/Query/Query";
+import FindQuery from "../../../src/types/Query/FindQuery";
 import database from "../database/index";
 import { Express } from "express";
 export { Express } from "express";
@@ -60,11 +63,11 @@ export default database.then(function(dbModule) {
   // we'll use them here as a faster alternative to old-style label mappers.
   app.get('/:type(people)/non-binary',
     Front.transformedAPIRequest((req, query) =>
-      query.andWhere({ field: "gender", operator: "nin", value: ["male", "female"] })));
+      (query as FindQuery).andWhere({ field: "gender", operator: "nin", value: ["male", "female"] })));
 
   // Apply a query transform that returns a custom error
   app.get('/request-that-errors/:type(people)/:id(42)',
-    Front.transformedAPIRequest((query) =>
+    Front.transformedAPIRequest((query: Query) =>
       query.resultsIn(undefined, (error) => ({
         document: new Document({
           errors: [
@@ -82,13 +85,14 @@ export default database.then(function(dbModule) {
 
   // Apply a query transform that puts all the names in meta
   app.get('/:type(people)/with-names',
-    Front.transformedAPIRequest((query) => {
+    Front.transformedAPIRequest((query: Query) => {
       const origReturning = query.returning;
 
       return query.resultsIn((...args) => {
-        const origResult = origReturning(...args);
-        const names = origResult.document.primary.resources.map(it => it.attrs.name);
-        origResult.document.meta = { ...origResult.document.meta, names };
+        const origResult = (origReturning as any)(...args);
+        const origDocument = origResult.document as Document;
+        const names = (origDocument.primary as Collection).resources.map(it => it.attrs.name);
+        origDocument.meta = { ...origDocument.meta, names };
         return origResult;
       }, (error) => ({
         document: new Document({})

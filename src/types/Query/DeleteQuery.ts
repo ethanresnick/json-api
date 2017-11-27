@@ -3,14 +3,14 @@ import { AndPredicate } from "../index";
 
 export default class DeleteQuery extends WithCriteriaQuery {
   protected query: {
-    readonly type: WithCriteriaQueryOptions['type'];
-    readonly returning: WithCriteriaQueryOptions['returning'];
-    readonly catch: WithCriteriaQueryOptions['catch'];
-    readonly criteria: {
-      readonly where: AndPredicate;
-      readonly singular: boolean;
-      readonly limit?: WithCriteriaQueryOptions['limit'];
-      readonly offset?: WithCriteriaQueryOptions['offset'];
+    type: WithCriteriaQueryOptions['type'];
+    returning: WithCriteriaQueryOptions['returning'];
+    catch: WithCriteriaQueryOptions['catch'];
+    criteria: {
+      where: AndPredicate;
+      singular: boolean;
+      limit?: WithCriteriaQueryOptions['limit'];
+      offset?: WithCriteriaQueryOptions['offset'];
     }
   };
 

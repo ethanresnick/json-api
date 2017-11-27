@@ -9,17 +9,17 @@ export type FindQueryOptions = WithCriteriaQueryOptions & {
 
 export default class FindQuery extends WithCriteriaQuery {
   protected query: {
-    readonly type: FindQueryOptions['type'];
-    readonly returning: FindQueryOptions['returning'];
-    readonly catch: FindQueryOptions['catch'];
-    readonly select?: FindQueryOptions['select'];
-    readonly sort?: FindQueryOptions['sort'];
-    readonly populates: FindQueryOptions['populates'];
-    readonly criteria: {
-      readonly where: AndPredicate;
-      readonly singular: boolean;
-      readonly limit?: FindQueryOptions['limit'];
-      readonly offset?: FindQueryOptions['offset'];
+    type: FindQueryOptions['type'];
+    returning: FindQueryOptions['returning'];
+    catch: FindQueryOptions['catch'];
+    select?: FindQueryOptions['select'];
+    sort?: FindQueryOptions['sort'];
+    populates: string[]; // never undefined in the object (it gets a default), but it can be in the option.
+    criteria: {
+      where: AndPredicate;
+      singular: boolean;
+      limit?: FindQueryOptions['limit'];
+      offset?: FindQueryOptions['offset'];
     }
   };
 
