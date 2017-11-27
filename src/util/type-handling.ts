@@ -109,51 +109,48 @@ export function forEachArrayOrVal(arrayOrVal, eachFn) {
 
 
 /**
- * The Maybe monad, with a totally-not-monadic unwrap() so we can
- * get out the raw value w/o needing to pass the monad everywhere.
- *
- * We also match js's convention from Promise of not requiring
- * the user's bind() to always return the monad. If a raw value
- * x is returned, it's converted to Maybe(x).
+ * The Maybe monad, except that pure(undefined) returns Nothing, rather than
+ * Just undefined. Also, we match js's convention from Promise of not requiring
+ * the user's bind() argument to always return the monad (i.e., we merge bind
+ * and map); if a raw value x is returned, it's converted to Maybe(x).
+ * Note: normally Nothing would be a single value not a class, but making it
+ * a class helps Typescript.
  */
-export const Nothing = {
-  unwrap() {
-    return undefined;
-  },
+export class Nothing<T> {
+  getOrDefault(defaultVal?: T): T | undefined {
+    return defaultVal;
+  }
 
-  bind(transform) {
-    return this;
+  bind<U>(transform: (v: T) => Just<U> | Nothing<U> | U): Just<U> | Nothing<U> {
+    return this as any as Nothing<U>;
   }
 };
 
-export class Just {
-  private val: any;
+export class Just<T> {
+  private val: T;
 
-  constructor(x) {
+  constructor(x: T) {
     this.val = x;
   }
 
-  unwrap() {
+  getOrDefault(defaultVal?: T): T | undefined {
     return this.val;
   }
 
-  bind(transform) {
+  bind<U>(transform: (v: T) => Just<U> | Nothing<U> | U): Just<U> | Nothing<U> {
     const transformed = transform(this.val);
-    if(transformed instanceof Just || transformed === Nothing) {
+
+    if(transformed instanceof Just || transformed instanceof Nothing) {
       return transformed;
     }
+
     else {
       return Maybe(transformed);
     }
   }
 }
 
-export function Maybe(x): Just | typeof Nothing {
-  // Sometimes, null is a valid value, so Nothing only covers undefined.
-  if(x !== undefined) {
-    return new Just(x);
-  }
-  else {
-    return Nothing;
-  }
+export function Maybe<T>(x: T | undefined): Just<T> | Nothing<T> {
+  // Sometimes, null is a valid value, so we only make undefined into Nothing.
+  return x !== undefined ? new Just(x) : new Nothing<T>();
 }

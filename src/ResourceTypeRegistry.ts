@@ -113,7 +113,9 @@ export default class ResourceTypeRegistry {
   }
 
   type(typeName): ResourceTypeDescription | undefined {
-    return Maybe(this[typesKey][typeName]).bind(it => it.toJS()).unwrap();
+    return Maybe(this[typesKey][typeName])
+      .bind(it => it.toJS())
+      .getOrDefault(undefined);
   }
 
   hasType(typeName) {
@@ -131,7 +133,7 @@ export default class ResourceTypeRegistry {
       return Maybe(this[typesKey][type])
         .bind(it => it.get("urlTemplates"))
         .bind(it => it.toJS())
-        .unwrap();
+        .getOrDefault(undefined);
     }
 
     return Object.keys(this[typesKey]).reduce((prev, typeName) => {
@@ -178,5 +180,5 @@ function doGet(inst, attrName, type) {
   return Maybe(inst[typesKey][type])
     .bind(it => it.get(attrName))
     .bind(it => it instanceof Immutable.Map || it instanceof Immutable.List ? it.toJS() : it)
-    .unwrap();
+    .getOrDefault(undefined);
 };
