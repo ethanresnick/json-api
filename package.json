@@ -83,7 +83,7 @@
     "nyc": "^11.1.0",
     "rimraf": "^2.6.1",
     "sinon": "1.10.2",
-    "superagent": "1.2.x",
+    "superagent": "^3.8.1",
     "ts-node": "^3.3.0",
     "tslint": "^5.7.0",
     "typescript": "^2.6.1"
