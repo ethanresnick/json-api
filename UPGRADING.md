@@ -19,6 +19,8 @@
 - The `HTTP/Response` class has been removed, and replaced with object literals with a simpler format (see HTTPResponse in `src/types/index.ts`) for the new structure. This should only be observable if you were subclassing the `Documentation` controller and defining a `transformTypeInfo` function that depended on the old Response structure. The argument to your function will now match the new structure.
 - The `Document` class now has a different constructor signature and different class methods. This shouldn't be an issue unless you were manually constructing Document instances. See file for details.
 
+### ResourceTypeRegistry
+- The type descriptions -- which have always been private -- are now stored in a different instance property. If you want to get a type description, use `registry.type(typeName)`. To get the list of all registered types, use `registry.typeNames()`.
 
 ## New Features
 ### Global

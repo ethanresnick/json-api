@@ -15,13 +15,11 @@ const globalResourceDefaults = Immutable.fromJS({
   }*/
 });
 
-const typesKey = Symbol();
-
 export type URLTemplates = {
-  [type: string]: {
-    [linkName: string]: string
-  }
+  [type: string]: URLTemplatesForType;
 }
+
+export type URLTemplatesForType = { [linkName: string]: string };
 
 export type ResourceTypeInfo = {
   fields?: {[fieldName: string]: any}
@@ -34,7 +32,7 @@ export type ResourceTypeDescription = {
   info?: ResourceTypeInfo,
   defaultIncludes?: string[],
   parentType?: string,
-  urlTemplates?: URLTemplates[keyof URLTemplates],
+  urlTemplates?: URLTemplatesForType,
   beforeSave?: TransformFn,
   beforeRender?: TransformFn,
   labelMappers?: { [label: string]: any },
@@ -56,11 +54,15 @@ export type ResourceTypeDescriptions = {
  * its JSON API type and has a number of properties defining it.
  */
 export default class ResourceTypeRegistry {
+  private _types: {
+    [typeName: string]: Immutable.Map<string, any> | undefined
+  };
+
   constructor(
     typeDescriptions: ResourceTypeDescriptions = Object.create(null),
     descriptionDefaults: object|Immutable.Map<string, any> = {}
   ) {
-    this[typesKey] = {};
+    this._types = {};
     descriptionDefaults = globalResourceDefaults.mergeDeep(descriptionDefaults);
 
     // Sort the types so we can register them in an order that respects their
@@ -97,13 +99,13 @@ export default class ResourceTypeRegistry {
       const thisDescriptionRaw = Immutable.fromJS(typeDescriptions[typeName]);
       const thisDescriptionMerged = (<Immutable.Map<string, any>>descriptionDefaults).mergeDeep(thisDescriptionRaw);
 
-      this[typesKey][typeName] = (parentType) ?
+      this._types[typeName] = (parentType) ?
         // If we have a parentType, we merge in all the parent's fields,
         // BUT we then overwrite labelMappers with just the ones directly
         // from this description. We don't inherit labelMappers because a
         // labelMapper is a kind of filter, and the results of a filter
         // on the parent type may not be instances of the subtype.
-        this[typesKey][parentType].mergeDeep(thisDescriptionRaw)
+        (<Immutable.Map<string, any>>this._types[parentType]).mergeDeep(thisDescriptionRaw)
           .set("labelMappers", thisDescriptionRaw.get("labelMappers")) :
 
         // If we don't have a parentType, just register
@@ -112,73 +114,76 @@ export default class ResourceTypeRegistry {
     });
   }
 
-  type(typeName): ResourceTypeDescription | undefined {
-    return Maybe(this[typesKey][typeName])
-      .bind(it => it.toJS())
+  type(typeName) {
+    return Maybe(this._types[typeName])
+      .map(it => <ResourceTypeDescription>it.toJS())
       .getOrDefault(undefined);
   }
 
   hasType(typeName) {
-    return typeName in this[typesKey];
+    return typeName in this._types;
   }
 
   typeNames() {
-    return Object.keys(this[typesKey]);
+    return Object.keys(this._types);
   }
 
   urlTemplates(): URLTemplates;
-  urlTemplates(type: string): URLTemplates[keyof URLTemplates];
+  urlTemplates(type: string): URLTemplatesForType;
   urlTemplates(type?: string) {
     if(type) {
-      return Maybe(this[typesKey][type])
-        .bind(it => it.get("urlTemplates"))
-        .bind(it => it.toJS())
+      return Maybe(this._types[type])
+        .map(it => it.get("urlTemplates"))
+        .map(it => <URLTemplatesForType>it.toJS())
         .getOrDefault(undefined);
     }
 
-    return Object.keys(this[typesKey]).reduce((prev, typeName) => {
+    return Object.keys(this._types).reduce((prev, typeName) => {
       prev[typeName] = this.urlTemplates(typeName);
       return prev;
-    }, {});
+    }, <URLTemplates>{});
   }
 
   // Note: type signature's lying here; this could be undefined.
   dbAdapter(type): AdapterInstance<any> {
-    return doGet(this, "dbAdapter", type);
+    return this.doGet("dbAdapter", type);
   }
 
   beforeSave(type): ResourceTypeDescription['beforeSave'] | undefined {
-    return doGet(this, "beforeSave", type);
+    return this.doGet("beforeSave", type);
   }
 
   beforeRender(type): ResourceTypeDescription['beforeRender'] | undefined {
-    return doGet(this, "beforeRender", type);
+    return this.doGet("beforeRender", type);
   }
 
   behaviors(type) {
-    return doGet(this, "behaviors", type);
+    return this.doGet("behaviors", type);
   }
 
   labelMappers(type): ResourceTypeDescription['labelMappers'] | undefined {
-    return doGet(this, "labelMappers", type);
+    return this.doGet("labelMappers", type);
   }
 
   defaultIncludes(type): ResourceTypeDescription['defaultIncludes'] | undefined {
-    return doGet(this, "defaultIncludes", type);
+    return this.doGet("defaultIncludes", type);
   }
 
   info(type): ResourceTypeDescription['info'] | undefined {
-    return doGet(this, "info", type);
+    return this.doGet("info", type);
   }
 
   parentType(type): ResourceTypeDescription['parentType'] | undefined {
-    return doGet(this, "parentType", type);
+    return this.doGet("parentType", type);
+  }
+
+  private doGet(attrName, type) {
+    return Maybe(this._types[type])
+      .map(it => it.get(attrName))
+      .map(it => it instanceof Immutable.Map || it instanceof Immutable.List
+        ? it.toJS()
+        : it
+      )
+      .getOrDefault(undefined);
   }
 }
-
-function doGet(inst, attrName, type) {
-  return Maybe(inst[typesKey][type])
-    .bind(it => it.get(attrName))
-    .bind(it => it instanceof Immutable.Map || it instanceof Immutable.List ? it.toJS() : it)
-    .getOrDefault(undefined);
-};
