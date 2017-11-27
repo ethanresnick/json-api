@@ -14,7 +14,7 @@ abstract class Query {
 
   constructor(opts: QueryOptions) {
     if(!opts.type) {
-      throw new Error("`using` option is required.");
+      throw new Error("`type` option is required.");
     }
 
     this.query = {
@@ -59,7 +59,7 @@ abstract class Query {
 
   forType(type: string) {
     const res = this.clone();
-    res.query = { ...res.query, using: type };
+    res.query = { ...res.query, type };
     return res;
   }
 }
