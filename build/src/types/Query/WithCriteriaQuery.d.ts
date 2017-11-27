@@ -8,16 +8,16 @@ export declare type WithCriteriaQueryOptions = QueryOptions & {
     idOrIds?: string | string[] | undefined;
 };
 export default class WithCriteriaQuery extends Query {
-    protected query: Readonly<QueryOptions & {
-        criteria: Readonly<{
+    protected query: QueryOptions & {
+        criteria: {
             where: AndPredicate;
             singular: boolean;
             offset?: number;
             limit?: number;
-        }>;
-    }>;
+        };
+    };
     constructor(opts: WithCriteriaQueryOptions);
-    andWhere(constraint: FieldConstraint | Predicate): any;
+    andWhere(constraint: FieldConstraint | Predicate): this;
     matchingIdOrIds(idOrIds?: WithCriteriaQueryOptions['idOrIds']): any;
     getIdOrIds(): string | string[] | undefined;
     getFilters(excludeIdFilters?: boolean): AndPredicate;

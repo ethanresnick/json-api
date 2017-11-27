@@ -11,11 +11,11 @@ declare abstract class Query {
         catch?: QueryOptions['catch'];
     };
     constructor(opts: QueryOptions);
-    protected clone(): any;
+    protected clone(): this;
     readonly type: string;
     readonly returning: (result: any) => Result;
     readonly catch: ((err: any) => Result) | undefined;
-    resultsIn(success?: QueryOptions['returning'], fail?: QueryOptions['catch']): any;
-    forType(type: string): any;
+    resultsIn(success?: QueryOptions['returning'], fail?: QueryOptions['catch']): this;
+    forType(type: string): this;
 }
 export default Query;

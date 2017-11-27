@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 class Query {
     constructor(opts) {
         if (!opts.type) {
-            throw new Error("`using` option is required.");
+            throw new Error("`type` option is required.");
         }
         this.query = {
             type: opts.type,
@@ -37,7 +37,7 @@ class Query {
     }
     forType(type) {
         const res = this.clone();
-        res.query = Object.assign({}, res.query, { using: type });
+        res.query = Object.assign({}, res.query, { type });
         return res;
     }
 }

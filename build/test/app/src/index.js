@@ -52,8 +52,9 @@ exports.default = index_1.default.then(function (dbModule) {
         const origReturning = query.returning;
         return query.resultsIn((...args) => {
             const origResult = origReturning(...args);
-            const names = origResult.document.primary.resources.map(it => it.attrs.name);
-            origResult.document.meta = Object.assign({}, origResult.document.meta, { names });
+            const origDocument = origResult.document;
+            const names = origDocument.primary.resources.map(it => it.attrs.name);
+            origDocument.meta = Object.assign({}, origDocument.meta, { names });
             return origResult;
         }, (error) => ({
             document: new Document_1.default({})
