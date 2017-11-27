@@ -24,6 +24,18 @@ export default database.then(function(dbModule) {
   const Docs = new API.controllers.Documentation(registry, { name: "Example API" });
   const Controller = new API.controllers.API(registry);
 
+  const ControllerWithCustomFilterParsing = new API.controllers.API(registry, {
+    filterParser: (legalUnary, legalBinary, rawQuery, params) => {
+      return ('customNameFilter' in params)
+        ? [{
+            field: "name",
+            operator: "eq",
+            value: String((<any>params).customNameFilter)
+          }]
+        : undefined;
+    }
+  })
+
   // Initialize the express app + front controller.
   const app: Express = express();
 
@@ -38,6 +50,9 @@ export default database.then(function(dbModule) {
       host: host + ":" + port,
       handleContentNegotiation: false
     });
+
+  const FrontWithCustomFilterSupport =
+    new API.httpStrategies.Express(ControllerWithCustomFilterParsing, Docs);
 
   const apiReqHandler = Front.apiRequest.bind(Front);
 
@@ -61,6 +76,9 @@ export default database.then(function(dbModule) {
       }))
     )
   );
+
+  app.get('/:type(people)/custom-filter-test/',
+    FrontWithCustomFilterSupport.apiRequest.bind(FrontWithCustomFilterSupport));
 
   // Apply a query transform that puts all the names in meta
   app.get('/:type(people)/with-names',

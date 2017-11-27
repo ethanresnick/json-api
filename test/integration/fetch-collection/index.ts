@@ -166,6 +166,29 @@ describe("Fetching Collection", () => {
       });
     });
   });
+
+  describe("Filtering", () => {
+    it("should support simple equality filters", (done) => {
+      Agent.request("GET", '/people')
+        .query('filter=(name,eq,Doug Wilson)')
+        .accept("application/vnd.api+json")
+        .then((res) => {
+          expect(res.body.data).to.have.length(1);
+          expect(res.body.data[0].attributes.name).to.equal("Doug Wilson");
+          done();
+        }, done).catch(done);
+    });
+
+    it("should support user's custom filters", (done) => {
+      Agent.request("GET", '/people/custom-filter-test?customNameFilter=Doug Wilson')
+        .accept("application/vnd.api+json")
+        .then((res) => {
+          expect(res.body.data).to.have.length(1);
+          expect(res.body.data[0].attributes.name).to.equal("Doug Wilson");
+          done();
+        }, done).catch(done);
+    });
+  });
 });
 
     // "[S]erver implementations MUST ignore

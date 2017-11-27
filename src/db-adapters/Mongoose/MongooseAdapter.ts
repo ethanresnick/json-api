@@ -708,4 +708,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
   static idIsValid(id) {
     return typeof id === "string" && /^[0-9a-fA-F]{24}$/.test(id);
   }
+
+  static unaryFilterOperators = ["and", "or"];
+  static binaryFilterOperators = ['eq', 'neq', 'ne', 'in', 'nin', 'lt', 'gt', 'lte', 'gte'];
 }

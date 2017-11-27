@@ -1,9 +1,5 @@
 import ResourceTypeRegistry from '../ResourceTypeRegistry';
-// This is typescript voodoo. Sealed response actually refers to the *un*sealed
-// class, but it's the appropriate type name in the sense that that same type is
-// used as the return value when a *sealed* response is created through ValueObject()
-// because TS doesn't have the concept of a Sealed type.
-import { HTTPResponse, Result } from "../types";
+import { HTTPResponse, Result, Predicate, FieldConstraint } from "../types";
 import Query from "../types/Query/Query";
 import Document, { DocumentData } from "../types/Document";
 import Collection from "../types/Collection";
@@ -19,6 +15,7 @@ import parseRequestPrimary from "../steps/pre-query/parse-request-primary";
 import validateRequestDocument from "../steps/pre-query/validate-document";
 import validateRequestResources from "../steps/pre-query/validate-resources";
 import parseQueryParams from "../steps/pre-query/parse-query-params";
+import filterParamParser, { getFilterList } from "../steps/pre-query/filter-param-parser";
 import applyTransform from "../steps/apply-transform";
 
 import makeGET from "../steps/make-query/make-get";
@@ -27,13 +24,29 @@ import makePATCH from "../steps/make-query/make-patch";
 import makeDELETE from "../steps/make-query/make-delete";
 
 type makeDoc = (data: DocumentData) => Document;
+
 export type ErrOrErrArr = Error | APIError | Error[] | APIError[];
+
+export type APIControllerOpts = {
+  filterParser?: filterParamParser
+};
+
+export type filterParamParser = (
+  legalUnaryOpts: string[],
+  legalBinaryOpts: string[],
+  rawQuery: string | undefined,
+  parsedParams: object
+) =>
+  (Predicate|FieldConstraint)[] | undefined;
 
 class APIController {
   private registry: ResourceTypeRegistry;
+  private filterParamParser: filterParamParser;
 
-  constructor(registry: ResourceTypeRegistry) {
+  constructor(registry: ResourceTypeRegistry, opts: APIControllerOpts = {}) {
     this.registry = registry;
+    this.filterParamParser =
+      opts.filterParser || (<any>this.constructor).defaultFilterParamParser;
   }
 
   /**
@@ -69,6 +82,11 @@ class APIController {
       contentType =
         await negotiateContentType(request.accepts, ["application/vnd.api+json"])
 
+      // If the type requested in the endpoint hasn't been registered, we 404.
+      if(!registry.hasType(request.type)) {
+        throw new APIError(404, undefined, `${request.type} is not a valid type.`);
+      }
+
       // Map label to idOrIds, if applicable.
       const supportsLabelMapping = request.idOrIds && request.allowLabel;
       const mappedLabel = supportsLabelMapping && await labelToIds(
@@ -80,16 +98,22 @@ class APIController {
         request.idOrIds = mappedLabel;
       }
 
-      // Parse any query params and mutate the request object to have the parse results.
-      // Arguably, this could be done a bit more lazily, since we only need to
-      // first parse the params to construct get queries (atm, anyway).
+      // Parse any query params and mutate the request object to have the parse
+      // results. Arguably, this could be done a bit more lazily, since we only
+      // need to first parse the params to construct get queries (atm, anyway).
       // Still, we do this here so that any any transforms (like beforeSave)
       // see the finished request object.
-      request.queryParams = parseQueryParams(request.queryParams);
+      const adapter = registry.dbAdapter(request.type);
+      const { unaryFilterOperators, binaryFilterOperators } = adapter.constructor;
 
-      // If the type requested in the endpoint hasn't been registered, we 404.
-      if(!registry.hasType(request.type)) {
-        throw new APIError(404, undefined, `${request.type} is not a valid type.`);
+      request.queryParams = {
+        ...parseQueryParams(request.queryParams),
+        filter: this.filterParamParser(
+          unaryFilterOperators,
+          binaryFilterOperators,
+          request.rawQueryString,
+          request.queryParams
+        )
       }
 
       // If the request has a body, validate it and parse its resources.
@@ -132,7 +156,6 @@ class APIController {
       // There's a special case here where we applied a label to id map
       // and it came back with no results, in which case we know the result
       // and don't even have to run a query. That's covered below.
-      const adapter = registry.dbAdapter(request.type);
       const labelMappedToNothing = supportsLabelMapping &&
         (mappedLabel == null || (Array.isArray(mappedLabel) && !mappedLabel.length));
 
@@ -205,6 +228,12 @@ class APIController {
   }
 
   public static supportedExt = Object.freeze([]);
+
+  static defaultFilterParamParser(legalUnary, legalBinary, rawQuery, params) {
+    return getFilterList(rawQuery)
+      .map(it => filterParamParser(legalUnary, legalBinary, it))
+      .getOrDefault(undefined)
+  }
 }
 
 export default APIController;

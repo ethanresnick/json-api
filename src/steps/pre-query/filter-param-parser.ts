@@ -1,4 +1,39 @@
 import { Predicate, FieldConstraint } from "../../types/index";
+import { Maybe } from "../../util/type-handling";
+
+/**
+ * Find the (urlencoded) value for the filter query parameter.
+ *
+ * Note: we need to do this from the raw query string, not qs's parse result,
+ * because qs prematurely decodes the entire parameter's value, whereas the
+ * encoded vs unencoded bits are significant to us.
+ *
+ * Note 2: we take the last occurrence of a param called filter and
+ * find the value there, rather than trying to concat them all into an
+ * array, which our format doesn't support.
+ *
+ * @param {string} queryString [description]
+ */
+export function getFilterList(queryString?: string) {
+  return Maybe(queryString).map(it =>
+    it.split('&').reduce((acc, paramString) => {
+      const [rawKey, rawValue] = splitSingleQueryParamString(paramString);
+      return rawKey === 'filter' ? rawValue : acc;
+    }, undefined)
+  );
+}
+
+function splitSingleQueryParamString(paramString: string) {
+  const bracketEqualsPos = paramString.indexOf(']=');
+  const delimiterPos = bracketEqualsPos === -1
+    ? paramString.indexOf('=')
+    : bracketEqualsPos + 1;
+
+  // returning [undecoded key, undecoded value]
+  return (delimiterPos === -1)
+    ? [paramString, '']
+    : [paramString.slice(0, delimiterPos), paramString.slice(delimiterPos + 1)];
+}
 
 export default function parse(
   validUnaryOperators: string[],
@@ -81,7 +116,7 @@ function processFilterCriteria(
     throw new Error("Filter criteria must be a list.");
   }
 
-  // Two tuples represent (field,eq,value), unless the field name
+  // Three tuples represent (field,eq,value), unless the field name
   // is a valid unary operator (expected to just be and or or for now)
   // and value is a list. If we are in the and/or case, we need to process
   // the value list as a list of filterCriteria (hence the recursion).

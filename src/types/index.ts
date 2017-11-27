@@ -32,10 +32,6 @@ export type FieldConstraint = ({
   field: string;
 };
 
-export const BinaryOpts = ['eq', 'neq', 'ne', 'in', 'nin', 'lt', 'gt', 'lte', 'gte'];
-export const UnaryOpts = ['and', 'or'];
-
-
 // I'm gonna start introducing more intermediate representations
 // so that Request and Response aren't so overloaded/constantly mutated.
 // Response is different than HTTPResponse in that it contains details of the

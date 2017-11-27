@@ -16,6 +16,7 @@ export class Request {
   public aboutRelationship: boolean;
   public primary: any;
   public queryParams: object;
+  public rawQueryString?: string;
 
   constructor() {
     // Whether the request has a (non-empty) body,
@@ -77,6 +78,9 @@ export class Request {
 
     // Query parameters that might influence the request.
     this.queryParams = {};
+
+    // The raw query string from which queryParams were parsed
+    Object.defineProperty(this, "rawQueryString", {writable: true, enumerable: true});
   }
 }
 

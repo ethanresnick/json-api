@@ -71,11 +71,11 @@ export default class BaseStrategy {
    *
    * @param {http.IncomingMessage} req original request object from core node module http
    * @param {string} protocol
-   * @param {string} host
+   * @param {string} fallbackHost Host to use if strategy.options.host is not set
    * @param {Object} params object containing url parameters
-   * @param {Object} [query] object containing query parameters
+   * @param {Object} [parsedQuery] object containing pre-parsed query parameters
    */
-  protected buildRequestObject(req, protocol, host, params, query?){
+  protected buildRequestObject(req, protocol, fallbackHost, params, parsedQuery?){
     const config = this.config;
 
     return new Promise<UnsealedRequest>(function(resolve, reject) {
@@ -85,35 +85,8 @@ export default class BaseStrategy {
       const rawQueryString = hasQuery && req.url.substr(queryStartIndex + 1);
 
       // Handle route & query params
-      if(query) {
-        it.queryParams = query;
-      }
-
-      else if(hasQuery) {
-        it.queryParams = qs.parse(rawQueryString);
-      }
-
-      // Replace the parsed value for the filter param.
-      // We need to do this because the default parsers prematurely decode
-      // the entire parameter's value, whereas the encoded vs unencoded bits
-      // are significant to our parser.
-      // Note that we take the last occurrence of a param called filter and
-      // find the value there, rather than trying to concat them all into an
-      // array, which our format doesn't support.
-      if(hasQuery) {
-        const filterParamVal = rawQueryString.split('&').reduce((acc, paramString) => {
-          const [rawKey, rawValue] = splitSingleQueryParamString(paramString);
-          return rawKey === 'filter' ? rawValue : acc;
-        }, undefined);
-
-        if(filterParamVal) {
-          if(it.queryParams) {
-            it.queryParams['filter'] = filterParamVal;
-          } else {
-            it.queryParams = { filter: filterParamVal };
-          }
-        }
-      }
+      it.queryParams = parsedQuery || (hasQuery && qs.parse(rawQueryString)) || {};
+      it.rawQueryString = rawQueryString || undefined;;
 
       it.allowLabel        = !!(params.idOrLabel && !params.id);
       it.idOrIds           = params.id || params.idOrLabel;
@@ -123,7 +96,7 @@ export default class BaseStrategy {
 
       // Handle HTTP/Conneg.
       protocol  = protocol || (req.connection.encrypted ? "https" : "http");
-      host      = config.host || host;
+      const host = config.host || fallbackHost;
 
       it.uri     = protocol + "://" + host + req.url;
       it.method  = req.method.toLowerCase();
@@ -207,16 +180,4 @@ function hasBody(req) {
 
 function isReadableStream(req) {
   return typeof req._readableState === "object" && req._readableState.endEmitted === false;
-}
-
-function splitSingleQueryParamString(paramString) {
-  const bracketEqualsPos = paramString.indexOf(']=');
-  const delimiterPos = bracketEqualsPos === -1
-    ? paramString.indexOf('=')
-    : bracketEqualsPos + 1;
-
-  // returning [undecoded key, undecoded value]
-  return (delimiterPos === -1)
-    ? [paramString, '']
-    : [paramString.slice(0, delimiterPos), paramString.slice(delimiterPos + 1)];
 }

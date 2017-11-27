@@ -110,7 +110,7 @@ In this library's default format, the value of the `filter` parameter is one or 
 
 If the value given is an integer, a float, `null`, `true`, or `false`, it is treated as a literal; every other value is treated as a string. If you want to express a string like "true", you can explicitly put it in single quotes, e.g.: `(street,eq,'true')`. To define a list of values, surround the values in parentheses and separate them with commas (e.g. `(90210,10012)` is a list of values used with the `in` operator above).
 
-The valid operators are: `eq`, `neq`, `in`, `nin`, `lt`, `gt`, `lte`, and `gte`.
+The valid operators (for the buit-in Mongoose adapter) are: `eq`, `neq`, `in`, `nin`, `lt`, `gt`, `lte`, and `gte`.
 
 If you have multiple constraints, you can choose whether to combine them with an `AND` or an `OR`. To do that, instead of providing three items in your field constraint (i.e., the field name, operator, and value), provide only two: 1) `and` or `or`, and 2) a list of constraints. E.g.:
 
@@ -127,6 +127,8 @@ Putting it all together, you could do:
 `GET /people?filter=(or,((email,test@example.com)(name,Test)))(dob,gte,1963)`
 
 This will find everyone born after 1963 who also has either the name Test or the email test@example.com
+
+Note: this filter query paramer format is entirely cusomizable, and other operators can be used if your adapter supports them. See MongooseAdapter's static properties and the ResourceTypeRegistry's constructor for details.
 
 ## Pagination
 Pagination limit and offset parameters are accepted in the following form:

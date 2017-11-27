@@ -16,6 +16,8 @@ export interface AdapterClass {
   new (...args: any[]): AdapterInstance<{new (...args: any[]): any}>;
   getStandardizedSchema(model: any, pluralizer: any): any;
   getChildTypes(type: string): string[];
+  unaryFilterOperators: string[]; // must include "and"
+  binaryFilterOperators: string[]; // must include "eq"
 }
 
 export interface Adapter<T extends AdapterClass> extends AdapterInstance<T> {
