@@ -16,6 +16,17 @@ exports.default = index_1.default.then(function (dbModule) {
     });
     const Docs = new API.controllers.Documentation(registry, { name: "Example API" });
     const Controller = new API.controllers.API(registry);
+    const ControllerWithCustomFilterParsing = new API.controllers.API(registry, {
+        filterParser: (legalUnary, legalBinary, rawQuery, params) => {
+            return ('customNameFilter' in params)
+                ? [{
+                        field: "name",
+                        operator: "eq",
+                        value: String(params.customNameFilter)
+                    }]
+                : undefined;
+        }
+    });
     const app = express();
     const port = process.env.PORT || "3000";
     const host = process.env.HOST || "127.0.0.1";
@@ -26,6 +37,7 @@ exports.default = index_1.default.then(function (dbModule) {
         host: host + ":" + port,
         handleContentNegotiation: false
     });
+    const FrontWithCustomFilterSupport = new API.httpStrategies.Express(ControllerWithCustomFilterParsing, Docs);
     const apiReqHandler = Front.apiRequest.bind(Front);
     app.get('/:type(people)/non-binary', Front.transformedAPIRequest((req, query) => query.andWhere({ field: "gender", operator: "nin", value: ["male", "female"] })));
     app.get('/request-that-errors/:type(people)/:id(42)', Front.transformedAPIRequest((query) => query.resultsIn(undefined, (error) => ({
@@ -35,6 +47,7 @@ exports.default = index_1.default.then(function (dbModule) {
             ]
         })
     }))));
+    app.get('/:type(people)/custom-filter-test/', FrontWithCustomFilterSupport.apiRequest.bind(FrontWithCustomFilterSupport));
     app.get('/:type(people)/with-names', Front.transformedAPIRequest((query) => {
         const origReturning = query.returning;
         return query.resultsIn((...args) => {

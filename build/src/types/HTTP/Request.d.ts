@@ -14,6 +14,7 @@ export declare class Request {
     aboutRelationship: boolean;
     primary: any;
     queryParams: object;
+    rawQueryString?: string;
     constructor();
 }
 declare const _default: {

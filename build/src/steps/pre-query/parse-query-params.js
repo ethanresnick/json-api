@@ -4,20 +4,13 @@ const R = require("ramda");
 const json_api_1 = require("../../util/json-api");
 const misc_1 = require("../../util/misc");
 const APIError_1 = require("../../types/APIError");
-const filter_param_parser_1 = require("./filter-param-parser");
-const index_1 = require("../../types/index");
 function default_1(params) {
     const paramsToParserFns = {
         include: parseCommaSeparatedParamString,
         sort: R.pipe(parseCommaSeparatedParamString, R.map(parseSortField)),
         page: R.pipe(parseScopedParam, R.map((it) => parseInt(String(it), 10))),
-        filter: filter_param_parser_1.default.bind(null, index_1.UnaryOpts, index_1.BinaryOpts),
         fields: parseFieldsParam
     };
-    if (params.filter && typeof params.filter !== 'string') {
-        throw new Error(`Expected filter params to be an unparsed string at this point.
-       Check if you're using the old object format, which would've been parsed earlier by qs.`);
-    }
     return R.mapObjIndexed((v, paramName) => {
         return (!R.has(paramName, paramsToParserFns))
             ? v

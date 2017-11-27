@@ -28,8 +28,6 @@ export declare type FieldConstraint = ({
 }) & {
     field: string;
 };
-export declare const BinaryOpts: string[];
-export declare const UnaryOpts: string[];
 export declare type Result = {
     headers?: {
         [headerName: string]: string;

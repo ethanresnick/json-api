@@ -401,4 +401,6 @@ class MongooseAdapter {
         return typeof id === "string" && /^[0-9a-fA-F]{24}$/.test(id);
     }
 }
+MongooseAdapter.unaryFilterOperators = ["and", "or"];
+MongooseAdapter.binaryFilterOperators = ['eq', 'neq', 'ne', 'in', 'nin', 'lt', 'gt', 'lte', 'gte'];
 exports.default = MongooseAdapter;

@@ -2,9 +2,10 @@ import Immutable = require("immutable");
 import { TransformFn } from "./steps/apply-transform";
 import { AdapterInstance } from "./db-adapters/AdapterInterface";
 export declare type URLTemplates = {
-    [type: string]: {
-        [linkName: string]: string;
-    };
+    [type: string]: URLTemplatesForType;
+};
+export declare type URLTemplatesForType = {
+    [linkName: string]: string;
 };
 export declare type ResourceTypeInfo = {
     fields?: {
@@ -18,7 +19,7 @@ export declare type ResourceTypeDescription = {
     info?: ResourceTypeInfo;
     defaultIncludes?: string[];
     parentType?: string;
-    urlTemplates?: URLTemplates[keyof URLTemplates];
+    urlTemplates?: URLTemplatesForType;
     beforeSave?: TransformFn;
     beforeRender?: TransformFn;
     labelMappers?: {
@@ -30,12 +31,13 @@ export declare type ResourceTypeDescriptions = {
     [typeName: string]: ResourceTypeDescription;
 };
 export default class ResourceTypeRegistry {
+    private _types;
     constructor(typeDescriptions?: ResourceTypeDescriptions, descriptionDefaults?: object | Immutable.Map<string, any>);
     type(typeName: any): ResourceTypeDescription | undefined;
     hasType(typeName: any): boolean;
     typeNames(): string[];
     urlTemplates(): URLTemplates;
-    urlTemplates(type: string): URLTemplates[keyof URLTemplates];
+    urlTemplates(type: string): URLTemplatesForType;
     dbAdapter(type: any): AdapterInstance<any>;
     beforeSave(type: any): ResourceTypeDescription['beforeSave'] | undefined;
     beforeRender(type: any): ResourceTypeDescription['beforeRender'] | undefined;
@@ -44,4 +46,5 @@ export default class ResourceTypeRegistry {
     defaultIncludes(type: any): ResourceTypeDescription['defaultIncludes'] | undefined;
     info(type: any): ResourceTypeDescription['info'] | undefined;
     parentType(type: any): ResourceTypeDescription['parentType'] | undefined;
+    private doGet(attrName, type);
 }

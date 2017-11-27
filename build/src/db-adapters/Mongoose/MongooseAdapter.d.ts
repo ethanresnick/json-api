@@ -49,4 +49,6 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
         };
     }] | ["find", {}];
     static idIsValid(id: any): boolean;
+    static unaryFilterOperators: string[];
+    static binaryFilterOperators: string[];
 }

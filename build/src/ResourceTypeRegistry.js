@@ -4,10 +4,9 @@ const Immutable = require("immutable");
 const misc_1 = require("./util/misc");
 const type_handling_1 = require("./util/type-handling");
 const globalResourceDefaults = Immutable.fromJS({});
-const typesKey = Symbol();
 class ResourceTypeRegistry {
     constructor(typeDescriptions = Object.create(null), descriptionDefaults = {}) {
-        this[typesKey] = {};
+        this._types = {};
         descriptionDefaults = globalResourceDefaults.mergeDeep(descriptionDefaults);
         const nodes = [], roots = [], edges = {};
         for (const typeName in typeDescriptions) {
@@ -26,63 +25,66 @@ class ResourceTypeRegistry {
             const parentType = typeDescriptions[typeName].parentType;
             const thisDescriptionRaw = Immutable.fromJS(typeDescriptions[typeName]);
             const thisDescriptionMerged = descriptionDefaults.mergeDeep(thisDescriptionRaw);
-            this[typesKey][typeName] = (parentType) ?
-                this[typesKey][parentType].mergeDeep(thisDescriptionRaw)
+            this._types[typeName] = (parentType) ?
+                this._types[parentType].mergeDeep(thisDescriptionRaw)
                     .set("labelMappers", thisDescriptionRaw.get("labelMappers")) :
                 thisDescriptionMerged;
         });
     }
     type(typeName) {
-        return type_handling_1.Maybe(this[typesKey][typeName]).bind(it => it.toJS()).unwrap();
+        return type_handling_1.Maybe(this._types[typeName])
+            .map(it => it.toJS())
+            .getOrDefault(undefined);
     }
     hasType(typeName) {
-        return typeName in this[typesKey];
+        return typeName in this._types;
     }
     typeNames() {
-        return Object.keys(this[typesKey]);
+        return Object.keys(this._types);
     }
     urlTemplates(type) {
         if (type) {
-            return type_handling_1.Maybe(this[typesKey][type])
-                .bind(it => it.get("urlTemplates"))
-                .bind(it => it.toJS())
-                .unwrap();
+            return type_handling_1.Maybe(this._types[type])
+                .map(it => it.get("urlTemplates"))
+                .map(it => it.toJS())
+                .getOrDefault(undefined);
         }
-        return Object.keys(this[typesKey]).reduce((prev, typeName) => {
+        return Object.keys(this._types).reduce((prev, typeName) => {
             prev[typeName] = this.urlTemplates(typeName);
             return prev;
         }, {});
     }
     dbAdapter(type) {
-        return doGet(this, "dbAdapter", type);
+        return this.doGet("dbAdapter", type);
     }
     beforeSave(type) {
-        return doGet(this, "beforeSave", type);
+        return this.doGet("beforeSave", type);
     }
     beforeRender(type) {
-        return doGet(this, "beforeRender", type);
+        return this.doGet("beforeRender", type);
     }
     behaviors(type) {
-        return doGet(this, "behaviors", type);
+        return this.doGet("behaviors", type);
     }
     labelMappers(type) {
-        return doGet(this, "labelMappers", type);
+        return this.doGet("labelMappers", type);
     }
     defaultIncludes(type) {
-        return doGet(this, "defaultIncludes", type);
+        return this.doGet("defaultIncludes", type);
     }
     info(type) {
-        return doGet(this, "info", type);
+        return this.doGet("info", type);
     }
     parentType(type) {
-        return doGet(this, "parentType", type);
+        return this.doGet("parentType", type);
+    }
+    doGet(attrName, type) {
+        return type_handling_1.Maybe(this._types[type])
+            .map(it => it.get(attrName))
+            .map(it => it instanceof Immutable.Map || it instanceof Immutable.List
+            ? it.toJS()
+            : it)
+            .getOrDefault(undefined);
     }
 }
 exports.default = ResourceTypeRegistry;
-function doGet(inst, attrName, type) {
-    return type_handling_1.Maybe(inst[typesKey][type])
-        .bind(it => it.get(attrName))
-        .bind(it => it instanceof Immutable.Map || it instanceof Immutable.List ? it.toJS() : it)
-        .unwrap();
-}
-;

@@ -20,14 +20,17 @@ const parse_request_primary_1 = require("../steps/pre-query/parse-request-primar
 const validate_document_1 = require("../steps/pre-query/validate-document");
 const validate_resources_1 = require("../steps/pre-query/validate-resources");
 const parse_query_params_1 = require("../steps/pre-query/parse-query-params");
+const filter_param_parser_1 = require("../steps/pre-query/filter-param-parser");
 const apply_transform_1 = require("../steps/apply-transform");
 const make_get_1 = require("../steps/make-query/make-get");
 const make_post_1 = require("../steps/make-query/make-post");
 const make_patch_1 = require("../steps/make-query/make-patch");
 const make_delete_1 = require("../steps/make-query/make-delete");
 class APIController {
-    constructor(registry) {
+    constructor(registry, opts = {}) {
         this.registry = registry;
+        this.filterParamParser =
+            opts.filterParser || this.constructor.defaultFilterParamParser;
     }
     handle(request, frameworkReq, frameworkRes, queryTransform) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -41,15 +44,17 @@ class APIController {
                 yield requestValidators.checkBodyExistence(request);
                 contentType =
                     yield negotiate_content_type_1.default(request.accepts, ["application/vnd.api+json"]);
+                if (!registry.hasType(request.type)) {
+                    throw new APIError_1.default(404, undefined, `${request.type} is not a valid type.`);
+                }
                 const supportsLabelMapping = request.idOrIds && request.allowLabel;
                 const mappedLabel = supportsLabelMapping && (yield label_to_ids_1.default(request.type, request.idOrIds, registry, frameworkReq));
                 if (supportsLabelMapping) {
                     request.idOrIds = mappedLabel;
                 }
-                request.queryParams = parse_query_params_1.default(request.queryParams);
-                if (!registry.hasType(request.type)) {
-                    throw new APIError_1.default(404, undefined, `${request.type} is not a valid type.`);
-                }
+                const adapter = registry.dbAdapter(request.type);
+                const { unaryFilterOperators, binaryFilterOperators } = adapter.constructor;
+                request.queryParams = Object.assign({}, parse_query_params_1.default(request.queryParams), { filter: this.filterParamParser(unaryFilterOperators, binaryFilterOperators, request.rawQueryString, request.queryParams) });
                 if (request.hasBody) {
                     yield validate_content_type_1.default(request, this.constructor.supportedExt);
                     yield validate_document_1.default(request.body);
@@ -72,7 +77,6 @@ class APIController {
                             return queryTransform(make_delete_1.default(request, registry, makeDoc));
                     }
                 })();
-                const adapter = registry.dbAdapter(request.type);
                 const labelMappedToNothing = supportsLabelMapping &&
                     (mappedLabel == null || (Array.isArray(mappedLabel) && !mappedLabel.length));
                 const makeResultPartiallyApplied = makeResultFromErrors.bind(null, makeDoc);
@@ -106,6 +110,11 @@ class APIController {
             }
             return resultToHTTPResponse(makeResultFromErrors((data) => new Document_1.default(data), errors), contentType);
         });
+    }
+    static defaultFilterParamParser(legalUnary, legalBinary, rawQuery, params) {
+        return filter_param_parser_1.getFilterList(rawQuery)
+            .map(it => filter_param_parser_1.default(legalUnary, legalBinary, it))
+            .getOrDefault(undefined);
     }
 }
 APIController.supportedExt = Object.freeze([]);

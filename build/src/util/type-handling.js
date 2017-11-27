@@ -69,24 +69,32 @@ function forEachArrayOrVal(arrayOrVal, eachFn) {
     Array.isArray(arrayOrVal) ? arrayOrVal.forEach(eachFn) : eachFn(arrayOrVal);
 }
 exports.forEachArrayOrVal = forEachArrayOrVal;
-exports.Nothing = {
-    unwrap() {
-        return undefined;
-    },
+class Nothing {
+    getOrDefault(defaultVal) {
+        return defaultVal;
+    }
     bind(transform) {
         return this;
     }
-};
+    map(transform) {
+        return this;
+    }
+}
+exports.Nothing = Nothing;
+;
 class Just {
     constructor(x) {
         this.val = x;
     }
-    unwrap() {
+    getOrDefault(defaultVal) {
         return this.val;
+    }
+    map(transform) {
+        return Maybe(transform(this.val));
     }
     bind(transform) {
         const transformed = transform(this.val);
-        if (transformed instanceof Just || transformed === exports.Nothing) {
+        if (transformed instanceof Just || transformed instanceof Nothing) {
             return transformed;
         }
         else {
@@ -96,11 +104,6 @@ class Just {
 }
 exports.Just = Just;
 function Maybe(x) {
-    if (x !== undefined) {
-        return new Just(x);
-    }
-    else {
-        return exports.Nothing;
-    }
+    return x !== undefined ? new Just(x) : new Nothing();
 }
 exports.Maybe = Maybe;

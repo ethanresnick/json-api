@@ -18,6 +18,7 @@ class Request {
         this.aboutRelationship = false;
         this.primary = null;
         this.queryParams = {};
+        Object.defineProperty(this, "rawQueryString", { writable: true, enumerable: true });
     }
 }
 exports.Request = Request;

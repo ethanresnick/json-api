@@ -1,5 +1,22 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const type_handling_1 = require("../../util/type-handling");
+function getFilterList(queryString) {
+    return type_handling_1.Maybe(queryString).map(it => it.split('&').reduce((acc, paramString) => {
+        const [rawKey, rawValue] = splitSingleQueryParamString(paramString);
+        return rawKey === 'filter' ? rawValue : acc;
+    }, undefined));
+}
+exports.getFilterList = getFilterList;
+function splitSingleQueryParamString(paramString) {
+    const bracketEqualsPos = paramString.indexOf(']=');
+    const delimiterPos = bracketEqualsPos === -1
+        ? paramString.indexOf('=')
+        : bracketEqualsPos + 1;
+    return (delimiterPos === -1)
+        ? [paramString, '']
+        : [paramString.slice(0, delimiterPos), paramString.slice(delimiterPos + 1)];
+}
 function parse(validUnaryOperators, validBinaryOperators, filterList) {
     const exprs = [];
     let currExpr = { rest: tokenize(filterList), expr: undefined };

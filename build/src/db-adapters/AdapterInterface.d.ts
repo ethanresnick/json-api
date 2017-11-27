@@ -17,6 +17,8 @@ export interface AdapterClass {
     }>;
     getStandardizedSchema(model: any, pluralizer: any): any;
     getChildTypes(type: string): string[];
+    unaryFilterOperators: string[];
+    binaryFilterOperators: string[];
 }
 export interface Adapter<T extends AdapterClass> extends AdapterInstance<T> {
 }

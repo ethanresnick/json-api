@@ -12,5 +12,5 @@ export default class BaseStrategy {
     protected docs: DocsController;
     protected config: HTTPStrategyOptions;
     constructor(apiController: APIController, docsController: DocsController, options?: HTTPStrategyOptions);
-    protected buildRequestObject(req: any, protocol: any, host: any, params: any, query?: any): Promise<UnsealedRequest>;
+    protected buildRequestObject(req: any, protocol: any, fallbackHost: any, params: any, parsedQuery?: any): Promise<UnsealedRequest>;
 }
