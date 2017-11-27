@@ -91,7 +91,7 @@ When a request comes in, the json-api library extracts various parameters from i
 
 However, to support advanced use cases, you may want to transform the query that the library generates to select/update different data, or you might want to modify how the query's result (data or error) is placed into the JSON:API response. Query transforms let you do this. See an example in [here](https://github.com/ethanresnick/json-api-example/blob/v3-wip/src/index.js#L56).
 
-## Filtering & Pagination
+## Filtering
 This library supports filtering out of the box, using a syntax that's designed to be easier to read, and much easier to write, than the  square brackets syntax used by libraries like [qs](https://github.com/ljharb/qs).
 
 For example, to include only items where the zip code is either 90210 or 10012, you'd write: 
@@ -100,20 +100,33 @@ For example, to include only items where the zip code is either 90210 or 10012, 
 
 By contrast, with the square-bracket syntax you'd have to write something like: 
 
-`?filter[zip][in][]=90210&filter[zip][in][]=100121`.
+`?filter[zip][in][]=90210&filter[zip][in][]=10012`.
 
-In this library's format, the value of the `filter` parameter is one or more "filter constraints" listed next to each other. These constraints narrow the results to only include those that match. The format of a filter constraint is: `(fieldName,operator,value)`. For example:
+### Formatting filtering constraints
+In this library's default format, the value of the `filter` parameter is one or more "filter constraints" listed next to each other. These constraints narrow the results to only include those that match. The format of a filter constraint is: `(fieldName,operator,value)`. For example:
 
 - `(name,eq,Bob)`: only include items where the name equals Bob
 - `(salary,gte,150000)`: only include items where the salary is greater than or equal to 150,000.
 
-As a shorthand, when the operator is "eq" (for equals), you can omit the operator entirely. E.g. `(name,Bob)` expresses the same constraint as `(name, eq,Bob)`. 
+If the value given is an integer, a float, `null`, `true`, or `false`, it is treated as a literal; every other value is treated as a string. If you want to express a string like "true", you can explicitly put it in single quotes, e.g.: `(street,eq,'true')`. To define a list of values, surround the values in parentheses and separate them with commas (e.g. `(90210,10012)` is a list of values used with the `in` operator above).
 
 The valid operators are: `eq`, `neq`, `in`, `nin`, `lt`, `gt`, `lte`, and `gte`.
 
-If the value given is an integer, a float, `null`, `true`, or `false`, it is treated as a literal; every other value is treated as a string. If you want to express a string like "true", you can explicitly put it in single quotes, e.g.: `(street,contains,'true')`.
+If you have multiple constraints, you can choose whether to combine them with an `AND` or an `OR`. To do that, instead of providing three items in your field constraint (i.e., the field name, operator, and value), provide only two: 1) `and` or `or`, and 2) a list of constraints. E.g.:
 
-Putting it all together, to find only the people named Bob who live in the 90210 zip code, you'd do: `GET /people?filter=(name,Bob)(zip,90210)`.
+`GET /people?filter=(or,((name,eq,Bob)(zip,eq,90210)))`
+
+Will find all the people who are named Bob or who live in the 90210 zip code.
+
+Filter constraints listed next to each other at the top-level are combined with an "AND". E.g., `GET /people?filter=(name,Bob)(zip,90210)` will give only the people named Bob who live in the 90210 zip code.
+
+Finally, as a shorthand, when the field name is not `and` or `or`, and the operator you want is `eq` (for equals), you can omit the operator entirely. E.g. `(name,Bob)` expresses the same constraint as `(name,eq,Bob)`. 
+
+Putting it all together, you could do:
+
+`GET /people?filter=(or,((email,test@example.com)(name,Test)))(dob,gte,1963)`
+
+This will find everyone born after 1963 who also has either the name Test or the email test@example.com
 
 ## Pagination
 Pagination limit and offset parameters are accepted in the following form:
