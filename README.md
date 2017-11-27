@@ -130,6 +130,11 @@ This will find everyone born after 1963 who also has either the name Test or the
 
 Note: this filter query paramer format is entirely cusomizable, and other operators can be used if your adapter supports them. See MongooseAdapter's static properties and the ResourceTypeRegistry's constructor for details.
 
+### On URL Encoding
+When the value that you want to use in a filter constraint contains parentheses, commas, or single quotation marks, you must URL encode those characters so that the server doesn't interpret them as delimiters. Conversely, when those characters do appear as delimiters (e.g., the parentheses that surround each filter constraint, or the comma that separates the field name from the operator), they must NOT be url encoded.
+
+Some clients automatically encode parentheses, commas, and single quotation marks in url query strings by default. This is incorrect behavior [per RFC 3986](https://tools.ietf.org/html/rfc3986#section-2.2), and it will cause the server to error, because it won't see the appropriate (unescaped) delimiter characters. Check your client for a setting to turn this behavior off.
+
 ## Pagination
 Pagination limit and offset parameters are accepted in the following form:
 ```
