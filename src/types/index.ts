@@ -45,9 +45,14 @@ export type Result = {
   document?: Document
 }
 
-export type HTTPResponse = {
+export interface HTTPResponse {
   // Note: header names are all lowercase.
-  headers: { [headerName: string]: string },
+  // I've enumerated them here to get better type checking.
+  // If you're adding custom headers, you probably want to extend this type.
+  headers: {
+    "content-type"?: string;
+    vary?: string;
+  },
   status: number;
   body?: string;
 }

@@ -256,18 +256,6 @@ function makeResultFromErrors(makeDoc: makeDoc, errors: ErrOrErrArr): Result {
 }
 
 function resultToHTTPResponse(response: Result, negotiatedMediaType?: string): HTTPResponse {
-  const headers = <any>{
-      // Our bodies are always JSON:API, so we force that as the Content-Type
-      // if nothing else (i.e., not even standard json) could be negotiated.
-      'content-type': negotiatedMediaType || "application/vnd.api+json",
-
-      // No matter what, though, we're varying on Accept. See:
-      // https://github.com/ethanresnick/json-api/issues/22
-      'vary': 'Accept',
-
-      ...response.headers
-    };
-
   const status = (() => {
     if(response.status) {
       return response.status;
@@ -280,7 +268,23 @@ function resultToHTTPResponse(response: Result, negotiatedMediaType?: string): H
     }
 
     return 204;
-  })()
+  })();
+
+  const headers = {
+    // If we have a body, our bodies are always JSON:API, so we force that
+    // as the Content-Type if nothing else (i.e., not even standard json)
+    // could be negotiated.
+    ...(status !== 204
+      ? { 'content-type': negotiatedMediaType || "application/vnd.api+json" }
+      : { }
+    ),
+
+    // No matter what, though, we're varying on Accept. See:
+    // https://github.com/ethanresnick/json-api/issues/22
+    'vary': 'Accept',
+
+    ...response.headers
+  };
 
   return {
     status,

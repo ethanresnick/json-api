@@ -1,7 +1,7 @@
 import chai = require("chai");
 import AgentPromise from "../../app/agent";
-import {VALID_ORG_RESOURCE_NO_ID} from "../fixtures/creation";
-import {VALID_ORG_STATE_GOVT_PATCH} from "../fixtures/updates";
+import { VALID_ORG_RESOURCE_NO_ID } from "../fixtures/creation";
+import { VALID_ORG_STATE_GOVT_PATCH } from "../fixtures/updates";
 
 const {expect} = chai;
 
@@ -54,7 +54,7 @@ AgentPromise.then((Agent) => {
         }, done).catch(done);
     });
 
-    it.skip("should use the json-api media type for errors if no json accepted, even if not acceptable", (done) => {
+    it("should use the json-api media type for errors if no json accepted, even if not acceptable", (done) => {
       Agent.request("GET", "/organizations/unknown-id")
         .accept("text/html")
         .promise()
@@ -98,6 +98,21 @@ AgentPromise.then((Agent) => {
           expect(res.text).to.equal("Hello from express");
           done();
         }, done).catch(done);
+    });
+
+    it("should not set a content-type header on 204 responses", (done) => {
+      return Agent.request("POST", "/organizations")
+        .type("application/vnd.api+json")
+        .send({"data": VALID_ORG_RESOURCE_NO_ID })
+        .then((response) => {
+          const orgId = response.body.data.id;
+          return Agent.request("DELETE", `/organizations/${orgId}`).promise();
+        })
+        .then((res) => {
+          expect(res.status).to.equal(204);
+          expect(res.headers["content-type"]).to.be.undefined;
+        })
+        .catch(done);
     });
   });
 });
