@@ -1,6 +1,8 @@
-engines:
+version: "2"
+plugins:
   eslint:
     enabled: true
-exclude_paths:
-- "build/*"
-- "lib/*"
+exclude_patterns:
+  - "build/"
+  - "test/"
+  - "coverage/"
