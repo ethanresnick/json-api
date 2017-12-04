@@ -12,7 +12,8 @@ export type WithCriteriaQueryOptions = QueryOptions & {
   offset?: number;
   singular?: boolean;
   filters?: (FieldConstraint | Predicate)[];
-  idOrIds?: string | string[] | undefined;
+  ids?: string[];
+  id?: string;
 };
 
 export default class WithCriteriaQuery extends Query {
@@ -27,6 +28,11 @@ export default class WithCriteriaQuery extends Query {
 
   constructor(opts: WithCriteriaQueryOptions) {
     super(opts);
+
+    if(opts.id && opts.ids) {
+      throw new Error("Can't provide both the id and the ids options. Pick one.");
+    }
+
     this.query = {
       ...this.query,
       criteria: {
@@ -36,14 +42,14 @@ export default class WithCriteriaQuery extends Query {
           value: [...(opts.filters || [])],
           field: undefined
         },
-        singular: opts.singular || false,
+        singular: opts.singular || opts.id !== undefined,
         limit: opts.limit,
         offset: opts.offset
       }
     };
 
-    if('idOrIds' in opts) {
-      this.query = this.matchingIdOrIds(opts.idOrIds).query;
+    if(opts.ids || opts.id) {
+      this.query = this.matchingIdOrIds(opts.ids || opts.id).query;
     }
   }
 
@@ -85,7 +91,7 @@ export default class WithCriteriaQuery extends Query {
    *
    * @param {string | string[] | undefined = undefined} idOrIds [description]
    */
-  matchingIdOrIds(idOrIds: WithCriteriaQueryOptions['idOrIds'] = undefined) {
+  matchingIdOrIds(idOrIds: string | string[] | undefined = undefined) {
     let res;
 
     if(Array.isArray(idOrIds)) {

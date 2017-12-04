@@ -1,11 +1,18 @@
+import CreateQuery from "../types/Query/CreateQuery";
+import FindQuery from "../types/Query/FindQuery";
+import DeleteQuery from "../types/Query/DeleteQuery";
+import UpdateQuery from "../types/Query/UpdateQuery";
+import AddToRelationshipQuery from "../types/Query/AddToRelationshipQuery";
+import RemoveFromRelationshipQuery from "../types/Query/RemoveFromRelationshipQuery";
+
 export interface AdapterInstance<T extends new (...args: any[]) => any> {
   constructor: T;
-  find(type: any, idOrIds: any, fields: any, sorts: any, filters: any, includePaths: any, offset: any, limit: any): Promise<any>;
-  create(parentType: any, resourceOrCollection: any): Promise<any>;
-  update(parentType: any, resourceOrCollection: any): Promise<any>;
-  delete(parentType: any, idOrIds: any): Promise<any>;
-  addToRelationship(type: any, id: any, relationshipPath: any, newLinkage: any): Promise<any>;
-  removeFromRelationship(type: any, id: any, relationshipPath: any, linkageToRemove: any): Promise<any>;
+  find(query: FindQuery): Promise<any>;
+  create(query: CreateQuery): Promise<any>;
+  update(update: UpdateQuery): Promise<any>;
+  delete(query: DeleteQuery): Promise<any>;
+  addToRelationship(query: AddToRelationshipQuery): Promise<any>;
+  removeFromRelationship(query: RemoveFromRelationshipQuery): Promise<any>;
   getModel(modelName)
   getTypesAllowedInCollection(parentType: any): any;
   getRelationshipNames(type: any): any;

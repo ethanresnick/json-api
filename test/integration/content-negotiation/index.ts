@@ -111,6 +111,7 @@ AgentPromise.then((Agent) => {
         .then((res) => {
           expect(res.status).to.equal(204);
           expect(res.headers["content-type"]).to.be.undefined;
+          done();
         })
         .catch(done);
     });

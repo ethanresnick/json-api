@@ -1,13 +1,14 @@
 import APIError from "../../types/APIError";
+import { Request } from "../../types/HTTP/Request";
 
-export function checkBodyExistence(requestContext) {
+export function checkBodyExistence(request: Request) {
   return new Promise(function(resolve, reject) {
     const needsBody =
-      ["post", "patch"].indexOf(requestContext.method) !== -1 ||
-      (requestContext.method === "delete" && requestContext.aboutRelationship) ||
-      (requestContext.method === "delete" && !requestContext.idOrIds && requestContext.ext.indexOf("bulk") !== -1);
+      ["post", "patch"].indexOf(<string>request.method) !== -1 ||
+      (request.method === "delete" && request.aboutRelationship) ||
+      (request.method === "delete" && !request.id && request.ext.indexOf("bulk") !== -1);
 
-    if(requestContext.hasBody === needsBody) {
+    if(request.hasBody === needsBody) {
       resolve();
     }
     else if(needsBody) {

@@ -84,12 +84,13 @@ To use this library, you describe the special behavior (if any) that resources o
 
 -  <a name="info"></a>`info` (optional): this allows you to provide extra information about the resource that will be included in the documentation. Available properties are `"description"` (a string describing what resources of this type are) and `"fields"`. `"fields"` holds an object in which you can describe each field in the resource (e.g. listing validation rules). See the [example implemenation](https://github.com/ethanresnick/json-api-example/blob/master/src/resource-descriptions/schools.js) for more details.
 
-- <a name="labels"></a>`labelMappers` (**deprecated, may be removed before v3 ships**, optional): this lets you create urls (or, in REST terminology, resources) that map to different database items over time. For example, you could have an `/events/upcoming` resource or a `/users/me` resource. In those examples, "upcoming" and "me" are called the labels and, in labelMappers, you provide a function that maps each label to the proper database id(s) at any given time. The function can return a Promise if needed. **As of v3, this can be done more efficiently and concisely with query transforms. See below.**
-
 ## Query Transforms
 When a request comes in, the json-api library extracts various parameters from it to build a query that will be used to fulfill the user's request.
 
 However, to support advanced use cases, you may want to transform the query that the library generates to select/update different data, or you might want to modify how the query's result (data or error) is placed into the JSON:API response. Query transforms let you do this. See an example in [here](https://github.com/ethanresnick/json-api-example/blob/v3-wip/src/index.js#L56).
+
+One simple thing you can do with query transforms is to create urls (or, in REST terminology, resources) that map to different database items over time. For example, you could have an `/events/upcoming` resource or a `/users/me` resource. To do that, your query transform function would modifiy the libraries auto-generated query (which would likely be for all the events and users respectively) to add a filter constraint that only returns the appropriate resources.
+
 
 ## Filtering
 This library supports filtering out of the box, using a syntax that's designed to be easier to read, and much easier to write, than the  square brackets syntax used by libraries like [qs](https://github.com/ljharb/qs).
@@ -148,7 +149,7 @@ GET /people?page[offset]=50&page[limit]=25
 ## Routing, Authentication & Controllers
 This library gives you a Front controller (shown in the example) that can handle requests for API results or for the documentation. But the library doesn't prescribe how requests get to this controller. This allows you to use any url scheme, routing layer, or authentication system you already have in place. 
 
-You just need to make sure that: `req.params.type` reflects the requested resource type; `req.params.id` or (if you want to allow labels on a request) `req.params.idOrLabel` reflects the requested id, if any; and `req.params.relationship` reflects the relationship name, in the event that the user is requesting a relationship url. The library will read these values to help it construct the query needed to fulfill the user's request.
+You just need to make sure that: `req.params.type` reflects the requested resource type; `req.params.id` reflects the requested id, if any; and `req.params.relationship` reflects the relationship name, in the event that the user is requesting a relationship url. The library will read these values to help it construct the query needed to fulfill the user's request.
 
 In the example above, routing is handled with Express's built-in `app[VERB]` methods, and the three parameters are set properly using express's built-in `:param` syntax. If you're looking for something more robust, you might be interested in [Express Simple Router](https://github.com/ethanresnick/express-simple-router). For authentication, check out [Express Simple Firewall](https://github.com/ethanresnick/express-simple-firewall).
 

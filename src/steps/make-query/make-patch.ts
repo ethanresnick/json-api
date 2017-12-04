@@ -4,14 +4,15 @@ import Resource from "../../types/Resource";
 import Relationship from "../../types/Relationship";
 import Linkage from "../../types/Linkage";
 import UpdateQuery from '../../types/Query/UpdateQuery';
+import { Request } from "../../types/HTTP/Request";
 
-export default function(request, registry, makeDoc) {
+export default function(request: Request, registry, makeDoc) {
   const primary = request.primary;
   const type    = request.type;
   let changedResourceOrCollection;
 
   if(primary instanceof Collection) {
-    if(request.idOrIds && !Array.isArray(request.idOrIds)) {
+    if(request.id) {
       const title = "You can't replace a single resource with a collection.";
       throw new APIError(400, undefined, title);
     }
@@ -20,21 +21,28 @@ export default function(request, registry, makeDoc) {
   }
 
   else if(primary instanceof Resource) {
-    if(!request.idOrIds) {
+    if(!request.id) {
       const title = "You must provide an array of resources to do a bulk update.";
       throw new APIError(400, undefined, title);
     }
-    else if(request.idOrIds !== primary.id) {
+
+    else if(request.id !== primary.id) {
       const title = "The id of the resource you provided doesn't match that in the URL.";
       throw new APIError(400, undefined, title);
     }
+
     changedResourceOrCollection = primary;
   }
 
   else if(primary instanceof Linkage) {
+    if(!request.relationship) {
+      const title = "You must PATCH a relationship endpoint to update relationship's linkage.";
+      throw new APIError(400, undefined, title);
+    }
+
     changedResourceOrCollection = new Resource(
       request.type,
-      request.idOrIds,
+      request.id,
       undefined,
       {[request.relationship]: new Relationship(request.primary) }
     );

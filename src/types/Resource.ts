@@ -103,7 +103,7 @@ function validateFieldGroup(group, otherFields, isAttributes = false) {
     throw new Error("Attributes and relationships must be provided as an object.");
   }
 
-  if(typeof group.id !== "undefined" || typeof group.type !== "undefined") {
+  if("id" in group || "type" in group) {
     throw new Error("`type` and `id` cannot be used as attribute or relationship names.");
   }
 
