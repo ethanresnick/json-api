@@ -88,8 +88,7 @@ export default class BaseStrategy {
       it.queryParams = parsedQuery || (hasQuery && qs.parse(rawQueryString)) || {};
       it.rawQueryString = rawQueryString || undefined;;
 
-      it.allowLabel        = !!(params.idOrLabel && !params.id);
-      it.idOrIds           = params.id || params.idOrLabel;
+      it.id                = params.id;
       it.type              = params.type;
       it.aboutRelationship = !!params.relationship;
       it.relationship      = params.related || params.relationship;
@@ -108,6 +107,7 @@ export default class BaseStrategy {
       if(config.tunnel && it.method === "post" && requestedMethod === "patch") {
         it.method = "patch";
       }
+
       else if(requestedMethod) {
         reject(
           new APIError(400, undefined, `Cannot tunnel to the method "${requestedMethod.toUpperCase()}".`)

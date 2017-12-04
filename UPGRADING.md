@@ -1,4 +1,11 @@
-# 3.0.0-alpha 
+# 3.0.0-alpha.14 (Unpublished)
+
+## Breaking Changes
+- Removed support for label mappers. Use query transforms instead for better performance and maintainability.
+- Query objects are now constructed with either an `id` or an `ids` option, rather than a single `idOrIds` option.
+- Request.allowLabel has been removed, and Request.idOrIds has been renamed to `Request.id` as part of removing label mapper support.
+
+# 3.0.0-alpha.1 to 3.0.0-alpha.13
 ## Breaking Changes
 ### Global
 - Q.Promise has been replaced with the standard ES6 Promise throughout the API.

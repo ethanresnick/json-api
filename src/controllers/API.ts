@@ -2,7 +2,6 @@ import ResourceTypeRegistry from '../ResourceTypeRegistry';
 import { HTTPResponse, Result, Predicate, FieldConstraint } from "../types";
 import Query from "../types/Query/Query";
 import Document, { DocumentData } from "../types/Document";
-import Collection from "../types/Collection";
 import APIError from "../types/APIError";
 import logger from '../util/logger';
 
@@ -10,7 +9,6 @@ import * as requestValidators from "../steps/http/validate-request";
 import negotiateContentType from "../steps/http/content-negotiation/negotiate-content-type";
 import validateContentType from "../steps/http/content-negotiation/validate-content-type";
 
-import labelToIds from "../steps/pre-query/label-to-ids";
 import parseRequestPrimary from "../steps/pre-query/parse-request-primary";
 import validateRequestDocument from "../steps/pre-query/validate-document";
 import validateRequestResources from "../steps/pre-query/validate-resources";
@@ -87,17 +85,6 @@ class APIController {
         throw new APIError(404, undefined, `${request.type} is not a valid type.`);
       }
 
-      // Map label to idOrIds, if applicable.
-      const supportsLabelMapping = request.idOrIds && request.allowLabel;
-      const mappedLabel = supportsLabelMapping && await labelToIds(
-        request.type, request.idOrIds, registry, frameworkReq
-      );
-
-      if(supportsLabelMapping) {
-        // set the idOrIds on the request context. Will influence query.
-        request.idOrIds = mappedLabel;
-      }
-
       // Parse any query params and mutate the request object to have the parse
       // results. Arguably, this could be done a bit more lazily, since we only
       // need to first parse the params to construct get queries (atm, anyway).
@@ -153,18 +140,10 @@ class APIController {
         }
       })();
 
-      // There's a special case here where we applied a label to id map
-      // and it came back with no results, in which case we know the result
-      // and don't even have to run a query. That's covered below.
-      const labelMappedToNothing = supportsLabelMapping &&
-        (mappedLabel == null || (Array.isArray(mappedLabel) && !mappedLabel.length));
-
-      const makeResultPartiallyApplied = makeResultFromErrors.bind(null, makeDoc);
-
-      jsonAPIResult = labelMappedToNothing
-        ? { document: makeDoc({ primary: mappedLabel ? new Collection() : null }) }
-        : await adapter.doQuery(query)
-            .then(query.returning, query.catch || makeResultPartiallyApplied);
+      jsonAPIResult = await adapter.doQuery(query).then(
+        query.returning,
+        query.catch || makeResultFromErrors.bind(null, makeDoc)
+      );
 
       // apply transforms pre-send
       if(jsonAPIResult.document) {

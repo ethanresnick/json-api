@@ -1,32 +1,34 @@
 import APIError from "../../types/APIError";
 import Collection from "../../types/Collection";
+import { Request } from "../../types/HTTP/Request";
 import DeleteQuery from "../../types/Query/DeleteQuery";
 import RemoveFromRelationshipQuery from "../../types/Query/RemoveFromRelationshipQuery";
 
-export default function(request, registry, makeDoc) {
+export default function(request: Request, registry, makeDoc) {
   const type = request.type;
 
   if(request.aboutRelationship) {
-    if(Array.isArray(request.idOrIds)) {
+    if(!request.id || !request.relationship) {
       throw new APIError(
-        400, undefined,
-        "You can only remove resources from the linkage of one resource at a time."
+        400,
+        undefined,
+        "To remove linkage from a relationship, you must send your request to a relationship endpoint."
       );
     }
     return new RemoveFromRelationshipQuery({
       type: type,
-      id: request.idOrIds,
+      id: request.id,
       relationshipName: request.relationship,
       linkage: request.primary,
       returning: () => ({ status: 204 })
     });
   }
 
-  // Bulk delete
-  const bulkDelete = !request.idOrIds;
+  // Bulk delete of resources
+  const bulkDelete = !request.id;
   if(bulkDelete) {
     if(!(request.primary instanceof Collection)) {
-      const title = "You must provide an array of objects to do a bulk delete.";
+      const title = "You must provide an array of resource objects to do a bulk delete.";
       throw new APIError(400, undefined, title);
     }
 
@@ -38,9 +40,10 @@ export default function(request, registry, makeDoc) {
 
   return new DeleteQuery({
     type,
-    idOrIds: bulkDelete
-      ? request.primary.resources.map((it) => it.id)
-      : request.idOrIds,
-    returning: () => ({ status: 204 })
+    returning: () => ({ status: 204 }),
+    [bulkDelete ? 'ids' : 'id']:
+      bulkDelete
+        ? request.primary.resources.map((it) => it.id)
+        : request.id
   });
 }

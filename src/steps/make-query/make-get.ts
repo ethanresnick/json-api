@@ -1,13 +1,14 @@
 import APIError from "../../types/APIError";
+import { Request } from "../../types/HTTP/Request";
 import FindQuery from "../../types/Query/FindQuery";
 
-export default function(request, registry, makeDoc) {
+export default function(request: Request, registry, makeDoc) {
   const type = request.type;
 
   // Handle fields, sorts, includes and filters.
   if(!request.aboutRelationship) {
     // Attempting to paginate a single resource request
-    if(request.queryParams.page && typeof request.idOrIds === 'string') {
+    if(request.queryParams.page && typeof request.id === 'string') {
       throw new APIError(400, undefined, "Pagination is not supported on requests for a single resource.");
     }
 
@@ -21,7 +22,7 @@ export default function(request, registry, makeDoc) {
 
     return new FindQuery({
       type,
-      idOrIds: request.idOrIds,
+      id: request.id, // id may or may not be undefined
       populates: include,
       select: fields,
       sort,
@@ -54,25 +55,24 @@ export default function(request, registry, makeDoc) {
     );
   }
 
-  if(Array.isArray(request.idOrIds)) {
-    throw new APIError(
-      400, undefined,
-      "You can only request the linkage for one resource at a time."
-    );
+  if(!request.id || !request.relationship) {
+    throw new Error("An id and a relationship path must be provided on requests for resource linkage.");
   }
 
   return new FindQuery({
     type,
-    singular: true,
     populates: [],
-    idOrIds: request.idOrIds,
+    id: request.id,
     returning([resource]) {
       // 404 if the requested relationship is not a relationship path. Doing
       // it here is more accurate than using adapter.getRelationshipNames,
       // since we're allowing for paths that can optionally hold linkage,
       // which getRelationshipNames doesn't return.
+      // Note: we need the type assertion because, even though we checked that
+      // relationship isn't null above, it could've hypothetically been set back
+      // to null before the `returning` method is called.
       const relationship = resource.relationships &&
-        resource.relationships[request.relationship];
+        resource.relationships[<string>(request.relationship)];
 
       if(!relationship) {
         const title = "Invalid relationship name.";

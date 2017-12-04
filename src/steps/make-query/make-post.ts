@@ -4,10 +4,11 @@ import Resource from "../../types/Resource";
 import {forEachResources} from "../../util/type-handling";
 import CreateQuery from "../../types/Query/CreateQuery";
 import AddToRelationshipQuery from '../../types/Query/AddToRelationshipQuery';
+import { Request } from "../../types/HTTP/Request";
 import { Result } from "../../types";
 import templating = require("url-template");
 
-export default function(request, registry, makeDoc) {
+export default function(request: Request, registry, makeDoc) {
   const primary = request.primary;
   const type    = request.type;
 
@@ -22,9 +23,17 @@ export default function(request, registry, makeDoc) {
       );
     }
 
+    if(!request.id || !request.relationship) {
+      throw new APIError(
+        400,
+        undefined,
+        "To add linkage to a relationship, you must POST to a relationship endpoint."
+      );
+    }
+
     return new AddToRelationshipQuery({
       type,
-      id: request.idOrIds,
+      id: request.id,
       relationshipName: request.relationship,
       linkage: primary,
       returning: () => ({status: 204})

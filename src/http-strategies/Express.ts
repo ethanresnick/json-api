@@ -59,13 +59,16 @@ export default class ExpressStrategy extends Base {
   // See: https://expressjs.com/en/guide/migrating-5.html#req.host
   // The workaround is to use the host configuration option.
   docsRequest(req, res, next) {
-    this.buildRequestObject(req, req.protocol, req.host, req.params, req.query).then((requestObject) => {
-      return this.docs.handle(requestObject, req, res).then((responseObject) => {
-        this.sendResources(responseObject, res, next);
+    this.buildRequestObject(req, req.protocol, req.host, req.params, req.query)
+      .then((requestObject) => {
+        return this.docs.handle(requestObject, req, res)
+          .then((responseObject) => {
+            this.sendResources(responseObject, res, next);
+          });
+      })
+      .catch((err) => {
+        this.sendError(err, req, res);
       });
-    }).catch((err) => {
-      this.sendError(err, req, res);
-    });
   }
 
   sendResources(responseObject, res, next) {
@@ -136,14 +139,18 @@ export default class ExpressStrategy extends Base {
       ? queryTransform.bind(undefined, req)
       : queryTransform;
 
-    this.buildRequestObject(req, req.protocol, req.host, req.params, req.query).then((requestObject) => {
-      return this.api.handle(requestObject, req, res, queryTransform).then((responseObject) => {
-        this.sendResources(responseObject, res, next);
+    this.buildRequestObject(req, req.protocol, req.host, req.params, req.query)
+      .then((requestObject) => {
+        return this.api.handle(requestObject, req, res, queryTransform)
+          .then((responseObject) => {
+            this.sendResources(responseObject, res, next);
+          });
+      })
+      .catch((err) => {
+        this.sendError(err, req, res);
       });
-    }).catch((err) => {
-      this.sendError(err, req, res);
-    });
   }
+
   /**
    * @TODO Uses this ExpressStrategy to create an express app with
    * preconfigured routes that can be mounted as a subapp.
