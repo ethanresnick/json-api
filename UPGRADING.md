@@ -1,9 +1,13 @@
 # 3.0.0-alpha.14 (Unpublished)
 
 ## Breaking Changes
-- Removed support for label mappers. Use query transforms instead for better performance and maintainability.
+### Global
+- Removed support for label mappers. Use query transforms instead for better performance and maintainability. This resulted in the removal of `Request.allowLabel`, `ResourceTypeRegistry.labelMappers()`
 - Query objects are now constructed with either an `id` or an `ids` option, rather than a single `idOrIds` option.
-- Request.allowLabel has been removed, and Request.idOrIds has been renamed to `Request.id` as part of removing label mapper support.
+- `Request.idOrIds` is now simply `Request.id` (as multiple ids were only used with label mappers).
+
+### (Mostly-internal) Types
+- Document instances are now constructed with url templates parsed into functions, rather than raw template strings. This shouldn't matter unless you were constructing Documents manually. 
 
 # 3.0.0-alpha.1 to 3.0.0-alpha.13
 ## Breaking Changes

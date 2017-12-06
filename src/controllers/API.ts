@@ -1,9 +1,11 @@
 import ResourceTypeRegistry from '../ResourceTypeRegistry';
-import { HTTPResponse, Result, Predicate, FieldConstraint } from "../types";
+import { HTTPResponse, Result, Predicate, FieldConstraint, UrlTemplateFns } from "../types";
 import Query from "../types/Query/Query";
 import Document, { DocumentData } from "../types/Document";
 import APIError from "../types/APIError";
 import logger from '../util/logger';
+import { mapObject } from '../util/type-handling';
+import templating = require("url-template");
 
 import * as requestValidators from "../steps/http/validate-request";
 import negotiateContentType from "../steps/http/content-negotiation/negotiate-content-type";
@@ -40,11 +42,16 @@ export type filterParamParser = (
 class APIController {
   private registry: ResourceTypeRegistry;
   private filterParamParser: filterParamParser;
+  private urlTemplateFns: UrlTemplateFns;
 
   constructor(registry: ResourceTypeRegistry, opts: APIControllerOpts = {}) {
     this.registry = registry;
     this.filterParamParser =
       opts.filterParser || (<any>this.constructor).defaultFilterParamParser;
+
+    this.urlTemplateFns = mapObject(registry.urlTemplates(), (templatesForType) => {
+      return mapObject(templatesForType, (it) => templating.parse(it).expand);
+    });
   }
 
   /**
@@ -59,9 +66,8 @@ class APIController {
    */
   async handle(request, frameworkReq, frameworkRes, queryTransform?: (q: Query) => Query | Promise<Query>) {
     const registry = this.registry;
-    const templates = registry.urlTemplates();
     const makeDoc = (data: DocumentData) =>
-      new Document({ reqURI: request.uri, urlTemplates: templates, ...data });
+      new Document({ reqURI: request.uri, urlTemplates: this.urlTemplateFns, ...data });
 
     let jsonAPIResult: Result = {};
     let contentType: string | undefined;

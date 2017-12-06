@@ -32,6 +32,12 @@ export type FieldConstraint = ({
   field: string;
 };
 
+export type UrlTemplateFns = {
+  [typeName: string]: {
+    [linkName: string]: (data: any) => string
+  }
+};
+
 // I'm gonna start introducing more intermediate representations
 // so that Request and Response aren't so overloaded/constantly mutated.
 // Response is different than HTTPResponse in that it contains details of the
