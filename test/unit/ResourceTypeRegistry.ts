@@ -166,12 +166,6 @@ describe("ResourceTypeRegistry", function() {
     );
   });
 
-  describe("labelMappers", () => {
-    it("should be a getter for a type's labelMappers",
-      makeGetterTest({"label": () => {}}, "mytypes", "labelMappers")
-    );
-  });
-
   describe("info", () => {
     it("should be a getter for a type's info",
       makeGetterTest({}, "mytypes", "info")
