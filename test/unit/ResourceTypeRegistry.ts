@@ -65,6 +65,30 @@ describe("ResourceTypeRegistry", function() {
       });
     });
 
+    it("should merge parent type's description into resource description", () => {
+      const registry = new ResourceTypeRegistry({
+        "b": {
+          parentType: "a",
+          info: { "description": "b" },
+          behaviors: {}
+        },
+        "a": {
+          info: { "description": "A", "example": "example from a" },
+          behaviors: <object><any>null
+        }
+      });
+
+      const resTypeInfo = <ResourceTypeInfo>(<any>registry.type("b")).info;
+      const resTypeBehaviors = <ResourceTypeInfo>(<any>registry.type("b")).behaviors;
+
+      expect(resTypeInfo).to.deep.equal({
+        example: "example from a",
+        description: "b"
+      });
+
+      expect(resTypeBehaviors).to.deep.equal({});
+    });
+
     it("should give the description precedence over the provided default", () => {
       const someTypeDesc = {
         beforeSave: (resource, req, res) => { return resource; }

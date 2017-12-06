@@ -143,16 +143,23 @@ export default class ResourceTypeRegistry {
     }, <URLTemplates>{});
   }
 
-  // Note: type signature's lying here; this could be undefined.
-  dbAdapter(type): AdapterInstance<any> {
-    return this.doGet("dbAdapter", type);
+  dbAdapter(type) {
+    const adapter = this.doGet("dbAdapter", type);
+    if(typeof adapter === 'undefined') {
+      throw new Error(
+        "Tried to get db adapter for a type registered without one. " +
+        "Every type must be registered with an adapter!"
+      );
+    }
+
+    return adapter;
   }
 
-  beforeSave(type): ResourceTypeDescription['beforeSave'] | undefined {
+  beforeSave(type) {
     return this.doGet("beforeSave", type);
   }
 
-  beforeRender(type): ResourceTypeDescription['beforeRender'] | undefined {
+  beforeRender(type) {
     return this.doGet("beforeRender", type);
   }
 
@@ -160,19 +167,19 @@ export default class ResourceTypeRegistry {
     return this.doGet("behaviors", type);
   }
 
-  defaultIncludes(type): ResourceTypeDescription['defaultIncludes'] | undefined {
+  defaultIncludes(type) {
     return this.doGet("defaultIncludes", type);
   }
 
-  info(type): ResourceTypeDescription['info'] | undefined {
+  info(type) {
     return this.doGet("info", type);
   }
 
-  parentType(type): ResourceTypeDescription['parentType'] | undefined {
+  parentType(type) {
     return this.doGet("parentType", type);
   }
 
-  private doGet(attrName, type) {
+  private doGet<T extends keyof ResourceTypeDescription>(attrName: T, type): ResourceTypeDescription[T] | undefined {
     return Maybe(this._types[type])
       .map(it => it.get(attrName))
       .map(it => it instanceof Immutable.Map || it instanceof Immutable.List

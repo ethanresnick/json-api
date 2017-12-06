@@ -1,8 +1,9 @@
 import APIError from "../../types/APIError";
 import { Request } from "../../types/HTTP/Request";
+import ResourceTypeRegistry from "../../ResourceTypeRegistry";
 import FindQuery from "../../types/Query/FindQuery";
 
-export default function(request: Request, registry, makeDoc) {
+export default function(request: Request, registry: ResourceTypeRegistry, makeDoc) {
   const type = request.type;
 
   // Handle fields, sorts, includes and filters.
