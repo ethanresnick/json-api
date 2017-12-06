@@ -2,12 +2,18 @@
 
 ## Breaking Changes
 ### Global
-- Removed support for label mappers. Use query transforms instead for better performance and maintainability. This resulted in the removal of `Request.allowLabel`, `ResourceTypeRegistry.labelMappers()`
+- Removed support for label mappers. Use query transforms instead for better performance and maintainability. This resulted in the removal of `Request.allowLabel` and `ResourceTypeRegistry.labelMappers()`.
 - Query objects are now constructed with either an `id` or an `ids` option, rather than a single `idOrIds` option.
-- `Request.idOrIds` is now simply `Request.id` (as multiple ids were only used with label mappers).
 
 ### (Mostly-internal) Types
 - Document instances are now constructed with url templates parsed into functions, rather than raw template strings. This shouldn't matter unless you were constructing Documents manually. 
+
+### Request type
+- The Request type is now a simple object literal rather than a class (the class ceremony wasn't buying us anything beyond extra boilerplate and a more involved construction process). If you were (for some reason) manaully constructing Request object, you'll need to update your logic.
+- `Request.idOrIds` is now simply `Request.id` (as multiple ids were only used with label mappers).
+- `Request.needsBody` no longer exists; this wasn't actually being used by anything internally. `Request.hasBody` has also been removed; if (and only if)the request doesn't have a body, `Request.body` be undefined.
+- `Request.contentType` will now be set if the HTTP request included a content-type header, even if there was no body. Also, when a content-type header is missing `Request.contentType` will now be undefined rather than null.
+- When an Accept header is missing, `Request.accepts` will now be undefined rather than null.
 
 # 3.0.0-alpha.1 to 3.0.0-alpha.13
 ## Breaking Changes

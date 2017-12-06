@@ -2,9 +2,9 @@ import contentTypeParser = require("content-type");
 import APIError from "../../../types/APIError";
 import {objectIsEmpty} from "../../../util/type-handling";
 
-export default function validateContentType(requestContext, supportedExt?) {
+export default function validateContentType(request, supportedExt?) {
   return new Promise(function(resolve, reject) {
-    const contentType = contentTypeParser.parse(requestContext.contentType);
+    const contentType = contentTypeParser.parse(request.contentType);
 
     // Removed due to issues with Firefox automatically adding charset parameter
     // See: https://github.com/ethanresnick/json-api/issues/78

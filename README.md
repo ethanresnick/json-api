@@ -151,6 +151,8 @@ This library gives you a Front controller (shown in the example) that can handle
 
 You just need to make sure that: `req.params.type` reflects the requested resource type; `req.params.id` reflects the requested id, if any; and `req.params.relationship` reflects the relationship name, in the event that the user is requesting a relationship url. The library will read these values to help it construct the query needed to fulfill the user's request.
 
+The library may, in the future, also read `req.params.related` for related resource urls, so make sure you're not using that if you don't want the library to pick up it's value and use it in the query.
+
 In the example above, routing is handled with Express's built-in `app[VERB]` methods, and the three parameters are set properly using express's built-in `:param` syntax. If you're looking for something more robust, you might be interested in [Express Simple Router](https://github.com/ethanresnick/express-simple-router). For authentication, check out [Express Simple Firewall](https://github.com/ethanresnick/express-simple-firewall).
 
 ## Database Adapters

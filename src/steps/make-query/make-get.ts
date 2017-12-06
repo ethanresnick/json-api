@@ -1,5 +1,5 @@
 import APIError from "../../types/APIError";
-import { Request } from "../../types/HTTP/Request";
+import { Request } from "../../types";
 import ResourceTypeRegistry from "../../ResourceTypeRegistry";
 import FindQuery from "../../types/Query/FindQuery";
 

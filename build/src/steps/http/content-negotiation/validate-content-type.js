@@ -3,9 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const contentTypeParser = require("content-type");
 const APIError_1 = require("../../../types/APIError");
 const type_handling_1 = require("../../../util/type-handling");
-function validateContentType(requestContext, supportedExt) {
+function validateContentType(request, supportedExt) {
     return new Promise(function (resolve, reject) {
-        const contentType = contentTypeParser.parse(requestContext.contentType);
+        const contentType = contentTypeParser.parse(request.contentType);
         delete contentType.parameters.charset;
         if (contentType.type !== "application/vnd.api+json") {
             const detail = "The request's Content-Type must be application/vnd.api+json, " +

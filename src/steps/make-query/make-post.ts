@@ -4,7 +4,7 @@ import Resource from "../../types/Resource";
 import {forEachResources} from "../../util/type-handling";
 import CreateQuery from "../../types/Query/CreateQuery";
 import AddToRelationshipQuery from '../../types/Query/AddToRelationshipQuery';
-import { Request } from "../../types/HTTP/Request";
+import { Request } from "../../types";
 import ResourceTypeRegistry from "../../ResourceTypeRegistry";
 import { Result } from "../../types";
 import templating = require("url-template");

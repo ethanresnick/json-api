@@ -60,7 +60,7 @@
     "pluralize": "0.0.11",
     "qs": "^6.5.0",
     "ramda": "^0.24.1",
-    "raw-body": "1.3.x",
+    "raw-body": "2.x.x",
     "url-template": "^2.0.4",
     "vary": "^1.1.1"
   },

@@ -1,5 +1,6 @@
 import ResourceTypeRegistry from '../ResourceTypeRegistry';
 import { HTTPResponse, Result, Predicate, FieldConstraint, UrlTemplateFns } from "../types";
+import { Request } from "../types/";
 import Query from "../types/Query/Query";
 import Document, { DocumentData } from "../types/Document";
 import APIError from "../types/APIError";
@@ -64,7 +65,12 @@ class APIController {
    * @param {Object} frameworkRes Theoretically, the response objcet generated
    *     by your http framework but, like with frameworkReq, it can be anything.
    */
-  async handle(request, frameworkReq, frameworkRes, queryTransform?: (q: Query) => Query | Promise<Query>) {
+  async handle(
+    request: Request,
+    frameworkReq: any,
+    frameworkRes: any,
+    queryTransform?: (q: Query) => Query | Promise<Query>
+  ) {
     const registry = this.registry;
     const makeDoc = (data: DocumentData) =>
       new Document({ reqURI: request.uri, urlTemplates: this.urlTemplateFns, ...data });
@@ -110,7 +116,7 @@ class APIController {
       }
 
       // If the request has a body, validate it and parse its resources.
-      if(request.hasBody) {
+      if(typeof request.body !== 'undefined') {
         await validateContentType(request, (<any>this.constructor).supportedExt);
         await validateRequestDocument(request.body);
 

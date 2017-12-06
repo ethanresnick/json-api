@@ -2,7 +2,7 @@ import Resource from "../types/Resource";
 import Collection from "../types/Collection";
 import Linkage from "../types/Linkage";
 import ResourceTypeRegistry from "../ResourceTypeRegistry";
-import { Request } from '../types/HTTP/Request';
+import { Request } from '../types/';
 
 
 /**
