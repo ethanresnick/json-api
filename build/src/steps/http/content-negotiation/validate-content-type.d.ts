@@ -1,1 +1,1 @@
-export default function validateContentType(requestContext: any, supportedExt?: any): Promise<{}>;
+export default function validateContentType(request: any, supportedExt?: any): Promise<{}>;

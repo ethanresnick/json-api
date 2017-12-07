@@ -4,10 +4,9 @@ import Resource, { ResourceJSON } from "./Resource";
 import Collection from "./Collection";
 import APIError, { APIErrorJSON } from './APIError';
 import { RelationshipJSON } from './Relationship';
-import {objectIsEmpty, mapResources, mapObject} from "../util/type-handling";
+import {objectIsEmpty, mapResources } from "../util/type-handling";
 import {arrayUnique} from "../util/arrays";
-import { URLTemplates } from "../ResourceTypeRegistry";
-import { PrimaryData, PrimaryDataJSON } from './index';
+import { PrimaryData, PrimaryDataJSON, UrlTemplateFns } from './index';
 
 // TODO: Make the constructor API sane in the presence of types;
 // actually define the API for this class (e.g., which fields are public?)
@@ -32,7 +31,7 @@ export type DocumentData = {
   primary?: PrimaryData;
   errors?: APIError[];
   reqURI?: string;
-  urlTemplates?: URLTemplates;
+  urlTemplates?: UrlTemplateFns;
 };
 
 export default class Document {
@@ -41,22 +40,14 @@ export default class Document {
   public primary: DocumentData['primary'];
   public errors: DocumentData['errors'];
   public reqURI: DocumentData['reqURI'];
-  public urlTemplates: URLTemplates;
+  public urlTemplates: UrlTemplateFns;
 
   constructor(data: DocumentData) {
+    // Assign data members, giving some a default.
+    // TODO: decide what level of validation/encapsulation
+    // is appropriate, given typescript.
     const { urlTemplates = {}, ...restData } = data;
-
-    // Assign data members.
-    // TODO: decide what level of validation/encapsulation is appropriate,
-    // given typescript.
-    Object.assign(this, restData);
-
-    // parse all the templates once on construction.
-    // TODO: accept parsed templates (which we probably want to store
-    // in the registry) so that we're not incurring this overhead.
-    this.urlTemplates = mapObject(urlTemplates, (templatesForType) => {
-      return mapObject(templatesForType, templating.parse.bind(templating));
-    });
+    Object.assign(this, restData, { urlTemplates });
   }
 
   toJSON() {
@@ -100,7 +91,7 @@ export default class Document {
   }
 }
 
-function relationshipToJSON(relationship, urlTemplates, templateData): RelationshipJSON {
+function relationshipToJSON(relationship, urlTemplates: UrlTemplateFns, templateData): RelationshipJSON {
   const result = <RelationshipJSON>{};
 
   if(relationship.linkage) {
@@ -110,11 +101,11 @@ function relationshipToJSON(relationship, urlTemplates, templateData): Relations
   // Add urls that we can.
   if(urlTemplates[templateData.ownerType]) {
     const relatedUrlTemplate = relationship.relatedURITemplate
-      ? templating.parse(relationship.relatedURITemplate)
+      ? templating.parse(relationship.relatedURITemplate).expand
       : urlTemplates[templateData.ownerType].related;
 
     const selfUrlTemplate = relationship.selfURITemplate
-      ? templating.parse(relationship.selfURITemplate)
+      ? templating.parse(relationship.selfURITemplate).expand
       : urlTemplates[templateData.ownerType].relationship;
 
     if(relatedUrlTemplate || selfUrlTemplate) {
@@ -122,11 +113,11 @@ function relationshipToJSON(relationship, urlTemplates, templateData): Relations
     }
 
     if(relatedUrlTemplate) {
-      (<any>result.links).related = relatedUrlTemplate.expand(templateData);
+      (<any>result.links).related = relatedUrlTemplate(templateData);
     }
 
     if(selfUrlTemplate) {
-      (<any>result.links).self = selfUrlTemplate.expand(templateData);
+      (<any>result.links).self = selfUrlTemplate(templateData);
     }
   }
 
@@ -152,7 +143,7 @@ function resourceToJSON(resource, urlTemplates): ResourceJSON {
   if(!objectIsEmpty(resource.links) || selfTemplate) {
     json.links = {};
     if(selfTemplate) {
-      json.links.self = selfTemplate.expand(templateData);
+      json.links.self = selfTemplate(templateData);
     }
   }
 

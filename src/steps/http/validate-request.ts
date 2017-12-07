@@ -1,41 +1,31 @@
 import APIError from "../../types/APIError";
-import { Request } from "../../types/HTTP/Request";
+import { Request } from "../../types";
 
-export function checkBodyExistence(request: Request) {
-  return new Promise(function(resolve, reject) {
-    const needsBody =
-      ["post", "patch"].indexOf(<string>request.method) !== -1 ||
-      (request.method === "delete" && request.aboutRelationship) ||
-      (request.method === "delete" && !request.id && request.ext.indexOf("bulk") !== -1);
+export async function checkBodyExistence(request: Request) {
+  const hasBody = typeof request.body !== 'undefined';
 
-    if(request.hasBody === needsBody) {
-      resolve();
-    }
-    else if(needsBody) {
-      reject(
-        new APIError(400, undefined, "This request needs a body, but didn't have one.")
-      );
-    }
-    else {
-      reject(
-        new APIError(400, undefined, "This request should not have a body, but does.")
-      );
-    }
-  });
+  const needsBody =
+    ["post", "patch"].indexOf(<string>request.method) !== -1 ||
+    (request.method === "delete" && request.aboutRelationship) ||
+    (request.method === "delete" && !request.id);
+
+  if(hasBody === needsBody) {
+    return;
+  }
+
+  const errorMsg = needsBody
+    ? "This request needs a body, but didn't have one."
+    : "This request should not have a body, but does.";
+
+  throw new APIError(400, undefined, errorMsg);
 }
 
-export function checkMethod({method}) {
+export async function checkMethod({ method }: Request) {
   if(["patch", "post", "delete", "get"].indexOf(method) === -1) {
-    const detail = `The method "${method}" is not supported.` + (method === "put" ? " See http://jsonapi.org/faq/#wheres-put" : "");
+    const detail =
+      `The method "${method}" is not supported.` +
+      (method === "put" ? " See http://jsonapi.org/faq/#wheres-put" : "");
 
-    return Promise.reject(new APIError(
-      405,
-      undefined,
-      "Method not supported.",
-      detail
-    ));
-  }
-  else {
-    return Promise.resolve();
+    throw new APIError(405, undefined, "Method not supported.", detail);
   }
 }

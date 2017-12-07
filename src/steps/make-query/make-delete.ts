@@ -1,10 +1,11 @@
 import APIError from "../../types/APIError";
 import Collection from "../../types/Collection";
-import { Request } from "../../types/HTTP/Request";
+import { Request } from "../../types";
+import ResourceTypeRegistry from "../../ResourceTypeRegistry";
 import DeleteQuery from "../../types/Query/DeleteQuery";
 import RemoveFromRelationshipQuery from "../../types/Query/RemoveFromRelationshipQuery";
 
-export default function(request: Request, registry, makeDoc) {
+export default function(request: Request, registry: ResourceTypeRegistry, makeDoc) {
   const type = request.type;
 
   if(request.aboutRelationship) {

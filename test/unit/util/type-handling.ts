@@ -45,46 +45,4 @@ describe("Utility methods", () => {
     it.skip("should return false on an object with direct properties");
     it.skip("should return true if the object only has prototype properties");
   });
-
-  describe("ValueObject", () => {
-    describe("the constructor function it produces", () => {
-      type xReturn = { allowedProp: any, otherValidProp: any};
-      type newableX = {
-        new (): xReturn;
-        (): void;
-      };
-
-      const x = <newableX>function x() {
-        this.allowedProp = null;
-        Object.defineProperty(this, "otherValidProp", {writable: true, enumerable: true});
-      };
-
-      /*eslint-disable new-cap */
-      const WrappedConstructor = utils.ValueObject(x);
-      /*eslint-enable */
-
-      it("should use provided initial values", () => {
-        const it = WrappedConstructor({allowedProp: "14"});
-        expect(it.allowedProp).to.equal("14");
-      });
-
-      it("should ignore initial values for unknown property names", () => {
-        const it = WrappedConstructor(<any>{notAValidProperty: "14"});
-        expect((<any>it).notAValidProperty).to.be.undefined;
-      });
-
-      it("should prevent adding new properties to the object", () => {
-        const it = WrappedConstructor();
-        expect(() => (<any>it).notAValidContextProperty = 4).to.throw(TypeError);
-      });
-
-      it("should allow the values of existing properties to change", () => {
-        const it = WrappedConstructor();
-        it.allowedProp = 9;
-        it.otherValidProp = 7; //check Object.defineProperty props too.
-        expect(it.allowedProp).to.equal(9);
-        expect(it.otherValidProp).to.equal(7);
-      });
-    });
-  });
 });

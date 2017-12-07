@@ -16,34 +16,6 @@ export type Ugh<T> = {
 //export type Sealed<T> = {
 //  [P in keyof T]: T[P];
 //}
-
-export function ValueObject<T extends object>(ConstructorFn: { new (): T}): Ugh<T> {
-  // Tell TS it's ok to call the returned function with new, even though
-  // that use of new won't effect the return and the value the engine
-  // allocates will just be discarded (which is why TS warning us about this
-  // is very sensible). However, we override TS here because we want the
-  // application of ValueObject to a constructor to be transparent (i.e., produce
-  // a resulting function with the same API), and the original constructor could
-  // be called with new so the new constructor should be called with new too.
-  return <Ugh<T>>function(initialValues) {
-    const obj = new ConstructorFn();
-    const hasOwnProp = Object.prototype.hasOwnProperty;
-
-    // Use initial values where possible.
-    if(initialValues) {
-      for(const key in obj) {
-        if(hasOwnProp.call(obj, key) && hasOwnProp.call(initialValues, key)) {
-          obj[key] = <T[keyof T]>initialValues[key];
-        }
-      }
-    }
-
-    // Object.seal prevents any other properties from being added to the object.
-    // Every property an object needs should be set by the original constructor.
-    return Object.seal(obj);
-  };
-}
-
 export function objectIsEmpty(obj) {
   const hasOwnProperty = Object.prototype.hasOwnProperty;
   for (const key in obj) {
@@ -77,14 +49,7 @@ export function mapResources(resourceOrCollection, mapFn) {
 }
 
 export function forEachResources(resourceOrCollection, eachFn) {
-  /*eslint-disable no-unused-expressions */
-  if(resourceOrCollection instanceof Collection) {
-    resourceOrCollection.resources.forEach(eachFn);
-  }
-  else {
-    return eachFn(resourceOrCollection);
-  }
-  /*eslint-enable */
+  mapResources(resourceOrCollection, eachFn); // do map but discard return value.
 }
 
 export function groupResourcesByType(resourceOrCollection) {

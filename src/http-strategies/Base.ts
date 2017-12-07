@@ -1,12 +1,10 @@
 import qs = require("qs");
-import contentType = require("content-type");
 import getRawBody = require("raw-body");
 import logger from "../util/logger";
 import APIError from "../types/APIError";
-import Request, { Request as UnsealedRequest } from "../types/HTTP/Request";
+import { Request } from "../types/";
 import APIController from "../controllers/API";
 import DocsController from "../controllers/Documentation";
-export { UnsealedRequest };
 
 export type HTTPStrategyOptions = {
   handleContentNegotiation?: boolean,
@@ -75,107 +73,107 @@ export default class BaseStrategy {
    * @param {Object} params object containing url parameters
    * @param {Object} [parsedQuery] object containing pre-parsed query parameters
    */
-  protected buildRequestObject(req, protocol, fallbackHost, params, parsedQuery?){
-    const config = this.config;
+  protected async buildRequestObject(req, protocol, fallbackHost, params, parsedQuery?): Promise<Request> {
+    const queryStartIndex = req.url.indexOf("?");
+    const hasQuery = queryStartIndex !== -1;
+    const rawQueryString = hasQuery && req.url.substr(queryStartIndex + 1);
 
-    return new Promise<UnsealedRequest>(function(resolve, reject) {
-      const it = new Request();
-      const queryStartIndex = req.url.indexOf("?");
-      const hasQuery = queryStartIndex !== -1;
-      const rawQueryString = hasQuery && req.url.substr(queryStartIndex + 1);
+    const protocolGuess = protocol || (req.connection.encrypted ? "https" : "http");
+    const host = this.config.host || fallbackHost;
+    const body = await this.getParsedBodyJSON(req);
 
+    return {
       // Handle route & query params
-      it.queryParams = parsedQuery || (hasQuery && qs.parse(rawQueryString)) || {};
-      it.rawQueryString = rawQueryString || undefined;;
+      queryParams: parsedQuery || (hasQuery && qs.parse(rawQueryString)) || {},
+      rawQueryString: rawQueryString || undefined,
 
-      it.id                = params.id;
-      it.type              = params.type;
-      it.aboutRelationship = !!params.relationship;
-      it.relationship      = params.related || params.relationship;
+      id: params.id,
+      type: params.type,
+      relationship: params.related || params.relationship,
+      aboutRelationship: !!params.relationship,
 
       // Handle HTTP/Conneg.
-      protocol  = protocol || (req.connection.encrypted ? "https" : "http");
-      const host = config.host || fallbackHost;
+      uri: protocolGuess + "://" + host + req.url,
+      method: (() => {
+        // Support Verb tunneling, but only for PATCH and only if user turns it on.
+        // Turning on any tunneling automatically could be a security issue.
+        const usedMethod = req.method.toLowerCase();
+        const requestedMethod =
+          (req.headers["x-http-method-override"] || "").toLowerCase();
 
-      it.uri     = protocol + "://" + host + req.url;
-      it.method  = req.method.toLowerCase();
-      it.accepts = req.headers.accept;
-
-      // Support Verb tunneling, but only for PATCH and only if user turns it on.
-      // Turning on any tunneling automatically could be a security issue.
-      const requestedMethod = (req.headers["x-http-method-override"] || "").toLowerCase();
-      if(config.tunnel && it.method === "post" && requestedMethod === "patch") {
-        it.method = "patch";
-      }
-
-      else if(requestedMethod) {
-        reject(
-          new APIError(400, undefined, `Cannot tunnel to the method "${requestedMethod.toUpperCase()}".`)
-        );
-      }
-
-      if(hasBody(req)) {
-        if(!isReadableStream(req)) {
-          return reject(
-            new APIError(500, undefined, "Request body could not be parsed. Make sure other no other middleware has already parsed the request body.")
-          );
+        if(this.config.tunnel && usedMethod === "post" && requestedMethod === "patch") {
+          return "patch";
         }
 
-        it.contentType  = req.headers["content-type"];
-        const typeParsed = it.contentType && contentType.parse(req);
+        else if(requestedMethod) {
+          const msg =
+            `Cannot tunnel to the method "${requestedMethod.toUpperCase()}".`;
 
-        const bodyParserOptions: (getRawBody.Options & { encoding: string}) = {
-          encoding: typeParsed.parameters.charset || "utf8",
-          limit: "1mb"
-        };
-
-        if(req.headers["content-length"] && !isNaN(req.headers["content-length"])) {
-          bodyParserOptions.length = req.headers["content-length"];
+          throw new APIError(400, undefined, msg);
         }
 
-        // The req has not yet been read, so let's read it
-        getRawBody(req, bodyParserOptions, function(err, string) {
-          if(err) {
-            reject(err);
-          }
+        return usedMethod;
+      })(),
+      accepts: req.headers.accept,
+      contentType: req.headers["content-type"],
 
-          // Even though we passed the hasBody check, the body could still be
-          // empty, so we check the length. (We can't check this before doing
-          // getRawBody because, while Content-Length: 0 signals an empty body,
-          // there's no similar in-advance clue for detecting empty bodies when
-          // Transfer-Encoding: chunked is being used.)
-          else if(string.length === 0) {
-            it.hasBody = false;
-            it.body = "";
-            resolve(it);
-          }
+      // handle body
+      body
+    };
+  }
 
-          else {
-            try {
-              it.hasBody = true;
-              it.body = JSON.parse(string);
-              resolve(it);
-            }
-            catch (error) {
-              reject(
-                new APIError(400, undefined, "Request contains invalid JSON.")
-              );
-            }
-          }
-        });
-      }
+  protected async getParsedBodyJSON(req: any): Promise<string | undefined> {
+    if(!hasBody(req)) {
+      return undefined;
+    }
 
-      else {
-        it.hasBody = false;
-        it.body = undefined;
-        resolve(it);
-      }
-    });
+    if(!isReadableStream(req)) {
+      throw new APIError(
+        500,
+        undefined,
+        "Request body could not be parsed. " +
+        "Make sure other no other middleware has already parsed the request body."
+      );
+    }
+
+    // Note: we always treat the encoding as utf-8 because
+    // JSON is specified to always be utf-8, and letting the sender specify
+    // the encoding we'll parse with (e.g., in req.headers['content-type'])
+    // seeems lnike poor security hygiene.
+    const bodyParserOptions: (getRawBody.Options & { encoding: string }) = {
+      encoding: "utf-8",
+      limit: "1mb",
+      ...(hasValidContentLength(req)
+          ? { length: req.headers["content-length"] }
+          : {})
+    };
+
+    const bodyString = await getRawBody(req, bodyParserOptions);
+
+    // Even though we passed the hasBody check, the body could still be
+    // empty, so we check the length. (We can't check this before doing
+    // getRawBody because, while Content-Length: 0 signals an empty body,
+    // there's no similar in-advance clue for detecting empty bodies when
+    // Transfer-Encoding: chunked is being used.)
+    if(bodyString.length === 0) {
+      return undefined;
+    }
+
+    try {
+      return JSON.parse(bodyString);
+    } catch (error) {
+      throw new APIError(400, undefined, "Request contains invalid JSON.")
+    }
   }
 }
 
 function hasBody(req) {
-  return req.headers["transfer-encoding"] !== undefined || !isNaN(req.headers["content-length"]);
+  return req.headers["transfer-encoding"] !== undefined || hasValidContentLength(req);
+}
+
+function hasValidContentLength(req) {
+  // intentionally not using Number.isNaN below to cover undefined case
+  return !isNaN(req.headers["content-length"]);
 }
 
 function isReadableStream(req) {

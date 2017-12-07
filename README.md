@@ -80,7 +80,7 @@ To use this library, you describe the special behavior (if any) that resources o
 
 - <a name="before-save"></a>`beforeSave` (optional): a function called on each resource provided by the client (i.e. in a `POST` or `PATCH` request) before it's sent to the adapter for saving. You can transform the data here as necessary or pre-emptively reject the request. [Usage details](https://github.com/ethanresnick/json-api-example/blob/master/src/resource-descriptions/people.js#L25).
 
-- <a name="parentType"></a>`parentType` (optional): this allows you to designate one resource type being a sub-type of another (its `parentType`). This is often used when you have two resource types that live in the same database table/collection, and their type is determined with a discriminator key. See the [`schools` type](https://github.com/ethanresnick/json-api-example/blob/master/src/resource-descriptions/schools.js#L2) in the example repository. If a resource has a `parentType`, it inherits that type's configuration (i.e. its `urlTemplates`, `beforeSave`/`beforeRender` functions, and `info`). The only exception is that `labelMappers` are not inherited.
+- <a name="parentType"></a>`parentType` (optional): this allows you to designate one resource type being a sub-type of another (its `parentType`). This is often used when you have two resource types that live in the same database table/collection, and their type is determined with a discriminator key. See the [`schools` type](https://github.com/ethanresnick/json-api-example/blob/master/src/resource-descriptions/schools.js#L2) in the example repository. If a resource has a `parentType`, it inherits that type's configuration (i.e. its `urlTemplates`, `beforeSave`/`beforeRender` functions, `info`, etc), but can override those configuration settings too.
 
 -  <a name="info"></a>`info` (optional): this allows you to provide extra information about the resource that will be included in the documentation. Available properties are `"description"` (a string describing what resources of this type are) and `"fields"`. `"fields"` holds an object in which you can describe each field in the resource (e.g. listing validation rules). See the [example implemenation](https://github.com/ethanresnick/json-api-example/blob/master/src/resource-descriptions/schools.js) for more details.
 
@@ -115,7 +115,7 @@ The valid operators (for the buit-in Mongoose adapter) are: `eq`, `neq`, `in`, `
 
 If you have multiple constraints, you can choose whether to combine them with an `AND` or an `OR`. To do that, instead of providing three items in your field constraint (i.e., the field name, operator, and value), provide only two: 1) `and` or `or`, and 2) a list of constraints. E.g.:
 
-`GET /people?filter=(or,((name,eq,Bob)(zip,eq,90210)))`
+`GET /people?filter=(or,((name,eq,Bob),(zip,eq,90210)))`
 
 Will find all the people who are named Bob or who live in the 90210 zip code.
 
@@ -127,7 +127,7 @@ Putting it all together, you could do:
 
 `GET /people?filter=(or,((email,test@example.com)(name,Test)))(dob,gte,1963)`
 
-This will find everyone born after 1963 who also has either the name Test or the email test@example.com
+This will find everyone born after 1963 who also has either the name "Test" or the email "test@example.com".
 
 Note: this filter query paramer format is entirely cusomizable, and other operators can be used if your adapter supports them. See MongooseAdapter's static properties and the ResourceTypeRegistry's constructor for details.
 
@@ -150,6 +150,8 @@ GET /people?page[offset]=50&page[limit]=25
 This library gives you a Front controller (shown in the example) that can handle requests for API results or for the documentation. But the library doesn't prescribe how requests get to this controller. This allows you to use any url scheme, routing layer, or authentication system you already have in place. 
 
 You just need to make sure that: `req.params.type` reflects the requested resource type; `req.params.id` reflects the requested id, if any; and `req.params.relationship` reflects the relationship name, in the event that the user is requesting a relationship url. The library will read these values to help it construct the query needed to fulfill the user's request.
+
+The library may, in the future, also read `req.params.related` for related resource urls, so make sure you're not using that if you don't want the library to pick up it's value and use it in the query.
 
 In the example above, routing is handled with Express's built-in `app[VERB]` methods, and the three parameters are set properly using express's built-in `:param` syntax. If you're looking for something more robust, you might be interested in [Express Simple Router](https://github.com/ethanresnick/express-simple-router). For authentication, check out [Express Simple Firewall](https://github.com/ethanresnick/express-simple-firewall).
 

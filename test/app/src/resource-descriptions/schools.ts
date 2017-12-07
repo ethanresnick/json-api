@@ -6,11 +6,6 @@ module.exports = {
     "related": "http://127.0.0.1:3000/schools/{ownerId}/{path}"
   },
 
-  labelMappers: {
-    "colleges": function(model, req) {
-      return model.findCollegeIds();
-    }
-  },
 
   info: {
     "description": "A description of your School resource (optional).",

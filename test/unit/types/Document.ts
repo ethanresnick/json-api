@@ -5,6 +5,7 @@ import Resource from "../../../src/types/Resource";
 import Relationship from "../../../src/types/Relationship";
 import Linkage from "../../../src/types/Linkage";
 import Document from "../../../src/types/Document";
+import templating = require("url-template");
 
 const expect = chai.expect;
 chai.use(chaiSubset);
@@ -17,7 +18,11 @@ describe("Document class", () => {
     const person2 = new Resource("people", "32", {"name": "ethan"}, {"organization": orgRelationCustom});
     const people = new Collection([person, person2]);
     const topLevelMeta = {"mcawesome": true};
-    const urlTemplates = {"people": {"relationship": "RELATIONSHIP{ownerId}{path}"}};
+    const urlTemplates = {
+      "people": {
+        "relationship": templating.parse("RELATIONSHIP{ownerId}{path}").expand
+      }
+    };
 
     const singleResourceDocJSON = new Document({
       primary: person,

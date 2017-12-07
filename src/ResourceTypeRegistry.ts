@@ -35,7 +35,6 @@ export type ResourceTypeDescription = {
   urlTemplates?: URLTemplatesForType,
   beforeSave?: TransformFn,
   beforeRender?: TransformFn,
-  labelMappers?: { [label: string]: any },
   behaviors?: object
 }
 
@@ -59,11 +58,13 @@ export default class ResourceTypeRegistry {
   };
 
   constructor(
-    typeDescriptions: ResourceTypeDescriptions = Object.create(null),
-    descriptionDefaults: object|Immutable.Map<string, any> = {}
+    typeDescs: ResourceTypeDescriptions = Object.create(null),
+    descDefaults: object|Immutable.Map<string, any> = {}
   ) {
     this._types = {};
-    descriptionDefaults = globalResourceDefaults.mergeDeep(descriptionDefaults);
+
+    const finalDefaults =
+      <Immutable.Map<string, any>>globalResourceDefaults.mergeDeep(descDefaults);
 
     // Sort the types so we can register them in an order that respects their
     // parentType. First, we pre-process the typeDescriptions to create edges
@@ -75,8 +76,8 @@ export default class ResourceTypeRegistry {
     // which there is an edge from A to that node.
     const nodes: string[] = [], roots: string[] = [], edges = {};
 
-    for(const typeName in typeDescriptions) {
-      const nodeParentType = typeDescriptions[typeName].parentType;
+    for(const typeName in typeDescs) {
+      const nodeParentType = typeDescs[typeName].parentType;
       nodes.push(typeName);
 
       if(nodeParentType) {
@@ -92,25 +93,23 @@ export default class ResourceTypeRegistry {
 
     // register the types, in order
     typeRegistrationOrder.forEach((typeName) => {
-      const parentType = typeDescriptions[typeName].parentType;
+      const parentType = typeDescs[typeName].parentType;
 
       // defaultIncludes need to be made into an object if they came as an array.
       // TODO: Remove support for array format before v3. It's inconsistent.
-      const thisDescriptionRaw = Immutable.fromJS(typeDescriptions[typeName]);
-      const thisDescriptionMerged = (<Immutable.Map<string, any>>descriptionDefaults).mergeDeep(thisDescriptionRaw);
+      const thisDescriptionRaw = Immutable.fromJS(typeDescs[typeName]);
+      const thisDescriptionMerged = finalDefaults.mergeDeep(thisDescriptionRaw);
 
-      this._types[typeName] = (parentType) ?
-        // If we have a parentType, we merge in all the parent's fields,
-        // BUT we then overwrite labelMappers with just the ones directly
-        // from this description. We don't inherit labelMappers because a
-        // labelMapper is a kind of filter, and the results of a filter
-        // on the parent type may not be instances of the subtype.
-        (<Immutable.Map<string, any>>this._types[parentType]).mergeDeep(thisDescriptionRaw)
-          .set("labelMappers", thisDescriptionRaw.get("labelMappers")) :
+      this._types[typeName] = (parentType)
+        // If we have a parentType, we merge in all the parent's fields
+        ? (<Immutable.Map<string, any>>this._types[parentType])
+            .mergeDeep(thisDescriptionRaw)
+            // if we had properties we didn't want to merge, we could reset
+            // them here, like: .set("prop", thisDescriptionRaw.get("prop"))
 
         // If we don't have a parentType, just register
         // the description merged with the universal defaults
-        thisDescriptionMerged;
+        : thisDescriptionMerged;
     });
   }
 
@@ -144,16 +143,23 @@ export default class ResourceTypeRegistry {
     }, <URLTemplates>{});
   }
 
-  // Note: type signature's lying here; this could be undefined.
-  dbAdapter(type): AdapterInstance<any> {
-    return this.doGet("dbAdapter", type);
+  dbAdapter(type) {
+    const adapter = this.doGet("dbAdapter", type);
+    if(typeof adapter === 'undefined') {
+      throw new Error(
+        "Tried to get db adapter for a type registered without one. " +
+        "Every type must be registered with an adapter!"
+      );
+    }
+
+    return adapter;
   }
 
-  beforeSave(type): ResourceTypeDescription['beforeSave'] | undefined {
+  beforeSave(type) {
     return this.doGet("beforeSave", type);
   }
 
-  beforeRender(type): ResourceTypeDescription['beforeRender'] | undefined {
+  beforeRender(type) {
     return this.doGet("beforeRender", type);
   }
 
@@ -161,23 +167,19 @@ export default class ResourceTypeRegistry {
     return this.doGet("behaviors", type);
   }
 
-  labelMappers(type): ResourceTypeDescription['labelMappers'] | undefined {
-    return this.doGet("labelMappers", type);
-  }
-
-  defaultIncludes(type): ResourceTypeDescription['defaultIncludes'] | undefined {
+  defaultIncludes(type) {
     return this.doGet("defaultIncludes", type);
   }
 
-  info(type): ResourceTypeDescription['info'] | undefined {
+  info(type) {
     return this.doGet("info", type);
   }
 
-  parentType(type): ResourceTypeDescription['parentType'] | undefined {
+  parentType(type) {
     return this.doGet("parentType", type);
   }
 
-  private doGet(attrName, type) {
+  private doGet<T extends keyof ResourceTypeDescription>(attrName: T, type): ResourceTypeDescription[T] | undefined {
     return Maybe(this._types[type])
       .map(it => it.get(attrName))
       .map(it => it instanceof Immutable.Map || it instanceof Immutable.List

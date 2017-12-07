@@ -4,9 +4,10 @@ import Resource from "../../types/Resource";
 import Relationship from "../../types/Relationship";
 import Linkage from "../../types/Linkage";
 import UpdateQuery from '../../types/Query/UpdateQuery';
-import { Request } from "../../types/HTTP/Request";
+import ResourceTypeRegistry from "../../ResourceTypeRegistry";
+import { Request } from "../../types";
 
-export default function(request: Request, registry, makeDoc) {
+export default function(request: Request, registry: ResourceTypeRegistry, makeDoc) {
   const primary = request.primary;
   const type    = request.type;
   let changedResourceOrCollection;
