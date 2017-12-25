@@ -120,8 +120,11 @@ class APIController {
         await validateContentType(request, (<any>this.constructor).supportedExt);
         await validateRequestDocument(request.body);
 
+        const isBulkDelete =
+          request.method === "delete" && !request.id && !request.aboutRelationship;
+
         const parsedPrimary = await parseRequestPrimary(
-          request.body.data, request.aboutRelationship
+          request.body.data, request.aboutRelationship || isBulkDelete
         );
 
         // validate the request's resources.
