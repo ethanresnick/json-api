@@ -37,4 +37,21 @@ describe("Updating Resources", () => {
                 }]);
         });
     });
+    describe("Updating a non-existent resource", () => {
+        it("should 404", () => {
+            const missingOId = "507f191e810c19729de860ea";
+            return agent_1.default.then((Agent) => {
+                return Agent.request("PATCH", `/organizations/${missingOId}`)
+                    .type("application/vnd.api+json")
+                    .send({ "data": Object.assign({}, updates_1.VALID_ORG_VIRTUAL_PATCH, { id: missingOId }) })
+                    .promise()
+                    .then((response) => {
+                    throw new Error("Should 404");
+                }, (err) => {
+                    chai_1.expect(err.status).to.equal(404);
+                    return true;
+                });
+            });
+        });
+    });
 });
