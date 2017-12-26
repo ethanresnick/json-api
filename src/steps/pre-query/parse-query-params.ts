@@ -46,7 +46,10 @@ function parseFieldsParam(fieldsParam: ScopedParam) {
     throw new APIError(400, undefined, "Invalid parameter value.");
 
   return R.map<ScopedParam, ScopedStringListParam>(
-    R.pipe(parseCommaSeparatedParamString, R.filter(isValidFieldName)),
+    R.pipe(
+      parseCommaSeparatedParamString,
+      <(it: string[]) => string[]>R.filter(isValidFieldName)
+    ),
     fieldsParam
   );
 }
