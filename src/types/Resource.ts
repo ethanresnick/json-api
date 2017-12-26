@@ -20,7 +20,7 @@ export default class Resource {
   private _type: string;
   private _relationships: { [name: string]: Relationship };
   private _attrs: {[name: string]: any};
-  public meta: object;
+  private _meta: object;
 
   constructor(type: string, id?: string, attrs = {}, relationships = {}, meta: object = {}) {
     [this.type, this.id, this.attrs, this.relationships, this.meta] =
@@ -68,6 +68,18 @@ export default class Resource {
   set relationships(relationships) {
     validateFieldGroup(relationships, this._attrs);
     this._relationships = relationships;
+  }
+
+  set meta(meta) {
+    if(typeof meta !== 'object' || meta === null) {
+      throw new Error("meta must be an object.");
+    }
+
+    this._meta = meta;
+  }
+
+  get meta() {
+    return this._meta;
   }
 
   removeAttr(attrPath) {
