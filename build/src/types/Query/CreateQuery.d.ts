@@ -1,8 +1,8 @@
 import Query, { QueryOptions } from "./Query";
 import Resource from '../Resource';
-import Collection from '../Collection';
+import Data from '../Data';
 export declare type CreateQueryOptions = QueryOptions & {
-    records: Resource | Collection;
+    records: Data<Resource>;
 };
 export default class CreateQuery extends Query {
     protected query: {
@@ -12,5 +12,5 @@ export default class CreateQuery extends Query {
         records: CreateQueryOptions['records'];
     };
     constructor({records, ...baseOpts}: CreateQueryOptions);
-    readonly records: Resource | Collection;
+    readonly records: Data<Resource>;
 }

@@ -1,15 +1,8 @@
-export declare type Ugh<T> = {
-    new (initial?: Partial<T>): T;
-    (initial?: Partial<T>): T;
-};
-export declare function ValueObject<T extends object>(ConstructorFn: {
-    new (): T;
-}): Ugh<T>;
+import Data from "../types/Data";
+import Resource from "../types/Resource";
 export declare function objectIsEmpty(obj: any): boolean;
 export declare function mapObject(obj: any, mapFn: any): any;
-export declare function mapResources(resourceOrCollection: any, mapFn: any): any;
-export declare function forEachResources(resourceOrCollection: any, eachFn: any): any;
-export declare function groupResourcesByType(resourceOrCollection: any): any;
+export declare function groupResourcesByType(data: Data<Resource>): any;
 export declare function forEachArrayOrVal(arrayOrVal: any, eachFn: any): void;
 export declare type Maybe<U> = Just<U> | Nothing<U>;
 export declare class Nothing<T> {

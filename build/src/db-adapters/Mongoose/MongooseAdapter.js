@@ -14,9 +14,9 @@ const arrays_1 = require("../../util/arrays");
 const misc_1 = require("../../util/misc");
 const type_handling_1 = require("../../util/type-handling");
 const util = require("./lib");
+const Data_1 = require("../../types/Data");
 const Resource_1 = require("../../types/Resource");
-const Collection_1 = require("../../types/Collection");
-const Linkage_1 = require("../../types/Linkage");
+const ResourceIdentifier_1 = require("../../types/ResourceIdentifier");
 const Relationship_1 = require("../../types/Relationship");
 const APIError_1 = require("../../types/APIError");
 const Field_1 = require("../../types/Documentation/Field");
@@ -80,39 +80,43 @@ class MongooseAdapter {
                     populatedPaths.push(pathParts[0]);
                     queryBuilder.populate(pathParts[0]);
                 });
-                const includedResources = [];
-                primaryDocumentsPromise = Promise.resolve(queryBuilder.exec()).then((docs) => {
-                    type_handling_1.forEachArrayOrVal(docs, (doc) => {
-                        if (!doc) {
-                            return;
-                        }
-                        populatedPaths.forEach((path) => {
-                            const refDocs = Array.isArray(doc[path]) ? doc[path] : [doc[path]];
-                            refDocs.forEach((it) => {
-                                if (it) {
-                                    includedResources.push(this.constructor.docToResource(it, pluralizer, fields));
-                                }
+                let includedResources = [];
+                primaryDocumentsPromise = Promise.resolve(queryBuilder.exec()).then((docOrDocs) => {
+                    includedResources =
+                        Data_1.default.fromJSON(docOrDocs)
+                            .flatMap((doc) => {
+                            return Data_1.default.of(populatedPaths).flatMap((path) => {
+                                return typeof doc[path] === 'undefined'
+                                    ? Data_1.default.empty
+                                    : Data_1.default.fromJSON(doc[path]).map(doc => {
+                                        return this.constructor.docToResource(doc, pluralizer, fields);
+                                    });
                             });
-                        });
-                    });
-                    return docs;
+                        }).values;
+                    return docOrDocs;
                 });
-                includedResourcesPromise = primaryDocumentsPromise.then(() => new Collection_1.default(includedResources));
+                includedResourcesPromise =
+                    primaryDocumentsPromise.then(() => includedResources);
             }
             else {
                 primaryDocumentsPromise = Promise.resolve(queryBuilder.exec());
-                includedResourcesPromise = Promise.resolve(null);
+                includedResourcesPromise = Promise.resolve(undefined);
             }
-            return Promise.all([primaryDocumentsPromise.then((it) => {
+            return Promise.all([
+                primaryDocumentsPromise.then((it) => {
                     const makeCollection = !idOrIds || Array.isArray(idOrIds) ? true : false;
-                    return this.constructor.docsToResourceOrCollection(it, makeCollection, pluralizer, fields);
-                }), includedResourcesPromise, collectionSizePromise]).catch(util.errorHandler);
+                    return this.constructor.docsToResourceData(it, makeCollection, pluralizer, fields);
+                }),
+                includedResourcesPromise,
+                collectionSizePromise
+            ])
+                .catch(util.errorHandler);
         });
     }
     create(query) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { records: resourceOrCollection } = query;
-            const resourcesByType = type_handling_1.groupResourcesByType(resourceOrCollection);
+            const { records: resourceData } = query;
+            const resourcesByType = type_handling_1.groupResourcesByType(resourceData);
             const creationPromises = [];
             const setIdWithGenerator = (doc) => { doc._id = this.idGenerator(doc); };
             for (const type in resourcesByType) {
@@ -125,15 +129,15 @@ class MongooseAdapter {
                 creationPromises.push(model.create(docObjects));
             }
             return Promise.all(creationPromises).then((docArrays) => {
-                const makeCollection = resourceOrCollection instanceof Collection_1.default;
+                const makeCollection = !resourceData.isSingular;
                 const finalDocs = docArrays.reduce((a, b) => a.concat(b), []);
-                return this.constructor.docsToResourceOrCollection(finalDocs, makeCollection, this.inflector.plural);
+                return this.constructor.docsToResourceData(finalDocs, makeCollection, this.inflector.plural);
             }).catch(util.errorHandler);
         });
     }
     update(query) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { type: parentType, patch: resourceOrCollection } = query;
+            const { type: parentType, patch: resourceData } = query;
             const singular = this.inflector.singular;
             const plural = this.inflector.plural;
             const parentModel = this.getModel(this.constructor.getModelName(parentType, singular));
@@ -143,7 +147,7 @@ class MongooseAdapter {
                 context: 'query',
                 upsert: false
             };
-            const updatedResourcePromiseOrPromises = type_handling_1.mapResources(resourceOrCollection, (resourceUpdate) => {
+            return resourceData.map((resourceUpdate) => {
                 const newModelName = this.constructor.getModelName(resourceUpdate.type, singular);
                 const NewModelConstructor = this.getModel(newModelName);
                 const changeSet = util.resourceToDocObject(resourceUpdate);
@@ -157,13 +161,10 @@ class MongooseAdapter {
                 return parentModel
                     .findByIdAndUpdate(resourceUpdate.id, finalUpdate, updateOptions)
                     .exec();
-            });
-            const updatedResourcePromises = Array.isArray(updatedResourcePromiseOrPromises)
-                ? updatedResourcePromiseOrPromises
-                : [updatedResourcePromiseOrPromises];
-            return Promise.all(updatedResourcePromises).then((docs) => {
-                const makeCollection = resourceOrCollection instanceof Collection_1.default;
-                return this.constructor.docsToResourceOrCollection(docs, makeCollection, plural);
+            }).flatMapAsync(docPromise => {
+                return docPromise.then(doc => {
+                    return this.constructor.docsToResourceData(doc, false, plural);
+                });
             }).catch(util.errorHandler);
         });
     }
@@ -179,12 +180,15 @@ class MongooseAdapter {
             const queryBuilder = mode === 'findOne'
                 ? model[mode](idQuery)
                 : model[mode](idQuery);
-            return Promise.resolve(queryBuilder.exec()).then((docs) => {
-                if (!docs) {
+            return Promise.resolve(queryBuilder.exec()).then((docOrDocsOrNull) => {
+                const data = Data_1.default.fromJSON(docOrDocsOrNull);
+                if (data.size === 0) {
                     throw new APIError_1.default(404, undefined, "No matching resource found.");
                 }
-                type_handling_1.forEachArrayOrVal(docs, (it) => { it.remove(); });
-                return docs;
+                data.forEach(it => { it.remove(); });
+                return data.map((it) => {
+                    return this.constructor.docToResource(it, this.inflector.plural);
+                });
             }).catch(util.errorHandler);
         });
     }
@@ -194,7 +198,7 @@ class MongooseAdapter {
             const model = this.getModel(this.constructor.getModelName(type));
             const update = {
                 $addToSet: {
-                    [relationshipName]: { $each: newLinkage.value.map(it => it.id) }
+                    [relationshipName]: { $each: newLinkage.map(it => it.id).values }
                 }
             };
             const options = { runValidators: true, context: 'query' };
@@ -208,7 +212,7 @@ class MongooseAdapter {
             const model = this.getModel(this.constructor.getModelName(type));
             const update = {
                 $pullAll: {
-                    [relationshipName]: linkageToRemove.value.map(it => it.id)
+                    [relationshipName]: linkageToRemove.map(it => it.id).values
                 }
             };
             const options = { runValidators: true, context: 'query' };
@@ -244,13 +248,13 @@ class MongooseAdapter {
         }
         return method.call(this, query);
     }
-    static docsToResourceOrCollection(docs, makeCollection, pluralizer, fields) {
-        if (!docs || (!makeCollection && Array.isArray(docs) && docs.length === 0)) {
+    static docsToResourceData(docs, isPlural, pluralizer, fields) {
+        if (!docs || (!isPlural && Array.isArray(docs) && docs.length === 0)) {
             throw new APIError_1.default(404, undefined, "No matching resource found.");
         }
         docs = !Array.isArray(docs) ? [docs] : docs;
         docs = docs.map((it) => this.docToResource(it, pluralizer, fields));
-        return makeCollection ? new Collection_1.default(docs) : docs[0];
+        return isPlural ? Data_1.default.of(docs) : Data_1.default.pure(docs[0]);
     }
     static docToResource(doc, pluralizer = pluralize.plural, fields) {
         const type = this.getType(doc.constructor.modelName, pluralizer);
@@ -280,20 +284,17 @@ class MongooseAdapter {
             let jsonValAtPath = pathParts.reduce(getProp, attrs);
             const referencedType = this.getReferencedType(doc.constructor, path);
             misc_1.deleteNested(path, attrs);
-            let isToOneRelationship = false;
-            if (!Array.isArray(jsonValAtPath)) {
-                jsonValAtPath = [jsonValAtPath];
-                isToOneRelationship = true;
-            }
-            let linkage = [];
-            jsonValAtPath.forEach((docOrIdOrNull) => {
-                const idOrNull = (docOrIdOrNull && docOrIdOrNull._id)
-                    ? String(docOrIdOrNull._id)
-                    : docOrIdOrNull ? String(docOrIdOrNull) : null;
-                linkage.push(idOrNull ? { type: referencedType, id: idOrNull } : null);
+            const normalizedValAtPath = typeof jsonValAtPath === 'undefined' ? null : jsonValAtPath;
+            const linkage = Data_1.default.fromJSON(normalizedValAtPath).map((docOrId) => {
+                return new ResourceIdentifier_1.default({
+                    type: referencedType,
+                    id: String(docOrId._id ? docOrId._id : docOrId)
+                });
             });
-            linkage = new Linkage_1.default(isToOneRelationship ? linkage[0] : linkage);
-            relationships[path] = new Relationship_1.default(linkage);
+            relationships[path] = Relationship_1.default.of({
+                data: linkage,
+                owner: { type, id: doc.id, path }
+            });
         });
         return new Resource_1.default(type, doc.id, attrs, relationships);
     }

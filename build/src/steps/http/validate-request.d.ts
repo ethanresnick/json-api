@@ -1,4 +1,3 @@
-export declare function checkBodyExistence(requestContext: any): Promise<{}>;
-export declare function checkMethod({method}: {
-    method: any;
-}): Promise<void>;
+import { Request } from "../../types";
+export declare function checkBodyExistence(request: Request): Promise<void>;
+export declare function checkMethod({method}: Request): Promise<void>;

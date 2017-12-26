@@ -1,4 +1,5 @@
-import Relationship, { RelationshipJSON } from './Relationship';
+import Relationship, { RelationshipJSON } from "./Relationship";
+import { UrlTemplateFns } from "./index";
 export declare type ResourceJSON = {
     id: string;
     type: string;
@@ -19,7 +20,7 @@ export default class Resource {
     private _type;
     private _relationships;
     private _attrs;
-    meta: object;
+    private _meta;
     constructor(type: string, id?: string, attrs?: {}, relationships?: {}, meta?: object);
     id: string | undefined;
     type: string;
@@ -30,6 +31,8 @@ export default class Resource {
     relationships: {
         [name: string]: Relationship;
     };
+    meta: object;
     removeAttr(attrPath: any): void;
     removeRelationship(relationshipPath: any): void;
+    toJSON(urlTemplates: UrlTemplateFns): ResourceJSON;
 }

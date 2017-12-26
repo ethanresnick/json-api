@@ -19,6 +19,15 @@ export declare const VALID_ORG_RELATIONSHIP_PATCH: {
         "id": string;
     }[];
 };
-export declare const VALID_ORG_RELATIONSHIP_EMPTY_PATCH: {
+export declare const VALID_TO_MANY_RELATIONSHIP_EMPTY_PATCH: {
     "data": never[];
+};
+export declare const VALID_TO_ONE_RELATIONSHIP_EMPTY_PATCH: {
+    "data": null;
+};
+export declare const VALID_SCHOOL_PRINCIPAL_PATCH: {
+    data: {
+        "type": string;
+        "id": string;
+    };
 };

@@ -3,14 +3,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Immutable = require("immutable");
 const misc_1 = require("./util/misc");
 const type_handling_1 = require("./util/type-handling");
-const globalResourceDefaults = Immutable.fromJS({});
+const Resource_1 = require("./types/Resource");
+exports.Resource = Resource_1.default;
+const ResourceIdentifier_1 = require("./types/ResourceIdentifier");
+exports.ResourceIdentifier = ResourceIdentifier_1.default;
+const globalResourceDefaults = Immutable.fromJS({
+    transformLinkage: false
+});
 class ResourceTypeRegistry {
-    constructor(typeDescriptions = Object.create(null), descriptionDefaults = {}) {
+    constructor(typeDescs = Object.create(null), descDefaults = {}) {
         this._types = {};
-        descriptionDefaults = globalResourceDefaults.mergeDeep(descriptionDefaults);
+        const finalDefaults = globalResourceDefaults.mergeDeep(descDefaults);
         const nodes = [], roots = [], edges = {};
-        for (const typeName in typeDescriptions) {
-            const nodeParentType = typeDescriptions[typeName].parentType;
+        for (const typeName in typeDescs) {
+            const nodeParentType = typeDescs[typeName].parentType;
             nodes.push(typeName);
             if (nodeParentType) {
                 edges[nodeParentType] = edges[nodeParentType] || {};
@@ -22,13 +28,13 @@ class ResourceTypeRegistry {
         }
         const typeRegistrationOrder = misc_1.pseudoTopSort(nodes, edges, roots);
         typeRegistrationOrder.forEach((typeName) => {
-            const parentType = typeDescriptions[typeName].parentType;
-            const thisDescriptionRaw = Immutable.fromJS(typeDescriptions[typeName]);
-            const thisDescriptionMerged = descriptionDefaults.mergeDeep(thisDescriptionRaw);
-            this._types[typeName] = (parentType) ?
-                this._types[parentType].mergeDeep(thisDescriptionRaw)
-                    .set("labelMappers", thisDescriptionRaw.get("labelMappers")) :
-                thisDescriptionMerged;
+            const parentType = typeDescs[typeName].parentType;
+            const thisDescriptionRaw = Immutable.fromJS(typeDescs[typeName]);
+            const thisDescriptionMerged = finalDefaults.mergeDeep(thisDescriptionRaw);
+            this._types[typeName] = (parentType)
+                ? this._types[parentType]
+                    .mergeDeep(thisDescriptionRaw)
+                : thisDescriptionMerged;
         });
     }
     type(typeName) {
@@ -55,7 +61,12 @@ class ResourceTypeRegistry {
         }, {});
     }
     dbAdapter(type) {
-        return this.doGet("dbAdapter", type);
+        const adapter = this.doGet("dbAdapter", type);
+        if (typeof adapter === 'undefined') {
+            throw new Error("Tried to get db adapter for a type registered without one. " +
+                "Every type must be registered with an adapter!");
+        }
+        return adapter;
     }
     beforeSave(type) {
         return this.doGet("beforeSave", type);
@@ -66,9 +77,6 @@ class ResourceTypeRegistry {
     behaviors(type) {
         return this.doGet("behaviors", type);
     }
-    labelMappers(type) {
-        return this.doGet("labelMappers", type);
-    }
     defaultIncludes(type) {
         return this.doGet("defaultIncludes", type);
     }
@@ -77,6 +85,9 @@ class ResourceTypeRegistry {
     }
     parentType(type) {
         return this.doGet("parentType", type);
+    }
+    transformLinkage(type) {
+        return this.doGet("transformLinkage", type);
     }
     doGet(attrName, type) {
         return type_handling_1.Maybe(this._types[type])

@@ -4,13 +4,16 @@ const Query_1 = require("./Query");
 class WithCriteriaQuery extends Query_1.default {
     constructor(opts) {
         super(opts);
+        if (opts.id && opts.ids) {
+            throw new Error("Can't provide both the id and the ids options. Pick one.");
+        }
         this.query = Object.assign({}, this.query, { criteria: Object.assign({}, this.query.criteria, { where: {
                     operator: "and",
                     value: [...(opts.filters || [])],
                     field: undefined
-                }, singular: opts.singular || false, limit: opts.limit, offset: opts.offset }) });
-        if ('idOrIds' in opts) {
-            this.query = this.matchingIdOrIds(opts.idOrIds).query;
+                }, singular: opts.singular || opts.id !== undefined, limit: opts.limit, offset: opts.offset }) });
+        if (opts.ids || opts.id) {
+            this.query = this.matchingIdOrIds(opts.ids || opts.id).query;
         }
     }
     andWhere(constraint) {
@@ -52,6 +55,12 @@ class WithCriteriaQuery extends Query_1.default {
         const idRestrictions = this.query.criteria.where.value.filter(it => it.field === 'id');
         if (idRestrictions.length > 1) {
             throw new Error("Expected only one id criterion to be present.");
+        }
+        if (idRestrictions[0]) {
+            const expectedOperator = Array.isArray(idRestrictions[0]) ? "in" : "eq";
+            if (idRestrictions[0].operator !== expectedOperator) {
+                throw new Error("Expected id criterion to pick out an exact set of ids.");
+            }
         }
         return idRestrictions[0]
             ? idRestrictions[0].value

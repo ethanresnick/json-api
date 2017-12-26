@@ -1,8 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const mongoose = require("mongoose");
+const ObjectId = mongoose.Schema.Types.ObjectId;
 function default_1(Organization, OrganizationSchema) {
     const schema = new OrganizationSchema({
-        isCollege: Boolean
+        isCollege: Boolean,
+        principal: { ref: "Person", type: ObjectId },
     });
     schema.statics.findCollegeIds = function () {
         return this.find({ isCollege: true }, "_id").lean().exec()

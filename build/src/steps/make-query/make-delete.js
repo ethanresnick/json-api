@@ -1,40 +1,38 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const APIError_1 = require("../../types/APIError");
-const Collection_1 = require("../../types/Collection");
 const DeleteQuery_1 = require("../../types/Query/DeleteQuery");
 const RemoveFromRelationshipQuery_1 = require("../../types/Query/RemoveFromRelationshipQuery");
 function default_1(request, registry, makeDoc) {
     const type = request.type;
     if (request.aboutRelationship) {
-        if (Array.isArray(request.idOrIds)) {
-            throw new APIError_1.default(400, undefined, "You can only remove resources from the linkage of one resource at a time.");
+        if (!request.id || !request.relationship) {
+            throw new APIError_1.default(400, undefined, "To remove linkage from a relationship, you must send your request to a relationship endpoint.");
         }
         return new RemoveFromRelationshipQuery_1.default({
             type: type,
-            id: request.idOrIds,
+            id: request.id,
             relationshipName: request.relationship,
             linkage: request.primary,
             returning: () => ({ status: 204 })
         });
     }
-    const bulkDelete = !request.idOrIds;
+    const bulkDelete = !request.id;
     if (bulkDelete) {
-        if (!(request.primary instanceof Collection_1.default)) {
-            const title = "You must provide an array of objects to do a bulk delete.";
-            throw new APIError_1.default(400, undefined, title);
+        if (!request.primary) {
+            throw new Error("Bulk delete without a body is not possible.");
         }
-        if (!request.primary.resources.every((it) => typeof it.id !== "undefined")) {
-            const title = "Every object provided for a bulk delete must contain a `type` and `id`.";
+        if (request.primary.isSingular) {
+            const title = "You must provide an array of resource identifier objects to do a bulk delete.";
             throw new APIError_1.default(400, undefined, title);
         }
     }
     return new DeleteQuery_1.default({
         type,
-        idOrIds: bulkDelete
-            ? request.primary.resources.map((it) => it.id)
-            : request.idOrIds,
-        returning: () => ({ status: 204 })
+        returning: () => ({ status: 204 }),
+        [bulkDelete ? 'ids' : 'id']: bulkDelete
+            ? request.primary.map((it) => it.id).values
+            : request.id
     });
 }
 exports.default = default_1;

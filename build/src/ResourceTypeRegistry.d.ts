@@ -1,6 +1,9 @@
 import Immutable = require("immutable");
-import { TransformFn } from "./steps/apply-transform";
+import { ResourceTransformFn, FullTransformFn, TransformFn } from "./steps/apply-transform";
 import { AdapterInstance } from "./db-adapters/AdapterInterface";
+import Resource from "./types/Resource";
+import ResourceIdentifier from "./types/ResourceIdentifier";
+export { Resource, ResourceIdentifier, TransformFn };
 export declare type URLTemplates = {
     [type: string]: URLTemplatesForType;
 };
@@ -20,31 +23,29 @@ export declare type ResourceTypeDescription = {
     defaultIncludes?: string[];
     parentType?: string;
     urlTemplates?: URLTemplatesForType;
-    beforeSave?: TransformFn;
-    beforeRender?: TransformFn;
-    labelMappers?: {
-        [label: string]: any;
-    };
+    beforeSave?: ResourceTransformFn | FullTransformFn;
+    beforeRender?: ResourceTransformFn | FullTransformFn;
     behaviors?: object;
+    transformLinkage?: boolean;
 };
 export declare type ResourceTypeDescriptions = {
     [typeName: string]: ResourceTypeDescription;
 };
 export default class ResourceTypeRegistry {
     private _types;
-    constructor(typeDescriptions?: ResourceTypeDescriptions, descriptionDefaults?: object | Immutable.Map<string, any>);
+    constructor(typeDescs?: ResourceTypeDescriptions, descDefaults?: object | Immutable.Map<string, any>);
     type(typeName: any): ResourceTypeDescription | undefined;
     hasType(typeName: any): boolean;
     typeNames(): string[];
     urlTemplates(): URLTemplates;
     urlTemplates(type: string): URLTemplatesForType;
     dbAdapter(type: any): AdapterInstance<any>;
-    beforeSave(type: any): ResourceTypeDescription['beforeSave'] | undefined;
-    beforeRender(type: any): ResourceTypeDescription['beforeRender'] | undefined;
-    behaviors(type: any): any;
-    labelMappers(type: any): ResourceTypeDescription['labelMappers'] | undefined;
-    defaultIncludes(type: any): ResourceTypeDescription['defaultIncludes'] | undefined;
-    info(type: any): ResourceTypeDescription['info'] | undefined;
-    parentType(type: any): ResourceTypeDescription['parentType'] | undefined;
-    private doGet(attrName, type);
+    beforeSave(type: any): TransformFn<Resource> | TransformFn<ResourceIdentifier | Resource> | undefined;
+    beforeRender(type: any): TransformFn<Resource> | TransformFn<ResourceIdentifier | Resource> | undefined;
+    behaviors(type: any): object | undefined;
+    defaultIncludes(type: any): string[] | undefined;
+    info(type: any): ResourceTypeInfo | undefined;
+    parentType(type: any): string | undefined;
+    transformLinkage(type: any): boolean;
+    private doGet<T>(attrName, type);
 }

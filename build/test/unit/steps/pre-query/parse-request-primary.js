@@ -2,9 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const chai = require("chai");
 const parse_request_primary_1 = require("../../../../src/steps/pre-query/parse-request-primary");
+const Data_1 = require("../../../../src/types/Data");
 const Resource_1 = require("../../../../src/types/Resource");
-const Collection_1 = require("../../../../src/types/Collection");
-const Linkage_1 = require("../../../../src/types/Linkage");
 const Relationship_1 = require("../../../../src/types/Relationship");
 const expect = chai.expect;
 describe("Resource Parser", () => {
@@ -16,17 +15,19 @@ describe("Resource Parser", () => {
         });
     });
     describe("Parsing a Collection", () => {
-        it("should resolve with a Collection object", (done) => {
+        it("should resolve with a plural Data object", (done) => {
             parse_request_primary_1.default([]).then((collection) => {
-                expect(collection).to.be.instanceof(Collection_1.default);
+                expect(collection).to.be.instanceof(Data_1.default);
+                expect(collection.isSingular).to.be.false;
                 done();
             }, done);
         });
     });
     describe("Parsing a single Resource", () => {
-        it("should resolve with a resource object", (done) => {
+        it("should resolve with a singular Data object", (done) => {
             parse_request_primary_1.default({ "type": "tests", "id": "1" }).then((resource) => {
-                expect(resource).to.be.instanceof(Resource_1.default);
+                expect(resource).to.be.instanceof(Data_1.default);
+                expect(resource.isSingular).to.be.true;
                 done();
             }, done);
         });
@@ -35,7 +36,9 @@ describe("Resource Parser", () => {
                 "id": "21", "type": "people",
                 "attributes": { "name": "bob", "isBob": true }
             };
-            parse_request_primary_1.default(json).then((resource) => {
+            parse_request_primary_1.default(json).then((resourceData) => {
+                const resource = resourceData.unwrap();
+                expect(resource).to.be.instanceof(Resource_1.default);
                 expect(resource.id).to.equal("21");
                 expect(resource.type).to.equal("people");
                 expect(resource.attrs).to.deep.equal({ "name": "bob", "isBob": true });
@@ -48,7 +51,7 @@ describe("Resource Parser", () => {
                 done();
             });
         });
-        it("should create Relationship/Linkage for each link", (done) => {
+        it("should create Relationship for each link", (done) => {
             const parents = [
                 { "type": "people", "id": "1" }, { "type": "people", "id": "2" }
             ];
@@ -58,10 +61,10 @@ describe("Resource Parser", () => {
                     "parents": { "data": parents }
                 }
             };
-            parse_request_primary_1.default(json).then((resource) => {
+            parse_request_primary_1.default(json).then((resourceData) => {
+                const resource = resourceData.unwrap();
                 expect(resource.relationships.parents).to.be.instanceof(Relationship_1.default);
-                expect(resource.relationships.parents.linkage).to.be.instanceof(Linkage_1.default);
-                expect(resource.relationships.parents.linkage.value).to.deep.equal(parents);
+                expect(resource.relationships.parents.toJSON({}).data).to.deep.equal(parents);
                 done();
             }, done);
         });

@@ -5,7 +5,8 @@ export declare type WithCriteriaQueryOptions = QueryOptions & {
     offset?: number;
     singular?: boolean;
     filters?: (FieldConstraint | Predicate)[];
-    idOrIds?: string | string[] | undefined;
+    ids?: string[];
+    id?: string;
 };
 export default class WithCriteriaQuery extends Query {
     protected query: QueryOptions & {
@@ -18,7 +19,7 @@ export default class WithCriteriaQuery extends Query {
     };
     constructor(opts: WithCriteriaQueryOptions);
     andWhere(constraint: FieldConstraint | Predicate): this;
-    matchingIdOrIds(idOrIds?: WithCriteriaQueryOptions['idOrIds']): any;
+    matchingIdOrIds(idOrIds?: string | string[] | undefined): any;
     getIdOrIds(): string | string[] | undefined;
     getFilters(excludeIdFilters?: boolean): AndPredicate;
     readonly offset: number | undefined;

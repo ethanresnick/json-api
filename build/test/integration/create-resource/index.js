@@ -130,11 +130,9 @@ describe("Creating Resources", () => {
             });
         });
         describe("The error", () => {
-            it("should have the correct title", () => {
+            it("should have the correct information", () => {
                 chai_1.expect(err.response.body.errors[0].title).to.be.equal("Missing relationship linkage.");
-            });
-            it("should have the correct details", () => {
-                chai_1.expect(err.response.body.errors[0].details).to.be.equal("No data was found for the liaisons relationship.");
+                chai_1.expect(err.response.body.errors[0].detail).to.be.equal("No data was found for the liaisons relationship.");
             });
         });
     });
