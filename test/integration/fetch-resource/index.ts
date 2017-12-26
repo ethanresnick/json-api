@@ -33,7 +33,27 @@ describe("Fetching Resources", () => {
             "53f54dd98d1e62ff12539db2",
             "53f54dd98d1e62ff12539db3"
           ])
-        }).catch(e => { console.log(e); throw e; });
+        });
+    });
+  });
+
+  describe("Fetching a single resource removed by beforeRender", () => {
+    it("should return `data: null`", () => {
+      return Agent.request("GET", '/people/59af14d3bbd18cd55ea08ea2')
+        .accept("application/vnd.api+json")
+        .then((res) => {
+          expect(res.body.data).to.equal(null);
+        });
+    });
+  });
+
+  describe("Fetching a single resource with transformed (removed) linkage", () => {
+    it("should not have the removed linkage", () => {
+      return Agent.request("GET", '/schools/59af14d3bbd18cd55ea08ea3')
+        .accept("application/vnd.api+json")
+        .then((res) => {
+          expect(res.body.data.relationships.principal.data).to.equal(null);
+        });
     });
   });
 });

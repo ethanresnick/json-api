@@ -1,8 +1,11 @@
 import Immutable = require("immutable");
 import { pseudoTopSort } from "./util/misc";
 import { Maybe } from "./util/type-handling";
-import { TransformFn } from "./steps/apply-transform";
+import { ResourceTransformFn, FullTransformFn, TransformFn } from "./steps/apply-transform";
 import { AdapterInstance } from "./db-adapters/AdapterInterface";
+import Resource from "./types/Resource";
+import ResourceIdentifier from "./types/ResourceIdentifier";
+export { Resource, ResourceIdentifier, TransformFn };
 
 /**
  * Global defaults for all resource descriptions, to be merged into the
@@ -10,9 +13,7 @@ import { AdapterInstance } from "./db-adapters/AdapterInterface";
  * into the values provided in each resource type description.
  */
 const globalResourceDefaults = Immutable.fromJS({
-  /*behaviors: {
-    dasherizeOutput: { enabled: true }
-  }*/
+  transformLinkage: false
 });
 
 export type URLTemplates = {
@@ -33,9 +34,10 @@ export type ResourceTypeDescription = {
   defaultIncludes?: string[],
   parentType?: string,
   urlTemplates?: URLTemplatesForType,
-  beforeSave?: TransformFn,
-  beforeRender?: TransformFn,
-  behaviors?: object
+  beforeSave?: ResourceTransformFn | FullTransformFn,
+  beforeRender?: ResourceTransformFn | FullTransformFn,
+  behaviors?: object,
+  transformLinkage?: boolean
 }
 
 export type ResourceTypeDescriptions = {
@@ -177,6 +179,10 @@ export default class ResourceTypeRegistry {
 
   parentType(type) {
     return this.doGet("parentType", type);
+  }
+
+  transformLinkage(type) {
+    return <boolean>this.doGet("transformLinkage", type);
   }
 
   private doGet<T extends keyof ResourceTypeDescription>(attrName: T, type): ResourceTypeDescription[T] | undefined {

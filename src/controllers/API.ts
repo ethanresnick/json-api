@@ -1,12 +1,19 @@
-import ResourceTypeRegistry from '../ResourceTypeRegistry';
-import { HTTPResponse, Result, Predicate, FieldConstraint, UrlTemplateFns } from "../types";
-import { Request } from "../types/";
+import templating = require("url-template");
+import {
+   Request, Result, HTTPResponse,
+   Predicate, FieldConstraint,
+   UrlTemplateFnsByType,
+   makeDoc
+} from "../types";
 import Query from "../types/Query/Query";
+import ResourceTypeRegistry from '../ResourceTypeRegistry';
 import Document, { DocumentData } from "../types/Document";
 import APIError from "../types/APIError";
+import Data from "../types/Data";
+import Resource from '../types/Resource';
+import ResourceIdentifier from "../types/ResourceIdentifier";
 import logger from '../util/logger';
 import { mapObject } from '../util/type-handling';
-import templating = require("url-template");
 
 import * as requestValidators from "../steps/http/validate-request";
 import negotiateContentType from "../steps/http/content-negotiation/negotiate-content-type";
@@ -24,7 +31,6 @@ import makePOST from "../steps/make-query/make-post";
 import makePATCH from "../steps/make-query/make-patch";
 import makeDELETE from "../steps/make-query/make-delete";
 
-type makeDoc = (data: DocumentData) => Document;
 
 export type ErrOrErrArr = Error | APIError | Error[] | APIError[];
 
@@ -43,7 +49,7 @@ export type filterParamParser = (
 class APIController {
   private registry: ResourceTypeRegistry;
   private filterParamParser: filterParamParser;
-  private urlTemplateFns: UrlTemplateFns;
+  private urlTemplateFns: UrlTemplateFnsByType;
 
   constructor(registry: ResourceTypeRegistry, opts: APIControllerOpts = {}) {
     this.registry = registry;
@@ -129,14 +135,14 @@ class APIController {
 
         // validate the request's resources.
         if(!request.aboutRelationship) {
-          await validateRequestResources(request.type, parsedPrimary, registry);
+          await validateRequestResources(request.type, <Data<Resource>>parsedPrimary, registry);
         }
 
         request.primary = await applyTransform(
-          parsedPrimary,
+          parsedPrimary as Data<Resource | ResourceIdentifier>,
           "beforeSave",
           { frameworkReq, frameworkRes, request, registry }
-        );
+        ) as (Data<Resource> | Data<ResourceIdentifier>);
       }
 
       // Actually fulfill the request!
@@ -162,17 +168,28 @@ class APIController {
 
       // apply transforms pre-send
       if(jsonAPIResult.document) {
-        jsonAPIResult.document.primary = await applyTransform(
-          jsonAPIResult.document.primary,
-          "beforeRender",
-          { frameworkReq, frameworkRes, request, registry }
-        );
+        // Read and transform private internal Data if it exists.
+        const primaryData = jsonAPIResult.document.primary &&
+          (<any>jsonAPIResult.document.primary).data;
 
-        jsonAPIResult.document.included = await applyTransform(
-          jsonAPIResult.document.included,
-          "beforeRender",
-          { frameworkReq, frameworkRes, request, registry }
-        );
+        const includedData = jsonAPIResult.document.included &&
+          Data.of(jsonAPIResult.document.included);
+
+        if(primaryData) {
+          (<any>jsonAPIResult.document.primary).data = await applyTransform(
+            primaryData,
+            "beforeRender",
+            { frameworkReq, frameworkRes, request, registry }
+          );
+        }
+
+        if(includedData) {
+          jsonAPIResult.document.included = (await applyTransform(
+            includedData,
+            "beforeRender",
+            { frameworkReq, frameworkRes, request, registry }
+          )).values as Resource[];
+        }
       }
     }
 

@@ -4,11 +4,11 @@ import pluralize = require("pluralize");
 
 import { arrayContains } from "../../util/arrays";
 import { deleteNested } from "../../util/misc";
-import {forEachArrayOrVal, mapResources, groupResourcesByType} from "../../util/type-handling";
+import { forEachArrayOrVal, groupResourcesByType } from "../../util/type-handling";
 import * as util from "./lib";
+import Data from "../../types/Data";
 import Resource, { ResourceWithId } from "../../types/Resource";
-import Collection from "../../types/Collection";
-import Linkage from "../../types/Linkage";
+import ResourceIdentifier from "../../types/ResourceIdentifier";
 import Relationship from "../../types/Relationship";
 import APIError from "../../types/APIError";
 import FieldDocumentation from "../../types/Documentation/Field";
@@ -146,61 +146,53 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
         queryBuilder.populate(pathParts[0]);
       });
 
-      const includedResources: Resource[] = [];
-      primaryDocumentsPromise = Promise.resolve(queryBuilder.exec()).then((docs) => {
-        forEachArrayOrVal(docs, (doc) => {
-          // There's no gaurantee that the doc (or every doc) was found
-          // and we can't populate paths on a non-existent doc.
-          if(!doc) {
-            return;
-          }
+      let includedResources: Resource[] = [];
+      primaryDocumentsPromise = Promise.resolve(queryBuilder.exec()).then((docOrDocs) => {
+        includedResources =
+          Data.fromJSON(docOrDocs) // fromJSON to handle docOrDocs === null.
+            .flatMap((doc) => {
+              return Data.of(populatedPaths).flatMap((path) => {
+                // Handle case that doc[path], which should hold id(s) of the
+                // referenced documents, is undefined b/c the relationship isn't set.
+                return typeof doc[path] === 'undefined'
+                  ? Data.empty
+                  : Data.fromJSON(doc[path]).map(doc => {
+                      return this.constructor.docToResource(doc, pluralizer, fields);
+                    })
+              })
+            }).values;
 
-          populatedPaths.forEach((path) => {
-            // if it's a toOne relationship, doc[path] will be a doc or undefined;
-            // if it's a toMany relationship, we have an array (or undefined).
-            const refDocs = Array.isArray(doc[path]) ? doc[path] : [doc[path]];
-            refDocs.forEach((it) => {
-              // only include if it's not undefined.
-              if(it) {
-                includedResources.push(
-                  this.constructor.docToResource(it, pluralizer, fields)
-                );
-              }
-            });
-          });
-        });
-
-        return docs;
+        return docOrDocs;
       });
 
-      includedResourcesPromise = primaryDocumentsPromise.then(() =>
-        new Collection(includedResources)
-      );
+      includedResourcesPromise =
+        primaryDocumentsPromise.then(() => includedResources);
     }
 
     else {
       primaryDocumentsPromise = Promise.resolve(queryBuilder.exec());
-      includedResourcesPromise = Promise.resolve(null);
+      includedResourcesPromise = Promise.resolve(undefined);
     }
 
-    return Promise.all([primaryDocumentsPromise.then((it) => {
-      const makeCollection = !idOrIds || Array.isArray(idOrIds) ? true : false;
-      return this.constructor.docsToResourceOrCollection(it, makeCollection, pluralizer, fields);
-    }), includedResourcesPromise, collectionSizePromise]).catch(util.errorHandler);
+    return Promise.all([
+      primaryDocumentsPromise.then((it) => {
+        const makeCollection = !idOrIds || Array.isArray(idOrIds) ? true : false;
+        return this.constructor.docsToResourceData(it, makeCollection, pluralizer, fields);
+      }),
+      includedResourcesPromise,
+      collectionSizePromise
+    ])/*.then(([primary, included, collectionSize]) => {
+      return [primary, { included, meta: { collectionSize } }];
+    })*/.catch(util.errorHandler);
   }
 
   /**
    * Returns a Promise that fulfills with the created Resource. The Promise
    * may also reject with an error if creation failed or was unsupported.
-   *
-   * @param {string} parentType - All the resources to be created must be this
-   *   type or be sub-types of it.
-   * @param {(Resource|Collection)} resourceOrCollection - The resource or
-   *   collection of resources to create.
    */
   async create(query: CreateQuery) {
-    const { records: resourceOrCollection } = query;
-    const resourcesByType = groupResourcesByType(resourceOrCollection);
+    const { records: resourceData } = query;
+    const resourcesByType = groupResourcesByType(resourceData);
 
     // Note: creating the resources as we do below means that we do one
     // query for each type, as opposed to only one query for all of the
@@ -223,11 +215,11 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     }
 
     return Promise.all(creationPromises).then((docArrays) => {
-      const makeCollection = resourceOrCollection instanceof Collection;
+      const makeCollection = !resourceData.isSingular;
       const finalDocs = docArrays.reduce((a, b) => a.concat(b), []);
       // TODO: why isn't fields passed here, but is only passed in find...
       // is that appropriate? (Probably... check spec, and common sense.)
-      return this.constructor.docsToResourceOrCollection(
+      return this.constructor.docsToResourceData(
         finalDocs, makeCollection, this.inflector.plural
       );
     }).catch(util.errorHandler);
@@ -240,7 +232,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
    *   of resources. Should only have the fields that are changed.
    */
   async update(query: UpdateQuery) {
-    const { type: parentType, patch: resourceOrCollection } = query;
+    const { type: parentType, patch: resourceData } = query;
     const singular = this.inflector.singular;
     const plural = this.inflector.plural;
 
@@ -256,47 +248,44 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       upsert: false
     };
 
-    const updatedResourcePromiseOrPromises =
-      mapResources(resourceOrCollection, (resourceUpdate: ResourceWithId) => {
-        const newModelName = this.constructor.getModelName(resourceUpdate.type, singular);
-        const NewModelConstructor = this.getModel(newModelName);
-        const changeSet = util.resourceToDocObject(resourceUpdate);
+    return resourceData.map((resourceUpdate: ResourceWithId) => {
+      const newModelName = this.constructor.getModelName(resourceUpdate.type, singular);
+      const NewModelConstructor = this.getModel(newModelName);
+      const changeSet = util.resourceToDocObject(resourceUpdate);
 
-        // run the fields to change through the doc constructor so mongoose
-        // will run any setters, but then remove any keys that weren't changed
-        // by the update itself (i.e., keys for which the doc constructor set
-        // defaults), to create the final update.
-        const updateDoc = NewModelConstructor.hydrate({}).set(changeSet);
-        const modifiedPaths = updateDoc.modifiedPaths();
-        const updateDocObject = updateDoc.toObject();
-        const finalUpdate = modifiedPaths.reduce((acc, key) => {
-          acc[key] = updateDocObject[key];
-          return acc;
-        }, {
-          // The user may have attempted to change the resource's `type`,
-          // so we try to update the type in the db as well.
-          // Note: this is currently ignored by mongoose :(
-          // See https://github.com/Automattic/mongoose/issues/5613
-          // ...(parentModelDiscriminatorKey
-          //   ? { [parentModelDiscriminatorKey]: newModelName }
-          //   : undefined)
-        });
-
-        return parentModel
-          .findByIdAndUpdate(resourceUpdate.id, finalUpdate, updateOptions)
-          .exec();
+      // run the fields to change through the doc constructor so mongoose
+      // will run any setters, but then remove any keys that weren't changed
+      // by the update itself (i.e., keys for which the doc constructor set
+      // defaults), to create the final update.
+      const updateDoc = NewModelConstructor.hydrate({}).set(changeSet);
+      const modifiedPaths = updateDoc.modifiedPaths();
+      const updateDocObject = updateDoc.toObject();
+      const finalUpdate = modifiedPaths.reduce((acc, key) => {
+        acc[key] = updateDocObject[key];
+        return acc;
+      }, {
+        // The user may have attempted to change the resource's `type`,
+        // so we try to update the type in the db as well.
+        // Note: this is currently ignored by mongoose :(
+        // See https://github.com/Automattic/mongoose/issues/5613
+        // ...(parentModelDiscriminatorKey
+        //   ? { [parentModelDiscriminatorKey]: newModelName }
+        //   : undefined)
       });
 
-    const updatedResourcePromises = Array.isArray(updatedResourcePromiseOrPromises)
-      ? updatedResourcePromiseOrPromises
-      : [updatedResourcePromiseOrPromises];
-
-    return Promise.all(updatedResourcePromises).then((docs) => {
-      const makeCollection = resourceOrCollection instanceof Collection;
-      return this.constructor.docsToResourceOrCollection(docs, makeCollection, plural);
+      return parentModel
+        .findByIdAndUpdate(resourceUpdate.id, finalUpdate, updateOptions)
+        .exec();
+    }).flatMapAsync(docPromise => {
+      return docPromise.then(doc => {
+        // Note: doc is null if id matches no docs; docsToResourceData handles that.
+        return this.constructor.docsToResourceData(doc, false, plural)
+      });
     }).catch(util.errorHandler);
   }
 
+  // TODO: Update to use findOneAndRemove/findAndRemove,
+  // rather than find then remove? Would parallel how update() works.
   async delete(query: DeleteQuery) {
     const { type: parentType } = query;
     const idOrIds = query.getIdOrIds();
@@ -314,13 +303,17 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       ? model[mode](idQuery)
       : model[mode](idQuery);
 
-    return Promise.resolve(queryBuilder.exec()).then((docs) => {
-      if(!docs) {
+    return Promise.resolve(queryBuilder.exec()).then((docOrDocsOrNull) => {
+      const data = Data.fromJSON<mongoose.Document>(docOrDocsOrNull);
+
+      if(data.size === 0) {
         throw new APIError(404, undefined, "No matching resource found.");
       }
 
-      forEachArrayOrVal(docs, (it) => { it.remove(); });
-      return docs;
+      data.forEach(it => { it.remove(); });
+      return data.map((it: mongoose.Document) => {
+        return this.constructor.docToResource(it, this.inflector.plural)
+      });
     }).catch(util.errorHandler);
   }
 
@@ -337,7 +330,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     const model = this.getModel(this.constructor.getModelName(type));
     const update = {
       $addToSet: {
-        [relationshipName]: { $each: newLinkage.value.map(it => it.id)}
+        [relationshipName]: { $each: newLinkage.map(it => it.id).values }
       }
     };
     const options = {runValidators: true, context: 'query'};
@@ -352,7 +345,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     const model = this.getModel(this.constructor.getModelName(type));
     const update = {
       $pullAll: {
-        [relationshipName]: linkageToRemove.value.map(it => it.id)
+        [relationshipName]: linkageToRemove.map(it => it.id).values
       }
     };
     const options = {runValidators: true, context: 'query'};
@@ -414,30 +407,30 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
   }
 
   /**
-   * We want to always return a collection when the user is asking for something
-   * that's logically a Collection (even if it only has 1 item), and a Resource
-   * otherwise. But, because mongoose returns a single doc if you query for a
-   * one-item array of ids, and because we sometimes generate arrays (e.g. of
-   * promises for documents' successful creation) even when only creating/updating
-   * one document, just looking at whether docs is an array isn't enough to tell
-   * us whether to return a collection or not. And, in all these cases, we want
-   * to handle the possibility that the query returned no documents when we needed
-   * one, such that we must 404. This function centralizes all that logic.
+   * We want return a singular Data<Resource> when the result is conceptually
+   * singular, and a non-singular one otherwise. But, because mongoose returns
+   * a single doc if you query for a one-item array of ids, and because we
+   * sometimes generate arrays (e.g. of promises for documents' successful
+   * creation) even when only creating/updating one document, just looking at
+   * whether docs is an array isn't enough to tell us whether the result is
+   * singular. And, in all these cases, we want to handle the possibility that
+   * the query returned no documents when we needed one, such that we must 404.
+   * This function centralizes all that logic.
    *
-   * @param docs The docs to turn into a resource or collection
-   * @param makeCollection Whether we're making a collection.
+   * @param docs The docs to turn into a Data<Resource>
+   * @param isPlural Whether the result is not conceptually singular.
    * @param pluralizer An inflector function for setting the Resource's type
    */
-  static docsToResourceOrCollection(docs, makeCollection, pluralizer, fields?: object): Collection | Resource {
+  static docsToResourceData(docs, isPlural, pluralizer, fields?: object) {
     // if docs is an empty array and we're making a collection, that's ok.
     // but, if we're looking for a single doc, we must 404 if we didn't find any.
-    if(!docs || (!makeCollection && Array.isArray(docs) && docs.length === 0)) {
+    if(!docs || (!isPlural && Array.isArray(docs) && docs.length === 0)) {
       throw new APIError(404, undefined, "No matching resource found.");
     }
 
     docs = !Array.isArray(docs) ? [docs] : docs;
     docs = docs.map((it) => this.docToResource(it, pluralizer, fields));
-    return makeCollection ? new Collection(docs) : docs[0];
+    return isPlural ? Data.of<Resource>(docs) : Data.pure<Resource>(docs[0]);
   }
 
   // Useful to have this as static for calling as a utility outside this class.
@@ -494,37 +487,34 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       deleteNested(path, attrs);
 
       // Now, since the value wasn't excluded, we need to build its
-      // Relationship. Note: the value could still be null or an empty array.
-      // And, because of population, it could be a single document or array of
-      // documents, in addition to a single/array of ids. So, as is customary,
-      // we'll start by coercing it to an array no matter what, tracking
-      // whether to make it a non-array at the end, to simplify our code.
-      let isToOneRelationship = false;
+      // Relationship. Note: the value could be null or undefined (if it's an
+      // empty to-one relationship; `null` if it was set to that explicitly and
+      // undefined if it's never been set) or an empty array (an empty to-many
+      // relationship; these should never be undefined, as mongoose will default
+      // to an array). Moreover, because of population, when there is content,
+      // it can be a document or array of documents, in addition to a single id
+      // or array of ids. So, we leverage Data.fromJSON to handle these cases,
+      // just converting undefined to null first, since that's what JSON:API
+      // uses to represent the missing, singular case.
+      const normalizedValAtPath =
+        typeof jsonValAtPath === 'undefined' ? null : jsonValAtPath;
 
-      if(!Array.isArray(jsonValAtPath)) {
-        jsonValAtPath = [jsonValAtPath];
-        isToOneRelationship = true;
-      }
-
-      let linkage: typeof Linkage.prototype.value = [];
-      jsonValAtPath.forEach((docOrIdOrNull) => {
-        // if docOrIdOrNull has an ._id key, it's a document
-        const idOrNull = (docOrIdOrNull && docOrIdOrNull._id)
-          // so the id (if it exists) is in ._id as an ObjectId
-          ? String(docOrIdOrNull._id)
-
-          // otherwise, we're dealing with an id directly (if we
-          // don't have null), but we still need to convert to a
-          // string because, even though we did toJSON(), id may
-          // be an ObjectId. (lame.)
-          : docOrIdOrNull ? String(docOrIdOrNull) : null;
-
-        linkage.push(idOrNull ? {type: referencedType, id: idOrNull} : null);
+      const linkage = Data.fromJSON(normalizedValAtPath).map((docOrId) => {
+        // Below, if docOrId has an _id prop, we're dealing with a mongoose doc
+        // from population, so we extract the id; otherwise we already have an
+        // id. Regardless, we stringify the result because, even though we did
+        // toJSON, the id may be an ObjectId (lame).
+        return new ResourceIdentifier({
+          type: referencedType,
+          id: String(docOrId._id ? docOrId._id : docOrId)
+        });
       });
 
       // go back from an array if neccessary and save.
-      linkage = new Linkage(isToOneRelationship ? linkage[0] : linkage);
-      relationships[path] = new Relationship(linkage);
+      relationships[path] = Relationship.of({
+        data: linkage,
+        owner: { type, id: doc.id, path }
+      });
     });
 
     // finally, create the resource.

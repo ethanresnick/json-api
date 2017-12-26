@@ -7,8 +7,8 @@ import mapValues = require("lodash/object/mapValues");
 
 import ResourceTypeRegistry, { ResourceTypeDescription, ResourceTypeInfo } from "../ResourceTypeRegistry";
 import { HTTPResponse } from "../types";
+import ResourceSet from "../types/ResourceSet";
 import Document from "../types/Document";
-import Collection from "../types/Collection";
 import Resource from "../types/Resource";
 
 export default class DocumentationController {
@@ -48,7 +48,7 @@ export default class DocumentationController {
 
     // set content type as negotiated & vary on accept.
     response.headers['content-type'] = contentType;
-    response.headers['vary'] = "Accept";
+    response.headers.vary = "Accept";
 
     // process templateData (just the type infos for now) for this particular request.
     const templateData = _.cloneDeep(this.templateData, cloneCustomizer);
@@ -62,16 +62,18 @@ export default class DocumentationController {
 
     else {
       // Create a collection of "jsonapi-descriptions" from the templateData
-      const descriptionResources = new Collection();
+      const descriptionResources: Resource[] = [];
 
       // Add a description resource for each resource type to the collection.
       for(const type in templateData.resourcesMap) {
-        descriptionResources.add(
+        descriptionResources.push(
           new Resource("jsonapi-descriptions", type, templateData.resourcesMap[type])
         );
       }
 
-      response.body = new Document({ primary: descriptionResources }).toString();
+      response.body = new Document({
+        primary: ResourceSet.of({ data: descriptionResources })
+      }).toString();
     }
 
     return Promise.resolve(response);

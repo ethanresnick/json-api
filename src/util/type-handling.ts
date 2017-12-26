@@ -1,21 +1,6 @@
-import Collection from "../types/Collection";
+import Data from "../types/Data";
+import Resource from "../types/Resource";
 
-/**
- * Takes in a constructor function that takes no arguments and returns a new one
- * that takes one argument representing initial values. These initial values
- * will be applied to the properties that exist on the object returned by the
- * input constructor function immediately post-creation. Then the object will be
- * sealed so that no properties can be added or deleted--a nice sanity check.
- */
-export type Ugh<T> = {
-  new (initial?: Partial<T>): T;
-  (initial?: Partial<T>): T;
-};
-
-// This is just an identity mapped type, because ts support for sealed is shit.
-//export type Sealed<T> = {
-//  [P in keyof T]: T[P];
-//}
 export function objectIsEmpty(obj) {
   const hasOwnProperty = Object.prototype.hasOwnProperty;
   for (const key in obj) {
@@ -34,36 +19,11 @@ export function mapObject(obj, mapFn) {
   return mappedObj;
 }
 
-/**
- * If `resourceOrCollection` is a collection, it applies `mapFn` to each of
- * its resources; otherwise, if `resourceOrCollection` is a single resource,
- * it applies `mapFn` just to that resource. This abstracts a common pattern.
- */
-export function mapResources(resourceOrCollection, mapFn) {
-  if(resourceOrCollection instanceof Collection) {
-    return resourceOrCollection.resources.map(mapFn);
-  }
-  else {
-    return mapFn(resourceOrCollection);
-  }
-}
-
-export function forEachResources(resourceOrCollection, eachFn) {
-  mapResources(resourceOrCollection, eachFn); // do map but discard return value.
-}
-
-export function groupResourcesByType(resourceOrCollection) {
-  const resourcesByType = Object.create(null);
-  if(resourceOrCollection instanceof Collection) {
-    resourceOrCollection.resources.forEach((it) => {
-      resourcesByType[it.type] = resourcesByType[it.type] || [];
-      resourcesByType[it.type].push(it);
-    });
-  }
-  else {
-    resourcesByType[resourceOrCollection.type] = [resourceOrCollection];
-  }
-  return resourcesByType;
+export function groupResourcesByType(data: Data<Resource>) {
+  return data.reduce((acc: { [type: string]: Resource[] }, it) => {
+    acc[it.type] = [...(acc[it.type] || []), it];
+    return acc;
+  }, Object.create(null));
 }
 
 export function forEachArrayOrVal(arrayOrVal, eachFn) {

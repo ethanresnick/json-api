@@ -1,11 +1,12 @@
-import { default as Linkage, LinkageJSON } from "./Linkage";
+import { LinkageJSON, UrlTemplateFns, Mapper, AsyncMapper } from "./index";
+import Data from "./Data";
+import MaybeDataWithLinks, { MaybeDataWithLinksArgs } from "./MaybeDataWithLinks";
+import ResourceIdentifier from "./ResourceIdentifier";
+import { objectIsEmpty } from '../util/type-handling';
 
 export type RelationshipJSON = {
-  data: LinkageJSON
+  data?: LinkageJSON
   links?: RelationshipLinksJSON
-} | {
-  data: undefined,
-  links: RelationshipLinksJSON
 }
 
 export type RelationshipLinksJSON = {
@@ -13,34 +14,69 @@ export type RelationshipLinksJSON = {
   related?: string
 };
 
-// TODO: do relationships even need overridable link templates?
-// Could the override be a resolved string, not a template?
-// (So that a relationship could define its own toJSON() method without
-// needing to take a template resolver as an argument). If we got
-// rid of the relationship-level overrides altogether, would relationship
-// even be a type separate from linkage? Should relationship store its
-// source (i.e., what resource it's a relationship from), since it already
-// stores the "to" in the form of the linkage. Should it store its own name?
-// That might be useful if JSON:API goes further down RFC 5988, which I hope
-// happens. But, holding aside what representation makes sense semantically,
-// what would be more perfomant?
-export default class Relationship {
-  public linkage: Linkage | undefined;
-  public relatedURITemplate: string | undefined;
-  public selfURITemplate: string | undefined;
+export type RelationshipOwner = { type: string, id: string, path: string };
+export type RelationshipArgs =
+  MaybeDataWithLinksArgs<ResourceIdentifier> & { owner: RelationshipOwner };
 
-  constructor(linkage, relatedURITemplate: string | undefined = undefined, selfURITemplate: string | undefined = undefined) {
-    Object.assign(this, {linkage, relatedURITemplate, selfURITemplate});
+export default class Relationship extends MaybeDataWithLinks<ResourceIdentifier> {
+  public owner: RelationshipOwner;
+
+  protected constructor(it: RelationshipArgs) {
+    super(it);
+    this.owner = it.owner;
   }
 
-  empty() {
-    // TODO: figure out if we even want to allow relationships constructed
-    // without linkage [i think we do], and what empty() should mean for them
-    // [should the method exist at all?].
-    if(!this.linkage) {
-      throw new Error("Relationship has no linkage");
-    }
+  static of(it: RelationshipArgs) {
+    return new this(it);
+  }
 
-    this.linkage.empty();
+  map(fn: Mapper<ResourceIdentifier, ResourceIdentifier>) {
+    const res = super.map(fn) as Relationship;
+    res.owner = this.owner;
+    return res;
+  }
+
+  mapAsync(fn: AsyncMapper<ResourceIdentifier, ResourceIdentifier>) {
+    return (super.mapAsync(fn) as Promise<Relationship>).then((res) => {
+      res.owner = this.owner;
+      return res;
+    });
+  }
+
+  flatMap(fn: (it: ResourceIdentifier) => Data<ResourceIdentifier>) {
+    const res = super.flatMap(fn) as Relationship;
+    res.owner = this.owner;
+    return res;
+  }
+
+  flatMapAsync(fn: (it: ResourceIdentifier) => Data<ResourceIdentifier> | Promise<Data<ResourceIdentifier>>) {
+    return (super.flatMapAsync(fn) as Promise<Relationship>).then((res) => {
+      res.owner = this.owner;
+      return res;
+    });
+  }
+
+  toJSON(fallbackTemplates: UrlTemplateFns): RelationshipJSON {
+    const templateData = {
+      "ownerType": this.owner.type,
+      "ownerId": this.owner.id,
+      "path": this.owner.path
+    };
+
+    const { data, links } = this.unwrapWith(it => it.toJSON(), templateData);
+
+    // Add any links that didn't have templates set on this instance.
+    const fallbackSelfTemplate = !links.self && fallbackTemplates.self;
+    const fallbackRelatedTemplate = !links.related && fallbackTemplates.related;
+    const finalLinks = {
+      ...links,
+      ...(fallbackSelfTemplate ? { self: fallbackSelfTemplate(templateData) } : {}),
+      ...(fallbackRelatedTemplate ? { related: fallbackRelatedTemplate(templateData) } : {})
+    };
+
+    return {
+      ...(typeof data !== 'undefined' ? { data } : {}),
+      ...(objectIsEmpty(finalLinks) ? {} : { links: finalLinks })
+    };
   }
 }

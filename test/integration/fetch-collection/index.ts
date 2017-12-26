@@ -77,6 +77,12 @@ describe("Fetching Collection", () => {
           return resource.attributes.addedBeforeRender;
         })).to.be.true;
       });
+
+      it("should not contain resources removed in beforeRender", () => {
+        expect(res.body.data.every(resource => {
+          return resource.id !== "59af14d3bbd18cd55ea08ea2"
+        })).to.be.true;
+      });
     });
 
     describe("Fetching Ascending Gendered Collection", () => {
@@ -162,7 +168,7 @@ describe("Fetching Collection", () => {
 
     it("Should include the total record count", () => {
       expect(res.body.meta).to.deep.equal({
-        total: 4
+        total: 5
       });
     });
   });

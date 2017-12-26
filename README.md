@@ -84,6 +84,8 @@ To use this library, you describe the special behavior (if any) that resources o
 
 -  <a name="info"></a>`info` (optional): this allows you to provide extra information about the resource that will be included in the documentation. Available properties are `"description"` (a string describing what resources of this type are) and `"fields"`. `"fields"` holds an object in which you can describe each field in the resource (e.g. listing validation rules). See the [example implemenation](https://github.com/ethanresnick/json-api-example/blob/master/src/resource-descriptions/schools.js) for more details.
 
+- <a name="transformLinkage">`transformLinkage` (optional): a boolean that, if true, will cause any resource identifier objects (i.e., the `{type, id}` pointer objects in each relationship) that have this type as their `type` to be passed to this type's `beforeRender`/`beforeSave` functions for transformation. Note that turning on `transformLinkage`, even for only one resource type, incurs a big performance cost. This may be optimized a bit in the future, but, fundamentally, transforming linkage is expensive because there can be many linkage items per relationship and each transform involves allocating a promise (as beforeRender and beforeSave can be async).
+
 ## Query Transforms
 When a request comes in, the json-api library extracts various parameters from it to build a query that will be used to fulfill the user's request.
 

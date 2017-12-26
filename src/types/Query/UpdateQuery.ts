@@ -1,9 +1,9 @@
 import Query, { QueryOptions } from "./Query";
 import Resource from '../Resource';
-import Collection from '../Collection';
+import Data from '../Data';
 
 export type UpdateQueryOptions = QueryOptions & {
-  patch: Resource | Collection
+  patch: Data<Resource>
 }
 
 export default class UpdateQuery extends Query {

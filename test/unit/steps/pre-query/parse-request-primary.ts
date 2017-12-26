@@ -1,8 +1,7 @@
 import chai = require("chai");
 import parsePrimary from "../../../../src/steps/pre-query/parse-request-primary";
+import Data from "../../../../src/types/Data";
 import Resource from "../../../../src/types/Resource";
-import Collection from "../../../../src/types/Collection";
-import Linkage from "../../../../src/types/Linkage";
 import Relationship from "../../../../src/types/Relationship";
 
 const expect = chai.expect;
@@ -19,18 +18,20 @@ describe("Resource Parser", () => {
   });
 
   describe("Parsing a Collection", () => {
-    it("should resolve with a Collection object", (done) => {
+    it("should resolve with a plural Data object", (done) => {
       parsePrimary([]).then((collection) => {
-        expect(collection).to.be.instanceof(Collection);
+        expect(collection).to.be.instanceof(Data);
+        expect(collection.isSingular).to.be.false;
         done();
       }, done);
     });
   });
 
   describe("Parsing a single Resource", () => {
-    it("should resolve with a resource object", (done) => {
+    it("should resolve with a singular Data object", (done) => {
       parsePrimary({"type": "tests", "id": "1"}).then((resource) => {
-        expect(resource).to.be.instanceof(Resource);
+        expect(resource).to.be.instanceof(Data);
+        expect(resource.isSingular).to.be.true;
         done();
       }, done);
     });
@@ -41,7 +42,9 @@ describe("Resource Parser", () => {
         "attributes": {"name": "bob", "isBob": true}
       };
 
-      parsePrimary(json).then((resource: Resource) => {
+      parsePrimary(json).then((resourceData: Data<Resource>) => {
+        const resource = resourceData.unwrap() as Resource;
+        expect(resource).to.be.instanceof(Resource);
         expect(resource.id).to.equal("21");
         expect(resource.type).to.equal("people");
         expect(resource.attrs).to.deep.equal({"name": "bob", "isBob": true});
@@ -56,7 +59,7 @@ describe("Resource Parser", () => {
       });
     });
 
-    it("should create Relationship/Linkage for each link", (done) => {
+    it("should create Relationship for each link", (done) => {
       const parents = [
         {"type": "people", "id": "1"}, {"type": "people", "id": "2"}
       ];
@@ -67,10 +70,10 @@ describe("Resource Parser", () => {
         }
       };
 
-      parsePrimary(json).then((resource: Resource) => {
+      parsePrimary(json).then((resourceData: Data<Resource>) => {
+        const resource = resourceData.unwrap() as Resource;
         expect(resource.relationships.parents).to.be.instanceof(Relationship);
-        expect(resource.relationships.parents.linkage).to.be.instanceof(Linkage);
-        expect((<Linkage>resource.relationships.parents.linkage).value).to.deep.equal(parents);
+        expect(resource.relationships.parents.toJSON({}).data).to.deep.equal(parents);
         done();
       }, done);
     });

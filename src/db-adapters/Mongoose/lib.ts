@@ -2,13 +2,14 @@
 // aren't part of the class's public interface. Don't use them in your own
 // code, as their APIs are subject to change.
 import APIError from "../../types/APIError";
+import Resource from "../../types/Resource";
 import { FieldConstraint, Predicate } from "../../types/index";
 
 /**
  * Takes any error that resulted from the above operations throws an array of
  * errors that can be sent back to the caller as the Promise's rejection value.
  */
-export function errorHandler(err) {
+export function errorHandler(err): never {
   const errors: APIError[] = [];
   //Convert validation errors collection to something reasonable
   if(err.errors) {
@@ -97,20 +98,11 @@ export function toMongoCriteria(constraintOrPredicate: FieldConstraint | Predica
  * outside of the document) or the meta (as storing that like a field may not
  * be what we want to do).
  */
-export function resourceToDocObject(resource): object {
+export function resourceToDocObject(resource: Resource): object {
   const res = {...resource.attrs};
-  const getId = (it) => it.id;
   for(const key in resource.relationships) {
-    const linkage = resource.relationships[key].linkage.value;
-
-    // handle linkage when set explicitly for empty relationships
-    if(linkage === null || (Array.isArray(linkage) && linkage.length === 0)) {
-      res[key] = linkage;
-    }
-
-    else {
-      res[key] = Array.isArray(linkage) ? linkage.map(getId) : linkage.id;
-    }
+    res[key] = resource.relationships[key].unwrapWith(it => it.id, {}).data;
   }
+
   return res;
 }

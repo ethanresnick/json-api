@@ -12,6 +12,8 @@ const smithId = ObjectId("53f54dd98d1e62ff12539db2");
 const doeId = ObjectId("53f54dd98d1e62ff12539db3");
 const echoOrgId = ObjectId("59ac9c0ecc4c356fcda65202");
 const genderPersonId = ObjectId("59af14d3bbd18cd55ea08ea1");
+const invisibleResourceId = ObjectId("59af14d3bbd18cd55ea08ea2");
+const elementaryId = ObjectId("59af14d3bbd18cd55ea08ea3");
 /*eslint-enable new-cap */
 
 const OrganizationModel = OrganizationModelSchema.model;
@@ -25,13 +27,14 @@ const models = {
 
 fixtures.save("all", {
   // Don't add/delete in this collection; the pagination tests depend
-  // on it being exactly as is. Also, don't change anyone's gender, as
-  // the query transform and sorting tests depend on that.
+  // on it being exactly as is. Also, don't change anyone's name or gender,
+  // as the query transform and sorting tests depend on those.
   Person: [
     { name: "John Smith", email: "jsmith@gmail.com", gender: "male", _id: smithId },
     { name: "Jane Doe", gender: "female", _id: doeId },
     { name: "Doug Wilson", gender: "male" },
-    { name: "Jordi Jones", _id: genderPersonId, gender: "other" }
+    { name: "Jordi Jones", _id: genderPersonId, gender: "other" },
+    { name: "An Inivisible Sorcerer", gender: "other", _id: invisibleResourceId },
   ],
   Organization: [
     {name: "State Government", description: "Representing the good people.", liaisons: [doeId, smithId], _id: govtId},
@@ -39,7 +42,8 @@ fixtures.save("all", {
   ],
   School: [
     {name: "City College", description: "Just your average local college.", liaisons: [smithId]},
-    {name: "State College", description: "Just your average state college."}
+    {name: "State College", description: "Just your average state college."},
+    {name: "Elementary School", description: "For the youngins.", principal: invisibleResourceId, _id: elementaryId }
   ]
 });
 

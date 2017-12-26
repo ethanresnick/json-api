@@ -1,11 +1,12 @@
 import Query, { QueryOptions } from "./Query";
 import { assertKeysTruthy } from "./utils";
-import Linkage from '../Linkage';
+import Data from '../Data';
+import ResourceIdentifier from '../ResourceIdentifier';
 
 export type RemoveFromRelationshipQueryOptions = QueryOptions & {
   id: string | number,
   relationshipName: string,
-  linkage: Linkage
+  linkage: Data<ResourceIdentifier>
 }
 
 export default class RemoveFromRelationshipQuery extends Query {
