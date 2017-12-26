@@ -62,6 +62,17 @@ export declare const VALID_SCHOOL_RESOURCE_NO_ID: {
         "name": string;
     };
 };
+export declare const VALID_SCHOOL_RESOURCE_NO_ID_EMPTY_PRINCIPAL: {
+    "type": string;
+    "attributes": {
+        "name": string;
+    };
+    "relationships": {
+        "principal": {
+            "data": null;
+        };
+    };
+};
 export declare const INVALID_ORG_RESOURCE_NO_DATA_IN_RELATIONSHIP: {
     "type": string;
     "relationships": {

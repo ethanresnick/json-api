@@ -49,6 +49,26 @@ describe("ResourceTypeRegistry", function () {
                 description: "provided as default"
             });
         });
+        it("should merge parent type's description into resource description", () => {
+            const registry = new ResourceTypeRegistry_1.default({
+                "b": {
+                    parentType: "a",
+                    info: { "description": "b" },
+                    behaviors: {}
+                },
+                "a": {
+                    info: { "description": "A", "example": "example from a" },
+                    behaviors: null
+                }
+            });
+            const resTypeInfo = registry.type("b").info;
+            const resTypeBehaviors = registry.type("b").behaviors;
+            expect(resTypeInfo).to.deep.equal({
+                example: "example from a",
+                description: "b"
+            });
+            expect(resTypeBehaviors).to.deep.equal({});
+        });
         it("should give the description precedence over the provided default", () => {
             const someTypeDesc = {
                 beforeSave: (resource, req, res) => { return resource; }
@@ -123,9 +143,6 @@ describe("ResourceTypeRegistry", function () {
     });
     describe("beforeRender", () => {
         it("should be a getter for a type's beforeRender", makeGetterTest(() => { }, "mytypes", "beforeRender"));
-    });
-    describe("labelMappers", () => {
-        it("should be a getter for a type's labelMappers", makeGetterTest({ "label": () => { } }, "mytypes", "labelMappers"));
     });
     describe("info", () => {
         it("should be a getter for a type's info", makeGetterTest({}, "mytypes", "info"));

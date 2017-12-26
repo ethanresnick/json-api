@@ -1,12 +1,46 @@
-# 3.0.0-alpha.14 (Unpublished)
+# 3.0.0-beta.1
 
-## Breaking Changes
+## New Features
+- Linkage can be transformed on a per-type basis with an opt-in. Addresses https://github.com/ethanresnick/json-api/issues/28. See README.
+- Your `beforeRender` and `beforeSave` functions can return undefined on requests for/inputs of a single resource to remove the resource, just like they can on multi-resource requests. If you remove the only resource from a single resource request, the result is a 200 response with `data: null`. (If you need an error, you can map `null` to that with a query transform, but there's no way for the library to know the appropriate error). Addresses https://github.com/ethanresnick/json-api/issues/105.
+
+## Breaking Changes (From 3.0.0-alpha.13)
+This beta removes support for label mappers. It also substantially reworks many of the library's underlying types. However, the type changes have mostly left the surface API unchanged and they should only effect you if:
+
+- You are doing query transforms that examine/modify the data in the query. This data was represented by a `Resource` or `Collection` or `Linkage` type instance before, but is now represented by the new `Data` type.
+
+- You are doing query transforms that change how the adapter results are put into the response, using `query.returning/query.resultsIn`. The arguments to your `returning` function will now be different (again, `Resource`, `Collection`, and `Linkage` instances will be replaced by `Data` instances) and the types of the `primary`/`included` keys of the document you're likely returning are now different.
+
+- You are manually instantiating/testing for/modifying `Relationship` or `Linkage` instances in `beforeSave` or `beforeRender`. The `Linkage` type has been removed and the `Relationship` type substantially refactored.
+
+See details below, and feel free to open an issue if you can't make something work.
+
 ### Global
 - Removed support for label mappers. Use query transforms instead for better performance and maintainability. This resulted in the removal of `Request.allowLabel` and `ResourceTypeRegistry.labelMappers()`.
 - Query objects are now constructed with either an `id` or an `ids` option, rather than a single `idOrIds` option.
 
-### (Mostly-internal) Types
-- Document instances are now constructed with url templates parsed into functions, rather than raw template strings. This shouldn't matter unless you were constructing Documents manually. 
+### New & Removed Types
+- A new, highly-generic type called `Data` has been introduced. It provides a uniform, monadic interface for transforming items inside it, obviating the need for the old `Collection` and `Linkage` types, which can now be represented as `Data<Resource>` and `Data<ResourceIdentifier>` respectively. See the comoment at the top of the `Data.ts` file for more details.
+
+- Accordingly, the `Collection` and `Linkage` types have been removed, and the `Relationship` type, which previously stored link templates along with a `Linkage` instance, now stores link templates along with a `Data` instance.
+
+- A new type called `ResourceSet` has been introduced, which parallels the basic structure of `Relationship` -- a `Data` plus some links -- except that the data here is a `Data<Resource>`. This makes it possible to associate a set of links with a set of `Resource`s (rather than each individual Resource's links), opening the door for custom top-level `links`, which wasn't previously possible.
+
+- The result of all of the above is that various places in the code that previously could hold either a `Resource` or `Collection` at runtime now always hold a `Data<Resource>`. For example:
+  -  `Document.included`, `UpdateQuery.patch`, and `CreateQuery.records` now expect a `Data<Resource>`
+  -  `Adapter.create`, `Adapter.update`, and `Adapter.delete` now return a `Data<Resource>`; the first item in the tuple returned by `Adapter.find` is also a `Data<Resource>`. 
+
+- Meanwhile, places that always held/returned a `Collection` (e.g. `Document.included`) now simply hold a `Resource[]`; they don't need to/shouldn't hold a `Data<Resource>` because having a singular one isn't possible. In this spirit, the second item in the tuple returned by `Adapter.find` is also now a `Resource[]`.
+
+### Relationship Type
+- The `Relationship` type is now constructed using the static `Relationship.of` method rather than `new Relationship()`. See source for details.
+- `Relationship`s must now be constructed with an `owner`, definining the resource (type, id) and relationship path that's the "source" of the linkage. This information is necessary to store to use as template data to render the Relationship's links. Previously, this data was missing, so the relationship's links couldn't be rendered (as top-level `links`) when the relationship was requested directly.
+- The link templates provided to the `Relationship` are now passed in with a slightly different format, and must be _string-returning functions_ rather than RFC 6570 template stings. (The easiest way to satisfy this is to parse the the RFC 6570 template into a function.)
+
+### Document type
+- `Document` instances are now constructed with url templates provided as functions, rather than raw template strings. This shouldn't matter unless you were constructing Documents manually. 
+- `Document.primary`, wich previously held a `Resource | Collection | Relationship` now holds a `Relationship | ResourceSet`. (It holds a `ResourceSet` rather than a `Data<Resource>` to support the possibility of top-level links, as mentioned above.)
+- As mentioned above, `Document.included` is now a `Resource[]`.
 
 ### Request type
 - The Request type is now a simple object literal rather than a class (the class ceremony wasn't buying us anything beyond extra boilerplate and a more involved construction process). If you were (for some reason) manaully constructing Request object, you'll need to update your logic.
@@ -14,6 +48,9 @@
 - `Request.needsBody` no longer exists; this wasn't actually being used by anything internally. `Request.hasBody` has also been removed; if (and only if)the request doesn't have a body, `Request.body` be undefined.
 - `Request.contentType` will now be set if the HTTP request included a content-type header, even if there was no body. Also, when a content-type header is missing `Request.contentType` will now be undefined rather than null.
 - When an Accept header is missing, `Request.accepts` will now be undefined rather than null.
+
+### FindQuery
+- The second item in the first argument to the `FindQuery.returning` callback, which represents the included resources, is now `undefined`, rather than `null`, when no included resources are present.
 
 # 3.0.0-alpha.1 to 3.0.0-alpha.13
 ## Breaking Changes

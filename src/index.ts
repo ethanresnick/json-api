@@ -12,12 +12,11 @@ import ExpressStrategy from "./http-strategies/Express";
 import KoaStrategy from "./http-strategies/Koa";
 
 // These imports are part of the compiled output and aren't lazy loaded.
-import Collection from './types/Collection'
 import Document from './types/Document'
 import Error from './types/APIError'
 import Resource from './types/Resource'
 import Relationship from './types/Relationship'
-import Linkage from './types/Linkage'
+import ResourceSet from './types/ResourceSet'
 import Field from './types/Documentation/Field'
 import FieldType from './types/Documentation/FieldType'
 import API from './controllers/API'
@@ -39,12 +38,11 @@ export= {
     }
   },
   types: {
-    Collection,
     Document,
     Error,
     Resource,
+    ResourceSet,
     Relationship,
-    Linkage,
     Documentation: {
       Field,
       FieldType

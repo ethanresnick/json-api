@@ -38,6 +38,16 @@ export const VALID_SCHOOL_RESOURCE_NO_ID = {
   }
 };
 
+export const VALID_SCHOOL_RESOURCE_NO_ID_EMPTY_PRINCIPAL = {
+  "type": "schools",
+  "attributes": {
+    "name": "Test School"
+  },
+  "relationships": {
+    "principal": { "data": null }
+  }
+};
+
 export const INVALID_ORG_RESOURCE_NO_DATA_IN_RELATIONSHIP = {
   "type": "organizations",
   "relationships": {

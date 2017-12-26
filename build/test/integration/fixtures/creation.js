@@ -29,6 +29,15 @@ exports.VALID_SCHOOL_RESOURCE_NO_ID = {
         "name": "Test School"
     }
 };
+exports.VALID_SCHOOL_RESOURCE_NO_ID_EMPTY_PRINCIPAL = {
+    "type": "schools",
+    "attributes": {
+        "name": "Test School"
+    },
+    "relationships": {
+        "principal": { "data": null }
+    }
+};
 exports.INVALID_ORG_RESOURCE_NO_DATA_IN_RELATIONSHIP = {
     "type": "organizations",
     "relationships": {

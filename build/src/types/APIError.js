@@ -36,8 +36,8 @@ class APIError extends Error {
         return Object.assign({}, this);
     }
     static fromError(err) {
-        const fallbackTitle = "An unknown error occurred while trying to process this request.";
         const ErrorConstructor = this || APIError;
+        const fallbackTitle = "An unknown error occurred while trying to process this request.";
         if (err instanceof APIError) {
             return err;
         }

@@ -1,6 +1,6 @@
-import ResourceTypeRegistry from '../ResourceTypeRegistry';
-import { HTTPResponse, Predicate, FieldConstraint } from "../types";
+import { Request, HTTPResponse, Predicate, FieldConstraint } from "../types";
 import Query from "../types/Query/Query";
+import ResourceTypeRegistry from '../ResourceTypeRegistry';
 import APIError from "../types/APIError";
 export declare type ErrOrErrArr = Error | APIError | Error[] | APIError[];
 export declare type APIControllerOpts = {
@@ -10,8 +10,9 @@ export declare type filterParamParser = (legalUnaryOpts: string[], legalBinaryOp
 declare class APIController {
     private registry;
     private filterParamParser;
+    private urlTemplateFns;
     constructor(registry: ResourceTypeRegistry, opts?: APIControllerOpts);
-    handle(request: any, frameworkReq: any, frameworkRes: any, queryTransform?: (q: Query) => Query | Promise<Query>): Promise<HTTPResponse>;
+    handle(request: Request, frameworkReq: any, frameworkRes: any, queryTransform?: (q: Query) => Query | Promise<Query>): Promise<HTTPResponse>;
     static responseFromExternalError(errors: ErrOrErrArr, requestAccepts: any): Promise<HTTPResponse>;
     static supportedExt: ReadonlyArray<never>;
     static defaultFilterParamParser(legalUnary: any, legalBinary: any, rawQuery: any, params: any): (({

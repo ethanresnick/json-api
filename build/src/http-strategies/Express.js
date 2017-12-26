@@ -17,11 +17,14 @@ class ExpressStrategy extends Base_1.default {
         super(apiController, docsController, options);
     }
     docsRequest(req, res, next) {
-        this.buildRequestObject(req, req.protocol, req.host, req.params, req.query).then((requestObject) => {
-            return this.docs.handle(requestObject, req, res).then((responseObject) => {
+        this.buildRequestObject(req, req.protocol, req.host, req.params, req.query)
+            .then((requestObject) => {
+            return this.docs.handle(requestObject, req, res)
+                .then((responseObject) => {
                 this.sendResources(responseObject, res, next);
             });
-        }).catch((err) => {
+        })
+            .catch((err) => {
             this.sendError(err, req, res);
         });
     }
@@ -59,11 +62,14 @@ class ExpressStrategy extends Base_1.default {
         queryTransform = queryTransform && queryTransform.length > 1
             ? queryTransform.bind(undefined, req)
             : queryTransform;
-        this.buildRequestObject(req, req.protocol, req.host, req.params, req.query).then((requestObject) => {
-            return this.api.handle(requestObject, req, res, queryTransform).then((responseObject) => {
+        this.buildRequestObject(req, req.protocol, req.host, req.params, req.query)
+            .then((requestObject) => {
+            return this.api.handle(requestObject, req, res, queryTransform)
+                .then((responseObject) => {
                 this.sendResources(responseObject, res, next);
             });
-        }).catch((err) => {
+        })
+            .catch((err) => {
             this.sendError(err, req, res);
         });
     }

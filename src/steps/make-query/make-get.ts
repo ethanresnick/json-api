@@ -1,9 +1,11 @@
 import APIError from "../../types/APIError";
-import { Request } from "../../types";
+import { Request, makeDoc } from "../../types";
+import Resource from "../../types/Resource";
+import ResourceSet from "../../types/ResourceSet";
 import ResourceTypeRegistry from "../../ResourceTypeRegistry";
 import FindQuery from "../../types/Query/FindQuery";
 
-export default function(request: Request, registry: ResourceTypeRegistry, makeDoc) {
+export default function(request: Request, registry: ResourceTypeRegistry, makeDoc: makeDoc) {
   const type = request.type;
 
   // Handle fields, sorts, includes and filters.
@@ -32,7 +34,7 @@ export default function(request: Request, registry: ResourceTypeRegistry, makeDo
       limit,
       returning: ([primary, included, collectionSizeOrNull]) => ({
         document: makeDoc({
-          primary,
+          primary: ResourceSet.of({ data: primary }),
           included,
           ...(collectionSizeOrNull != null
             ? { meta: { total: collectionSizeOrNull } }
@@ -64,7 +66,10 @@ export default function(request: Request, registry: ResourceTypeRegistry, makeDo
     type,
     populates: [],
     id: request.id,
-    returning([resource]) {
+    returning([primary]) {
+      // Because the query filters by id, we know we only have one resource here.
+      const resource = primary.unwrap() as Resource;
+
       // 404 if the requested relationship is not a relationship path. Doing
       // it here is more accurate than using adapter.getRelationshipNames,
       // since we're allowing for paths that can optionally hold linkage,
@@ -83,13 +88,13 @@ export default function(request: Request, registry: ResourceTypeRegistry, makeDo
         return {
           status: 404,
           document: makeDoc({
-            primary: [new APIError(404, undefined, title, detail)]
+            errors: [new APIError(404, undefined, title, detail)]
           })
         };
       }
 
       return {
-        document: makeDoc({ primary: relationship.linkage })
+        document: makeDoc({ primary: relationship })
       }
     }
   });

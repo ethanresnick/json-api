@@ -1,11 +1,12 @@
-import Collection from "./Collection";
+import Resource, { ResourceJSON } from "./Resource";
 import APIError, { APIErrorJSON } from './APIError';
-import { URLTemplates } from "../ResourceTypeRegistry";
-import { PrimaryData, PrimaryDataJSON } from './index';
+import { PrimaryDataJSON, UrlTemplateFnsByType } from './index';
+import ResourceSet from './ResourceSet';
+import Relationship from './Relationship';
 export declare type DocumentJSON = ({
     data: PrimaryDataJSON;
     errors: undefined;
-    included?: Collection;
+    included?: ResourceJSON[];
 } | {
     errors: APIErrorJSON[];
     data: undefined;
@@ -16,11 +17,11 @@ export declare type DocumentJSON = ({
 };
 export declare type DocumentData = {
     meta?: object;
-    included?: Collection;
-    primary?: PrimaryData;
+    included?: Resource[];
+    primary?: ResourceSet | Relationship;
     errors?: APIError[];
     reqURI?: string;
-    urlTemplates?: URLTemplates;
+    urlTemplates?: UrlTemplateFnsByType;
 };
 export default class Document {
     meta: DocumentData['meta'];
@@ -28,7 +29,7 @@ export default class Document {
     primary: DocumentData['primary'];
     errors: DocumentData['errors'];
     reqURI: DocumentData['reqURI'];
-    urlTemplates: URLTemplates;
+    urlTemplates: UrlTemplateFnsByType;
     constructor(data: DocumentData);
     toJSON(): DocumentJSON;
     toString(): string;

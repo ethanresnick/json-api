@@ -1,9 +1,9 @@
 import Query, { QueryOptions } from "./Query";
 import Resource from '../Resource';
-import Collection from '../Collection';
+import Data from '../Data';
 
 export type CreateQueryOptions = QueryOptions & {
-  records:  Resource | Collection
+  records: Data<Resource>
 }
 
 export default class CreateQuery extends Query {

@@ -1,5 +1,7 @@
-import {deleteNested, isPlainObject} from "../util/misc";
-import Relationship, { RelationshipJSON } from './Relationship';
+import { deleteNested, isPlainObject } from "../util/misc";
+import { objectIsEmpty } from "../util/type-handling";
+import Relationship, { RelationshipJSON } from "./Relationship";
+import { UrlTemplateFns } from "./index";
 
 export type ResourceJSON = {
   id: string,
@@ -16,9 +18,9 @@ export type ResourceWithId = Resource & { id: string };
 export default class Resource {
   private _id: string | undefined;
   private _type: string;
-  private _relationships: {[name: string]: Relationship};
+  private _relationships: { [name: string]: Relationship };
   private _attrs: {[name: string]: any};
-  public meta: object;
+  private _meta: object;
 
   constructor(type: string, id?: string, attrs = {}, relationships = {}, meta: object = {}) {
     [this.type, this.id, this.attrs, this.relationships, this.meta] =
@@ -68,6 +70,18 @@ export default class Resource {
     this._relationships = relationships;
   }
 
+  set meta(meta) {
+    if(typeof meta !== 'object' || meta === null) {
+      throw new Error("meta must be an object.");
+    }
+
+    this._meta = meta;
+  }
+
+  get meta() {
+    return this._meta;
+  }
+
   removeAttr(attrPath) {
     if(this._attrs) {
       deleteNested(attrPath, this._attrs);
@@ -78,6 +92,40 @@ export default class Resource {
     if(this._relationships) {
       deleteNested(relationshipPath, this._relationships);
     }
+  }
+
+  toJSON(urlTemplates: UrlTemplateFns): ResourceJSON {
+    const json = <ResourceJSON>{
+      id: this.id,
+      type: this.type,
+      attributes: this.attrs,
+      ...(!objectIsEmpty(this.meta) ? { meta: this.meta } : {}),
+    };
+
+    // use type, id, meta and attrs for template data, even though building
+    // links from attr values is usually stupid (but there are cases for it).
+    const templateData = { ...json };
+    const selfTemplate = urlTemplates.self;
+
+    if(selfTemplate) {
+      json.links = {
+        self: selfTemplate(templateData)
+      }
+    }
+
+    if(!objectIsEmpty(this.relationships)) {
+      json.relationships = {};
+
+      for(const path in this.relationships) {
+        const { related = undefined, relationship = undefined } = urlTemplates;
+        const finalTemplates = { related, self: relationship };
+
+        json.relationships[path] =
+          this.relationships[path].toJSON(finalTemplates);
+      }
+    }
+
+    return json;
   }
 }
 

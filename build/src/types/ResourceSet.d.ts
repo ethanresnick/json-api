@@ -1,0 +1,67 @@
+import Resource from './Resource';
+import Data from './Data';
+import { UrlTemplateFns, UrlTemplateFnsByType } from "./index";
+import MaybeDataWithLinks from "./MaybeDataWithLinks";
+export declare type DataWithLinksArgs<T> = {
+    data: T | T[] | null | Data<T>;
+    links?: UrlTemplateFns;
+};
+export default class ResourceSet extends MaybeDataWithLinks<Resource> {
+    protected data: Data<Resource>;
+    protected constructor(it: DataWithLinksArgs<Resource>);
+    readonly ids: Data<string | undefined>;
+    readonly types: Data<string>;
+    toJSON(urlTemplates: UrlTemplateFnsByType): {
+        links: {
+            [linkName: string]: string;
+        };
+        data: {
+            id: string;
+            type: string;
+            attributes?: object | undefined;
+            relationships?: {
+                [name: string]: {
+                    data?: {
+                        type: string;
+                        id: string;
+                    } | {
+                        type: string;
+                        id: string;
+                    }[] | null | undefined;
+                    links?: {
+                        self?: string | undefined;
+                        related?: string | undefined;
+                    } | undefined;
+                };
+            } | undefined;
+            meta?: object | undefined;
+            links?: {
+                self?: string | undefined;
+            } | undefined;
+        } | {
+            id: string;
+            type: string;
+            attributes?: object | undefined;
+            relationships?: {
+                [name: string]: {
+                    data?: {
+                        type: string;
+                        id: string;
+                    } | {
+                        type: string;
+                        id: string;
+                    }[] | null | undefined;
+                    links?: {
+                        self?: string | undefined;
+                        related?: string | undefined;
+                    } | undefined;
+                };
+            } | undefined;
+            meta?: object | undefined;
+            links?: {
+                self?: string | undefined;
+            } | undefined;
+        }[] | null | undefined;
+    };
+    static of(it: DataWithLinksArgs<Resource>): ResourceSet;
+}

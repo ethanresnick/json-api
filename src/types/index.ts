@@ -1,11 +1,27 @@
-import Linkage, { LinkageJSON } from './Linkage';
-import Resource from './Resource';
-import Collection from './Collection';
-import Document from "./Document";
+import Resource, { ResourceJSON } from './Resource';
+import ResourceIdentifier from "./ResourceIdentifier";
+import Document, { DocumentData } from "./Document";
+import Data from "./Data";
 
-export type PrimaryData = Resource | Collection | null | Linkage;
-export type PrimaryDataJSON = Resource | Collection | null | LinkageJSON;
+// A helper type to capture the ability of
+// a given type T to appear singularly or in an array.
+export type DataOf<T> = null | T | T[];
 
+// Types used in the code as function arguments for JSON:API structures.
+export type PrimaryData = DataOf<Resource> | DataOf<ResourceIdentifier>;
+
+// Types for JSON values
+export type ResourceIdentifierJSON = { type: string; id: string };
+export type LinkageJSON = DataOf<ResourceIdentifierJSON>;
+export type PrimaryDataJSON = DataOf<ResourceJSON> | LinkageJSON;
+
+// Types for convenience, for built-in js array helpers.
+export type Reducer<T,U> = (acc: any, it: T, i: number, arr: T[]) => U;
+export type PredicateFn<T> = (it: T, i: number, arr: T[]) => boolean;
+export type Mapper<T,U> = (it: T, i: number, arr: T[]) => U;
+export type AsyncMapper<T,U> = (it: T, i: number, arr: T[]) => U | Promise<U>;
+
+// Types related to queries
 export type Sort = { field: string; direction: 'ASC' | 'DESC' };
 
 export type Predicate = {
@@ -32,10 +48,12 @@ export type FieldConstraint = ({
   field: string;
 };
 
+export type UrlTemplateFnsByType = {
+  [typeName: string]: UrlTemplateFns
+};
+
 export type UrlTemplateFns = {
-  [typeName: string]: {
-    [linkName: string]: (data: any) => string
-  }
+  [linkName: string]: ((data: any) => string) | undefined
 };
 
 // I'm gonna start introducing more intermediate representations
@@ -78,7 +96,7 @@ export type Request = {
   // Any primary data included in the request's body.
   // Necessary for creating and updating our resources.
   // Not present when request first created (parsed later from body).
-  primary?: any;
+  primary?: Data<Resource> | Data<ResourceIdentifier>;
 }
 
 // Result is different than HTTPResponse in that it contains details of the
@@ -103,3 +121,5 @@ export interface HTTPResponse {
   status: number;
   body?: string;
 }
+
+export type makeDoc = (data: DocumentData) => Document;

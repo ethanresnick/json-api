@@ -61,15 +61,8 @@ function toMongoCriteria(constraintOrPredicate) {
 exports.toMongoCriteria = toMongoCriteria;
 function resourceToDocObject(resource) {
     const res = Object.assign({}, resource.attrs);
-    const getId = (it) => it.id;
     for (const key in resource.relationships) {
-        const linkage = resource.relationships[key].linkage.value;
-        if (linkage === null || (Array.isArray(linkage) && linkage.length === 0)) {
-            res[key] = linkage;
-        }
-        else {
-            res[key] = Array.isArray(linkage) ? linkage.map(getId) : linkage.id;
-        }
+        res[key] = resource.relationships[key].unwrapWith(it => it.id, {}).data;
     }
     return res;
 }

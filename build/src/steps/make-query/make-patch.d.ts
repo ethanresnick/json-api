@@ -1,2 +1,4 @@
 import UpdateQuery from '../../types/Query/UpdateQuery';
-export default function (request: any, registry: any, makeDoc: any): UpdateQuery;
+import ResourceTypeRegistry from "../../ResourceTypeRegistry";
+import { Request, makeDoc } from "../../types";
+export default function (request: Request, registry: ResourceTypeRegistry, makeDoc: makeDoc): UpdateQuery;

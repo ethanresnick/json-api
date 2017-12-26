@@ -1,10 +1,10 @@
 import express = require("express");
 import API = require("../../../src/index");
 import Document from "../../../src/types/Document";
-import Collection from "../../../src/types/Collection";
 import APIError from "../../../src/types/APIError";
 import Query from "../../../src/types/Query/Query";
 import FindQuery from "../../../src/types/Query/FindQuery";
+import ResourceSet from "../../../src/types/ResourceSet";
 import database from "../database/index";
 import { Express } from "express";
 export { Express } from "express";
@@ -91,7 +91,7 @@ export default database.then(function(dbModule) {
       return query.resultsIn((...args) => {
         const origResult = (origReturning as any)(...args);
         const origDocument = origResult.document as Document;
-        const names = (origDocument.primary as Collection).resources.map(it => it.attrs.name);
+        const names = (<ResourceSet>origDocument.primary).map(it => it.attrs.name).values;
         origDocument.meta = { ...origDocument.meta, names };
         return origResult;
       }, (error) => ({

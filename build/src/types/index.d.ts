@@ -1,9 +1,19 @@
-import Linkage, { LinkageJSON } from './Linkage';
-import Resource from './Resource';
-import Collection from './Collection';
-import Document from "./Document";
-export declare type PrimaryData = Resource | Collection | null | Linkage;
-export declare type PrimaryDataJSON = Resource | Collection | null | LinkageJSON;
+import Resource, { ResourceJSON } from './Resource';
+import ResourceIdentifier from "./ResourceIdentifier";
+import Document, { DocumentData } from "./Document";
+import Data from "./Data";
+export declare type DataOf<T> = null | T | T[];
+export declare type PrimaryData = DataOf<Resource> | DataOf<ResourceIdentifier>;
+export declare type ResourceIdentifierJSON = {
+    type: string;
+    id: string;
+};
+export declare type LinkageJSON = DataOf<ResourceIdentifierJSON>;
+export declare type PrimaryDataJSON = DataOf<ResourceJSON> | LinkageJSON;
+export declare type Reducer<T, U> = (acc: any, it: T, i: number, arr: T[]) => U;
+export declare type PredicateFn<T> = (it: T, i: number, arr: T[]) => boolean;
+export declare type Mapper<T, U> = (it: T, i: number, arr: T[]) => U;
+export declare type AsyncMapper<T, U> = (it: T, i: number, arr: T[]) => U | Promise<U>;
 export declare type Sort = {
     field: string;
     direction: 'ASC' | 'DESC';
@@ -28,6 +38,28 @@ export declare type FieldConstraint = ({
 }) & {
     field: string;
 };
+export declare type UrlTemplateFnsByType = {
+    [typeName: string]: UrlTemplateFns;
+};
+export declare type UrlTemplateFns = {
+    [linkName: string]: ((data: any) => string) | undefined;
+};
+export declare type Request = {
+    body: any | undefined;
+    method: string;
+    uri: string;
+    contentType: string | undefined;
+    accepts: string | undefined;
+    rawQueryString: string | undefined;
+    queryParams: {
+        [paramName: string]: any;
+    };
+    type: string;
+    id: string | undefined;
+    relationship: string | undefined;
+    aboutRelationship: boolean;
+    primary?: Data<Resource> | Data<ResourceIdentifier>;
+};
 export declare type Result = {
     headers?: {
         [headerName: string]: string;
@@ -36,10 +68,12 @@ export declare type Result = {
     status?: number;
     document?: Document;
 };
-export declare type HTTPResponse = {
+export interface HTTPResponse {
     headers: {
-        [headerName: string]: string;
+        "content-type"?: string;
+        vary?: string;
     };
     status: number;
     body?: string;
-};
+}
+export declare type makeDoc = (data: DocumentData) => Document;

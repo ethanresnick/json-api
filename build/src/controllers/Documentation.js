@@ -6,8 +6,8 @@ const jade = require("jade");
 const Negotiator = require("negotiator");
 const dasherize = require("dasherize");
 const mapValues = require("lodash/object/mapValues");
+const ResourceSet_1 = require("../types/ResourceSet");
 const Document_1 = require("../types/Document");
-const Collection_1 = require("../types/Collection");
 const Resource_1 = require("../types/Resource");
 class DocumentationController {
     constructor(registry, apiInfo, templatePath = undefined, dasherizeJSONKeys = true) {
@@ -26,7 +26,7 @@ class DocumentationController {
         const negotiator = new Negotiator({ headers: { accept: request.accepts } });
         const contentType = negotiator.mediaType(["text/html", "application/vnd.api+json"]);
         response.headers['content-type'] = contentType;
-        response.headers['vary'] = "Accept";
+        response.headers.vary = "Accept";
         const templateData = _.cloneDeep(this.templateData, cloneCustomizer);
         templateData.resourcesMap = mapValues(templateData.resourcesMap, (typeInfo, typeName) => {
             return this.transformTypeInfo(typeName, typeInfo, request, response, frameworkReq, frameworkRes);
@@ -35,11 +35,13 @@ class DocumentationController {
             response.body = jade.renderFile(this.template, templateData);
         }
         else {
-            const descriptionResources = new Collection_1.default();
+            const descriptionResources = [];
             for (const type in templateData.resourcesMap) {
-                descriptionResources.add(new Resource_1.default("jsonapi-descriptions", type, templateData.resourcesMap[type]));
+                descriptionResources.push(new Resource_1.default("jsonapi-descriptions", type, templateData.resourcesMap[type]));
             }
-            response.body = new Document_1.default({ primary: descriptionResources }).toString();
+            response.body = new Document_1.default({
+                primary: ResourceSet_1.default.of({ data: descriptionResources })
+            }).toString();
         }
         return Promise.resolve(response);
     }

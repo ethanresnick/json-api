@@ -1,12 +1,12 @@
 import APIError from "../../types/APIError";
-import Linkage from "../../types/Linkage";
 import Resource from "../../types/Resource";
-import {forEachResources} from "../../util/type-handling";
 import CreateQuery from "../../types/Query/CreateQuery";
 import AddToRelationshipQuery from '../../types/Query/AddToRelationshipQuery';
-import { Request } from "../../types";
+import { Request, Result } from "../../types";
+import Data from "../../types/Data";
+import ResourceSet from "../../types/ResourceSet";
+import ResourceIdentifier from "../../types/ResourceIdentifier";
 import ResourceTypeRegistry from "../../ResourceTypeRegistry";
-import { Result } from "../../types";
 import templating = require("url-template");
 
 export default function(request: Request, registry: ResourceTypeRegistry, makeDoc) {
@@ -15,8 +15,8 @@ export default function(request: Request, registry: ResourceTypeRegistry, makeDo
 
   // We're going to do an adapter.create, below, EXCEPT if we're adding to
   // an existing toMany relationship, which uses a different adapter method.
-  if(primary instanceof Linkage) {
-    if(!Array.isArray(primary.value)) {
+  if(request.aboutRelationship) {
+    if((request.primary as Data<ResourceIdentifier>).isSingular) {
       throw new APIError(
         400,
         undefined,
@@ -36,34 +36,37 @@ export default function(request: Request, registry: ResourceTypeRegistry, makeDo
       type,
       id: request.id,
       relationshipName: request.relationship,
-      linkage: primary,
+      linkage: <Data<ResourceIdentifier>>primary,
       returning: () => ({status: 204})
     });
   }
 
   else {
-    const noClientIds = "Client-generated ids are not supported.";
-    forEachResources(primary, (it) => {
-      if(it.id) throw new APIError(403, undefined, noClientIds);
-    });
+    if((<Data<Resource | ResourceIdentifier>>primary).some(it => !!it.id)) {
+      throw new APIError(403, undefined, "Client-generated ids are not supported.");
+    }
 
     return new CreateQuery({
       type,
-      records: primary,
-      returning: (created) => {
+      records: <Data<Resource>>primary,
+      returning: (created: Data<Resource>) => {
         const res: Result = {
           status: 201,
-          document: makeDoc({ primary: created })
+          document: makeDoc({ primary: ResourceSet.of({ data: created }) })
         };
 
         // We can only generate a Location url for a single resource.
-        if(created instanceof Resource) {
-          const templates = registry.urlTemplates(created.type);
-          const template = templates && templates.self;
-          if(template) {
-            const templateData = {"id": created.id, ...created.attrs};
+        if(created.isSingular) {
+          const createdResource = created.unwrap() as Resource;
+          const { self: selfTemplate = undefined } =
+            (registry.urlTemplates(createdResource.type) || {});
+
+          if(selfTemplate) {
             res.headers = {
-              Location: templating.parse(template).expand(templateData)
+              Location: templating.parse(selfTemplate).expand({
+                "id": createdResource.id,
+                ...createdResource.attrs
+              })
             };
           }
         }

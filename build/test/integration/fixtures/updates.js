@@ -20,6 +20,14 @@ exports.VALID_ORG_RELATIONSHIP_PATCH = {
             "type": "people", "id": "53f54dd98d1e62ff12539db3"
         }]
 };
-exports.VALID_ORG_RELATIONSHIP_EMPTY_PATCH = {
+exports.VALID_TO_MANY_RELATIONSHIP_EMPTY_PATCH = {
     "data": []
+};
+exports.VALID_TO_ONE_RELATIONSHIP_EMPTY_PATCH = {
+    "data": null
+};
+exports.VALID_SCHOOL_PRINCIPAL_PATCH = {
+    data: {
+        "type": "people", "id": "53f54dd98d1e62ff12539db3"
+    }
 };

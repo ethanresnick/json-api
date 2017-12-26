@@ -21,6 +21,16 @@ export const VALID_ORG_RELATIONSHIP_PATCH = {
   }]
 };
 
-export const VALID_ORG_RELATIONSHIP_EMPTY_PATCH = {
+export const VALID_TO_MANY_RELATIONSHIP_EMPTY_PATCH = {
   "data": []
+};
+
+export const VALID_TO_ONE_RELATIONSHIP_EMPTY_PATCH = {
+  "data": null
+};
+
+export const VALID_SCHOOL_PRINCIPAL_PATCH = {
+  data: {
+    "type": "people", "id": "53f54dd98d1e62ff12539db3"
+  }
 };

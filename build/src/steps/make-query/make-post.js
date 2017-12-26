@@ -1,48 +1,46 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const APIError_1 = require("../../types/APIError");
-const Linkage_1 = require("../../types/Linkage");
-const Resource_1 = require("../../types/Resource");
-const type_handling_1 = require("../../util/type-handling");
 const CreateQuery_1 = require("../../types/Query/CreateQuery");
 const AddToRelationshipQuery_1 = require("../../types/Query/AddToRelationshipQuery");
+const ResourceSet_1 = require("../../types/ResourceSet");
 const templating = require("url-template");
 function default_1(request, registry, makeDoc) {
     const primary = request.primary;
     const type = request.type;
-    if (primary instanceof Linkage_1.default) {
-        if (!Array.isArray(primary.value)) {
+    if (request.aboutRelationship) {
+        if (request.primary.isSingular) {
             throw new APIError_1.default(400, undefined, "To add to a to-many relationship, you must POST an array of linkage objects.");
+        }
+        if (!request.id || !request.relationship) {
+            throw new APIError_1.default(400, undefined, "To add linkage to a relationship, you must POST to a relationship endpoint.");
         }
         return new AddToRelationshipQuery_1.default({
             type,
-            id: request.idOrIds,
+            id: request.id,
             relationshipName: request.relationship,
             linkage: primary,
             returning: () => ({ status: 204 })
         });
     }
     else {
-        const noClientIds = "Client-generated ids are not supported.";
-        type_handling_1.forEachResources(primary, (it) => {
-            if (it.id)
-                throw new APIError_1.default(403, undefined, noClientIds);
-        });
+        if (primary.some(it => !!it.id)) {
+            throw new APIError_1.default(403, undefined, "Client-generated ids are not supported.");
+        }
         return new CreateQuery_1.default({
             type,
             records: primary,
             returning: (created) => {
                 const res = {
                     status: 201,
-                    document: makeDoc({ primary: created })
+                    document: makeDoc({ primary: ResourceSet_1.default.of({ data: created }) })
                 };
-                if (created instanceof Resource_1.default) {
-                    const templates = registry.urlTemplates(created.type);
-                    const template = templates && templates.self;
-                    if (template) {
-                        const templateData = Object.assign({ "id": created.id }, created.attrs);
+                if (created.isSingular) {
+                    const createdResource = created.unwrap();
+                    const { self: selfTemplate = undefined } = (registry.urlTemplates(createdResource.type) || {});
+                    if (selfTemplate) {
                         res.headers = {
-                            Location: templating.parse(template).expand(templateData)
+                            Location: templating.parse(selfTemplate).expand(Object.assign({ "id": createdResource.id }, createdResource.attrs))
                         };
                     }
                 }
