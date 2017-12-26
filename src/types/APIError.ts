@@ -60,7 +60,7 @@ export default class APIError extends Error {
   }
 
   toJSON(): APIErrorJSON {
-    // Intentionally not using {...this}. 
+    // Intentionally not using {...this}.
     // See https://github.com/Microsoft/TypeScript/issues/10727
     return Object.assign({}, this); //tslint:disable-line:prefer-object-spread
   }
@@ -70,8 +70,9 @@ export default class APIError extends Error {
    *
    */
   static fromError(err) {
-    const fallbackTitle = "An unknown error occurred while trying to process this request.";
-    const ErrorConstructor = this || APIError; // in case this isn't bound.
+    const ErrorConstructor = this || APIError; // in case `this` isn't bound.
+    const fallbackTitle =
+      "An unknown error occurred while trying to process this request.";
 
     if(err instanceof APIError) {
       return err;

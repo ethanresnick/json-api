@@ -152,6 +152,13 @@ export default class WithCriteriaQuery extends Query {
       throw new Error("Expected only one id criterion to be present.");
     }
 
+    if(idRestrictions[0]) {
+      const expectedOperator = Array.isArray(idRestrictions[0]) ? "in"  : "eq";
+      if(idRestrictions[0].operator !== expectedOperator) {
+        throw new Error("Expected id criterion to pick out an exact set of ids.");
+      }
+    }
+
     return idRestrictions[0]
       ? <string | string[]>idRestrictions[0].value
       : undefined;
