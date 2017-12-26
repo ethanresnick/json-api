@@ -6,7 +6,7 @@ import AddToRelationshipQuery from "../types/Query/AddToRelationshipQuery";
 import RemoveFromRelationshipQuery from "../types/Query/RemoveFromRelationshipQuery";
 export interface AdapterInstance<T extends new (...args: any[]) => any> {
     constructor: T;
-    find(query: FindQuery): Promise<any[]>;
+    find(query: FindQuery): Promise<any>;
     create(query: CreateQuery): Promise<any>;
     update(update: UpdateQuery): Promise<any>;
     delete(query: DeleteQuery): Promise<any>;
