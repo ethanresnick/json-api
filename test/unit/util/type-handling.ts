@@ -42,7 +42,13 @@ describe("Utility methods", () => {
   });
 
   describe("objectIsEmpty", () => {
-    it.skip("should return false on an object with direct properties");
-    it.skip("should return true if the object only has prototype properties");
+    it("should return false on an object with direct properties", () => {
+      expect(utils.objectIsEmpty({ test: true })).to.be.false;
+    });
+
+    it("should return true if the object only has prototype properties", () => {
+      expect(utils.objectIsEmpty({})).to.be.true;
+      expect(utils.objectIsEmpty(Object.create({ test: true }))).to.be.true;
+    });
   });
 });
