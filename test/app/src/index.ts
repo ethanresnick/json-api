@@ -18,7 +18,7 @@ export default database.then(function(dbModule) {
     "people": require("./resource-descriptions/people"),
     "organizations": require("./resource-descriptions/organizations"),
     "schools": require("./resource-descriptions/schools")
-  }, <object>{
+  }, {
     dbAdapter: adapter
   });
 

@@ -1,0 +1,8 @@
+{
+  "extends": "@ethanresnick/tslint-config",
+  "rules": {
+    // disable because of chai's assertion format,
+    // and lack of easy support for dirty-chai with ts.
+    "no-unused-expression": false
+  }
+}

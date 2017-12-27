@@ -17,9 +17,9 @@ module.exports = {
   },
 
   beforeSave: function(resource, req, res, superFn) {
-    return new Promise((resolve, reject) => {
+    return Promise.resolve().then(() => {
       resource.attrs.modified = new Date("2015-10-27T05:16:57.257Z");
-      resolve(resource);
+      return resource;
     }).then((transformed) => superFn(transformed, req, res));
   }
 };

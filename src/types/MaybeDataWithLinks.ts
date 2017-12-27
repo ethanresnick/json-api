@@ -1,7 +1,7 @@
 import Data from './Data';
 import Resource from './Resource';
 import ResourceIdentifier from './ResourceIdentifier';
-import { Reducer, PredicateFn, UrlTemplateFns, Mapper, AsyncMapper } from "./index";
+import { Reducer, PredicateFn, UrlTemplateFns, Mapper, AsyncMapper, Links } from "./index";
 import { mapObject } from '../util/type-handling';
 
 /**
@@ -64,7 +64,7 @@ export default class MaybeDataWithLinks<T extends (Resource | ResourceIdentifier
 
   unwrapWith<U>(fn: (it: T) => U, linkTemplateData: any) {
     return {
-      links: mapObject(this.links, (template) => template(linkTemplateData)) as { [linkName: string]: string },
+      links: mapObject(this.links, (template) => template(linkTemplateData)) as Links,
       data: this.data && this.data.map(fn).unwrap()
     };
   }

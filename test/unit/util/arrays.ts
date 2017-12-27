@@ -28,9 +28,4 @@ describe("Utility methods", () => {
   describe("arrayValuesMatch", () => {
     it.skip("should work");
   });
-
-  describe("arrayContains", () => {
-    it.skip("should return whether an array contains the value", () => {
-    });
-  });
 });

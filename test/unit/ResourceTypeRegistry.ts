@@ -53,7 +53,7 @@ describe("ResourceTypeRegistry", function() {
         "someType": {
           info: { "example": "merged with the default" }
         }
-      }, <object>{
+      }, {
         info: { description: "provided as default" }
       });
 
@@ -96,7 +96,7 @@ describe("ResourceTypeRegistry", function() {
 
       const registry = new ResourceTypeRegistry({
         "someType": someTypeDesc
-      }, <object>{
+      }, {
         beforeSave: (resource, req, res) => { return resource; },
       });
 
@@ -113,7 +113,7 @@ describe("ResourceTypeRegistry", function() {
           }
         },
         "testType2": {}
-      }, <object>{
+      }, {
         "behaviors": {
           "dasherizeOutput": {"enabled": false, "exceptions": []}
         }
@@ -136,7 +136,7 @@ describe("ResourceTypeRegistry", function() {
       "testType": <any>{
         "behaviors": null
       }
-    }, <object>{
+    }, {
       "behaviors": {
         "dasherizeOutput": {"enabled": false, "exceptions": []}
       }
@@ -174,19 +174,19 @@ describe("ResourceTypeRegistry", function() {
 
   describe("adapter", () => {
     it("should be a getter for a type's db adapter",
-      makeGetterTest(function() {}, "mytypes", "dbAdapter")
+      makeGetterTest(function() { return; }, "mytypes", "dbAdapter")
     );
   });
 
   describe("beforeSave", () => {
     it("should be a getter for a type for a type's beforeSave",
-      makeGetterTest(() => {}, "mytypes", "beforeSave")
+      makeGetterTest(() => { return; }, "mytypes", "beforeSave")
     );
   });
 
   describe("beforeRender", () => {
     it("should be a getter for a type's beforeRender",
-      makeGetterTest(() => {}, "mytypes", "beforeRender")
+      makeGetterTest(() => { return; }, "mytypes", "beforeRender")
     );
   });
 

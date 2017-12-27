@@ -7,13 +7,35 @@ import Relationship from "../../../../src/types/Relationship";
 const expect = chai.expect;
 
 describe("Resource Parser", () => {
-  describe.skip("Parsing Linkage", () => {
-    it.skip("should read in the incoming json correctly", () => {
-      console.log("see https://github.com/json-api/json-api/issues/482");
+  describe("Parsing Linkage", () => {
+    it("should read in the incoming json correctly", () => {
+      const resourceIdentifier = {id: "3", type: "people"};
+
+      return Promise.all([
+        parsePrimary(null, true).then(res => {
+          expect(res).to.deep.equal(Data.empty);
+        }),
+        parsePrimary([], true).then(res => {
+          expect(res).to.deep.equal(Data.of([]))
+        }),
+        parsePrimary([resourceIdentifier], true).then(res => {
+          expect(res).to.deep.equal(Data.of([resourceIdentifier]));
+        }),
+        parsePrimary(resourceIdentifier, true).then(res => {
+          expect(res).to.deep.equal(Data.pure(resourceIdentifier));
+        })
+      ]);
     });
 
-    it.skip("should reject invalid linkage", () => {
-      //linkage who's value is true, or {"id": ""}
+    it("should reject invalid linkage", () => {
+      return Promise.all([
+        parsePrimary(true, true).then(() => {
+          throw new Error("Should have rejected.");
+        }, (e) => { return; }),
+        parsePrimary([{id: "3"}], true).then(() => {
+          throw new Error("Should have rejected.");
+        }, (e) => { return; })
+      ]);
     });
   });
 
@@ -52,14 +74,15 @@ describe("Resource Parser", () => {
       }, done);
     });
 
-    it("should reject invalid resources", (done) => {
-      parsePrimary({"id": "1"}).then(() => {}, (err) => {
+    it("should reject invalid resources", () => {
+      return parsePrimary({"id": "1"}).then(() => {
+        throw new Error("Should have rejected.")
+      }, (err) => {
         expect(err.detail).to.match(/type.*required/);
-        done();
       });
     });
 
-    it("should create Relationship for each link", (done) => {
+    it("should create Relationship for each link", () => {
       const parents = [
         {"type": "people", "id": "1"}, {"type": "people", "id": "2"}
       ];
@@ -70,12 +93,11 @@ describe("Resource Parser", () => {
         }
       };
 
-      parsePrimary(json).then((resourceData: Data<Resource>) => {
+      return parsePrimary(json).then((resourceData: Data<Resource>) => {
         const resource = resourceData.unwrap() as Resource;
         expect(resource.relationships.parents).to.be.instanceof(Relationship);
         expect(resource.relationships.parents.toJSON({}).data).to.deep.equal(parents);
-        done();
-      }, done);
+      });
     });
   });
 });

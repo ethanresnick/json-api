@@ -1,4 +1,4 @@
-import {expect} from "chai";
+import { expect } from "chai";
 import mongoose = require("mongoose");
 import APIError from "../../../../src/types/APIError";
 import MongooseAdapter from "../../../../src/db-adapters/Mongoose/MongooseAdapter";
@@ -25,7 +25,7 @@ describe("Mongoose Adapter", () => {
 
     describe("getType", () => {
       it("should lowercase & pluralize the model name; use dashes in camelCased names", () => {
-        for(const type in typesToModelNames) {
+        for(const type in typesToModelNames) { //tslint:disable-line:forin
           expect(MongooseAdapter.getType(typesToModelNames[type])).to.equal(type);
         }
       });
@@ -38,7 +38,7 @@ describe("Mongoose Adapter", () => {
 
     describe("getModelName", () => {
       it("should reverse getType", () => {
-        for(const type in typesToModelNames) {
+        for(const type in typesToModelNames) { //tslint:disable-line:forin
           const modelName = typesToModelNames[type];
           expect(MongooseAdapter.getModelName(type)).to.equal(modelName);
         }
@@ -106,31 +106,31 @@ describe("Mongoose Adapter", () => {
 
     describe("idIsValid", () => {
       it("should reject all == null input", () => {
-        expect((<any>MongooseAdapter).idIsValid()).to.not.be.ok;
-        expect(MongooseAdapter.idIsValid(null)).to.not.be.ok;
-        expect(MongooseAdapter.idIsValid(undefined)).to.not.be.ok;
+        expect((<any>MongooseAdapter).idIsValid()).to.be.false;
+        expect(MongooseAdapter.idIsValid(null)).to.be.false;
+        expect(MongooseAdapter.idIsValid(undefined)).to.be.false;
       });
 
       it("should reject bad input type", () => {
-        expect(MongooseAdapter.idIsValid(true)).to.not.be.ok;
+        expect(MongooseAdapter.idIsValid(true)).to.be.false;
       });
 
       it("should reject empty string", () => {
-        expect(MongooseAdapter.idIsValid("")).to.not.be.ok;
+        expect(MongooseAdapter.idIsValid("")).to.be.false;
       });
 
       // the string coming into the MongooseAdapter needs to be the 24-character,
       // hex encoded version of the ObjectId, not an arbitrary 12 byte string.
       it("should reject 12-character strings", () => {
-        expect(MongooseAdapter.idIsValid("aaabbbccc111")).to.not.be.ok;
+        expect(MongooseAdapter.idIsValid("aaabbbccc111")).to.be.false;
       });
 
       it("should reject numbers", () => {
-        expect(MongooseAdapter.idIsValid(1)).to.not.be.ok;
+        expect(MongooseAdapter.idIsValid(1)).to.be.false;
       });
 
       it("should accpet valid hex string", () => {
-        expect(MongooseAdapter.idIsValid("552c5e1c604d41e5836bb175")).to.be.ok;
+        expect(MongooseAdapter.idIsValid("552c5e1c604d41e5836bb175")).to.be.true;
       });
     });
 

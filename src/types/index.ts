@@ -14,6 +14,7 @@ export type PrimaryData = DataOf<Resource> | DataOf<ResourceIdentifier>;
 export type ResourceIdentifierJSON = { type: string; id: string };
 export type LinkageJSON = DataOf<ResourceIdentifierJSON>;
 export type PrimaryDataJSON = DataOf<ResourceJSON> | LinkageJSON;
+export type Links = { [linkName: string]: any };
 
 // Types for convenience, for built-in js array helpers.
 export type Reducer<T,U> = (acc: any, it: T, i: number, arr: T[]) => U;

@@ -6,9 +6,9 @@ const {expect} = chai;
 describe("Request Validation functions", () => {
   describe("checkBodyExistence", () => {
     it("should return a promise", () => {
-      const res = requestValidators.checkBodyExistence(<any>{});
-      expect(res instanceof Promise).to.be.true;
-      res.catch(() => {}); // don't leave an unhandled rejection.
+      //tslint:disable-next-line:no-empty
+      const res = requestValidators.checkBodyExistence(<any>{}).catch(() => {});
+      expect(res).to.be.instanceof(Promise);
     });
 
     it("should return a rejected promise if a POST request is missing a body", (done) => {

@@ -4,21 +4,19 @@ import { VALID_ORG_VIRTUAL_PATCH } from "../fixtures/updates";
 
 describe("Updating Resources", () => {
   let Agent;
-  let res;
+  before(() => {
+    return AgentPromise.then((A) => { Agent = A; })
+  });
 
   describe("Updating a resource's attributes", () => {
-    before(done => {
-      AgentPromise.then((A) => {
-        Agent = A;
-        return Agent.request("PATCH", `/organizations/${VALID_ORG_VIRTUAL_PATCH.id}`)
-          .type("application/vnd.api+json")
-          .send({"data": VALID_ORG_VIRTUAL_PATCH })
-          .promise()
-          .then((response) => {
-            res = response.body.data;
-            done();
-          });
-      }).catch(done);
+    let res;
+    before(() => {
+      return Agent.request("PATCH", `/organizations/${VALID_ORG_VIRTUAL_PATCH.id}`)
+        .type("application/vnd.api+json")
+        .send({"data": VALID_ORG_VIRTUAL_PATCH })
+        .then((response) => {
+          res = response.body.data;
+        });
     });
 
     it("should not reset fields missing in the update to their defaults", () => {
@@ -47,18 +45,16 @@ describe("Updating Resources", () => {
   describe("Updating a non-existent resource", () => {
     it("should 404", () => {
       const missingOId = "507f191e810c19729de860ea";
-      return AgentPromise.then((Agent) => {
-        return Agent.request("PATCH", `/organizations/${missingOId}`)
-          .type("application/vnd.api+json")
-          .send({"data": { ...VALID_ORG_VIRTUAL_PATCH, id: missingOId } })
-          .promise()
-          .then((response) => {
-            throw new Error("Should 404");
-          }, (err) => {
-            expect(err.status).to.equal(404);
-            return true;
-          });
-      });
+      return Agent.request("PATCH", `/organizations/${missingOId}`)
+        .type("application/vnd.api+json")
+        .send({"data": { ...VALID_ORG_VIRTUAL_PATCH, id: missingOId } })
+        .promise()
+        .then((response) => {
+          throw new Error("Should 404");
+        }, (err) => {
+          expect(err.status).to.equal(404);
+          return true;
+        });
     });
   })
   /*

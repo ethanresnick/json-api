@@ -8,10 +8,5 @@ export function arrayValuesMatch(array1, array2) {
 }
 
 export function arrayContains(arr, value) {
-  if(!Number.isNaN(value)) {
-    return arr.indexOf(value) !== -1;
-  }
-  else {
-    return arr.some(Number.isNaN) === true;
-  }
+  return arr.includes(value);
 }

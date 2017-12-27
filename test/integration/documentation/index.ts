@@ -39,14 +39,10 @@ describe("Fetching HTML Documentation", () => {
       return Agent.request("GET", "/")
         .accept("text/*")
         .promise();
-    }, (e) => {
-      console.log(e); done(e);
-    }).then(response => {
+    }, done).then(response => {
       res = response;
       done();
-    }).catch((e) => {
-      console.log(e); done(e);
-    });
+    }).catch(done);
   });
 
   describe("Content Type", () => {

@@ -55,6 +55,23 @@ export default mongoose.connect(
   "mongodb://localhost/integration-test",
   { useMongoClient: true}
 ).then(function() {
+
+  /**
+   * Remove all fixtures data.
+   * @returns Promise<void> Promise rejects if this fails.
+   */
+  function fixturesRemoveAll() {
+    return new Promise<void>((resolve, reject) => {
+      fixtures.reset((err, res) => {
+        if(err) {
+          reject(err);
+        } else {
+          resolve(res);
+        }
+      })
+    });
+  }
+
   return {
     models() {
       return models;
@@ -62,18 +79,16 @@ export default mongoose.connect(
     instance() {
       return mongoose;
     },
-    fixturesRemoveAll() {
-      return new Promise((resolve, reject) => {
-        fixtures.reset((err, res) => {
-          err ? reject(err) : resolve(res)
-        })
-      });
-    },
+    fixturesRemoveAll,
     fixturesReset() {
-      return this.fixturesRemoveAll().then(function() {
-        return new Promise((resolve, reject) => {
+      return fixturesRemoveAll().then(function() {
+        return new Promise<mongoose.Document[]>((resolve, reject) => {
           fixtures("all", (err, res) => {
-            err ? reject(err) : resolve(res)
+            if(err) {
+              reject(err);
+            } else {
+              resolve(res);
+            }
           })
         });
       });

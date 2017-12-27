@@ -42,7 +42,6 @@
     "all": true
   },
   "dependencies": {
-    "@types/chai-subset": "^1.3.1",
     "@types/debug": "0.0.29",
     "@types/express": "^4.0.37",
     "@types/node": "^8.5.2",
@@ -67,10 +66,12 @@
   },
   "devDependencies": {
     "@ethanresnick/tslint-config": "^5.5.1",
+    "@types/chai-subset": "^1.3.1",
     "@types/mocha": "^2.2.42",
     "@types/mongodb": "^2.2.11",
     "@types/mongoose": "^4.7.21",
-    "chai": "^1.9.2",
+    "@types/superagent": "^3.5.6",
+    "chai": "^4.0.0",
     "chai-subset": "^1.5.0",
     "coveralls": "^2.13.1",
     "cpr": "^2.2.0",
@@ -95,8 +96,11 @@
   },
   "scripts": {
     "clean": "rimraf build",
-    "lint": "tslint --project tsconfig.json --format verbose --config node_modules/@ethanresnick/tslint-config/tslint.json",
-    "test": "export NODE_ENV=testing; mocha --compilers ts:ts-node/register --recursive test/unit/ test/integration/",
+    "lint": "npm run lint:src & npm run lint:test",
+    "lint:src": "tslint --project tsconfig.json --format verbose --exclude 'test/**/*' --config node_modules/@ethanresnick/tslint-config/tslint.json",
+    "lint:test": "tslint --project tsconfig.json --format verbose --exclude 'src/**/*' --config ./test/tslint.json",
+    "test": "export NODE_ENV=testing; mocha --compilers ts:ts-node/register --recursive test/unit/ test/integration/ --full-trace",
+    "test:debug": "npm run test -- --inspect-brk",
     "build:lintfree": "npm run clean && cpr templates build/templates && echo Using TypeScript && tsc --version && tsc --pretty",
     "build": "npm run build:lintfree",
     "prepublish": "npm run test && npm run build:lintfree",

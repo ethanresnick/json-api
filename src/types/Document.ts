@@ -1,7 +1,7 @@
 import Resource, { ResourceJSON } from "./Resource";
 import APIError, { APIErrorJSON } from './APIError';
 import { objectIsEmpty } from "../util/type-handling";
-import { PrimaryDataJSON, UrlTemplateFnsByType, UrlTemplateFns } from './index';
+import { PrimaryDataJSON, UrlTemplateFnsByType, UrlTemplateFns, Links } from './index';
 import ResourceSet from './ResourceSet';
 import Relationship from './Relationship';
 
@@ -19,7 +19,7 @@ export type DocumentJSON = ({
   included: undefined
 }) & {
   meta?: object,
-  links?: object
+  links?: Links
 };
 
 export type DocumentData = {

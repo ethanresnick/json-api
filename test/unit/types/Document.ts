@@ -30,9 +30,10 @@ describe("Document class", () => {
       new Resource("people", "32", {"name": "ethan"}, {"organization": orgRelationCustom });
 
     const people = Data.of([person, person2]);
-    const topLevelMeta = {"mcawesome": true};
+    const topLevelMeta = { "mcawesome": true };
     const urlTemplates = {
       "people": {
+        // tslint:disable-next-line:no-unbound-method
         "relationship": templating.parse("RELATIONSHIP{ownerId}{path}").expand
       }
     };
@@ -82,7 +83,7 @@ describe("Document class", () => {
       const docJSON = doc.toJSON();
 
       expect(docJSON.links).to.be.an("object");
-      expect(docJSON.links && docJSON.links['self']).to.equal(reqURI);
+      expect(docJSON.links && docJSON.links.self).to.equal(reqURI);
     });
 
     it("should output top-level meta information, iff provided", () => {

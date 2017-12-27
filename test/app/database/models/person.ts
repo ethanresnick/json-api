@@ -10,8 +10,9 @@ const schema = new mongoose.Schema({
 });
 
 schema.virtual('virtualName').get(function() {
-  return this.name + ' (virtualized)';
+  return this.name + ' (virtualized)'; // tslint:disable-line:no-invalid-this
 }).set(function(v) {
+  // tslint:disable-next-line:no-invalid-this
   this.name = v.substr(0, v.lastIndexOf(' (virtualized)'));
 });
 
