@@ -1,5 +1,4 @@
-import { LinkageJSON, UrlTemplateFns, Mapper, AsyncMapper } from "./index";
-import Data from "./Data";
+import { LinkageJSON, UrlTemplateFns } from "./index";
 import MaybeDataWithLinks, { MaybeDataWithLinksArgs } from "./MaybeDataWithLinks";
 import ResourceIdentifier from "./ResourceIdentifier";
 import { objectIsEmpty } from '../util/type-handling';
@@ -26,33 +25,11 @@ export default class Relationship extends MaybeDataWithLinks<ResourceIdentifier>
     this.owner = it.owner;
   }
 
-  static of(it: RelationshipArgs) {
-    return new this(it);
-  }
-
-  map(fn: Mapper<ResourceIdentifier, ResourceIdentifier>) {
-    const res = super.map(fn) as Relationship;
-    res.owner = this.owner;
-    return res;
-  }
-
-  mapAsync(fn: AsyncMapper<ResourceIdentifier, ResourceIdentifier>) {
-    return (super.mapAsync(fn) as Promise<Relationship>).then((res) => {
-      res.owner = this.owner;
-      return res;
-    });
-  }
-
-  flatMap(fn: (it: ResourceIdentifier) => Data<ResourceIdentifier>) {
-    const res = super.flatMap(fn) as Relationship;
-    res.owner = this.owner;
-    return res;
-  }
-
-  flatMapAsync(fn: (it: ResourceIdentifier) => Data<ResourceIdentifier> | Promise<Data<ResourceIdentifier>>) {
-    return (super.flatMapAsync(fn) as Promise<Relationship>).then((res) => {
-      res.owner = this.owner;
-      return res;
+  protected clone(): this {
+    return (this.constructor as any).of({
+      data: this.data,
+      links: this.links,
+      owner: this.owner
     });
   }
 
@@ -78,5 +55,9 @@ export default class Relationship extends MaybeDataWithLinks<ResourceIdentifier>
       ...(typeof data !== 'undefined' ? { data } : {}),
       ...(objectIsEmpty(finalLinks) ? {} : { links: finalLinks })
     };
+  }
+
+  static of(it: RelationshipArgs) {
+    return new this(it);
   }
 }

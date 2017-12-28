@@ -16,6 +16,9 @@ import { mapObject } from '../util/type-handling';
 export type MaybeDataWithLinksArgs<T> =
   { data: T | T[] | null | undefined | Data<T>, links?: UrlTemplateFns };
 
+export type DataSyncMethods = "flatMap" | "map" | "filter";
+export type DataAsyncMethods = "flatMapAsync" | "mapAsync";
+
 export default class MaybeDataWithLinks<T extends (Resource | ResourceIdentifier)> {
   protected data: Data<T> | undefined;
   public links: UrlTemplateFns;
@@ -33,35 +36,23 @@ export default class MaybeDataWithLinks<T extends (Resource | ResourceIdentifier
   }
 
   map(fn: Mapper<T, T>) {
-    const Ctor = this.constructor as typeof MaybeDataWithLinks;
-    return new Ctor<T>({
-      data: this.data && this.data.map(fn),
-      links: this.links
-    });
-  }
-
-  mapAsync(fn: AsyncMapper<T, T>) {
-    const Ctor = this.constructor as typeof MaybeDataWithLinks;
-    return this.data
-      ? this.data.mapAsync(fn)
-          .then(newData => new Ctor<T>({ data: newData, links: this.links }))
-      : Promise.resolve(this);
+    return this.delegateDataTransformToParent("map", arguments);
   }
 
   flatMap(fn: (it: T) => Data<T>) {
-    const Ctor = this.constructor as typeof MaybeDataWithLinks;
-    return new Ctor<T>({
-      data: this.data && this.data.flatMap(fn),
-      links: this.links
-    });
+    return this.delegateDataTransformToParent("flatMap", arguments);
+  }
+
+  filter(fn: PredicateFn<T>) {
+    return this.delegateDataTransformToParent("filter", arguments);
+  }
+
+  mapAsync(fn: AsyncMapper<T, T>) {
+    return this.delegateDataTransformToParentAsync("mapAsync", arguments);
   }
 
   flatMapAsync(fn: (it: T) => Data<T> | Promise<Data<T>>) {
-    const Ctor = this.constructor as typeof MaybeDataWithLinks;
-    return this.data
-      ? this.data.flatMapAsync(fn)
-          .then(newData => new Ctor<T>({ data: newData, links: this.links }))
-      : Promise.resolve(this);
+    return this.delegateDataTransformToParentAsync("flatMapAsync", arguments);
   }
 
   /**
@@ -98,5 +89,32 @@ export default class MaybeDataWithLinks<T extends (Resource | ResourceIdentifier
   forEach(fn: (it: T) => void) {
     this.data && this.data.forEach(fn);
     return this; // for chaining
+  }
+
+  protected clone(): this {
+    const Ctor = this.constructor as any;
+    return new Ctor({
+      data: this.data,
+      links: this.links
+    });
+  }
+
+  protected delegateDataTransformToParent(methodName: DataSyncMethods, args) {
+    return this.data
+      ? this.withNewData((this.data[methodName] as any)(...args))
+      : this
+  }
+
+  protected delegateDataTransformToParentAsync(methodName: DataAsyncMethods, args) {
+    return this.data
+      ? (this.data[methodName] as () => Promise<Data<T>>)(...args)
+          .then(newData => this.withNewData(newData))
+      : Promise.resolve(this)
+  }
+
+  protected withNewData(newData): this {
+    const res = this.clone();
+    res.data = newData;
+    return res;
   }
 };
