@@ -87,11 +87,16 @@ export default class MaybeDataWithLinks<T extends (Resource | ResourceIdentifier
     return this.data ? this.data.every(fn) : true;
   }
 
+  some(fn: PredicateFn<T>): boolean {
+    return this.data ? this.data.some(fn) : false;
+  }
+
   reduce<U>(fn: Reducer<T, U>, initialValue?: U) {
     return this.data ? this.data.reduce(fn, initialValue) : initialValue;
   }
 
   forEach(fn: (it: T) => void) {
     this.data && this.data.forEach(fn);
+    return this; // for chaining
   }
 };
