@@ -1,7 +1,9 @@
 import Data from './Data';
 import Resource from './Resource';
 import ResourceIdentifier from './ResourceIdentifier';
-import { Reducer, PredicateFn, UrlTemplateFns, Mapper, AsyncMapper, Links } from "./index";
+import {
+  Reducer, PredicateFn, UrlTemplateFns, Mapper, AsyncMapper, Links
+} from "./index";
 import { mapObject } from '../util/type-handling';
 
 /**
@@ -62,6 +64,18 @@ export default class MaybeDataWithLinks<T extends (Resource | ResourceIdentifier
       : Promise.resolve(this);
   }
 
+  /**
+   * map, flatMap, and their async variants are all from T => T,  where
+   * T extends Resource | ResourceIdentifier. That T => T restriction is b/c
+   * it doesn't make sense, in our domain, for the data to change from a
+   * Resource to a ResourceIdentifier or vice-versa. The exception is when we
+   * want to do final output/serialization-like things, where we need to convert
+   * the underlying Resource | ResourceIdentifier to plain objects or strings
+   * or whatever. `unwrapWith` is designed for that final transformation, and
+   * it lifts the T => T restriction by taking an unconstrained T => U transform.
+   * In that same spirit, it also serializes the links, by passing the data
+   * provided as the second argument to the stored template functions.
+   */
   unwrapWith<U>(fn: (it: T) => U, linkTemplateData: any) {
     return {
       links: mapObject(this.links, (template) => template(linkTemplateData)) as Links,
@@ -73,7 +87,7 @@ export default class MaybeDataWithLinks<T extends (Resource | ResourceIdentifier
     return this.data ? this.data.every(fn) : true;
   }
 
-  reduce<U, V>(fn: Reducer<T, U>, initialValue?: V) {
+  reduce<U>(fn: Reducer<T, U>, initialValue?: U) {
     return this.data ? this.data.reduce(fn, initialValue) : initialValue;
   }
 

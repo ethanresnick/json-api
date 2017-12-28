@@ -129,7 +129,9 @@ export default class Data<T> {
     return this; // for chaining
   }
 
-  reduce(fn: Reducer<T, any>, initialValue?: any) {
+  reduce<U>(fn: Reducer<T, U>): U | undefined;
+  reduce<U>(fn: Reducer<T, U>, initialValue: U): U;
+  reduce<U>(fn: Reducer<T, U>, initialValue?: U): U | undefined {
     return this.value.data.reduce(fn, initialValue);
   }
 

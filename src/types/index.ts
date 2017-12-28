@@ -17,7 +17,7 @@ export type PrimaryDataJSON = DataOf<ResourceJSON> | LinkageJSON;
 export type Links = { [linkName: string]: any };
 
 // Types for convenience, for built-in js array helpers.
-export type Reducer<T,U> = (acc: any, it: T, i: number, arr: T[]) => U;
+export type Reducer<T,U = any> = (acc: U, it: T, i: number, arr: T[]) => U;
 export type PredicateFn<T> = (it: T, i: number, arr: T[]) => boolean;
 export type Mapper<T,U> = (it: T, i: number, arr: T[]) => U;
 export type AsyncMapper<T,U> = (it: T, i: number, arr: T[]) => U | Promise<U>;
