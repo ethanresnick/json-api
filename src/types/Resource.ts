@@ -61,6 +61,14 @@ export default class Resource {
     this._attrs = attrs;
   }
 
+  get attributes() {
+    return this.attrs;
+  }
+
+  set attributes(attrs) {
+    this.attrs = attrs;
+  }
+
   get relationships() {
     return this._relationships;
   }
