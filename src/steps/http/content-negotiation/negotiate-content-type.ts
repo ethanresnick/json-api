@@ -41,10 +41,13 @@ export default function(acceptHeader, availableBaseTypes) {
       it.type.toLowerCase() === jsonApiBaseType
     );
 
+    const notAcceptableError =
+      new APIError({ status: 406, title: "Not Acceptable" });
+
     // If we do have JSON API in the Accept header and all instances
     // are parameterized, this is explicitly a 406.
     if(jsonApiRanges.length && jsonApiRanges.every(hasParams)) {
-      reject(new APIError(406, null, "Not Acceptable"));
+      reject(notAcceptableError);
     }
 
     // For everything but the JSON API media type, trust
@@ -59,7 +62,7 @@ export default function(acceptHeader, availableBaseTypes) {
       resolve("application/vnd.api+json");
     }
     else {
-      reject(new APIError(406, null, "Not Acceptable"));
+      reject(notAcceptableError);
     }
   });
 }

@@ -1,5 +1,3 @@
-const nonEnumerable = {writable: true, enumerable: false};
-
 export type APIErrorJSON = {
   status?: string;
   code?: string;
@@ -9,11 +7,19 @@ export type APIErrorJSON = {
   paths?: any;
 }
 
+export type Opts = {
+  status?: string | number;
+  code?: string | number;
+  title?: string;
+  detail?: string;
+  links?: object;
+  paths?: string[];
+};
+
 // TODO: refactor args list to be:
 // constructor(title, status, [code, detail, links, paths])
 // This matches the standard Error constructor and makes sense intuitively.
 // TODO: turn on noImplicitAny, fix errors
-// TODO: Define, for every type, a type for its structure as JSON, like we have for Document?
 export default class APIError extends Error {
   public status?: string;
   public code?: string;
@@ -21,48 +27,47 @@ export default class APIError extends Error {
   public detail?: string;
   public links?: any;
   public paths?: any;
-  private _status?: string;
-  private _code?: string;
 
+  constructor(opts: Opts);
+  constructor(
+    status?: Opts['status'], code?: Opts['code'], title?: Opts['title'],
+    detail?: Opts['detail'], links?: Opts['links'], paths?: Opts['paths']
+  );
   constructor(...args) {
     super();
 
-    // Hack around lack of proxy support and default non-enumerability
-    // of class accessor properties, while still giving us validation.
-    Object.defineProperty(this, "_status", nonEnumerable);
-    Object.defineProperty(this, "_code", nonEnumerable);
-    Object.defineProperty(this, "status", {
-      enumerable: true,
-      get: () => this._status,
-      set: (value) => {
-        if(typeof value !== "undefined" && value !== null) {
-          this._status = String(value);
-        }
-        else {
-          this._status = value;
-        }
-      }
-    });
-    Object.defineProperty(this, "code", {
-      enumerable: true,
-      get: () => this._code,
-      set: (value) => {
-        if(typeof value !== "undefined" && value !== null) {
-          this._code = String(value);
-        }
-        else {
-          this._code = value;
-        }
+    // Use a Proxy to handle coercing status, code etc.
+    // to strings on set (including below in the constructor).
+    // Because we're setting the validated properties directly on obj,
+    // ownKeys will work correctly.
+    const res = new Proxy(this, {
+      set(obj, prop, value) {
+        const coercePropToString =
+          ["status", "code", "title", "detail"].indexOf(<string>prop) > -1;
+
+        obj[prop] = coercePropToString
+          ? (value == null ? undefined : String(value))
+          : value;
+
+        return true;
       }
     });
 
-    [this.status, this.code, this.title, this.detail, this.links, this.paths] = args;
+    // Construct from object format
+    if(args.length === 1 && typeof args[0] === 'object') {
+      Object.assign(res, args[0]);
+    }
+
+    // Construct from list of arguments
+    else {
+      [res.status, res.code, res.title, res.detail, res.links, res.paths] = args;
+    }
+
+    return res;
   }
 
   toJSON(): APIErrorJSON {
-    // Intentionally not using {...this}.
-    // See https://github.com/Microsoft/TypeScript/issues/10727
-    return Object.assign({}, this); //tslint:disable-line:prefer-object-spread
+    return {...(this as object)};
   }
 
   /**
@@ -86,7 +91,7 @@ export default class APIError extends Error {
         err.status || err.statusCode || 500,
         err.code,
         err.title || fallbackTitle,
-        err.details || (err.message ? err.message : undefined),
+        err.detail || err.details || (err.message ? err.message : undefined),
         err.links,
         err.paths
       );
@@ -94,7 +99,7 @@ export default class APIError extends Error {
 
     // Otherwise, we just show a generic error message.
     else {
-      return new ErrorConstructor(500, undefined, fallbackTitle);
+      return new ErrorConstructor({ status: 500, title: fallbackTitle });
     }
   }
 }

@@ -6,7 +6,7 @@ export default function(body) {
     const errMessage = "Request body is not a valid JSON API document.";
 
     if(typeof body !== "object" || !ownProp.call(body, "data")) {
-      reject(new APIError(400, null, errMessage));
+      reject(new APIError(400, undefined, errMessage));
     }
 
     else {

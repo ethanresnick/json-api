@@ -14,6 +14,18 @@ describe("Error Objects", () => {
     });
   });
 
+  describe("structure", () => {
+    const er = new APIError(300, 1401);
+
+    it("should be an instanceof APIError", () => {
+      expect(er).to.be.instanceof(APIError);
+    });
+
+    it("should have status as an enumerable own property", () => {
+      expect(Object.keys(er)).to.include('status');
+    });
+  })
+
   describe("the fromError helper", () => {
     it("should pass APIError instances through as is", () => {
       const error = new APIError();
