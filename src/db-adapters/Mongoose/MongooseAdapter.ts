@@ -504,10 +504,10 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
         // from population, so we extract the id; otherwise we already have an
         // id. Regardless, we stringify the result because, even though we did
         // toJSON, the id may be an ObjectId (lame).
-        return new ResourceIdentifier({
-          type: referencedType,
-          id: String(docOrId._id ? docOrId._id : docOrId)
-        });
+        return new ResourceIdentifier(
+          referencedType,
+          String(docOrId._id ? docOrId._id : docOrId)
+        );
       });
 
       // go back from an array if neccessary and save.

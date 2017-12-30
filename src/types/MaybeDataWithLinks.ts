@@ -107,7 +107,7 @@ export default class MaybeDataWithLinks<T extends (Resource | ResourceIdentifier
 
   protected delegateDataTransformToParentAsync(methodName: DataAsyncMethods, args) {
     return this.data
-      ? (this.data[methodName] as () => Promise<Data<T>>)(...args)
+      ? (this.data[methodName] as (...args: any[]) => Promise<Data<T>>)(...args)
           .then(newData => this.withNewData(newData))
       : Promise.resolve(this)
   }

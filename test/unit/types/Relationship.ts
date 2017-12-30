@@ -3,8 +3,8 @@ import ResourceIdentifier from "../../../src/types/ResourceIdentifier";
 import Relationship from "../../../src/types/Relationship";
 
 describe("Relationship type", () => {
-  const item1 = new ResourceIdentifier({ type: "a", id: "1" });
-  const item2 = new ResourceIdentifier({ type: "b", id: "2" });
+  const item1 = new ResourceIdentifier("a", "1");
+  const item2 = new ResourceIdentifier("b", "2");
 
   // relationships
   const owner = { "type": "b", "id": "2", "path": "test"};

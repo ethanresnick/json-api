@@ -27,7 +27,7 @@ export default async function(jsonData, parseAsLinkage = false) {
 }
 
 function toResourceIdentifier(json) {
-  return new ResourceIdentifier(json);
+  return ResourceIdentifier.fromJSON(json);
 }
 
 function toResource(json) {

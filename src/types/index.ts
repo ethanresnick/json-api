@@ -1,5 +1,5 @@
 import Resource, { ResourceJSON } from './Resource';
-import ResourceIdentifier from "./ResourceIdentifier";
+import ResourceIdentifier, { ResourceIdentifierJSON } from "./ResourceIdentifier";
 import Document, { DocumentData } from "./Document";
 import Data from "./Data";
 
@@ -11,7 +11,6 @@ export type DataOf<T> = null | T | T[];
 export type PrimaryData = DataOf<Resource> | DataOf<ResourceIdentifier>;
 
 // Types for JSON values
-export type ResourceIdentifierJSON = { type: string; id: string };
 export type LinkageJSON = DataOf<ResourceIdentifierJSON>;
 export type PrimaryDataJSON = DataOf<ResourceJSON> | LinkageJSON;
 export type Links = { [linkName: string]: any };
