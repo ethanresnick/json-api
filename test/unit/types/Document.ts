@@ -72,18 +72,17 @@ describe("Document class", () => {
         .to.containSubset([{"id": "32", "type": "people", "attributes": {"name": "ethan"}}]);
     });
 
-    it("Should include a top-level self links", () => {
-      const reqURI = "http://bob";
+    it("Should include a top-level self links from primary", () => {
+      const primary = ResourceSet.of({ data: people });
+      primary.links.self = () => "http://bob";
       const doc = new Document({
-        primary: ResourceSet.of({ data: people }),
+        primary,
         included: [person2]
-        , reqURI
       });
 
       const docJSON = doc.toJSON();
-
       expect(docJSON.links).to.be.an("object");
-      expect(docJSON.links && docJSON.links.self).to.equal(reqURI);
+      expect(docJSON.links && docJSON.links.self).to.equal("http://bob");
     });
 
     it("should output top-level meta information, iff provided", () => {

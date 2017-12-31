@@ -79,7 +79,7 @@ class APIController {
   ) {
     const registry = this.registry;
     const makeDoc = (data: DocumentData) =>
-      new Document({ reqURI: request.uri, urlTemplates: this.urlTemplateFns, ...data });
+      new Document({ urlTemplates: this.urlTemplateFns, ...data });
 
     let jsonAPIResult: Result = {};
     let contentType: string | undefined;
@@ -165,6 +165,14 @@ class APIController {
         query.returning,
         query.catch || makeResultFromErrors.bind(null, makeDoc)
       );
+
+      // add top level self link pre send.
+      if(jsonAPIResult.document && jsonAPIResult.document.primary) {
+        jsonAPIResult.document.primary.links = {
+          "self": () => request.uri,
+          ...jsonAPIResult.document.primary.links
+        };
+      }
 
       // apply transforms pre-send
       if(jsonAPIResult.document) {

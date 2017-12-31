@@ -27,7 +27,6 @@ export type DocumentData = {
   included?: Resource[];
   primary?: ResourceSet | Relationship;
   errors?: APIError[];
-  reqURI?: string;
   urlTemplates?: UrlTemplateFnsByType;
 };
 
@@ -36,7 +35,6 @@ export default class Document {
   public included: DocumentData['included'];
   public primary: DocumentData['primary'];
   public errors: DocumentData['errors'];
-  public reqURI: DocumentData['reqURI'];
   public urlTemplates: UrlTemplateFnsByType;
 
   constructor(data: DocumentData) {
@@ -76,11 +74,6 @@ export default class Document {
 
     if(!objectIsEmpty(links)) {
       res.links = links;
-    }
-
-    // TODO: top-level related link.
-    if(this.reqURI) {
-      res.links = { "self": this.reqURI, ...res.links };
     }
 
     if(this.errors) {

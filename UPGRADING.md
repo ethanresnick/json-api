@@ -3,6 +3,7 @@
 ## Breaking Changes
 - `ResourceIdentifier`'s are now constructed with two arguments (type, id), rather than a single object with a type and id key. This is to be consistent with the `Resource` constructor.
 - `APIError.fromError` now sets the `detail` property of the returned error by using the `detail` property of the passed in Error and only falling back to the `details` property if `detail` is not set. Before, it prefered `details`.
+- `Document` instances are no longer constructed with the request URI as an argument (which was used to set the top-level self link). Instead, the top-level self link should be set like all other top-level links: by storing a self template on the value in `Document.primary`.
 
 # 3.0.0-beta.1
 
