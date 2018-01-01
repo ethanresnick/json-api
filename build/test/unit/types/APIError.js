@@ -12,6 +12,15 @@ describe("Error Objects", () => {
             chai_1.expect(er.code === "1401").to.be.true;
         });
     });
+    describe("structure", () => {
+        const er = new APIError_1.default(300, 1401);
+        it("should be an instanceof APIError", () => {
+            chai_1.expect(er).to.be.instanceof(APIError_1.default);
+        });
+        it("should have status as an enumerable own property", () => {
+            chai_1.expect(Object.keys(er)).to.include('status');
+        });
+    });
     describe("the fromError helper", () => {
         it("should pass APIError instances through as is", () => {
             const error = new APIError_1.default();

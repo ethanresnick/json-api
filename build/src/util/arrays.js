@@ -10,11 +10,6 @@ function arrayValuesMatch(array1, array2) {
 }
 exports.arrayValuesMatch = arrayValuesMatch;
 function arrayContains(arr, value) {
-    if (!Number.isNaN(value)) {
-        return arr.indexOf(value) !== -1;
-    }
-    else {
-        return arr.some(Number.isNaN) === true;
-    }
+    return arr.includes(value);
 }
 exports.arrayContains = arrayContains;

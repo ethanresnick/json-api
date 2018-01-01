@@ -40,6 +40,7 @@ describe("Creating Resources", () => {
             });
         });
         describe("Links", () => {
+            it.skip("should have a top-level self link");
         });
         describe("Transforms", () => {
             describe("beforeSave", () => {

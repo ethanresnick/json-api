@@ -1,5 +1,4 @@
-import { LinkageJSON, UrlTemplateFns, Mapper, AsyncMapper } from "./index";
-import Data from "./Data";
+import { LinkageJSON, UrlTemplateFns } from "./index";
 import MaybeDataWithLinks, { MaybeDataWithLinksArgs } from "./MaybeDataWithLinks";
 import ResourceIdentifier from "./ResourceIdentifier";
 export declare type RelationshipJSON = {
@@ -21,10 +20,7 @@ export declare type RelationshipArgs = MaybeDataWithLinksArgs<ResourceIdentifier
 export default class Relationship extends MaybeDataWithLinks<ResourceIdentifier> {
     owner: RelationshipOwner;
     protected constructor(it: RelationshipArgs);
-    static of(it: RelationshipArgs): Relationship;
-    map(fn: Mapper<ResourceIdentifier, ResourceIdentifier>): any;
-    mapAsync(fn: AsyncMapper<ResourceIdentifier, ResourceIdentifier>): any;
-    flatMap(fn: (it: ResourceIdentifier) => Data<ResourceIdentifier>): any;
-    flatMapAsync(fn: (it: ResourceIdentifier) => Data<ResourceIdentifier> | Promise<Data<ResourceIdentifier>>): any;
+    protected clone(): this;
     toJSON(fallbackTemplates: UrlTemplateFns): RelationshipJSON;
+    static of(it: RelationshipArgs): Relationship;
 }

@@ -136,13 +136,13 @@ describe("ResourceTypeRegistry", function () {
         it("should be a getter for a type's behaviors", makeGetterTest({ "someSetting": true }, "mytypes", "behaviors"));
     });
     describe("adapter", () => {
-        it("should be a getter for a type's db adapter", makeGetterTest(function () { }, "mytypes", "dbAdapter"));
+        it("should be a getter for a type's db adapter", makeGetterTest(function () { return; }, "mytypes", "dbAdapter"));
     });
     describe("beforeSave", () => {
-        it("should be a getter for a type for a type's beforeSave", makeGetterTest(() => { }, "mytypes", "beforeSave"));
+        it("should be a getter for a type for a type's beforeSave", makeGetterTest(() => { return; }, "mytypes", "beforeSave"));
     });
     describe("beforeRender", () => {
-        it("should be a getter for a type's beforeRender", makeGetterTest(() => { }, "mytypes", "beforeRender"));
+        it("should be a getter for a type's beforeRender", makeGetterTest(() => { return; }, "mytypes", "beforeRender"));
     });
     describe("info", () => {
         it("should be a getter for a type's info", makeGetterTest({}, "mytypes", "info"));

@@ -15,8 +15,9 @@ function default_1(acceptHeader, availableBaseTypes) {
         const acceptables = negotiator.mediaTypes(undefined, { "detailed": true });
         const preferredType = negotiator.mediaType(syntheticAvailableBaseTypes);
         const jsonApiRanges = acceptables.filter((it) => it.type.toLowerCase() === jsonApiBaseType);
+        const notAcceptableError = new APIError_1.default({ status: 406, title: "Not Acceptable" });
         if (jsonApiRanges.length && jsonApiRanges.every(hasParams)) {
-            reject(new APIError_1.default(406, null, "Not Acceptable"));
+            reject(notAcceptableError);
         }
         else if (preferredType && preferredType.toLowerCase() !== jsonApiBaseType) {
             resolve(preferredType);
@@ -25,7 +26,7 @@ function default_1(acceptHeader, availableBaseTypes) {
             resolve("application/vnd.api+json");
         }
         else {
-            reject(new APIError_1.default(406, null, "Not Acceptable"));
+            reject(notAcceptableError);
         }
     });
 }

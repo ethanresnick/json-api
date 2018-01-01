@@ -13,32 +13,19 @@ class MaybeDataWithLinks {
         return this.data ? [...this.data.values] : [];
     }
     map(fn) {
-        const Ctor = this.constructor;
-        return new Ctor({
-            data: this.data && this.data.map(fn),
-            links: this.links
-        });
-    }
-    mapAsync(fn) {
-        const Ctor = this.constructor;
-        return this.data
-            ? this.data.mapAsync(fn)
-                .then(newData => new Ctor({ data: newData, links: this.links }))
-            : Promise.resolve(this);
+        return this.delegateDataTransformToParent("map", arguments);
     }
     flatMap(fn) {
-        const Ctor = this.constructor;
-        return new Ctor({
-            data: this.data && this.data.flatMap(fn),
-            links: this.links
-        });
+        return this.delegateDataTransformToParent("flatMap", arguments);
+    }
+    filter(fn) {
+        return this.delegateDataTransformToParent("filter", arguments);
+    }
+    mapAsync(fn) {
+        return this.delegateDataTransformToParentAsync("mapAsync", arguments);
     }
     flatMapAsync(fn) {
-        const Ctor = this.constructor;
-        return this.data
-            ? this.data.flatMapAsync(fn)
-                .then(newData => new Ctor({ data: newData, links: this.links }))
-            : Promise.resolve(this);
+        return this.delegateDataTransformToParentAsync("flatMapAsync", arguments);
     }
     unwrapWith(fn, linkTemplateData) {
         return {
@@ -49,11 +36,38 @@ class MaybeDataWithLinks {
     every(fn) {
         return this.data ? this.data.every(fn) : true;
     }
+    some(fn) {
+        return this.data ? this.data.some(fn) : false;
+    }
     reduce(fn, initialValue) {
         return this.data ? this.data.reduce(fn, initialValue) : initialValue;
     }
     forEach(fn) {
         this.data && this.data.forEach(fn);
+        return this;
+    }
+    clone() {
+        const Ctor = this.constructor;
+        return new Ctor({
+            data: this.data,
+            links: this.links
+        });
+    }
+    delegateDataTransformToParent(methodName, args) {
+        return this.data
+            ? this.withNewData(this.data[methodName](...args))
+            : this;
+    }
+    delegateDataTransformToParentAsync(methodName, args) {
+        return this.data
+            ? this.data[methodName](...args)
+                .then(newData => this.withNewData(newData))
+            : Promise.resolve(this);
+    }
+    withNewData(newData) {
+        const res = this.clone();
+        res.data = newData;
+        return res;
     }
 }
 exports.default = MaybeDataWithLinks;

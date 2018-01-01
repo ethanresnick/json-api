@@ -15,7 +15,8 @@ export default class Data<T> {
     every(fn: PredicateFn<T>): boolean;
     some(fn: PredicateFn<T>): boolean;
     forEach(fn: (it: T) => void): this;
-    reduce(fn: Reducer<T, any>, initialValue?: any): any;
+    reduce<U>(fn: Reducer<T, U>): U | undefined;
+    reduce<U>(fn: Reducer<T, U>, initialValue: U): U;
     filter(fn: PredicateFn<T>): Data<T>;
     unwrap(): T | T[] | null;
     readonly isSingular: boolean;

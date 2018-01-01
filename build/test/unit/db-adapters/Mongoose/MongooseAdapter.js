@@ -93,24 +93,24 @@ describe("Mongoose Adapter", () => {
         });
         describe("idIsValid", () => {
             it("should reject all == null input", () => {
-                chai_1.expect(MongooseAdapter_1.default.idIsValid()).to.not.be.ok;
-                chai_1.expect(MongooseAdapter_1.default.idIsValid(null)).to.not.be.ok;
-                chai_1.expect(MongooseAdapter_1.default.idIsValid(undefined)).to.not.be.ok;
+                chai_1.expect(MongooseAdapter_1.default.idIsValid()).to.be.false;
+                chai_1.expect(MongooseAdapter_1.default.idIsValid(null)).to.be.false;
+                chai_1.expect(MongooseAdapter_1.default.idIsValid(undefined)).to.be.false;
             });
             it("should reject bad input type", () => {
-                chai_1.expect(MongooseAdapter_1.default.idIsValid(true)).to.not.be.ok;
+                chai_1.expect(MongooseAdapter_1.default.idIsValid(true)).to.be.false;
             });
             it("should reject empty string", () => {
-                chai_1.expect(MongooseAdapter_1.default.idIsValid("")).to.not.be.ok;
+                chai_1.expect(MongooseAdapter_1.default.idIsValid("")).to.be.false;
             });
             it("should reject 12-character strings", () => {
-                chai_1.expect(MongooseAdapter_1.default.idIsValid("aaabbbccc111")).to.not.be.ok;
+                chai_1.expect(MongooseAdapter_1.default.idIsValid("aaabbbccc111")).to.be.false;
             });
             it("should reject numbers", () => {
-                chai_1.expect(MongooseAdapter_1.default.idIsValid(1)).to.not.be.ok;
+                chai_1.expect(MongooseAdapter_1.default.idIsValid(1)).to.be.false;
             });
             it("should accpet valid hex string", () => {
-                chai_1.expect(MongooseAdapter_1.default.idIsValid("552c5e1c604d41e5836bb175")).to.be.ok;
+                chai_1.expect(MongooseAdapter_1.default.idIsValid("552c5e1c604d41e5836bb175")).to.be.true;
             });
         });
         describe("getStandardizedSchema", () => {

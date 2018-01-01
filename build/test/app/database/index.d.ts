@@ -7,7 +7,7 @@ declare const _default: Promise<{
         School: any;
     };
     instance(): typeof mongoose;
-    fixturesRemoveAll(): Promise<{}>;
-    fixturesReset(): any;
+    fixturesRemoveAll: () => Promise<void>;
+    fixturesReset(): Promise<mongoose.Document[]>;
 }>;
 export default _default;

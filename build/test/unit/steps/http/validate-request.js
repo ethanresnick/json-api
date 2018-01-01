@@ -6,9 +6,8 @@ const { expect } = chai;
 describe("Request Validation functions", () => {
     describe("checkBodyExistence", () => {
         it("should return a promise", () => {
-            const res = requestValidators.checkBodyExistence({});
-            expect(res instanceof Promise).to.be.true;
-            res.catch(() => { });
+            const res = requestValidators.checkBodyExistence({}).catch(() => { });
+            expect(res).to.be.instanceof(Promise);
         });
         it("should return a rejected promise if a POST request is missing a body", (done) => {
             const contextMock = { body: undefined, method: "post" };

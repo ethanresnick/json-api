@@ -7,11 +7,33 @@ const Resource_1 = require("../../../../src/types/Resource");
 const Relationship_1 = require("../../../../src/types/Relationship");
 const expect = chai.expect;
 describe("Resource Parser", () => {
-    describe.skip("Parsing Linkage", () => {
-        it.skip("should read in the incoming json correctly", () => {
-            console.log("see https://github.com/json-api/json-api/issues/482");
+    describe("Parsing Linkage", () => {
+        it("should read in the incoming json correctly", () => {
+            const resourceIdentifier = { id: "3", type: "people" };
+            return Promise.all([
+                parse_request_primary_1.default(null, true).then(res => {
+                    expect(res).to.deep.equal(Data_1.default.empty);
+                }),
+                parse_request_primary_1.default([], true).then(res => {
+                    expect(res).to.deep.equal(Data_1.default.of([]));
+                }),
+                parse_request_primary_1.default([resourceIdentifier], true).then(res => {
+                    expect(res).to.deep.equal(Data_1.default.of([resourceIdentifier]));
+                }),
+                parse_request_primary_1.default(resourceIdentifier, true).then(res => {
+                    expect(res).to.deep.equal(Data_1.default.pure(resourceIdentifier));
+                })
+            ]);
         });
-        it.skip("should reject invalid linkage", () => {
+        it("should reject invalid linkage", () => {
+            return Promise.all([
+                parse_request_primary_1.default(true, true).then(() => {
+                    throw new Error("Should have rejected.");
+                }, (e) => { return; }),
+                parse_request_primary_1.default([{ id: "3" }], true).then(() => {
+                    throw new Error("Should have rejected.");
+                }, (e) => { return; })
+            ]);
         });
     });
     describe("Parsing a Collection", () => {
@@ -45,13 +67,14 @@ describe("Resource Parser", () => {
                 done();
             }, done);
         });
-        it("should reject invalid resources", (done) => {
-            parse_request_primary_1.default({ "id": "1" }).then(() => { }, (err) => {
+        it("should reject invalid resources", () => {
+            return parse_request_primary_1.default({ "id": "1" }).then(() => {
+                throw new Error("Should have rejected.");
+            }, (err) => {
                 expect(err.detail).to.match(/type.*required/);
-                done();
             });
         });
-        it("should create Relationship for each link", (done) => {
+        it("should create Relationship for each link", () => {
             const parents = [
                 { "type": "people", "id": "1" }, { "type": "people", "id": "2" }
             ];
@@ -61,12 +84,11 @@ describe("Resource Parser", () => {
                     "parents": { "data": parents }
                 }
             };
-            parse_request_primary_1.default(json).then((resourceData) => {
+            return parse_request_primary_1.default(json).then((resourceData) => {
                 const resource = resourceData.unwrap();
                 expect(resource.relationships.parents).to.be.instanceof(Relationship_1.default);
                 expect(resource.relationships.parents.toJSON({}).data).to.deep.equal(parents);
-                done();
-            }, done);
+            });
         });
     });
 });

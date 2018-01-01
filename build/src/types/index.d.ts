@@ -1,16 +1,15 @@
 import Resource, { ResourceJSON } from './Resource';
-import ResourceIdentifier from "./ResourceIdentifier";
+import ResourceIdentifier, { ResourceIdentifierJSON } from "./ResourceIdentifier";
 import Document, { DocumentData } from "./Document";
 import Data from "./Data";
 export declare type DataOf<T> = null | T | T[];
 export declare type PrimaryData = DataOf<Resource> | DataOf<ResourceIdentifier>;
-export declare type ResourceIdentifierJSON = {
-    type: string;
-    id: string;
-};
 export declare type LinkageJSON = DataOf<ResourceIdentifierJSON>;
 export declare type PrimaryDataJSON = DataOf<ResourceJSON> | LinkageJSON;
-export declare type Reducer<T, U> = (acc: any, it: T, i: number, arr: T[]) => U;
+export declare type Links = {
+    [linkName: string]: any;
+};
+export declare type Reducer<T, U = any> = (acc: U, it: T, i: number, arr: T[]) => U;
 export declare type PredicateFn<T> = (it: T, i: number, arr: T[]) => boolean;
 export declare type Mapper<T, U> = (it: T, i: number, arr: T[]) => U;
 export declare type AsyncMapper<T, U> = (it: T, i: number, arr: T[]) => U | Promise<U>;

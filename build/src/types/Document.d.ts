@@ -1,6 +1,6 @@
 import Resource, { ResourceJSON } from "./Resource";
 import APIError, { APIErrorJSON } from './APIError';
-import { PrimaryDataJSON, UrlTemplateFnsByType } from './index';
+import { PrimaryDataJSON, UrlTemplateFnsByType, Links } from './index';
 import ResourceSet from './ResourceSet';
 import Relationship from './Relationship';
 export declare type DocumentJSON = ({
@@ -13,14 +13,13 @@ export declare type DocumentJSON = ({
     included: undefined;
 }) & {
     meta?: object;
-    links?: object;
+    links?: Links;
 };
 export declare type DocumentData = {
     meta?: object;
     included?: Resource[];
     primary?: ResourceSet | Relationship;
     errors?: APIError[];
-    reqURI?: string;
     urlTemplates?: UrlTemplateFnsByType;
 };
 export default class Document {
@@ -28,7 +27,6 @@ export default class Document {
     included: DocumentData['included'];
     primary: DocumentData['primary'];
     errors: DocumentData['errors'];
-    reqURI: DocumentData['reqURI'];
     urlTemplates: UrlTemplateFnsByType;
     constructor(data: DocumentData);
     toJSON(): DocumentJSON;

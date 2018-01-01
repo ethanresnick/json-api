@@ -39,6 +39,18 @@ fixtures.save("all", {
     ]
 });
 exports.default = mongoose.connect("mongodb://localhost/integration-test", { useMongoClient: true }).then(function () {
+    function fixturesRemoveAll() {
+        return new Promise((resolve, reject) => {
+            fixtures.reset((err, res) => {
+                if (err) {
+                    reject(err);
+                }
+                else {
+                    resolve(res);
+                }
+            });
+        });
+    }
     return {
         models() {
             return models;
@@ -46,18 +58,17 @@ exports.default = mongoose.connect("mongodb://localhost/integration-test", { use
         instance() {
             return mongoose;
         },
-        fixturesRemoveAll() {
-            return new Promise((resolve, reject) => {
-                fixtures.reset((err, res) => {
-                    err ? reject(err) : resolve(res);
-                });
-            });
-        },
+        fixturesRemoveAll,
         fixturesReset() {
-            return this.fixturesRemoveAll().then(function () {
+            return fixturesRemoveAll().then(function () {
                 return new Promise((resolve, reject) => {
                     fixtures("all", (err, res) => {
-                        err ? reject(err) : resolve(res);
+                        if (err) {
+                            reject(err);
+                        }
+                        else {
+                            resolve(res);
+                        }
                     });
                 });
             });

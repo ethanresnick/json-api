@@ -57,16 +57,16 @@ describe("Document class", () => {
             expect(doc.toJSON().included)
                 .to.containSubset([{ "id": "32", "type": "people", "attributes": { "name": "ethan" } }]);
         });
-        it("Should include a top-level self links", () => {
-            const reqURI = "http://bob";
+        it("Should include a top-level self links from primary", () => {
+            const primary = ResourceSet_1.default.of({ data: people });
+            primary.links.self = () => "http://bob";
             const doc = new Document_1.default({
-                primary: ResourceSet_1.default.of({ data: people }),
-                included: [person2],
-                reqURI
+                primary,
+                included: [person2]
             });
             const docJSON = doc.toJSON();
             expect(docJSON.links).to.be.an("object");
-            expect(docJSON.links && docJSON.links['self']).to.equal(reqURI);
+            expect(docJSON.links && docJSON.links.self).to.equal("http://bob");
         });
         it("should output top-level meta information, iff provided", () => {
             const docWithoutMeta = new Document_1.default({

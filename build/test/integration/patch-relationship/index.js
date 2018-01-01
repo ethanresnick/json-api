@@ -79,7 +79,7 @@ describe("Patching a relationship", () => {
                 .then(() => {
                 return setRelationship(updates_1.VALID_ORG_RELATIONSHIP_PATCH, url).then(() => {
                     throw new Error("Should have failed");
-                }, (e) => { });
+                }, (e) => { return; });
             });
         });
     });

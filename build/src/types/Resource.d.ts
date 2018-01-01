@@ -28,6 +28,9 @@ export default class Resource {
     attrs: {
         [name: string]: any;
     };
+    attributes: {
+        [name: string]: any;
+    };
     relationships: {
         [name: string]: Relationship;
     };

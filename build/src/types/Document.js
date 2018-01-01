@@ -34,9 +34,6 @@ class Document {
         if (!type_handling_1.objectIsEmpty(links)) {
             res.links = links;
         }
-        if (this.reqURI) {
-            res.links = Object.assign({ "self": this.reqURI }, res.links);
-        }
         if (this.errors) {
             res.errors = this.errors.map(it => it.toJSON());
         }

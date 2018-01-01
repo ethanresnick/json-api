@@ -13,7 +13,7 @@ export default class ResourceSet extends MaybeDataWithLinks<Resource> {
     readonly types: Data<string>;
     toJSON(urlTemplates: UrlTemplateFnsByType): {
         links: {
-            [linkName: string]: string;
+            [linkName: string]: any;
         };
         data: {
             id: string;

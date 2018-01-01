@@ -11,15 +11,29 @@ exports.default = index_1.default.then(function (app) {
     const baseUrl = "http://" + host + ":" + port;
     const appListenPromise = new Promise((resolve, reject) => {
         app.listen(Number(port), host, function (err) {
-            err ? reject(err) : resolve();
+            if (err) {
+                reject(err);
+            }
+            else {
+                resolve();
+            }
         });
     });
-    return appListenPromise.then((app) => {
+    return appListenPromise.then(() => {
         return {
             request(method, url) {
                 const req = superagent[method.toLowerCase()](baseUrl + url).buffer(true);
                 req.promise = () => {
-                    return new Promise((resolveInner, rejectInner) => req.end((err, res) => err ? rejectInner(err) : resolveInner(res)));
+                    return new Promise((resolveInner, rejectInner) => {
+                        req.end((err, res) => {
+                            if (err) {
+                                rejectInner(err);
+                            }
+                            else {
+                                resolveInner(res);
+                            }
+                        });
+                    });
                 };
                 return req;
             },

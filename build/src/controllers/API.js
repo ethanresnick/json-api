@@ -39,7 +39,7 @@ class APIController {
     handle(request, frameworkReq, frameworkRes, queryTransform) {
         return __awaiter(this, void 0, void 0, function* () {
             const registry = this.registry;
-            const makeDoc = (data) => new Document_1.default(Object.assign({ reqURI: request.uri, urlTemplates: this.urlTemplateFns }, data));
+            const makeDoc = (data) => new Document_1.default(Object.assign({ urlTemplates: this.urlTemplateFns }, data));
             let jsonAPIResult = {};
             let contentType;
             try {
@@ -77,6 +77,9 @@ class APIController {
                     }
                 })();
                 jsonAPIResult = yield adapter.doQuery(query).then(query.returning, query.catch || makeResultFromErrors.bind(null, makeDoc));
+                if (jsonAPIResult.document && jsonAPIResult.document.primary) {
+                    jsonAPIResult.document.primary.links = Object.assign({ "self": () => request.uri }, jsonAPIResult.document.primary.links);
+                }
                 if (jsonAPIResult.document) {
                     const primaryData = jsonAPIResult.document.primary &&
                         jsonAPIResult.document.primary.data;

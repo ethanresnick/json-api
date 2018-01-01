@@ -34,7 +34,7 @@ function default_1(jsonData, parseAsLinkage = false) {
 }
 exports.default = default_1;
 function toResourceIdentifier(json) {
-    return new ResourceIdentifier_1.default(json);
+    return ResourceIdentifier_1.default.fromJSON(json);
 }
 function toResource(json) {
     const relationships = json.relationships || {};

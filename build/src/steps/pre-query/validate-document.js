@@ -6,7 +6,7 @@ function default_1(body) {
         const ownProp = Object.prototype.hasOwnProperty;
         const errMessage = "Request body is not a valid JSON API document.";
         if (typeof body !== "object" || !ownProp.call(body, "data")) {
-            reject(new APIError_1.default(400, null, errMessage));
+            reject(new APIError_1.default(400, undefined, errMessage));
         }
         else {
             resolve(undefined);

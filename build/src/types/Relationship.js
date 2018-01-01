@@ -7,29 +7,11 @@ class Relationship extends MaybeDataWithLinks_1.default {
         super(it);
         this.owner = it.owner;
     }
-    static of(it) {
-        return new this(it);
-    }
-    map(fn) {
-        const res = super.map(fn);
-        res.owner = this.owner;
-        return res;
-    }
-    mapAsync(fn) {
-        return super.mapAsync(fn).then((res) => {
-            res.owner = this.owner;
-            return res;
-        });
-    }
-    flatMap(fn) {
-        const res = super.flatMap(fn);
-        res.owner = this.owner;
-        return res;
-    }
-    flatMapAsync(fn) {
-        return super.flatMapAsync(fn).then((res) => {
-            res.owner = this.owner;
-            return res;
+    clone() {
+        return this.constructor.of({
+            data: this.data,
+            links: this.links,
+            owner: this.owner
         });
     }
     toJSON(fallbackTemplates) {
@@ -43,6 +25,9 @@ class Relationship extends MaybeDataWithLinks_1.default {
         const fallbackRelatedTemplate = !links.related && fallbackTemplates.related;
         const finalLinks = Object.assign({}, links, (fallbackSelfTemplate ? { self: fallbackSelfTemplate(templateData) } : {}), (fallbackRelatedTemplate ? { related: fallbackRelatedTemplate(templateData) } : {}));
         return Object.assign({}, (typeof data !== 'undefined' ? { data } : {}), (type_handling_1.objectIsEmpty(finalLinks) ? {} : { links: finalLinks }));
+    }
+    static of(it) {
+        return new this(it);
     }
 }
 exports.default = Relationship;

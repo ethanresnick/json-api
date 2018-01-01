@@ -286,10 +286,7 @@ class MongooseAdapter {
             misc_1.deleteNested(path, attrs);
             const normalizedValAtPath = typeof jsonValAtPath === 'undefined' ? null : jsonValAtPath;
             const linkage = Data_1.default.fromJSON(normalizedValAtPath).map((docOrId) => {
-                return new ResourceIdentifier_1.default({
-                    type: referencedType,
-                    id: String(docOrId._id ? docOrId._id : docOrId)
-                });
+                return new ResourceIdentifier_1.default(referencedType, String(docOrId._id ? docOrId._id : docOrId));
             });
             relationships[path] = Relationship_1.default.of({
                 data: linkage,
