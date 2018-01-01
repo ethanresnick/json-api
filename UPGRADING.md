@@ -1,4 +1,4 @@
-# 3.0.0-beta.2 (Unpublished)
+# 3.0.0-beta.2
 
 ## Breaking Changes
 - `ResourceIdentifier`'s are now constructed with two arguments (type, id), rather than a single object with a type and id key. This is to be consistent with the `Resource` constructor.
