@@ -2,6 +2,7 @@ import mongodb = require("mongodb");
 import mongoose = require("mongoose");
 import pluralize = require("pluralize");
 
+import { AndPredicate } from "../../types/";
 import { arrayContains } from "../../util/arrays";
 import { deleteNested } from "../../util/misc";
 import { forEachArrayOrVal, groupResourcesByType } from "../../util/type-handling";
@@ -55,24 +56,26 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       sort: sorts,
       offset,
       limit,
+      singular
     } = query
 
-    const idOrIds = query.getIdOrIds();
-    const otherFilters = query.getFilters(true);
-    const isFiltering = otherFilters.value.length > 0;
-    const mongofiedFilters = util.toMongoCriteria(otherFilters);
+    const mode = singular ? 'findOne' : 'find';
+    const filters = query.getFilters();
+    const mongofiedFilters = util.toMongoCriteria(filters);
 
     const model = this.getModel(this.constructor.getModelName(type));
-    const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
     const pluralizer = this.inflector.plural;
-    const isPaginating = typeof idOrIds !== 'string' &&
+
+    this.constructor.assertIdsValid(filters, singular);
+
+    const isPaginating = mode !== 'findOne' &&
       (typeof offset !== 'undefined' || typeof limit !== 'undefined');
 
     let primaryDocumentsPromise, includedResourcesPromise;
 
     const queryBuilder = mode === 'findOne' // ternary is a hack for TS compiler
-      ? model[mode](idQuery)
-      : model[mode](idQuery);
+      ? model[mode](mongofiedFilters)
+      : model[mode](mongofiedFilters);
 
     // a promised query result that counts how many results we'd have if
     // we weren't paginating. this just resolves to null when we aren't paginating.
@@ -85,14 +88,6 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       queryBuilder.sort(
         sorts.map(it => (it.direction === 'DESC' ? '-' : '') + it.field).join(" ")
       );
-    }
-
-    // filter out invalid records with simple fields equality.
-    // note that there's a non-trivial risk of sql-like injection here.
-    // we're mostly protected by the fact that we're treating the filter's
-    // value as a single string, though, and not parsing as JSON.
-    if(isFiltering) {
-      queryBuilder.where(mongofiedFilters);
     }
 
     if(offset) {
@@ -176,8 +171,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
 
     return Promise.all([
       primaryDocumentsPromise.then((it) => {
-        const makeCollection = !idOrIds || Array.isArray(idOrIds) ? true : false;
-        return this.constructor.docsToResourceData(it, makeCollection, pluralizer, fields);
+        return this.constructor.docsToResourceData(it, mode === 'find', pluralizer, fields);
       }),
       includedResourcesPromise,
       collectionSizePromise
@@ -287,21 +281,23 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
   // TODO: Update to use findOneAndRemove/findAndRemove,
   // rather than find then remove? Would parallel how update() works.
   async delete(query: DeleteQuery) {
-    const { type: parentType } = query;
-    const idOrIds = query.getIdOrIds();
+    const { type: parentType, singular } = query;
+
+    const mode = singular ? 'findOne' : 'find';
+    const filters = query.getFilters();
+    const mongofiedFilters = util.toMongoCriteria(filters);
 
     const model = this.getModel(this.constructor.getModelName(parentType));
-    const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
 
-    if(!idOrIds) {
-      return Promise.reject(
-        new APIError(400, undefined, "You must specify some resources to delete")
-      );
+    this.constructor.assertIdsValid(filters, singular);
+
+    if(!filters.value.length) {
+      throw new APIError(400, undefined, "You must specify some resources to delete");
     }
 
     const queryBuilder = mode === 'findOne' // ternary is a hack for TS compiler
-      ? model[mode](idQuery)
-      : model[mode](idQuery);
+      ? model[mode](mongofiedFilters)
+      : model[mode](mongofiedFilters);
 
     return Promise.resolve(queryBuilder.exec()).then((docOrDocsOrNull) => {
       const data = Data.fromJSON<mongoose.Document>(docOrDocsOrNull);
@@ -659,40 +655,27 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     return words.join(" ");
   }
 
-  /*
-  Note: adding overloads here creates more (false) compile errors than it fixes,
-  because of issues like https://github.com/Microsoft/TypeScript/issues/10523
-  static getIdQueryType(ids: string[]): ["find", {_id: {$in: string[]}}];
-  static getIdQueryType(id: string): ["findOne", {_id: string}];
-  static getIdQueryType(id: undefined): ["find", {}];
-  static getIdQueryType(): ["find", {}];*/
-  static getIdQueryType(idOrIds: string | string[] | undefined) {
-    type result =
-      ["findOne", {_id: string}] | // one resource
-      ["find", {_id: {$in: string[]}}] | // set of resources
-      ["find", {}]; // all resources in collection
+  /**
+   * Verifies that filter constraints on the id field check against valid
+   * mongo ids, and throws an error if not. TODO: Does this check make sense,
+   * given that we don't also check relationship fields that hold ids?
+   *
+   * @param {AndPredicate} filters A set of filter constraints to check.
+   * @param {boolean} isSingular Whether the query that the filters came from
+   *   is singular. Influences error message.
+   */
+  static assertIdsValid(filters: AndPredicate, isSingular: boolean): void {
+    const idsArray = filters.value.reduce((acc, filter) => {
+      return filter.field === 'id'
+        ? acc.concat(filter.value as any as (string | string[]))
+        : acc;
+    }, [] as string[]);
 
-    const [mode, idQuery, idsArray] = <result & { 2?: string[] }>(() => {
-      if(Array.isArray(idOrIds)) {
-        return ["find", {_id: {"$in": idOrIds}}, idOrIds];
-      }
-
-      else if(typeof idOrIds === "string" && idOrIds) {
-        return ["findOne", {_id: idOrIds}, [idOrIds]];
-      }
-
-      else {
-        return ["find", {}, undefined];
-      }
-    })();
-
-    if (idsArray && !idsArray.every(this.idIsValid)) {
-      throw Array.isArray(idOrIds)
-        ? new APIError(400, undefined, "Invalid ID.")
-        : new APIError(404, undefined, "No matching resource found.", "Invalid ID.");
+    if(!idsArray.every(this.idIsValid)) {
+      throw isSingular
+        ? new APIError(404, undefined, "No matching resource found.", "Invalid ID.")
+        : new APIError(400, undefined, "Invalid ID.");
     }
-
-    return <result>[mode, idQuery];
   }
 
   static idIsValid(id) {

@@ -63,6 +63,13 @@ export function toMongoCriteria(constraintOrPredicate: FieldConstraint | Predica
       ? 'ne'
       : constraintOrPredicate.operator);
 
+  // Type cast is because we only read this below when
+  // we're gauranteed to have a field.
+  const mongoField = <string>
+    (constraintOrPredicate.field === 'id'
+      ? '_id'
+      : constraintOrPredicate.field);
+
   switch(constraintOrPredicate.operator) {
     case "and":
     case "or":
@@ -79,11 +86,11 @@ export function toMongoCriteria(constraintOrPredicate: FieldConstraint | Predica
           };
 
     case "eq":
-      return { [constraintOrPredicate.field]: constraintOrPredicate.value };
+      return { [mongoField]: constraintOrPredicate.value };
 
     default:
       return {
-        [constraintOrPredicate.field]: {
+        [mongoField]: {
           [mongoOperator]: constraintOrPredicate.value
         }
       }

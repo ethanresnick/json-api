@@ -192,6 +192,18 @@ describe("Fetching Collection", () => {
           done();
         }, done).catch(done);
     });
+
+
+    it("should still return resource array even with a single id filter", () => {
+      return Agent.request("GET", '/organizations')
+        .query('filter=(id,54419d550a5069a2129ef254)')
+        .accept("application/vnd.api+json")
+        .then((res) => {
+          expect(res.body.data).to.be.an("array");
+          expect(res.body.data).to.have.length(1);
+          expect(res.body.data[0].id).to.equal('54419d550a5069a2129ef254');
+        });
+    });
   });
 });
 

@@ -1,3 +1,16 @@
+# 3.0.0-beta.3
+
+## Bugfixes
+- MongooseAdapter now correctly respects the `singular` property of find and delete queries.
+
+## Breaking Changes
+- On `FindQuery` and `DeleteQuery` instances:
+  - The `getFilters` method now returns a deep clone of the filters, rather than a shallow clone, so mutating the result is safe.
+  - The `getIdOrIds` method no longer exists; just get the filters with the `getFilters` method and filter the result as needed.
+  - Relatedly, the `getFilters` method now no longer takes an argument to exclude filters that apply to the `id` field; you can easily recreate this yourself.
+  - The `matchingIdOrIds` method no longer forces the query to be `singular: false` when an array of ids to match is provided, or when `undefined` is provided. This very likely won't effect you, as queries default to `singular: false` anyway unless you construct them with a single id filter or with an explicit `singular: true` constructor argument.
+
+
 # 3.0.0-beta.2
 
 ## Breaking Changes

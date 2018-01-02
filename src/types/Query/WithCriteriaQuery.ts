@@ -6,6 +6,7 @@
 // give up basically all type safety in order to use it.
 import Query, { QueryOptions } from './Query';
 import { FieldConstraint, Predicate, AndPredicate } from "../index";
+import R = require("ramda");
 
 export type WithCriteriaQueryOptions = QueryOptions & {
   limit?: number;
@@ -83,10 +84,15 @@ export default class WithCriteriaQuery extends Query {
 
   /**
    * This function adds criteria to the query to have it only match an id,
-   * or list of ids (or the whole collection if undefined is passed in).
-   * This function has a special role in preventing Mongo injection.
-   * It always casts the ids to a string, and adds the criteria to the outer-
-   * most and predicate in the where so it can't be overriden.
+   * or list of ids. Matching one id forces the query to singular mode, but
+   * matching multiple ids will leave the query singular if it was already;
+   * otherwise, it's plural. This function never removes existing id filters,
+   * which is important for security (so a user-provided id filter query
+   * parameter, e.g., can't override a hard-coded one extracted from the url).
+   * Passing undefined is a noop, which is convenient if you only might have an
+   * id to filter on. This function has a special role in preventing Mongo
+   * injection: it always casts the ids to a string, and adds the criteria to
+   * the outer-most and predicate in the where so it can't be overriden.
    * See https://thecodebarbarian.wordpress.com/2014/09/04/defending-against-query-selector-injection-attacks/
    *
    * @param {string | string[] | undefined = undefined} idOrIds [description]
@@ -100,14 +106,6 @@ export default class WithCriteriaQuery extends Query {
         operator: "in",
         value: idOrIds.map(String)
       });
-
-      res.query = {
-        ...res.query,
-        criteria: {
-          ...res.query.criteria,
-          singular: false
-        }
-      };
     }
 
     else if(typeof idOrIds === "string" && idOrIds) {
@@ -127,51 +125,23 @@ export default class WithCriteriaQuery extends Query {
     }
 
     else {
-      res = this.clone();
-      res.query = {
-        ...res.query,
-        criteria: {
-          ...res.query.criteria,
-          singular: false
-        }
-      };
+      res = this;
     }
 
     return res;
   }
 
-  /**
-   * Is the inverse of @see matchingIdOrIds.
-   * (I.e., returns the value that was passed into that function.)
-   */
-  getIdOrIds(): string | string[] | undefined {
-    const idRestrictions =
-      this.query.criteria.where.value.filter(it => it.field === 'id');
-
-    if(idRestrictions.length > 1) {
-      throw new Error("Expected only one id criterion to be present.");
-    }
-
-    if(idRestrictions[0]) {
-      const expectedOperator = Array.isArray(idRestrictions[0]) ? "in"  : "eq";
-      if(idRestrictions[0].operator !== expectedOperator) {
-        throw new Error("Expected id criterion to pick out an exact set of ids.");
-      }
-    }
-
-    return idRestrictions[0]
-      ? <string | string[]>idRestrictions[0].value
-      : undefined;
+  getFilters(): AndPredicate {
+    return R.clone(this.query.criteria.where);
   }
 
-  getFilters(excludeIdFilters = false): AndPredicate {
-    const rootFilterPredicate = this.query.criteria.where;
-    return {
-      ...rootFilterPredicate,
-      value: excludeIdFilters
-        ? rootFilterPredicate.value.filter(it => it.field !== 'id')
-        : rootFilterPredicate.value
-    };
+  // Still experimental
+  protected removeFilter(filter: FieldConstraint | Predicate) {
+    const res = this.clone();
+    res.query.criteria.where.value =
+      res.query.criteria.where.value.filter(it => !R.equals(it, filter));
+
+    return res;
   }
 
   get offset() {
@@ -180,5 +150,9 @@ export default class WithCriteriaQuery extends Query {
 
   get limit() {
     return this.query.criteria.limit;
+  }
+
+  get singular() {
+    return this.query.criteria.singular;
   }
 }

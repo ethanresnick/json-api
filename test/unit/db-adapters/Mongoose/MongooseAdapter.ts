@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import mongoose = require("mongoose");
 import APIError from "../../../../src/types/APIError";
+import { AndPredicate } from "../../../../src/types";
 import MongooseAdapter from "../../../../src/db-adapters/Mongoose/MongooseAdapter";
 
 describe("Mongoose Adapter", () => {
@@ -68,39 +69,62 @@ describe("Mongoose Adapter", () => {
       });
     });
 
-    describe("getIdQueryType", () => {
-      it("should handle empty input", () => {
-        const res = MongooseAdapter.getIdQueryType(undefined);
-        expect(res[0]).to.equal("find");
-        expect(res[1]).to.deep.equal({});
+    describe("assertIdsValid", () => {
+      it("should return void on empty input, a valid id, or valid ids", () => {
+        const basicPredicate = {
+          operator: <"and">"and",
+          value: [{ field: "a", value: <any>"b", operator: "eq"}],
+          field: undefined
+        };
+
+        const validInputs = [
+          basicPredicate,
+          {
+            ...basicPredicate,
+            values: basicPredicate.value.concat({
+              field: "id",
+              value: "552c5e1c604d41e5836bb174",
+              operator: 'eq'
+            })
+          },
+          {
+            ...basicPredicate,
+            values: basicPredicate.value.concat({
+              field: "id",
+              value: ["552c5e1c604d41e5836bb174", "552c5e1c604d41e5836bb175"],
+              operator: 'in'
+            })
+          }
+        ];
+
+        const results = validInputs.map(it =>
+          MongooseAdapter.assertIdsValid((it as any as AndPredicate), true));
+
+        expect(results.every(it => it === undefined)).to.be.true;
       });
 
-      describe("string", () => {
-        it("should throw on invalid input", () => {
-          const fn = function() { MongooseAdapter.getIdQueryType("1"); };
-          expect(fn).to.throw(APIError);
-        });
+      it("should throw on an invalid id, or if any id in an array is invalid", () => {
+        const fn = () => MongooseAdapter.assertIdsValid({
+          operator: <"and">"and",
+          value: [
+            { field: "a", value: <any>"b", operator: "eq"},
+            { field: "id", value: "1", operator: "eq"}
+          ],
+          field: undefined
+        }, true);
+        expect(fn).to.throw(APIError);
 
-        it("should produce query on valid input", () => {
-          const res = MongooseAdapter.getIdQueryType("552c5e1c604d41e5836bb174");
-          expect(res[0]).to.equal("findOne");
-          expect((<any>res[1])._id).to.equal("552c5e1c604d41e5836bb174");
-        });
-      });
 
-      describe("array", () => {
-        it("should throw if any ids are invalid", () => {
-          const fn = function() { MongooseAdapter.getIdQueryType(["1", "552c5e1c604d41e5836bb174"]); };
-          expect(fn).to.throw(APIError);
-        });
+        const fn2 = () => MongooseAdapter.assertIdsValid({
+          operator: <"and">"and",
+          value: [
+            { field: "a", value: "b", operator: "eq"},
+            { field: "id", value: ["1", "552c5e1c604d41e5836bb174"], operator: "in"}
+          ],
+          field: undefined
+        }, false);
 
-        it("should produce query on valid input", () => {
-          const res = MongooseAdapter.getIdQueryType(["552c5e1c604d41e5836bb174", "552c5e1c604d41e5836bb175"]);
-          expect(res[0]).to.equal("find");
-          expect((<any>res[1])._id.$in).to.be.an('array');
-          expect((<any>res[1])._id.$in[0]).to.equal("552c5e1c604d41e5836bb174");
-          expect((<any>res[1])._id.$in[1]).to.equal("552c5e1c604d41e5836bb175");
-        });
+        expect(fn2).to.throw(APIError);
       });
     });
 
