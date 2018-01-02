@@ -60,35 +60,48 @@ describe("Mongoose Adapter", () => {
                 chai_1.expect(MongooseAdapter_1.default.toFriendlyName("isCaseB")).to.equal("Is Case B");
             });
         });
-        describe("getIdQueryType", () => {
-            it("should handle empty input", () => {
-                const res = MongooseAdapter_1.default.getIdQueryType(undefined);
-                chai_1.expect(res[0]).to.equal("find");
-                chai_1.expect(res[1]).to.deep.equal({});
+        describe("assertIdsValid", () => {
+            it("should return void on empty input, a valid id, or valid ids", () => {
+                const basicPredicate = {
+                    operator: "and",
+                    value: [{ field: "a", value: "b", operator: "eq" }],
+                    field: undefined
+                };
+                const validInputs = [
+                    basicPredicate,
+                    Object.assign({}, basicPredicate, { values: basicPredicate.value.concat({
+                            field: "id",
+                            value: "552c5e1c604d41e5836bb174",
+                            operator: 'eq'
+                        }) }),
+                    Object.assign({}, basicPredicate, { values: basicPredicate.value.concat({
+                            field: "id",
+                            value: ["552c5e1c604d41e5836bb174", "552c5e1c604d41e5836bb175"],
+                            operator: 'in'
+                        }) })
+                ];
+                const results = validInputs.map(it => MongooseAdapter_1.default.assertIdsValid(it, true));
+                chai_1.expect(results.every(it => it === undefined)).to.be.true;
             });
-            describe("string", () => {
-                it("should throw on invalid input", () => {
-                    const fn = function () { MongooseAdapter_1.default.getIdQueryType("1"); };
-                    chai_1.expect(fn).to.throw(APIError_1.default);
-                });
-                it("should produce query on valid input", () => {
-                    const res = MongooseAdapter_1.default.getIdQueryType("552c5e1c604d41e5836bb174");
-                    chai_1.expect(res[0]).to.equal("findOne");
-                    chai_1.expect(res[1]._id).to.equal("552c5e1c604d41e5836bb174");
-                });
-            });
-            describe("array", () => {
-                it("should throw if any ids are invalid", () => {
-                    const fn = function () { MongooseAdapter_1.default.getIdQueryType(["1", "552c5e1c604d41e5836bb174"]); };
-                    chai_1.expect(fn).to.throw(APIError_1.default);
-                });
-                it("should produce query on valid input", () => {
-                    const res = MongooseAdapter_1.default.getIdQueryType(["552c5e1c604d41e5836bb174", "552c5e1c604d41e5836bb175"]);
-                    chai_1.expect(res[0]).to.equal("find");
-                    chai_1.expect(res[1]._id.$in).to.be.an('array');
-                    chai_1.expect(res[1]._id.$in[0]).to.equal("552c5e1c604d41e5836bb174");
-                    chai_1.expect(res[1]._id.$in[1]).to.equal("552c5e1c604d41e5836bb175");
-                });
+            it("should throw on an invalid id, or if any id in an array is invalid", () => {
+                const fn = () => MongooseAdapter_1.default.assertIdsValid({
+                    operator: "and",
+                    value: [
+                        { field: "a", value: "b", operator: "eq" },
+                        { field: "id", value: "1", operator: "eq" }
+                    ],
+                    field: undefined
+                }, true);
+                chai_1.expect(fn).to.throw(APIError_1.default);
+                const fn2 = () => MongooseAdapter_1.default.assertIdsValid({
+                    operator: "and",
+                    value: [
+                        { field: "a", value: "b", operator: "eq" },
+                        { field: "id", value: ["1", "552c5e1c604d41e5836bb174"], operator: "in" }
+                    ],
+                    field: undefined
+                }, false);
+                chai_1.expect(fn2).to.throw(APIError_1.default);
             });
         });
         describe("idIsValid", () => {

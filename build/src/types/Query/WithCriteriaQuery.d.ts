@@ -20,8 +20,9 @@ export default class WithCriteriaQuery extends Query {
     constructor(opts: WithCriteriaQueryOptions);
     andWhere(constraint: FieldConstraint | Predicate): this;
     matchingIdOrIds(idOrIds?: string | string[] | undefined): any;
-    getIdOrIds(): string | string[] | undefined;
-    getFilters(excludeIdFilters?: boolean): AndPredicate;
+    getFilters(): AndPredicate;
+    protected removeFilter(filter: FieldConstraint | Predicate): this;
     readonly offset: number | undefined;
     readonly limit: number | undefined;
+    readonly singular: boolean;
 }

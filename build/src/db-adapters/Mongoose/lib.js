@@ -40,6 +40,9 @@ function toMongoCriteria(constraintOrPredicate) {
         (constraintOrPredicate.operator === 'neq'
             ? 'ne'
             : constraintOrPredicate.operator);
+    const mongoField = (constraintOrPredicate.field === 'id'
+        ? '_id'
+        : constraintOrPredicate.field);
     switch (constraintOrPredicate.operator) {
         case "and":
         case "or":
@@ -49,10 +52,10 @@ function toMongoCriteria(constraintOrPredicate) {
                     [mongoOperator]: constraintOrPredicate.value.map(toMongoCriteria)
                 };
         case "eq":
-            return { [constraintOrPredicate.field]: constraintOrPredicate.value };
+            return { [mongoField]: constraintOrPredicate.value };
         default:
             return {
-                [constraintOrPredicate.field]: {
+                [mongoField]: {
                     [mongoOperator]: constraintOrPredicate.value
                 }
             };

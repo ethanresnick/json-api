@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Query_1 = require("./Query");
+const R = require("ramda");
 class WithCriteriaQuery extends Query_1.default {
     constructor(opts) {
         super(opts);
@@ -35,7 +36,6 @@ class WithCriteriaQuery extends Query_1.default {
                 operator: "in",
                 value: idOrIds.map(String)
             });
-            res.query = Object.assign({}, res.query, { criteria: Object.assign({}, res.query.criteria, { singular: false }) });
         }
         else if (typeof idOrIds === "string" && idOrIds) {
             res = this.andWhere({
@@ -46,37 +46,27 @@ class WithCriteriaQuery extends Query_1.default {
             res.query = Object.assign({}, res.query, { criteria: Object.assign({}, res.query.criteria, { singular: true }) });
         }
         else {
-            res = this.clone();
-            res.query = Object.assign({}, res.query, { criteria: Object.assign({}, res.query.criteria, { singular: false }) });
+            res = this;
         }
         return res;
     }
-    getIdOrIds() {
-        const idRestrictions = this.query.criteria.where.value.filter(it => it.field === 'id');
-        if (idRestrictions.length > 1) {
-            throw new Error("Expected only one id criterion to be present.");
-        }
-        if (idRestrictions[0]) {
-            const expectedOperator = Array.isArray(idRestrictions[0]) ? "in" : "eq";
-            if (idRestrictions[0].operator !== expectedOperator) {
-                throw new Error("Expected id criterion to pick out an exact set of ids.");
-            }
-        }
-        return idRestrictions[0]
-            ? idRestrictions[0].value
-            : undefined;
+    getFilters() {
+        return R.clone(this.query.criteria.where);
     }
-    getFilters(excludeIdFilters = false) {
-        const rootFilterPredicate = this.query.criteria.where;
-        return Object.assign({}, rootFilterPredicate, { value: excludeIdFilters
-                ? rootFilterPredicate.value.filter(it => it.field !== 'id')
-                : rootFilterPredicate.value });
+    removeFilter(filter) {
+        const res = this.clone();
+        res.query.criteria.where.value =
+            res.query.criteria.where.value.filter(it => !R.equals(it, filter));
+        return res;
     }
     get offset() {
         return this.query.criteria.offset;
     }
     get limit() {
         return this.query.criteria.limit;
+    }
+    get singular() {
+        return this.query.criteria.singular;
     }
 }
 exports.default = WithCriteriaQuery;

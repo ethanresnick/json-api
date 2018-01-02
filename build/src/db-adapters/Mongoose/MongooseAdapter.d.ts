@@ -3,6 +3,7 @@
 import mongodb = require("mongodb");
 import mongoose = require("mongoose");
 import pluralize = require("pluralize");
+import { AndPredicate } from "../../types/";
 import Data from "../../types/Data";
 import Resource from "../../types/Resource";
 import FieldDocumentation from "../../types/Documentation/Field";
@@ -41,13 +42,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     static getChildTypes(model: any, pluralizer?: (word: string) => string): string[];
     static getStandardizedSchema(model: any, pluralizer?: (word: string) => string): FieldDocumentation[];
     static toFriendlyName(pathOrModelName: string): string;
-    static getIdQueryType(idOrIds: string | string[] | undefined): ["findOne", {
-        _id: string;
-    }] | ["find", {
-        _id: {
-            $in: string[];
-        };
-    }] | ["find", {}];
+    static assertIdsValid(filters: AndPredicate, isSingular: boolean): void;
     static idIsValid(id: any): boolean;
     static unaryFilterOperators: string[];
     static binaryFilterOperators: string[];

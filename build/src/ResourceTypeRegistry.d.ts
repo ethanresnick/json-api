@@ -40,8 +40,8 @@ export default class ResourceTypeRegistry {
     urlTemplates(): URLTemplates;
     urlTemplates(type: string): URLTemplatesForType;
     dbAdapter(type: any): AdapterInstance<any>;
-    beforeSave(type: any): TransformFn<Resource> | TransformFn<ResourceIdentifier | Resource> | undefined;
-    beforeRender(type: any): TransformFn<Resource> | TransformFn<ResourceIdentifier | Resource> | undefined;
+    beforeSave(type: any): TransformFn<Resource> | TransformFn<Resource | ResourceIdentifier> | undefined;
+    beforeRender(type: any): TransformFn<Resource> | TransformFn<Resource | ResourceIdentifier> | undefined;
     behaviors(type: any): object | undefined;
     defaultIncludes(type: any): string[] | undefined;
     info(type: any): ResourceTypeInfo | undefined;

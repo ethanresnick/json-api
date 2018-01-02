@@ -36,28 +36,24 @@ class MongooseAdapter {
     }
     find(query) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { type, populates: includePaths, select: fields, sort: sorts, offset, limit, } = query;
-            const idOrIds = query.getIdOrIds();
-            const otherFilters = query.getFilters(true);
-            const isFiltering = otherFilters.value.length > 0;
-            const mongofiedFilters = util.toMongoCriteria(otherFilters);
+            const { type, populates: includePaths, select: fields, sort: sorts, offset, limit, singular } = query;
+            const mode = singular ? 'findOne' : 'find';
+            const filters = query.getFilters();
+            const mongofiedFilters = util.toMongoCriteria(filters);
             const model = this.getModel(this.constructor.getModelName(type));
-            const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
             const pluralizer = this.inflector.plural;
-            const isPaginating = typeof idOrIds !== 'string' &&
+            this.constructor.assertIdsValid(filters, singular);
+            const isPaginating = mode !== 'findOne' &&
                 (typeof offset !== 'undefined' || typeof limit !== 'undefined');
             let primaryDocumentsPromise, includedResourcesPromise;
             const queryBuilder = mode === 'findOne'
-                ? model[mode](idQuery)
-                : model[mode](idQuery);
+                ? model[mode](mongofiedFilters)
+                : model[mode](mongofiedFilters);
             const collectionSizePromise = isPaginating
                 ? model.count(mongofiedFilters).exec()
                 : Promise.resolve(null);
             if (Array.isArray(sorts)) {
                 queryBuilder.sort(sorts.map(it => (it.direction === 'DESC' ? '-' : '') + it.field).join(" "));
-            }
-            if (isFiltering) {
-                queryBuilder.where(mongofiedFilters);
             }
             if (offset) {
                 queryBuilder.skip(offset);
@@ -104,8 +100,7 @@ class MongooseAdapter {
             }
             return Promise.all([
                 primaryDocumentsPromise.then((it) => {
-                    const makeCollection = !idOrIds || Array.isArray(idOrIds) ? true : false;
-                    return this.constructor.docsToResourceData(it, makeCollection, pluralizer, fields);
+                    return this.constructor.docsToResourceData(it, mode === 'find', pluralizer, fields);
                 }),
                 includedResourcesPromise,
                 collectionSizePromise
@@ -170,16 +165,18 @@ class MongooseAdapter {
     }
     delete(query) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { type: parentType } = query;
-            const idOrIds = query.getIdOrIds();
+            const { type: parentType, singular } = query;
+            const mode = singular ? 'findOne' : 'find';
+            const filters = query.getFilters();
+            const mongofiedFilters = util.toMongoCriteria(filters);
             const model = this.getModel(this.constructor.getModelName(parentType));
-            const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
-            if (!idOrIds) {
-                return Promise.reject(new APIError_1.default(400, undefined, "You must specify some resources to delete"));
+            this.constructor.assertIdsValid(filters, singular);
+            if (!filters.value.length) {
+                throw new APIError_1.default(400, undefined, "You must specify some resources to delete");
             }
             const queryBuilder = mode === 'findOne'
-                ? model[mode](idQuery)
-                : model[mode](idQuery);
+                ? model[mode](mongofiedFilters)
+                : model[mode](mongofiedFilters);
             return Promise.resolve(queryBuilder.exec()).then((docOrDocsOrNull) => {
                 const data = Data_1.default.fromJSON(docOrDocsOrNull);
                 if (data.size === 0) {
@@ -376,24 +373,17 @@ class MongooseAdapter {
         }
         return words.join(" ");
     }
-    static getIdQueryType(idOrIds) {
-        const [mode, idQuery, idsArray] = (() => {
-            if (Array.isArray(idOrIds)) {
-                return ["find", { _id: { "$in": idOrIds } }, idOrIds];
-            }
-            else if (typeof idOrIds === "string" && idOrIds) {
-                return ["findOne", { _id: idOrIds }, [idOrIds]];
-            }
-            else {
-                return ["find", {}, undefined];
-            }
-        })();
-        if (idsArray && !idsArray.every(this.idIsValid)) {
-            throw Array.isArray(idOrIds)
-                ? new APIError_1.default(400, undefined, "Invalid ID.")
-                : new APIError_1.default(404, undefined, "No matching resource found.", "Invalid ID.");
+    static assertIdsValid(filters, isSingular) {
+        const idsArray = filters.value.reduce((acc, filter) => {
+            return filter.field === 'id'
+                ? acc.concat(filter.value)
+                : acc;
+        }, []);
+        if (!idsArray.every(this.idIsValid)) {
+            throw isSingular
+                ? new APIError_1.default(404, undefined, "No matching resource found.", "Invalid ID.")
+                : new APIError_1.default(400, undefined, "Invalid ID.");
         }
-        return [mode, idQuery];
     }
     static idIsValid(id) {
         return typeof id === "string" && /^[0-9a-fA-F]{24}$/.test(id);
