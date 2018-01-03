@@ -1,8 +1,8 @@
 import { Result } from '../index';
 export type QueryOptions = {
   type: string,
-  returning: (result: any) => Result,
-  catch?: (err: any) => Result
+  returning: (result: any) => Result | Promise<Result>,
+  catch?: (err: any) => Result | Promise<Result>
 };
 
 abstract class Query {

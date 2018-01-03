@@ -88,8 +88,8 @@ export default database.then(function(dbModule) {
     Front.transformedAPIRequest((query: Query) => {
       const origReturning = query.returning;
 
-      return query.resultsIn((...args) => {
-        const origResult = (origReturning as any)(...args);
+      return query.resultsIn(async (...args) => {
+        const origResult = await (origReturning as any)(...args);
         const origDocument = origResult.document as Document;
         const names = (<ResourceSet>origDocument.primary).map(it => it.attrs.name).values;
         origDocument.meta = { ...origDocument.meta, names };

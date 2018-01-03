@@ -1,3 +1,7 @@
+# 3.0.0-beta.4
+
+## Breaking Changes
+- Query.returning and query.catch can now be async (returning a `Promise<Result>` rather than a `Result` directly). Accordingly, if you were wrapping one of those functions, you'll now have to `await` the return value.
 # 3.0.0-beta.3
 
 ## Bugfixes
