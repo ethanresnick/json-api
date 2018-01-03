@@ -3,7 +3,6 @@ import mongoose = require("mongoose");
 import pluralize = require("pluralize");
 
 import { AndPredicate } from "../../types/";
-import { arrayContains } from "../../util/arrays";
 import { deleteNested } from "../../util/misc";
 import { forEachArrayOrVal, groupResourcesByType } from "../../util/type-handling";
 import * as util from "./lib";
@@ -126,7 +125,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
 
       includePaths.map((it) => it.split(".")).forEach((pathParts) => {
         // first, check that the include path is valid.
-        if(!arrayContains(refPaths, pathParts[0])) {
+        if(!refPaths.includes(pathParts[0])) {
           const title = "Invalid include path.";
           const detail = `Resources of type "${type}" don't have a(n) "${pathParts[0]}" relationship.`;
           throw new APIError(400, undefined, title, detail);
@@ -470,7 +469,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
 
     refPaths.forEach((path) => {
       // skip if applicable
-      if(fields && fields[type] && !arrayContains(fields[type], path)) {
+      if(fields && fields[type] && !fields[type].includes(path)) {
         return;
       }
 
@@ -568,7 +567,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     };
 
     model.schema.eachPath((name, type) => {
-      if(arrayContains([versionKey, discriminatorKey], name)) {
+      if([versionKey, discriminatorKey].includes(name)) {
         return;
       }
 
