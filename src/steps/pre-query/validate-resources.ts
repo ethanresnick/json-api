@@ -1,7 +1,7 @@
 import { groupResourcesByType } from "../../util/type-handling";
 import { isSubsetOf } from "../../util/misc";
 import APIError from "../../types/APIError";
-import Data from "../../types/Data";
+import Data from "../../types/Generic/Data";
 import Resource from "../../types/Resource";
 
 export default function(endpointParentType, data: Data<Resource>, registry) {

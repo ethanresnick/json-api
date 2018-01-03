@@ -6,7 +6,7 @@ import { AndPredicate } from "../../types/";
 import { deleteNested } from "../../util/misc";
 import { forEachArrayOrVal, groupResourcesByType } from "../../util/type-handling";
 import * as util from "./lib";
-import Data from "../../types/Data";
+import Data from "../../types/Generic/Data";
 import Resource, { ResourceWithId } from "../../types/Resource";
 import ResourceIdentifier from "../../types/ResourceIdentifier";
 import Relationship from "../../types/Relationship";
@@ -507,7 +507,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
 
       // go back from an array if neccessary and save.
       relationships[path] = Relationship.of({
-        data: linkage,
+        data: linkage as Data<ResourceIdentifier>,
         owner: { type, id: doc.id, path }
       });
     });

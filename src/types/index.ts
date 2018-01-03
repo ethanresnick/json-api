@@ -1,7 +1,7 @@
 import Resource, { ResourceJSON } from './Resource';
 import ResourceIdentifier, { ResourceIdentifierJSON } from "./ResourceIdentifier";
 import Document, { DocumentData } from "./Document";
-import Data from "./Data";
+import Data from "./Generic/Data";
 
 // A helper type to capture the ability of
 // a given type T to appear singularly or in an array.

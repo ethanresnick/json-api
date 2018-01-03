@@ -2,7 +2,7 @@ import APIError from "../../types/APIError";
 import Resource from "../../types/Resource";
 import ResourceIdentifier from "../../types/ResourceIdentifier";
 import Relationship from "../../types/Relationship";
-import Data from '../../types/Data';
+import Data from '../../types/Generic/Data';
 
 export default async function(jsonData, parseAsLinkage = false) {
   try {

@@ -3,7 +3,7 @@ import Resource from "../../types/Resource";
 import Relationship from "../../types/Relationship";
 import UpdateQuery from '../../types/Query/UpdateQuery';
 import ResourceTypeRegistry from "../../ResourceTypeRegistry";
-import Data from "../../types/Data";
+import Data from "../../types/Generic/Data";
 import ResourceSet from "../../types/ResourceSet";
 import ResourceIdentifier from "../../types/ResourceIdentifier";
 import { Request, makeDoc } from "../../types";

@@ -1,6 +1,6 @@
 import chai = require("chai");
 import chaiSubset = require("chai-subset");
-import Data from "../../../src/types/Data";
+import Data from "../../../src/types/Generic/Data";
 import Resource from "../../../src/types/Resource";
 import ResourceSet from "../../../src/types/ResourceSet";
 import Relationship from "../../../src/types/Relationship";

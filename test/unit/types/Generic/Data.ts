@@ -1,5 +1,5 @@
 import {expect} from "chai";
-import Data from "../../../src/types/Data";
+import Data from "../../../../src/types/Generic/Data";
 
 describe("Data type", () => {
   const item1 = {"type": "a", "id": "1"};

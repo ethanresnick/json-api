@@ -1,5 +1,5 @@
 import Resource from './Resource';
-import Data from './Data';
+import Data from './Generic/Data';
 import { UrlTemplateFns, UrlTemplateFnsByType } from "./index";
 import MaybeDataWithLinks from "./MaybeDataWithLinks";
 

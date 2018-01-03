@@ -1,6 +1,6 @@
 import ResourceTypeRegistry from "../ResourceTypeRegistry";
 import { Request } from '../types/';
-import Data from "../types/Data";
+import Data from "../types/Generic/Data";
 import Resource from "../types/Resource";
 import ResourceIdentifier from "../types/ResourceIdentifier";
 

@@ -1,7 +1,7 @@
 import APIError from "../../types/APIError";
 import { Request, makeDoc } from "../../types";
 import ResourceTypeRegistry from "../../ResourceTypeRegistry";
-import Data from "../../types/Data";
+import Data from "../../types/Generic/Data";
 import ResourceIdentifier from "../../types/ResourceIdentifier";
 import DeleteQuery from "../../types/Query/DeleteQuery";
 import RemoveFromRelationshipQuery from "../../types/Query/RemoveFromRelationshipQuery";

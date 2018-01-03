@@ -9,7 +9,7 @@ import Query from "../types/Query/Query";
 import ResourceTypeRegistry from '../ResourceTypeRegistry';
 import Document, { DocumentData } from "../types/Document";
 import APIError from "../types/APIError";
-import Data from "../types/Data";
+import Data from "../types/Generic/Data";
 import Resource from '../types/Resource';
 import ResourceIdentifier from "../types/ResourceIdentifier";
 import logger from '../util/logger';

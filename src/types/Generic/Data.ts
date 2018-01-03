@@ -1,4 +1,4 @@
-import { DataOf, Reducer, PredicateFn, Mapper, AsyncMapper } from "./index";
+import { DataOf, Reducer, PredicateFn, Mapper, AsyncMapper } from "../index";
 
 /**
  * This type represents a set of values (stored in an array) along with an

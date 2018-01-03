@@ -3,7 +3,7 @@ import Resource from "../../types/Resource";
 import CreateQuery from "../../types/Query/CreateQuery";
 import AddToRelationshipQuery from '../../types/Query/AddToRelationshipQuery';
 import { Request, Result } from "../../types";
-import Data from "../../types/Data";
+import Data from "../../types/Generic/Data";
 import ResourceSet from "../../types/ResourceSet";
 import ResourceIdentifier from "../../types/ResourceIdentifier";
 import ResourceTypeRegistry from "../../ResourceTypeRegistry";

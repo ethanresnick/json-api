@@ -1,5 +1,6 @@
 import { Predicate, FieldConstraint } from "../../types/index";
-import { Maybe } from "../../util/type-handling";
+import Maybe, { Just, Nothing } from "../../types/Generic/Maybe";
+export { Just, Nothing };
 
 /**
  * Find the (urlencoded) value for the filter query parameter.

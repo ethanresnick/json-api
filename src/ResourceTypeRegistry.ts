@@ -1,6 +1,6 @@
 import Immutable = require("immutable");
 import { pseudoTopSort } from "./util/misc";
-import { Maybe } from "./util/type-handling";
+import Maybe from "./types/Generic/Maybe";
 import { ResourceTransformFn, FullTransformFn, TransformFn } from "./steps/apply-transform";
 import { AdapterInstance } from "./db-adapters/AdapterInterface";
 import Resource from "./types/Resource";

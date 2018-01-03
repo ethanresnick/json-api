@@ -1,6 +1,6 @@
 import chai = require("chai");
 import parsePrimary from "../../../../src/steps/pre-query/parse-request-primary";
-import Data from "../../../../src/types/Data";
+import Data from "../../../../src/types/Generic/Data";
 import Resource from "../../../../src/types/Resource";
 import Relationship from "../../../../src/types/Relationship";
 
