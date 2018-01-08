@@ -86,12 +86,12 @@ To use this library, you describe the special behavior (if any) that resources o
 
 - <a name="transformLinkage">`transformLinkage` (optional): a boolean that, if true, will cause any resource identifier objects (i.e., the `{type, id}` pointer objects in each relationship) that have this type as their `type` to be passed to this type's `beforeRender`/`beforeSave` functions for transformation. Note that turning on `transformLinkage`, even for only one resource type, incurs a big performance cost. This may be optimized a bit in the future, but, fundamentally, transforming linkage is expensive because there can be many linkage items per relationship and each transform involves allocating a promise (as beforeRender and beforeSave can be async).
 
-## Query Transforms
+## Query Factories
 When a request comes in, the json-api library extracts various parameters from it to build a query that will be used to fulfill the user's request.
 
-However, to support advanced use cases, you may want to transform the query that the library generates to select/update different data, or you might want to modify how the query's result (data or error) is placed into the JSON:API response. Query transforms let you do this. See an example in [here](https://github.com/ethanresnick/json-api-example/blob/v3-wip/src/index.js#L56).
+However, to support advanced use cases, you might want to override how the library generates this query in order to select/update different data, or to modify how the query's result (data or error) is placed into the JSON:API response. To do this, you can just pass in your own function (a "query factory") for constructing this query. See an example [here](https://github.com/ethanresnick/json-api-example/blob/0d8d50c7e651dc099b4f5a89b7a9c47b8f7a4f32/src/index.js#L56).
 
-One simple thing you can do with query transforms is to create urls (or, in REST terminology, resources) that map to different database items over time. For example, you could have an `/events/upcoming` resource or a `/users/me` resource. To do that, your query transform function would modifiy the libraries auto-generated query (which would likely be for all the events and users respectively) to add a filter constraint that only returns the appropriate resources.
+One simple thing you can do with query factories is to create urls (or, in REST terminology, resources) that map to different database items over time. For example, you could have an `/events/upcoming` resource or a `/users/me` resource. To do that, your query factory function would call the library's built-in function to get its auto-generated query, and then modifiy that query (which would likely be for all the events and users respectively) to add a filter constraint that only returns the appropriate resources.
 
 
 ## Filtering

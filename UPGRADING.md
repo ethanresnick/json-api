@@ -1,6 +1,8 @@
 # 3.0.0-beta.4
 
 ## New Features
+- Instead of the library constructing an initial query from the request, which you can then provide a function to transform, you can provide a function that dictates how to construct the initial query itself. (Of course, that function can use the library's built-in logic to create a query, and then transform that result, thereby recreating the same functionality as previously.) This is a subtle but important difference described in [569fa64](https://github.com/ethanresnick/json-api/commit/569fa643aca1d1add64402495179ebb939d40b7a). To use this feature, the ExpressStrategy provides a new `customAPIRequest` method, which takes a `queryFactory` option. See that file for details. Now that `customAPIRequest` exists, `transformedAPIRequest` is deprecated. See [/test/app/src/index.ts](https://github.com/ethanresnick/json-api/blob/569fa643aca1d1add64402495179ebb939d40b7a/test/app/src/index.ts#L121) for an example of how to use the new function, and see the new implementation of `transformedAPIRequest` in ExpressStategy for a sense of how to upgrade.
+
 - The APIController, and the ExpressStrategy, now have functions for sending a JSON:API any `Result` back to the user. This is convenient if you ahve a `Result` that you created manually or that otherwise came from somewhere other than executing a query in `APIController.handle`.
  
 - The public methods on the Express strategy are now bound methods, so you no-longer have to bind their `this` when passing them around. 
