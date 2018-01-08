@@ -1,14 +1,15 @@
 import Resource, { ResourceJSON } from "./Resource";
 import APIError, { APIErrorJSON } from './APIError';
 import { objectIsEmpty } from "../util/type-handling";
+import { isPlainObject } from "../util/misc";
 import { PrimaryDataJSON, UrlTemplateFnsByType, UrlTemplateFns, Links } from './index';
-import ResourceSet from './ResourceSet';
 import Relationship from './Relationship';
+import ResourceSet from './ResourceSet';
+import ResourceIdentifierSet from "../types/ResourceIdentifierSet";
 
 // TODO: Make the constructor API sane in the presence of types;
 // actually define the API for this class (e.g., which fields are public?)
 // TODO: use more Maybes for optional fields?
-// TODO: don't take primary or errors as a single argument?
 export type DocumentJSON = ({
   data: PrimaryDataJSON,
   errors: undefined,
@@ -25,7 +26,7 @@ export type DocumentJSON = ({
 export type DocumentData = {
   meta?: object;
   included?: Resource[];
-  primary?: ResourceSet | Relationship;
+  primary?: ResourceSet | Relationship | ResourceIdentifierSet;
   errors?: APIError[];
   urlTemplates?: UrlTemplateFnsByType;
 };
@@ -39,9 +40,15 @@ export default class Document {
 
   constructor(data: DocumentData) {
     // Assign data members, giving some a default.
-    // TODO: decide what level of validation/encapsulation
-    // is appropriate, given typescript.
     const { urlTemplates = {}, ...restData } = data;
+
+    // Validate meta, as sometimes we pass it in straight from the JSON,
+    // which isn't really the case for anything else. TODO: decide what
+    // level of validation/encapsulation is appropriate, given typescript.
+    if(typeof data.meta !== 'undefined' && !isPlainObject(data.meta)) {
+      throw new Error("Document `meta` must be an object.");
+    }
+
     Object.assign(this, restData, { urlTemplates });
   }
 
@@ -57,16 +64,23 @@ export default class Document {
       return { related, self: relationship };
     }
 
-    const { data = undefined, links = {} } =
-      this.primary instanceof ResourceSet
-        ? this.primary.toJSON(this.urlTemplates)
-        : (this.primary
-            ? this.primary.toJSON(
-                templatesForRelationship(
-                  this.urlTemplates[this.primary.owner.type] || {}
-                )
-              )
-            : {});
+    const { data = undefined, links = {} } = (() => {
+      if(this.primary instanceof ResourceSet) {
+        return this.primary.toJSON(this.urlTemplates);
+      }
+
+      else if (this.primary instanceof Relationship) {
+        return this.primary.toJSON(
+          templatesForRelationship(this.urlTemplates[this.primary.owner.type] || {})
+        );
+      }
+
+      else if(this.primary) {
+        return this.primary.toJSON();
+      }
+
+      return {};
+    })();
 
     if(this.meta) {
       res.meta = this.meta;
@@ -92,5 +106,10 @@ export default class Document {
 
   toString() {
     return JSON.stringify(this.toJSON());
+  }
+
+  clone() {
+    const Ctor = (this.constructor || Document) as typeof Document;
+    return new Ctor(this);
   }
 }

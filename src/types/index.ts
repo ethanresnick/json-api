@@ -9,6 +9,10 @@ export type DataOf<T> = null | T | T[];
 
 // Types used in the code as function arguments for JSON:API structures.
 export type PrimaryData = DataOf<Resource> | DataOf<ResourceIdentifier>;
+export type DataWithLinksArgs<T> = {
+  data: T | T[] | null | Data<T>,
+  links?: UrlTemplateFns
+};
 
 // Types for JSON values
 export type LinkageJSON = DataOf<ResourceIdentifierJSON>;

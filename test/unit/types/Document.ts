@@ -11,33 +11,42 @@ const expect = chai.expect;
 chai.use(chaiSubset);
 
 describe("Document class", () => {
+  const orgRelation = Relationship.of({
+    data: Data.empty,
+    owner: { type: "people", path: "organization", id: "31" }
+  });
+
+  const orgRelationCustom = Relationship.of({
+    data: undefined,
+    owner: { type: "people", path: "organization", id: "32" },
+    links: { self: ({ ownerId }) => `http://localhost/a?filter=${ownerId}` }
+  });
+
+  const person =
+    new Resource("people", "31", {"name": "mark"}, {"organization": orgRelation });
+
+  const person2 =
+    new Resource("people", "32", {"name": "ethan"}, {"organization": orgRelationCustom });
+
+  const people = Data.of([person, person2]);
+  const topLevelMeta = { "mcawesome": true };
+  const urlTemplates = {
+    "people": {
+      // tslint:disable-next-line:no-unbound-method
+      "relationship": templating.parse("RELATIONSHIP{ownerId}{path}").expand
+    }
+  };
+
+  describe("Creating a Document", () => {
+    it("should reject non-object meta information", () => {
+      expect(() => new Document({
+        primary: ResourceSet.of({ data: people }),
+        meta: (["bob"] as any)
+      })).to.throw(/meta.*object/i);
+    });
+  })
+
   describe("Rendering a document", () => {
-    const orgRelation = Relationship.of({
-      data: Data.empty,
-      owner: { type: "people", path: "organization", id: "31" }
-    });
-
-    const orgRelationCustom = Relationship.of({
-      data: undefined,
-      owner: { type: "people", path: "organization", id: "32" },
-      links: { self: ({ ownerId }) => `http://localhost/a?filter=${ownerId}` }
-    });
-
-    const person =
-      new Resource("people", "31", {"name": "mark"}, {"organization": orgRelation });
-
-    const person2 =
-      new Resource("people", "32", {"name": "ethan"}, {"organization": orgRelationCustom });
-
-    const people = Data.of([person, person2]);
-    const topLevelMeta = { "mcawesome": true };
-    const urlTemplates = {
-      "people": {
-        // tslint:disable-next-line:no-unbound-method
-        "relationship": templating.parse("RELATIONSHIP{ownerId}{path}").expand
-      }
-    };
-
     const relationshipDocJSON = new Document({
       primary: orgRelationCustom
     }).toJSON();
