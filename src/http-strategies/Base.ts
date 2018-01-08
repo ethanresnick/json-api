@@ -2,7 +2,7 @@ import qs = require("qs");
 import getRawBody = require("raw-body");
 import logger from "../util/logger";
 import APIError from "../types/APIError";
-import { Request } from "../types/";
+import { Request, ServerReq, ServerRes, HTTPResponse } from "../types/";
 import APIController from "../controllers/API";
 import DocsController from "../controllers/Documentation";
 
@@ -11,6 +11,9 @@ export type HTTPStrategyOptions = {
   tunnel?: boolean,
   host?: string
 };
+
+export type Controller =
+  (request: Request, req: ServerReq, res: ServerRes) => Promise<HTTPResponse>;
 
 /**
  * This controller is the base for http strategy classes. It's built around
@@ -41,7 +44,11 @@ export default class BaseStrategy {
   protected docs: DocsController;
   protected config: HTTPStrategyOptions;
 
-  constructor(apiController: APIController, docsController: DocsController, options?: HTTPStrategyOptions) {
+  constructor(
+    apiController: APIController,
+    docsController: DocsController,
+    options?: HTTPStrategyOptions
+  ) {
     this.api = apiController;
     this.docs = docsController;
 
@@ -57,7 +64,6 @@ export default class BaseStrategy {
         "unless you have reason to trust the (X-Forwarded-)Host header."
       );
     }
-
   }
 
   /**
@@ -73,14 +79,20 @@ export default class BaseStrategy {
    * @param {Object} params object containing url parameters
    * @param {Object} [parsedQuery] object containing pre-parsed query parameters
    */
-  protected async buildRequestObject(req, protocol, fallbackHost, params, parsedQuery?): Promise<Request> {
+  protected async buildRequestObject(
+    req,
+    protocol,
+    fallbackHost,
+    params,
+    parsedQuery?
+  ): Promise<Request> {
     const queryStartIndex = req.url.indexOf("?");
     const hasQuery = queryStartIndex !== -1;
     const rawQueryString = hasQuery && req.url.substr(queryStartIndex + 1);
 
     const protocolGuess = protocol || (req.connection.encrypted ? "https" : "http");
     const host = this.config.host || fallbackHost;
-    const body = await this.getParsedBodyJSON(req);
+    const body = await this.getParsedBodyJSON(req); // could throw, rejecting promise.
 
     return {
       // Handle route & query params
@@ -106,10 +118,10 @@ export default class BaseStrategy {
         }
 
         else if(requestedMethod) {
-          const msg =
-            `Cannot tunnel to the method "${requestedMethod.toUpperCase()}".`;
-
-          throw new APIError(400, undefined, msg);
+          throw new APIError({
+            status: 400,
+            title: `Cannot tunnel to method "${requestedMethod.toUpperCase()}".`
+          });
         }
 
         return usedMethod;

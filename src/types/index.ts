@@ -2,6 +2,8 @@ import Resource, { ResourceJSON } from './Resource';
 import ResourceIdentifier, { ResourceIdentifierJSON } from "./ResourceIdentifier";
 import Document, { DocumentData } from "./Document";
 import Data from "./Generic/Data";
+import { ParsedQueryParams } from '../steps/pre-query/parse-query-params';
+import { IncomingMessage, ServerResponse } from "http";
 
 // A helper type to capture the ability of
 // a given type T to appear singularly or in an array.
@@ -24,6 +26,10 @@ export type Reducer<T,U = any> = (acc: U, it: T, i: number, arr: T[]) => U;
 export type PredicateFn<T> = (it: T, i: number, arr: T[]) => boolean;
 export type Mapper<T,U> = (it: T, i: number, arr: T[]) => U;
 export type AsyncMapper<T,U> = (it: T, i: number, arr: T[]) => U | Promise<U>;
+
+// Types for interacting with the underlying server
+export type ServerReq = IncomingMessage;
+export type ServerRes = ServerResponse;
 
 // Types related to queries
 export type Sort = { field: string; direction: 'ASC' | 'DESC' };
@@ -96,11 +102,13 @@ export type Request = {
 
   // The prop below will be used in the future with the JSON:API ext system.
   //ext: string[];
+}
 
-  // Any primary data included in the request's body.
-  // Necessary for creating and updating our resources.
-  // Not present when request first created (parsed later from body).
-  primary?: Data<Resource> | Data<ResourceIdentifier>;
+// A request, with its query parameters parsed for their
+// JSON:API-specific format, and the body (if any) parsed into a Document.
+export type FinalizedRequest = Request & {
+  queryParams: ParsedQueryParams,
+  document: Document | undefined
 }
 
 // Result is different than HTTPResponse in that it contains details of the
@@ -126,4 +134,4 @@ export interface HTTPResponse {
   body?: string;
 }
 
-export type makeDoc = (data: DocumentData) => Document;
+export type makeDocument = (data: DocumentData) => Document;

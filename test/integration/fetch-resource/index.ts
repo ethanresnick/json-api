@@ -78,4 +78,15 @@ describe("Fetching Resources", () => {
       ]);
     });
   });
+
+  describe("Fetching a static/hardcoded resource", () => {
+    it("should work", () => {
+      return Agent.request("GET", '/hardcoded-result')
+        .accept("application/vnd.api+json")
+        .then((res) => {
+          expect(res.body.meta).to.deep.equal({ "hardcoded result": true });
+          expect(res.status).to.equal(201);
+        });
+    });
+  });
 });

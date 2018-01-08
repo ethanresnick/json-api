@@ -51,7 +51,8 @@
     "@types/url-template": "^2.0.28",
     "content-type": "1.x.x",
     "dasherize": "2.0.x",
-    "debug": "^2.6.8",
+    "debug": "^3.1.0",
+    "depd": "^1.1.1",
     "flat": "^1.2.1",
     "immutable": "^3.7.5",
     "jade": "1.11.x",
@@ -61,6 +62,7 @@
     "qs": "^6.5.0",
     "ramda": "^0.24.1",
     "raw-body": "2.x.x",
+    "supports-color": "^4.5.0",
     "url-template": "^2.0.4",
     "vary": "^1.1.1"
   },

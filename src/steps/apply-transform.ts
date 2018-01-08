@@ -1,13 +1,17 @@
+import depd = require("depd");
 import ResourceTypeRegistry from "../ResourceTypeRegistry";
-import { Request } from '../types/';
+import { FinalizedRequest, ServerReq, ServerRes } from '../types/';
 import Data from "../types/Generic/Data";
 import Resource from "../types/Resource";
 import ResourceIdentifier from "../types/ResourceIdentifier";
+const deprecate = depd("json-api");
 
 export type Extras = {
-  frameworkReq: any,
-  frameworkRes: any,
-  request: Request,
+  request: FinalizedRequest,
+  serverReq: ServerReq,
+  serverRes: ServerRes,
+  frameworkReq?: ServerReq,
+  frameworkRes?: ServerRes,
   registry: ResourceTypeRegistry
 };
 
@@ -15,8 +19,8 @@ export type Transformable = Resource | ResourceIdentifier;
 export type TransformMode = 'beforeSave' | 'beforeRender';
 export type TransformFn<T> = (
   resourceOrIdentifier: T,
-  frameworkReq: Extras['frameworkReq'],
-  frameworkRes: Extras['frameworkRes'],
+  serverReq: Extras['serverReq'],
+  serverRes: Extras['serverRes'],
   superFn: TransformFn<T>,
   extras: Extras
 ) => T | undefined | Promise<T | undefined>;
@@ -30,6 +34,12 @@ export default function transform<T extends Transformable>(
   extras: Extras
 ): Promise<Data<T>> {
   const { registry } = extras;
+
+  // Copy properties for backwards compatibility, with deprecation warning.
+  extras.frameworkReq = extras.serverReq;
+  extras.frameworkRes = extras.serverRes;
+  deprecate.property(extras, 'frameworkReq', 'frameworkReq: use serverReq prop instead.');
+  deprecate.property(extras, 'frameworkRes', 'frameworkRes: use serverReq prop instead.');
 
   // Whether to skip transforming a given item.
   const skipTransform = (it: Transformable, typeForTransform: string) =>
@@ -81,8 +91,8 @@ export default function transform<T extends Transformable>(
 
     const transformed = await transformFn(
       it,
-      extras.frameworkReq,
-      extras.frameworkRes,
+      extras.serverReq,
+      extras.serverRes,
       superFn,
       extras
     );

@@ -1,13 +1,15 @@
 import APIError from "../../types/APIError";
-import { Request, makeDoc } from "../../types";
+import { FinalizedRequest, makeDocument } from "../../types";
 import ResourceTypeRegistry from "../../ResourceTypeRegistry";
 import Data from "../../types/Generic/Data";
 import ResourceIdentifier from "../../types/ResourceIdentifier";
 import DeleteQuery from "../../types/Query/DeleteQuery";
 import RemoveFromRelationshipQuery from "../../types/Query/RemoveFromRelationshipQuery";
 
-export default function(request: Request, registry: ResourceTypeRegistry, makeDoc: makeDoc) {
+export default function(request: FinalizedRequest, registry: ResourceTypeRegistry, makeDoc: makeDocument) {
   const type = request.type;
+  // There may not be a document, but if there is it'll have primary data.
+  const primary = request.document && (request.document.primary as any).data;
 
   if(request.aboutRelationship) {
     if(!request.id || !request.relationship) {
@@ -22,7 +24,7 @@ export default function(request: Request, registry: ResourceTypeRegistry, makeDo
       type: type,
       id: request.id,
       relationshipName: request.relationship,
-      linkage: <Data<ResourceIdentifier>>request.primary,
+      linkage: <Data<ResourceIdentifier>>primary,
       returning: () => ({ status: 204 })
     });
   }
@@ -30,11 +32,11 @@ export default function(request: Request, registry: ResourceTypeRegistry, makeDo
   // Bulk delete of resources
   const bulkDelete = !request.id;
   if(bulkDelete) {
-    if(!request.primary) {
+    if(!primary) {
       throw new Error("Bulk delete without a body is not possible.")
     }
 
-    if(request.primary.isSingular) {
+    if(primary.isSingular) {
       const title = "You must provide an array of resource identifier objects to do a bulk delete.";
       throw new APIError(400, undefined, title);
     }
@@ -45,7 +47,7 @@ export default function(request: Request, registry: ResourceTypeRegistry, makeDo
     returning: () => ({ status: 204 }),
     [bulkDelete ? 'ids' : 'id']:
       bulkDelete
-        ? (<Data<ResourceIdentifier>>request.primary).map((it) => it.id).values
+        ? (<Data<ResourceIdentifier>>primary).map((it) => it.id).values
         : request.id
   });
 }

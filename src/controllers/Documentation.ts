@@ -6,10 +6,12 @@ import dasherize = require("dasherize");
 import mapValues = require("lodash/object/mapValues");
 
 import ResourceTypeRegistry, { ResourceTypeDescription, ResourceTypeInfo } from "../ResourceTypeRegistry";
-import { HTTPResponse } from "../types";
+import { HTTPResponse, ServerReq, ServerRes, Request } from "../types";
 import ResourceSet from "../types/ResourceSet";
 import Document from "../types/Document";
 import Resource from "../types/Resource";
+import { IncomingMessage, ServerResponse } from 'http';
+export { IncomingMessage, ServerResponse };
 
 export default class DocumentationController {
   private registry: ResourceTypeRegistry;
@@ -41,7 +43,7 @@ export default class DocumentationController {
     this.templateData = data;
   }
 
-  handle(request, frameworkReq, frameworkRes) {
+  handle = async (request: Request, serverReq: ServerReq, serverRes: ServerRes) => {
     const response: HTTPResponse = { headers: {}, body: undefined, status: 200 };
     const negotiator = new Negotiator({headers: {accept: request.accepts}});
     const contentType = negotiator.mediaType(["text/html", "application/vnd.api+json"]);
@@ -53,7 +55,7 @@ export default class DocumentationController {
     // process templateData (just the type infos for now) for this particular request.
     const templateData = _.cloneDeep(this.templateData, cloneCustomizer);
     templateData.resourcesMap = mapValues(templateData.resourcesMap, (typeInfo, typeName) => {
-      return this.transformTypeInfo(typeName, typeInfo, request, response, frameworkReq, frameworkRes);
+      return this.transformTypeInfo(typeName, typeInfo, request, response, serverReq, serverRes);
     });
 
     if(contentType && contentType.toLowerCase() === "text/html") {
@@ -76,7 +78,7 @@ export default class DocumentationController {
       }).toString();
     }
 
-    return Promise.resolve(response);
+    return response;
   }
 
   // Clients can extend this if, say, the adapter can't infer

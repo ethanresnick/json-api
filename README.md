@@ -25,43 +25,43 @@ Check out the [full, working v3 example repo](https://github.com/ethanresnick/js
   var adapter = new API.dbAdapters.Mongoose(models);
   var registry = new API.ResourceTypeRegistry({
     "people": {
-      urlTemplates: {
-        "self": "/people/{id}"
-      },
       beforeRender: function(resource, req, res) {
         if(!userIsAdmin(req)) resource.removeAttr("password");
         return resource;
       }
     },
-    "places": {
-      urlTemplates: {"self": "/places/{id}"}
-    }
+    "places": {}
   }, {
-    "dbAdapter": adapter
+    "dbAdapter": adapter,
+    "urlTemplates": { 
+      "self": "/{type}/{id}"
+    }
   });
 
-  // Initialize the automatic documentation.
-  var DocsController = new API.controllers.Documentation(registry, {name: 'Example API'});
-
   // Tell the lib the host name our API is served from; needed for security.
-  var opts = { host: 'example.com' }
+  const opts = { host: 'example.com' };
 
-  // Set up our controllers
-  var APIController = new API.controllers.API(registry);
-  var Front = new API.httpStrategies.Express(APIController, DocsController, opts);
-  var requestHandler = Front.apiRequest.bind(Front);
+  // Set up a front controller, passing it controllers that'll be used
+  // to handle requests for API resources and for the auto-generated docs.
+  var Front = new API.httpStrategies.Express(
+    new API.controllers.API(registry), 
+    new API.controllers.Documentation(registry, {name: 'Example API'})
+  );
+
+  // Render the docs at /
+  app.get("/", Front.docsRequest);
 
   // Add routes for basic list, read, create, update, delete operations
-  app.get("/:type(people|places)", requestHandler);
-  app.get("/:type(people|places)/:id", requestHandler);
-  app.post("/:type(people|places)", requestHandler);
-  app.patch("/:type(people|places)/:id", requestHandler);
-  app.delete("/:type(people|places)/:id", requestHandler);
+  app.get("/:type(people|places)", Front.apiRequest);
+  app.get("/:type(people|places)/:id", Front.apiRequest);
+  app.post("/:type(people|places)", Front.apiRequest);
+  app.patch("/:type(people|places)/:id", Front.apiRequest);
+  app.delete("/:type(people|places)/:id", Front.apiRequest);
 
   // Add routes for adding to, removing from, or updating resource relationships
-  app.post("/:type(people|places)/:id/relationships/:relationship", requestHandler);
-  app.patch("/:type(people|places)/:id/relationships/:relationship", requestHandler);
-  app.delete("/:type(people|places)/:id/relationships/:relationship", requestHandler);
+  app.post("/:type(people|places)/:id/relationships/:relationship", Front.apiRequest);
+  app.patch("/:type(people|places)/:id/relationships/:relationship", Front.apiRequest);
+  app.delete("/:type(people|places)/:id/relationships/:relationship", Front.apiRequest);
 
 
   app.listen(3000);

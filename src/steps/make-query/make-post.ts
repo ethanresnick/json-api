@@ -2,21 +2,21 @@ import APIError from "../../types/APIError";
 import Resource from "../../types/Resource";
 import CreateQuery from "../../types/Query/CreateQuery";
 import AddToRelationshipQuery from '../../types/Query/AddToRelationshipQuery';
-import { Request, Result } from "../../types";
+import { FinalizedRequest, Result } from "../../types";
 import Data from "../../types/Generic/Data";
 import ResourceSet from "../../types/ResourceSet";
 import ResourceIdentifier from "../../types/ResourceIdentifier";
 import ResourceTypeRegistry from "../../ResourceTypeRegistry";
 import templating = require("url-template");
 
-export default function(request: Request, registry: ResourceTypeRegistry, makeDoc) {
-  const primary = request.primary;
+export default function(request: FinalizedRequest, registry: ResourceTypeRegistry, makeDoc) {
+  const primary = (request.document!.primary as any).data;
   const type    = request.type;
 
   // We're going to do an adapter.create, below, EXCEPT if we're adding to
   // an existing toMany relationship, which uses a different adapter method.
   if(request.aboutRelationship) {
-    if((request.primary as Data<ResourceIdentifier>).isSingular) {
+    if((primary as Data<ResourceIdentifier>).isSingular) {
       throw new APIError(
         400,
         undefined,

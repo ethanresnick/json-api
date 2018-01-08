@@ -69,7 +69,7 @@ export default class KoaStrategy extends Base {
     };
   }
 
-  sendResources(responseObject, ctx): void | true {
+  protected sendResources(responseObject, ctx): void | true {
     const { vary, ...otherHeaders } = responseObject.headers;
 
     if(vary) {
@@ -101,7 +101,7 @@ export default class KoaStrategy extends Base {
    * @param {Object} ctx Koa's context object
    */
   sendError(errors, ctx) {
-    API.responseFromExternalError(errors, ctx.headers.accept).then(
+    API.responseFromError(errors, ctx.headers.accept).then(
       (responseObject) => this.sendResources(responseObject, ctx)
     ).catch((err) => {
       // if we hit an error generating our error...

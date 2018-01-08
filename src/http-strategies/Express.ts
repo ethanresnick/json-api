@@ -1,8 +1,13 @@
 import varyLib = require("vary");
-import API from "../controllers/API";
-import Base, { HTTPStrategyOptions } from "./Base";
+import depd = require('depd')
+import R = require('ramda');
+import logger from '../util/logger';
+import API, { RequestOpts, QueryBuildingContext } from "../controllers/API";
+import Base, { HTTPStrategyOptions, Controller } from "./Base";
 import Query from "../types/Query/Query";
-import { Request } from "express";
+import { HTTPResponse, Request as JSONAPIRequest, Result } from "../types";
+import { Request, Response, NextFunction } from "express";
+const deprecate = depd("json-api");
 
 // Note: however, having one object type with both possible callback signatures
 // in it doesn't work, but splitting these function signatures into separate
@@ -12,16 +17,16 @@ import { Request } from "express";
 // this behavior is probably subject to change (e.g., might be effected by
 // https://github.com/Microsoft/TypeScript/pull/17819). However, it's the
 // approach that the express typings seem to use, so I imagine it's safe enough.
-export type QueryTransformCurried = {
+export type DeprecatedQueryTransformNoReq = {
   (first: Query): Query;
 };
 
-export type QueryTransformWithReq = {
+export type DeprecatedQueryTransformWithReq = {
   (first: Request, second: Query): Query
 }
 
-export type QueryTransform =
-  QueryTransformCurried | QueryTransformWithReq;
+export type DeprecatedQueryTransform =
+  DeprecatedQueryTransformNoReq | DeprecatedQueryTransformWithReq;
 
 /**
  * This controller receives requests directly from express and sends responses
@@ -54,47 +59,102 @@ export default class ExpressStrategy extends Base {
     super(apiController, docsController, options);
   }
 
-  // For requests for the documentation.
-  // Note: this will ignore any port number if you're using Express 4.
-  // See: https://expressjs.com/en/guide/migrating-5.html#req.host
-  // The workaround is to use the host configuration option.
-  docsRequest(req, res, next) {
-    this.buildRequestObject(req, req.protocol, req.host, req.params, req.query)
-      .then((requestObject) => {
-        return this.docs.handle(requestObject, req, res)
-          .then((responseObject) => {
-            this.sendResources(responseObject, res, next);
-          });
-      })
-      .catch((err) => {
-        this.sendError(err, req, res);
-      });
+  protected buildRequestObject(req: Request): Promise<JSONAPIRequest> {
+    return super.buildRequestObject(req, req.protocol, req.host, req.params, req.query)
   }
 
-  sendResources(responseObject, res, next) {
-    const { vary, ...otherHeaders } = responseObject.headers;
+  protected sendResponse(response: HTTPResponse, res: Response, next: NextFunction) {
+    const { vary, ...otherHeaders } = response.headers;
 
     if(vary) {
       varyLib(res, vary);
     }
 
-    if(responseObject.status === 406 && !this.config.handleContentNegotiation) {
+    if(response.status === 406 && !this.config.handleContentNegotiation) {
       return next();
     }
 
-    res.status(responseObject.status || 200);
+    res.status(response.status || 200);
 
     Object.keys(otherHeaders).forEach(k => {
       res.set(k, otherHeaders[k]);
     })
 
-    if(responseObject.body !== undefined) {
-      res.send(new Buffer(responseObject.body)).end();
+    if(response.body !== undefined) {
+      res.send(new Buffer(response.body)).end();
     }
 
     else {
       res.end();
     }
+  }
+
+  protected doRequest = async (
+    controller: Controller,
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const requestObj = await this.buildRequestObject(req);
+      const responseObj = await controller(requestObj, req, res);
+      this.sendResponse(responseObj, res, next);
+    }
+    catch (err) {
+      // This case should only occur if building a request object fails, as the
+      // controller should catch any internal errors and always returns a response.
+      this.sendError(err, req, res, next);
+    }
+  }
+
+  /**
+   * A middleware to handle requests for the documentation.
+   * Note: this will ignore any port number if you're using Express 4.
+   * See: https://expressjs.com/en/guide/migrating-5.html#req.host
+   * The workaround is to use the host configuration option.
+   */
+  docsRequest = R.partial(this.doRequest, [this.docs.handle]);
+
+  /**
+   * A middleware to handle supported API requests.
+   *
+   * Supported requests included: GET /:type, GET /:type/:id/:relationship,
+   * POST /:type, PATCH /:type/:id, PATCH /:type, DELETE /:type/:id,
+   * DELETE /:type, GET /:type/:id/relationships/:relationship,
+   * PATCH /:type/:id/relationships/:relationship,
+   * POST /:type/:id/relationships/:relationship, and
+   * DELETE /:type/:id/relationships/:relationship.
+   *
+   * Note: this will ignore any port number if you're using Express 4.
+   * See: https://expressjs.com/en/guide/migrating-5.html#req.host
+   * The workaround is to use the host configuration option.
+   */
+  apiRequest = R.partial(this.doRequest, [this.api.handle]);
+
+  /**
+   * Takes arguments for how to build the query, and returns a middleware
+   * function that will respond to incoming requests with those query settings.
+   *
+   * @param {RequestCustomizationOpts} opts
+   * @returns {RequestHandler} A middleware for fulfilling API requests.
+   */
+  customAPIRequest = (opts: RequestOpts) =>
+    R.partial(this.doRequest, [
+      (request, req, res) => this.api.handle(request, req, res, opts)
+    ]);
+
+  transformedAPIRequest = (queryTransform: DeprecatedQueryTransform) => {
+    deprecate('transformedAPIRequest: use customAPIRequest instead.');
+
+    return this.customAPIRequest({
+      queryFactory: async (opts: QueryBuildingContext) => {
+        const req = opts.serverReq as Request;
+        const query = await this.api.makeQuery(opts);
+        return queryTransform.length > 1
+          ? (queryTransform as DeprecatedQueryTransformWithReq)(req, query)
+          : (queryTransform as DeprecatedQueryTransformNoReq)(query);
+      }
+    });
   }
 
   /**
@@ -107,48 +167,33 @@ export default class ExpressStrategy extends Base {
    * @param {Object} req Express's request object
    * @param {Object} res Express's response object
    */
-  sendError(errors, req, res) {
-    API.responseFromExternalError(errors, req.headers.accept).then(
-      (responseObject) => this.sendResources(responseObject, res, () => {})
-    ).catch((err) => {
-      // if we hit an error generating our error...
-      res.status(err.status).send(err.message);
-    });
+  sendError = async (errors, req, res, next) => {
+    if(!next) {
+      deprecate("sendError with 3 arguments: must now provide next function.");
+      next = (err: any) => {}
+    }
+
+    try {
+      const responseObj = await API.responseFromError(errors, req.headers.accept);
+      this.sendResponse(responseObj, res, next)
+    }
+
+    catch(err) {
+      logger.warn("Hit an unexpected error creating or sending response. This shouldn't happen.");
+      next(err);
+    }
   }
 
-  apiRequest(req, res, next) {
-    return this.apiRequestWithTransform(undefined, req, res, next);
-  }
+  sendResult = async (result: Result, req, res, next) => {
+    try {
+      const responseObj = await API.responseFromResult(result, req.headers.accept, true);
+      this.sendResponse(responseObj, res, next)
+    }
 
-  transformedAPIRequest(queryTransform: QueryTransform) {
-    return this.apiRequestWithTransform.bind(this, queryTransform);
-  }
-
-  // For requests like GET /:type, GET /:type/:id/:relationship,
-  // POST /:type PATCH /:type/:id, PATCH /:type, DELETE /:type/:idOrLabel,
-  // DELETE /:type, GET /:type/:id/links/:relationship,
-  // PATCH /:type/:id/links/:relationship, POST /:type/:id/links/:relationship,
-  // and DELETE /:type/:id/links/:relationship.
-  // Note: this will ignore any port number if you're using Express 4.
-  // See: https://expressjs.com/en/guide/migrating-5.html#req.host
-  // The workaround is to use the host configuration option.
-  private apiRequestWithTransform(queryTransform, req, res, next) {
-    // Support query transform functions where the query is the only argument,
-    // but also ones that expect (req, query).
-    queryTransform = queryTransform && queryTransform.length > 1
-      ? queryTransform.bind(undefined, req)
-      : queryTransform;
-
-    this.buildRequestObject(req, req.protocol, req.host, req.params, req.query)
-      .then((requestObject) => {
-        return this.api.handle(requestObject, req, res, queryTransform)
-          .then((responseObject) => {
-            this.sendResources(responseObject, res, next);
-          });
-      })
-      .catch((err) => {
-        this.sendError(err, req, res);
-      });
+    catch(err) {
+      logger.warn("Hit an unexpected error creating or sending response. This shouldn't happen.");
+      next(err);
+    }
   }
 
   /**

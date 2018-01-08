@@ -6,11 +6,11 @@ import ResourceTypeRegistry from "../../ResourceTypeRegistry";
 import Data from "../../types/Generic/Data";
 import ResourceSet from "../../types/ResourceSet";
 import ResourceIdentifier from "../../types/ResourceIdentifier";
-import { Request, makeDoc } from "../../types";
+import { FinalizedRequest, makeDocument } from "../../types";
 
-export default function(request: Request, registry: ResourceTypeRegistry, makeDoc: makeDoc) {
-  const primary = <Data<Resource> | Data<ResourceIdentifier>>request.primary;
-  const type    = request.type;
+export default function(request: FinalizedRequest, registry: ResourceTypeRegistry, makeDoc: makeDocument) {
+  const type = request.type;
+  const primary = <Data<Resource> | Data<ResourceIdentifier>>(request.document!.primary as any).data;
   let changedResourceData;
 
   if(!request.aboutRelationship) {
@@ -50,7 +50,7 @@ export default function(request: Request, registry: ResourceTypeRegistry, makeDo
       undefined,
       {
         [request.relationship]: Relationship.of({
-          data: <Data<ResourceIdentifier>>request.primary,
+          data: <Data<ResourceIdentifier>>primary,
           owner: { type: request.type, id: request.id, path: request.relationship }
         })
       }

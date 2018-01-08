@@ -1,4 +1,5 @@
 import express = require("express");
+import R = require("ramda");
 import API = require("../../../src/index");
 import Document from "../../../src/types/Document";
 import APIError from "../../../src/types/APIError";
@@ -6,8 +7,9 @@ import Query from "../../../src/types/Query/Query";
 import FindQuery from "../../../src/types/Query/FindQuery";
 import ResourceSet from "../../../src/types/ResourceSet";
 import database from "../database/index";
+import { QueryBuildingContext } from "../../../src/controllers/API";
 import { Express } from "express";
-export { Express } from "express";
+export { Express, QueryBuildingContext };
 
 /**
  * Export a promise for the app.
@@ -80,8 +82,7 @@ export default database.then(function(dbModule) {
     )
   );
 
-  app.get('/:type(people)/custom-filter-test/',
-    FrontWithCustomFilterSupport.apiRequest.bind(FrontWithCustomFilterSupport));
+  app.get('/:type(people)/custom-filter-test/', FrontWithCustomFilterSupport.apiRequest);
 
   // Apply a query transform that puts all the names in meta
   app.get('/:type(people)/with-names',
@@ -100,30 +101,86 @@ export default database.then(function(dbModule) {
     })
   );
 
-// Add a route that delegates to next route on 406.
-app.get('/:type(organizations)/no-id/406-delegation-test',
-  FrontWith406Delegation.apiRequest.bind(FrontWith406Delegation),
-  (req, res, next) => {
-    res.header('Content-Type', 'text/plain')
-    res.send("Hello from express");
-  })
+  // Add a route that delegates to next route on 406.
+  app.get('/:type(organizations)/no-id/406-delegation-test',
+    FrontWith406Delegation.apiRequest,
+    (req, res, next) => {
+      res.header('Content-Type', 'text/plain')
+      res.send("Hello from express");
+    })
 
-// Now, add the routes.
-// Note: below, express incorrectly passes requests using PUT and other
-// unknown methods into the API Controller at some routes. We're doing this
-// here just to test that the controller rejects them properly.
-app.get("/", Front.docsRequest.bind(Front));
-app.route("/:type(people|organizations|schools)").all(apiReqHandler);
-app.route("/:type(people|organizations|schools)/:id")
-  .get(apiReqHandler).patch(apiReqHandler).delete(apiReqHandler);
-app.route("/:type(organizations|schools)/:id/:related") // not supported yet.
-  .get(apiReqHandler);
-app.route("/:type(people|organizations|schools)/:id/relationships/:relationship")
-  .get(apiReqHandler).post(apiReqHandler).patch(apiReqHandler);
+  app.get('/hardcoded-result', R.partial(
+    Front.sendResult, [{
+      status: 201,
+      document: new Document({ meta: { "hardcoded result": true } })
+    }]
+  ));
 
-app.use(function(req, res, next) {
-  Front.sendError({ "message": "Not Found", "status": 404 }, req, res);
+  app.post('/sign-in', Front.customAPIRequest({ queryFactory: makeSignInQuery }));
+
+  app.post('/sign-in/with-before-render', Front.customAPIRequest({
+    queryFactory: (opts) => {
+      const signInQuery = makeSignInQuery(opts);
+
+      return signInQuery.resultsIn(
+        R.pipe(signInQuery.returning, async (origResultPromise) => {
+          const origResult = await origResultPromise;
+
+          if(origResult.document) {
+            origResult.document =
+              await opts.transformDocument(origResult.document, 'beforeRender');
+          }
+
+          return origResult;
+        })
+      );
+    }
+  }))
+
+  // Now, add the routes.
+  // Note: below, express incorrectly passes requests using PUT and other
+  // unknown methods into the API Controller at some routes. We're doing this
+  // here just to test that the controller rejects them properly.
+  app.get("/", Front.docsRequest);
+  app.route("/:type(people|organizations|schools)").all(Front.apiRequest);
+  app.route("/:type(people|organizations|schools)/:id")
+    .get(apiReqHandler).patch(apiReqHandler).delete(apiReqHandler);
+  app.route("/:type(organizations|schools)/:id/:related") // not supported yet.
+    .get(apiReqHandler);
+  app.route("/:type(people|organizations|schools)/:id/relationships/:relationship")
+    .get(apiReqHandler).post(apiReqHandler).patch(apiReqHandler);
+
+  app.use(function(req, res, next) {
+    Front.sendError({ "message": "Not Found", "status": 404 }, req, res, next);
+  });
+
+  return app;
 });
 
-return app;
-});
+function makeSignInQuery(opts: QueryBuildingContext) {
+  const { serverReq } = opts;
+  let authHeader = serverReq.headers.authorization;
+
+  if(!authHeader) {
+    throw new APIError({ status: 400, title: "Missing user info." });
+  }
+
+  authHeader = Array.isArray(authHeader) ? authHeader[0] : authHeader;
+  const [user, pass] = Buffer.from(authHeader.substr(6), 'base64').toString().split(':');
+
+  return new FindQuery({
+    type: "people",
+    singular: true,
+    filters: [{ field: "name", operator: "eq", value: user }],
+    returning: ([userData]) => {
+      if(pass !== 'password') {
+        throw new APIError(401);
+      }
+
+      return {
+        // Note lack of beforeRender.
+        document: new Document({ primary: ResourceSet.of({ data: userData }) })
+      }
+    }
+  });
+}
