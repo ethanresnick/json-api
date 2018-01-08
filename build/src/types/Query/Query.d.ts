@@ -1,8 +1,8 @@
 import { Result } from '../index';
 export declare type QueryOptions = {
     type: string;
-    returning: (result: any) => Result;
-    catch?: (err: any) => Result;
+    returning: (result: any) => Result | Promise<Result>;
+    catch?: (err: any) => Result | Promise<Result>;
 };
 declare abstract class Query {
     protected query: {
@@ -13,8 +13,8 @@ declare abstract class Query {
     constructor(opts: QueryOptions);
     protected clone(): this;
     readonly type: string;
-    readonly returning: (result: any) => Result;
-    readonly catch: ((err: any) => Result) | undefined;
+    readonly returning: (result: any) => Result | Promise<Result>;
+    readonly catch: ((err: any) => Result | Promise<Result>) | undefined;
     resultsIn(success?: QueryOptions['returning'], fail?: QueryOptions['catch']): this;
     forType(type: string): this;
 }

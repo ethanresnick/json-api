@@ -1,6 +1,6 @@
 import Query, { QueryOptions } from "./Query";
 import Resource from '../Resource';
-import Data from '../Data';
+import Data from '../Generic/Data';
 export declare type UpdateQueryOptions = QueryOptions & {
     patch: Data<Resource>;
 };

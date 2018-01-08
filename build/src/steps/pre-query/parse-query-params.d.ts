@@ -14,5 +14,6 @@ export declare type ParsedQueryParams = {
     sort?: Sort[];
     page?: ScopedParam;
     fields?: ScopedStringListParam;
+    [paramName: string]: any;
 };
 export default function (params: RawParams): ParsedQueryParams;

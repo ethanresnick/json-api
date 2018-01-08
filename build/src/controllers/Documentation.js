@@ -1,4 +1,12 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const _ = require("lodash");
 const path = require("path");
@@ -9,8 +17,35 @@ const mapValues = require("lodash/object/mapValues");
 const ResourceSet_1 = require("../types/ResourceSet");
 const Document_1 = require("../types/Document");
 const Resource_1 = require("../types/Resource");
+const http_1 = require("http");
+exports.IncomingMessage = http_1.IncomingMessage;
+exports.ServerResponse = http_1.ServerResponse;
 class DocumentationController {
     constructor(registry, apiInfo, templatePath = undefined, dasherizeJSONKeys = true) {
+        this.handle = (request, serverReq, serverRes) => __awaiter(this, void 0, void 0, function* () {
+            const response = { headers: {}, body: undefined, status: 200 };
+            const negotiator = new Negotiator({ headers: { accept: request.accepts } });
+            const contentType = negotiator.mediaType(["text/html", "application/vnd.api+json"]);
+            response.headers['content-type'] = contentType;
+            response.headers.vary = "Accept";
+            const templateData = _.cloneDeep(this.templateData, cloneCustomizer);
+            templateData.resourcesMap = mapValues(templateData.resourcesMap, (typeInfo, typeName) => {
+                return this.transformTypeInfo(typeName, typeInfo, request, response, serverReq, serverRes);
+            });
+            if (contentType && contentType.toLowerCase() === "text/html") {
+                response.body = jade.renderFile(this.template, templateData);
+            }
+            else {
+                const descriptionResources = [];
+                for (const type in templateData.resourcesMap) {
+                    descriptionResources.push(new Resource_1.default("jsonapi-descriptions", type, templateData.resourcesMap[type]));
+                }
+                response.body = new Document_1.default({
+                    primary: ResourceSet_1.default.of({ data: descriptionResources })
+                }).toString();
+            }
+            return response;
+        });
         this.registry = registry;
         const defaultTempPath = "../../templates/documentation.jade";
         this.template = templatePath || path.resolve(__dirname, defaultTempPath);
@@ -20,30 +55,6 @@ class DocumentationController {
             data.resourcesMap[typeName] = this.getTypeInfo(typeName);
         });
         this.templateData = data;
-    }
-    handle(request, frameworkReq, frameworkRes) {
-        const response = { headers: {}, body: undefined, status: 200 };
-        const negotiator = new Negotiator({ headers: { accept: request.accepts } });
-        const contentType = negotiator.mediaType(["text/html", "application/vnd.api+json"]);
-        response.headers['content-type'] = contentType;
-        response.headers.vary = "Accept";
-        const templateData = _.cloneDeep(this.templateData, cloneCustomizer);
-        templateData.resourcesMap = mapValues(templateData.resourcesMap, (typeInfo, typeName) => {
-            return this.transformTypeInfo(typeName, typeInfo, request, response, frameworkReq, frameworkRes);
-        });
-        if (contentType && contentType.toLowerCase() === "text/html") {
-            response.body = jade.renderFile(this.template, templateData);
-        }
-        else {
-            const descriptionResources = [];
-            for (const type in templateData.resourcesMap) {
-                descriptionResources.push(new Resource_1.default("jsonapi-descriptions", type, templateData.resourcesMap[type]));
-            }
-            response.body = new Document_1.default({
-                primary: ResourceSet_1.default.of({ data: descriptionResources })
-            }).toString();
-        }
-        return Promise.resolve(response);
     }
     getTypeInfo(type) {
         const adapter = this.registry.dbAdapter(type);

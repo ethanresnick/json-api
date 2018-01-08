@@ -4,7 +4,7 @@ import mongodb = require("mongodb");
 import mongoose = require("mongoose");
 import pluralize = require("pluralize");
 import { AndPredicate } from "../../types/";
-import Data from "../../types/Data";
+import Data from "../../types/Generic/Data";
 import Resource from "../../types/Resource";
 import FieldDocumentation from "../../types/Documentation/Field";
 import { Adapter } from '../AdapterInterface';

@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const chai = require("chai");
 const parse_request_primary_1 = require("../../../../src/steps/pre-query/parse-request-primary");
-const Data_1 = require("../../../../src/types/Data");
+const Data_1 = require("../../../../src/types/Generic/Data");
 const Resource_1 = require("../../../../src/types/Resource");
 const Relationship_1 = require("../../../../src/types/Relationship");
 const expect = chai.expect;

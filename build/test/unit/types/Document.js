@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const chai = require("chai");
 const chaiSubset = require("chai-subset");
-const Data_1 = require("../../../src/types/Data");
+const Data_1 = require("../../../src/types/Generic/Data");
 const Resource_1 = require("../../../src/types/Resource");
 const ResourceSet_1 = require("../../../src/types/ResourceSet");
 const Relationship_1 = require("../../../src/types/Relationship");
@@ -11,25 +11,33 @@ const templating = require("url-template");
 const expect = chai.expect;
 chai.use(chaiSubset);
 describe("Document class", () => {
+    const orgRelation = Relationship_1.default.of({
+        data: Data_1.default.empty,
+        owner: { type: "people", path: "organization", id: "31" }
+    });
+    const orgRelationCustom = Relationship_1.default.of({
+        data: undefined,
+        owner: { type: "people", path: "organization", id: "32" },
+        links: { self: ({ ownerId }) => `http://localhost/a?filter=${ownerId}` }
+    });
+    const person = new Resource_1.default("people", "31", { "name": "mark" }, { "organization": orgRelation });
+    const person2 = new Resource_1.default("people", "32", { "name": "ethan" }, { "organization": orgRelationCustom });
+    const people = Data_1.default.of([person, person2]);
+    const topLevelMeta = { "mcawesome": true };
+    const urlTemplates = {
+        "people": {
+            "relationship": templating.parse("RELATIONSHIP{ownerId}{path}").expand
+        }
+    };
+    describe("Creating a Document", () => {
+        it("should reject non-object meta information", () => {
+            expect(() => new Document_1.default({
+                primary: ResourceSet_1.default.of({ data: people }),
+                meta: ["bob"]
+            })).to.throw(/meta.*object/i);
+        });
+    });
     describe("Rendering a document", () => {
-        const orgRelation = Relationship_1.default.of({
-            data: Data_1.default.empty,
-            owner: { type: "people", path: "organization", id: "31" }
-        });
-        const orgRelationCustom = Relationship_1.default.of({
-            data: undefined,
-            owner: { type: "people", path: "organization", id: "32" },
-            links: { self: ({ ownerId }) => `http://localhost/a?filter=${ownerId}` }
-        });
-        const person = new Resource_1.default("people", "31", { "name": "mark" }, { "organization": orgRelation });
-        const person2 = new Resource_1.default("people", "32", { "name": "ethan" }, { "organization": orgRelationCustom });
-        const people = Data_1.default.of([person, person2]);
-        const topLevelMeta = { "mcawesome": true };
-        const urlTemplates = {
-            "people": {
-                "relationship": templating.parse("RELATIONSHIP{ownerId}{path}").expand
-            }
-        };
         const relationshipDocJSON = new Document_1.default({
             primary: orgRelationCustom
         }).toJSON();

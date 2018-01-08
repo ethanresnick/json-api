@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const chai_1 = require("chai");
-const Data_1 = require("../../../src/types/Data");
+const Data_1 = require("../../../../src/types/Generic/Data");
 describe("Data type", () => {
     const item1 = { "type": "a", "id": "1" };
     const item2 = { "type": "b", "id": "2" };

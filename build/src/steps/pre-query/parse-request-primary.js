@@ -12,7 +12,7 @@ const APIError_1 = require("../../types/APIError");
 const Resource_1 = require("../../types/Resource");
 const ResourceIdentifier_1 = require("../../types/ResourceIdentifier");
 const Relationship_1 = require("../../types/Relationship");
-const Data_1 = require("../../types/Data");
+const Data_1 = require("../../types/Generic/Data");
 function default_1(jsonData, parseAsLinkage = false) {
     return __awaiter(this, void 0, void 0, function* () {
         try {

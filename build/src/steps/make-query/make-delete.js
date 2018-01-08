@@ -5,6 +5,7 @@ const DeleteQuery_1 = require("../../types/Query/DeleteQuery");
 const RemoveFromRelationshipQuery_1 = require("../../types/Query/RemoveFromRelationshipQuery");
 function default_1(request, registry, makeDoc) {
     const type = request.type;
+    const primary = request.document && request.document.primary.data;
     if (request.aboutRelationship) {
         if (!request.id || !request.relationship) {
             throw new APIError_1.default(400, undefined, "To remove linkage from a relationship, you must send your request to a relationship endpoint.");
@@ -13,16 +14,16 @@ function default_1(request, registry, makeDoc) {
             type: type,
             id: request.id,
             relationshipName: request.relationship,
-            linkage: request.primary,
+            linkage: primary,
             returning: () => ({ status: 204 })
         });
     }
     const bulkDelete = !request.id;
     if (bulkDelete) {
-        if (!request.primary) {
+        if (!primary) {
             throw new Error("Bulk delete without a body is not possible.");
         }
-        if (request.primary.isSingular) {
+        if (primary.isSingular) {
             const title = "You must provide an array of resource identifier objects to do a bulk delete.";
             throw new APIError_1.default(400, undefined, title);
         }
@@ -31,7 +32,7 @@ function default_1(request, registry, makeDoc) {
         type,
         returning: () => ({ status: 204 }),
         [bulkDelete ? 'ids' : 'id']: bulkDelete
-            ? request.primary.map((it) => it.id).values
+            ? primary.map((it) => it.id).values
             : request.id
     });
 }

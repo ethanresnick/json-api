@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const Data_1 = require("./Data");
+const Data_1 = require("./Generic/Data");
 const type_handling_1 = require("../util/type-handling");
 class MaybeDataWithLinks {
     constructor({ data, links = {} }) {

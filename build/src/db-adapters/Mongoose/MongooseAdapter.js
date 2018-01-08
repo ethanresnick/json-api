@@ -10,11 +10,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose = require("mongoose");
 const pluralize = require("pluralize");
-const arrays_1 = require("../../util/arrays");
 const misc_1 = require("../../util/misc");
 const type_handling_1 = require("../../util/type-handling");
 const util = require("./lib");
-const Data_1 = require("../../types/Data");
+const Data_1 = require("../../types/Generic/Data");
 const Resource_1 = require("../../types/Resource");
 const ResourceIdentifier_1 = require("../../types/ResourceIdentifier");
 const Relationship_1 = require("../../types/Relationship");
@@ -65,7 +64,7 @@ class MongooseAdapter {
                 const populatedPaths = [];
                 const refPaths = util.getReferencePaths(model);
                 includePaths.map((it) => it.split(".")).forEach((pathParts) => {
-                    if (!arrays_1.arrayContains(refPaths, pathParts[0])) {
+                    if (!refPaths.includes(pathParts[0])) {
                         const title = "Invalid include path.";
                         const detail = `Resources of type "${type}" don't have a(n) "${pathParts[0]}" relationship.`;
                         throw new APIError_1.default(400, undefined, title, detail);
@@ -274,7 +273,7 @@ class MongooseAdapter {
         const relationships = {};
         const getProp = (obj, part) => obj[part];
         refPaths.forEach((path) => {
-            if (fields && fields[type] && !arrays_1.arrayContains(fields[type], path)) {
+            if (fields && fields[type] && !fields[type].includes(path)) {
                 return;
             }
             const pathParts = path.split(".");
@@ -328,7 +327,7 @@ class MongooseAdapter {
                 new RelationshipType_1.default(holdsArray, refModelName, this.getType(refModelName, pluralizer));
         };
         model.schema.eachPath((name, type) => {
-            if (arrays_1.arrayContains([versionKey, discriminatorKey], name)) {
+            if ([versionKey, discriminatorKey].includes(name)) {
                 return;
             }
             const fieldType = getFieldType(name, type);

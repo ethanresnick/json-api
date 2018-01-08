@@ -1,4 +1,4 @@
-import Data from './Data';
+import Data from './Generic/Data';
 import Resource from './Resource';
 import ResourceIdentifier from './ResourceIdentifier';
 import { Reducer, PredicateFn, UrlTemplateFns, Mapper, AsyncMapper, Links } from "./index";

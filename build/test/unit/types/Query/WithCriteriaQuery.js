@@ -29,7 +29,6 @@ describe("WithCriteriaQuery", () => {
         describe("matching multiple ids", () => {
             const resultQueries = queries.map(q => q.matchingIdOrIds(["33", "45"]));
             it("should add an id filter, not removing any that already exist", () => {
-                console.log(resultQueries[1].getFilters());
                 const resultIdFilters = resultQueries.map(getIdFilters);
                 const addedFilter = { field: "id", operator: 'in', value: ["33", "45"] };
                 chai_1.expect(resultIdFilters).to.deep.equal([

@@ -10,10 +10,15 @@ var __rest = (this && this.__rest) || function (s, e) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const type_handling_1 = require("../util/type-handling");
+const misc_1 = require("../util/misc");
+const Relationship_1 = require("./Relationship");
 const ResourceSet_1 = require("./ResourceSet");
 class Document {
     constructor(data) {
         const { urlTemplates = {} } = data, restData = __rest(data, ["urlTemplates"]);
+        if (typeof data.meta !== 'undefined' && !misc_1.isPlainObject(data.meta)) {
+            throw new Error("Document `meta` must be an object.");
+        }
         Object.assign(this, restData, { urlTemplates });
     }
     toJSON() {
@@ -23,11 +28,18 @@ class Document {
             const { related = undefined, relationship = undefined } = templatesForOwnerType;
             return { related, self: relationship };
         };
-        const { data = undefined, links = {} } = this.primary instanceof ResourceSet_1.default
-            ? this.primary.toJSON(this.urlTemplates)
-            : (this.primary
-                ? this.primary.toJSON(templatesForRelationship(this.urlTemplates[this.primary.owner.type] || {}))
-                : {});
+        const { data = undefined, links = {} } = (() => {
+            if (this.primary instanceof ResourceSet_1.default) {
+                return this.primary.toJSON(this.urlTemplates);
+            }
+            else if (this.primary instanceof Relationship_1.default) {
+                return this.primary.toJSON(templatesForRelationship(this.urlTemplates[this.primary.owner.type] || {}));
+            }
+            else if (this.primary) {
+                return this.primary.toJSON();
+            }
+            return {};
+        })();
         if (this.meta) {
             res.meta = this.meta;
         }
@@ -47,6 +59,10 @@ class Document {
     }
     toString() {
         return JSON.stringify(this.toJSON());
+    }
+    clone() {
+        const Ctor = (this.constructor || Document);
+        return new Ctor(this);
     }
 }
 exports.default = Document;

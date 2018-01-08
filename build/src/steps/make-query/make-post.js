@@ -6,10 +6,10 @@ const AddToRelationshipQuery_1 = require("../../types/Query/AddToRelationshipQue
 const ResourceSet_1 = require("../../types/ResourceSet");
 const templating = require("url-template");
 function default_1(request, registry, makeDoc) {
-    const primary = request.primary;
+    const primary = request.document.primary.data;
     const type = request.type;
     if (request.aboutRelationship) {
-        if (request.primary.isSingular) {
+        if (primary.isSingular) {
             throw new APIError_1.default(400, undefined, "To add to a to-many relationship, you must POST an array of linkage objects.");
         }
         if (!request.id || !request.relationship) {

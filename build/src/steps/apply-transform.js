@@ -8,11 +8,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const Data_1 = require("../types/Data");
+const depd = require("depd");
+const Data_1 = require("../types/Generic/Data");
 const Resource_1 = require("../types/Resource");
 const ResourceIdentifier_1 = require("../types/ResourceIdentifier");
+const deprecate = depd("json-api");
 function transform(toTransform, mode, extras) {
     const { registry } = extras;
+    extras.frameworkReq = extras.serverReq;
+    extras.frameworkRes = extras.serverRes;
+    deprecate.property(extras, 'frameworkReq', 'frameworkReq: use serverReq prop instead.');
+    deprecate.property(extras, 'frameworkRes', 'frameworkRes: use serverReq prop instead.');
     const skipTransform = (it, typeForTransform) => it instanceof ResourceIdentifier_1.default && !registry.transformLinkage(typeForTransform);
     const linkageTransformEnabled = registry.typeNames().some(it => registry.transformLinkage(it));
     const superFn = (it, req, res, extras) => {
@@ -40,7 +46,7 @@ function transform(toTransform, mode, extras) {
             if (!transformFn) {
                 return Data_1.default.pure(it);
             }
-            const transformed = yield transformFn(it, extras.frameworkReq, extras.frameworkRes, superFn, extras);
+            const transformed = yield transformFn(it, extras.serverReq, extras.serverRes, superFn, extras);
             return transformed === undefined
                 ? Data_1.default.empty
                 : Data_1.default.pure(transformed);

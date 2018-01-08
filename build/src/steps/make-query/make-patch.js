@@ -4,11 +4,11 @@ const APIError_1 = require("../../types/APIError");
 const Resource_1 = require("../../types/Resource");
 const Relationship_1 = require("../../types/Relationship");
 const UpdateQuery_1 = require("../../types/Query/UpdateQuery");
-const Data_1 = require("../../types/Data");
+const Data_1 = require("../../types/Generic/Data");
 const ResourceSet_1 = require("../../types/ResourceSet");
 function default_1(request, registry, makeDoc) {
-    const primary = request.primary;
     const type = request.type;
+    const primary = request.document.primary.data;
     let changedResourceData;
     if (!request.aboutRelationship) {
         if (request.id) {
@@ -35,7 +35,7 @@ function default_1(request, registry, makeDoc) {
         }
         changedResourceData = Data_1.default.pure(new Resource_1.default(request.type, request.id, undefined, {
             [request.relationship]: Relationship_1.default.of({
-                data: request.primary,
+                data: primary,
                 owner: { type: request.type, id: request.id, path: request.relationship }
             })
         }));

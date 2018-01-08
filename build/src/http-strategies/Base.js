@@ -45,8 +45,10 @@ class BaseStrategy {
                         return "patch";
                     }
                     else if (requestedMethod) {
-                        const msg = `Cannot tunnel to the method "${requestedMethod.toUpperCase()}".`;
-                        throw new APIError_1.default(400, undefined, msg);
+                        throw new APIError_1.default({
+                            status: 400,
+                            title: `Cannot tunnel to method "${requestedMethod.toUpperCase()}".`
+                        });
                     }
                     return usedMethod;
                 })(),

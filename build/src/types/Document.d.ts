@@ -1,8 +1,9 @@
 import Resource, { ResourceJSON } from "./Resource";
 import APIError, { APIErrorJSON } from './APIError';
 import { PrimaryDataJSON, UrlTemplateFnsByType, Links } from './index';
-import ResourceSet from './ResourceSet';
 import Relationship from './Relationship';
+import ResourceSet from './ResourceSet';
+import ResourceIdentifierSet from "../types/ResourceIdentifierSet";
 export declare type DocumentJSON = ({
     data: PrimaryDataJSON;
     errors: undefined;
@@ -18,7 +19,7 @@ export declare type DocumentJSON = ({
 export declare type DocumentData = {
     meta?: object;
     included?: Resource[];
-    primary?: ResourceSet | Relationship;
+    primary?: ResourceSet | Relationship | ResourceIdentifierSet;
     errors?: APIError[];
     urlTemplates?: UrlTemplateFnsByType;
 };
@@ -31,4 +32,5 @@ export default class Document {
     constructor(data: DocumentData);
     toJSON(): DocumentJSON;
     toString(): string;
+    clone(): Document;
 }

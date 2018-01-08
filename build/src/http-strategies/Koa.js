@@ -67,7 +67,7 @@ class KoaStrategy extends Base_1.default {
         }
     }
     sendError(errors, ctx) {
-        API_1.default.responseFromExternalError(errors, ctx.headers.accept).then((responseObject) => this.sendResources(responseObject, ctx)).catch((err) => {
+        API_1.default.responseFromError(errors, ctx.headers.accept).then((responseObject) => this.sendResources(responseObject, ctx)).catch((err) => {
             ctx.throw(err.message, err.status);
         });
     }

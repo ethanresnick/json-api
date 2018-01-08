@@ -1,8 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const type_handling_1 = require("../../util/type-handling");
+const Maybe_1 = require("../../types/Generic/Maybe");
+exports.Just = Maybe_1.Just;
+exports.Nothing = Maybe_1.Nothing;
 function getFilterList(queryString) {
-    return type_handling_1.Maybe(queryString).map(it => it.split('&').reduce((acc, paramString) => {
+    return Maybe_1.default(queryString).map(it => it.split('&').reduce((acc, paramString) => {
         const [rawKey, rawValue] = splitSingleQueryParamString(paramString);
         return rawKey === 'filter' ? rawValue : acc;
     }, undefined));

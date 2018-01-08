@@ -1,11 +1,7 @@
 import Resource from './Resource';
-import Data from './Data';
-import { UrlTemplateFns, UrlTemplateFnsByType } from "./index";
+import Data from './Generic/Data';
+import { UrlTemplateFnsByType, DataWithLinksArgs } from "./index";
 import MaybeDataWithLinks from "./MaybeDataWithLinks";
-export declare type DataWithLinksArgs<T> = {
-    data: T | T[] | null | Data<T>;
-    links?: UrlTemplateFns;
-};
 export default class ResourceSet extends MaybeDataWithLinks<Resource> {
     protected data: Data<Resource>;
     protected constructor(it: DataWithLinksArgs<Resource>);

@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const Immutable = require("immutable");
 const misc_1 = require("./util/misc");
-const type_handling_1 = require("./util/type-handling");
+const Maybe_1 = require("./types/Generic/Maybe");
 const Resource_1 = require("./types/Resource");
 exports.Resource = Resource_1.default;
 const ResourceIdentifier_1 = require("./types/ResourceIdentifier");
@@ -38,7 +38,7 @@ class ResourceTypeRegistry {
         });
     }
     type(typeName) {
-        return type_handling_1.Maybe(this._types[typeName])
+        return Maybe_1.default(this._types[typeName])
             .map(it => it.toJS())
             .getOrDefault(undefined);
     }
@@ -50,7 +50,7 @@ class ResourceTypeRegistry {
     }
     urlTemplates(type) {
         if (type) {
-            return type_handling_1.Maybe(this._types[type])
+            return Maybe_1.default(this._types[type])
                 .map(it => it.get("urlTemplates"))
                 .map(it => it.toJS())
                 .getOrDefault(undefined);
@@ -90,7 +90,7 @@ class ResourceTypeRegistry {
         return this.doGet("transformLinkage", type);
     }
     doGet(attrName, type) {
-        return type_handling_1.Maybe(this._types[type])
+        return Maybe_1.default(this._types[type])
             .map(it => it.get(attrName))
             .map(it => it instanceof Immutable.Map || it instanceof Immutable.List
             ? it.toJS()

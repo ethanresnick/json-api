@@ -1,5 +1,5 @@
 import Query, { QueryOptions } from "./Query";
-import Data from '../Data';
+import Data from '../Generic/Data';
 import ResourceIdentifier from '../ResourceIdentifier';
 export declare type RemoveFromRelationshipQueryOptions = QueryOptions & {
     id: string | number;

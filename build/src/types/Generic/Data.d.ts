@@ -1,4 +1,4 @@
-import { DataOf, Reducer, PredicateFn, Mapper, AsyncMapper } from "./index";
+import { DataOf, Reducer, PredicateFn, Mapper, AsyncMapper } from "../index";
 export declare type INTERNAL_DONT_USE<T> = {
     data: T[];
     isSingular: boolean;
