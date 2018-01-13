@@ -70,9 +70,17 @@ export default class MaybeDataWithLinks<T extends (Resource | ResourceIdentifier
   unwrapWith<U>(fn: (it: T) => U, linkTemplateData: any) {
     return {
       links: mapObject(this.links, (template) => template(linkTemplateData)) as Links,
-      data: this.data && this.data.map(fn).unwrap()
+      data: this.unwrapDataWith(fn)
     };
   }
+
+  /**
+   * Like {@see unwrapWith}, but only gives you the data back.
+   */
+  unwrapDataWith<U>(fn: (it: T) => U) {
+    return this.data && this.data.map(fn).unwrap();
+  }
+
 
   every(fn: PredicateFn<T>): boolean {
     return this.data ? this.data.every(fn) : true;
