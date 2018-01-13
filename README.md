@@ -93,6 +93,7 @@ However, to support advanced use cases, you might want to override how the libra
 
 One simple thing you can do with query factories is to create urls (or, in REST terminology, resources) that map to different database items over time. For example, you could have an `/events/upcoming` resource or a `/users/me` resource. To do that, your query factory function would call the library's built-in function to get its auto-generated query, and then modifiy that query (which would likely be for all the events and users respectively) to add a filter constraint that only returns the appropriate resources.
 
+Query factory functions are also a good place to do permissions checks that rely on access to the parsed request body. If the user doesn't have permission, you can throw an error, and the library will pass it along gracefully in the response. See [error handling](#error-handling).
 
 ## Filtering
 This library supports filtering out of the box, using a syntax that's designed to be easier to read, and much easier to write, than the  square brackets syntax used by libraries like [qs](https://github.com/ljharb/qs).
@@ -147,6 +148,15 @@ For example, to get 25 people starting at the 51st person:
 ```
 GET /people?page[offset]=50&page[limit]=25
 ```
+
+## Error Handling
+Code that you provide the library (e.g., a query factory function) can throw an error or, in some cases, return a promise that rejects with an error. 
+
+Any time an `Error` is encountered, the library responds with a generic "An error has ocurred" response. The library doesn't pass any information from the error object (e.g., its message or stack trace) back to the client by default, as that could leak details about the server's implementation, which is not great for security.
+
+If you want to pass information about the error back to the user, you need to explicitly mark it as safe to expose to the user, which you can do in two ways. First, you can throw an instance of the library's [`APIError` class](https://github.com/ethanresnick/json-api/blob/master/src/types/APIError.ts) directly, instead of a more general `Error`. (See the APIError constructor and the [json:api spec on errors](http://jsonapi.org/format/#errors) for details about what properties you can expose.) Second, if your error is coming from some existing code, you can attach a [special, Symbol-named property](https://github.com/ethanresnick/json-api/blob/d8bfaf0710e902d1e3ee7efba7e73aa2446788b5/src/types/APIError.ts#L22) to it with a truthy value, and that'll trigger the framework to know that it's safe to display.
+
+Hope that helps! I'm going to close this thread, though, because neither @andrewbranch nor I are able to reproduce the original problem it was about (which is different then yours). Nevertheless, if my fix above doesn't work, feel free to add more comments here.
 
 ## Routing, Authentication & Controllers
 This library gives you a Front controller (shown in the example) that can handle requests for API results or for the documentation. But the library doesn't prescribe how requests get to this controller. This allows you to use any url scheme, routing layer, or authentication system you already have in place. 
