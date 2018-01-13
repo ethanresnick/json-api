@@ -16,8 +16,8 @@ import Document from './types/Document'
 import Error from './types/APIError'
 import Resource from './types/Resource'
 import ResourceIdentifier from './types/ResourceIdentifier'
-import Relationship from './types/Relationship'
 import ResourceSet from './types/ResourceSet'
+import Relationship from './types/Relationship'
 import Field from './types/Documentation/Field'
 import FieldType from './types/Documentation/FieldType'
 import API from './controllers/API'
@@ -31,44 +31,54 @@ import DeleteQuery from './types/Query/DeleteQuery';
 import AddToRelationshipQuery from './types/query/AddToRelationshipQuery';
 import RemoveFromRelationshipQuery from './types/Query/RemoveFromRelationshipQuery';
 
-
-export= {
-  dbAdapters: {
-    get Mongoose() {
-      return <typeof MongooseAdapter>require('./db-adapters/Mongoose/MongooseAdapter').default
-    }
-  },
-  httpStrategies: {
-    get Express() {
-      return <typeof ExpressStrategy>require('./http-strategies/Express').default
-    },
-    get Koa() {
-      return <typeof KoaStrategy>require('./http-strategies/Koa').default
-    }
-  },
-  types: {
-    Document,
-    Error,
-    Resource,
-    ResourceIdentifier,
-    ResourceSet,
-    Relationship,
-    Documentation: {
-      Field,
-      FieldType
-    },
-    Query: {
-      Find: FindQuery,
-      Create: CreateQuery,
-      Update: UpdateQuery,
-      Delete: DeleteQuery,
-      AddToRelationship: AddToRelationshipQuery,
-      RemoveFromRelationship: RemoveFromRelationshipQuery
-    }
-  },
-  controllers: {
-    API,
-    Documentation
-  },
-  ResourceTypeRegistry
+// Export types for typescript
+export {
+  Document, Error, Resource, ResourceIdentifier, ResourceSet, Relationship,
+  API as APIController, Documentation as DocumentationController,
+  CreateQuery, FindQuery, UpdateQuery, DeleteQuery, AddToRelationshipQuery, RemoveFromRelationshipQuery,
+  Field, FieldType, ResourceTypeRegistry
 };
+
+export const dbAdapters = {
+  get Mongoose() {
+    return <typeof MongooseAdapter>require('./db-adapters/Mongoose/MongooseAdapter').default
+  }
+};
+
+export const httpStrategies = {
+  get Express() {
+    return <typeof ExpressStrategy>require('./http-strategies/Express').default
+  },
+  get Koa() {
+    return <typeof KoaStrategy>require('./http-strategies/Koa').default
+  }
+};
+
+export const types = {
+  Document,
+  Error,
+  Resource,
+  ResourceIdentifier,
+  ResourceSet,
+  Relationship,
+  Documentation: {
+    Field,
+    FieldType
+  },
+  Query: {
+    Find: FindQuery,
+    Create: CreateQuery,
+    Update: UpdateQuery,
+    Delete: DeleteQuery,
+    AddToRelationship: AddToRelationshipQuery,
+    RemoveFromRelationship: RemoveFromRelationshipQuery
+  }
+};
+
+export const controllers = {
+  API,
+  Documentation
+};
+
+const defaultExp = { types, controllers, httpStrategies, dbAdapters };
+export default defaultExp;
