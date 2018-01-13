@@ -32,6 +32,7 @@ import AddToRelationshipQuery from './types/query/AddToRelationshipQuery';
 import RemoveFromRelationshipQuery from './types/Query/RemoveFromRelationshipQuery';
 
 // Export types for typescript
+export { Request, Result, HTTPResponse } from './types';
 export {
   Document, Error, Resource, ResourceIdentifier, ResourceSet, Relationship,
   API as APIController, Documentation as DocumentationController,
