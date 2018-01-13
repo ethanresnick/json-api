@@ -21,6 +21,8 @@
 - `ExpressStrategy.sendError` should now be provided with the `next` function as an argument; not providing this will be an error when v3 is finalized.
 
 - On `APIController` signature of `handle` method has changed, and the `responseFromExternalError` method has been renamed to `responseFromError`. These changes should only effect you if you have written a custom HTTP strategy.
+
+- Adding an `isJSONAPIDisplayReady` property to error objects to signal that their details can be shown to the user is deprecated; throw a proper APIError instead or use the symbol property exported from the APIError class.
  
 # 3.0.0-beta.3
 

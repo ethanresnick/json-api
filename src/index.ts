@@ -13,7 +13,7 @@ import KoaStrategy from "./http-strategies/Koa";
 
 // These imports are part of the compiled output and aren't lazy loaded.
 import Document from './types/Document'
-import Error from './types/APIError'
+import Error, { displaySafe as displaySafeError } from './types/APIError'
 import Resource from './types/Resource'
 import ResourceIdentifier from './types/ResourceIdentifier'
 import ResourceSet from './types/ResourceSet'
@@ -36,8 +36,9 @@ export {
   Document, Error, Resource, ResourceIdentifier, ResourceSet, Relationship,
   API as APIController, Documentation as DocumentationController,
   CreateQuery, FindQuery, UpdateQuery, DeleteQuery, AddToRelationshipQuery, RemoveFromRelationshipQuery,
-  Field, FieldType, ResourceTypeRegistry
+  Field, FieldType, ResourceTypeRegistry, displaySafeError
 };
+
 
 export const dbAdapters = {
   get Mongoose() {
@@ -80,5 +81,5 @@ export const controllers = {
   Documentation
 };
 
-const defaultExp = { types, controllers, httpStrategies, dbAdapters };
+const defaultExp = { types, controllers, httpStrategies, dbAdapters, displaySafeError };
 export default defaultExp;

@@ -1,3 +1,6 @@
+import depd = require("depd");
+const deprecate = depd("json-api");
+
 export type APIErrorJSON = {
   status?: string;
   code?: string;
@@ -15,6 +18,8 @@ export type Opts = {
   links?: object;
   paths?: string[];
 };
+
+export const displaySafe = Symbol('isJSONAPIDisplayReady');
 
 // TODO: refactor args list to be:
 // constructor(title, status, [code, detail, links, paths])
@@ -35,6 +40,10 @@ export default class APIError extends Error {
   );
   constructor(...args) {
     super();
+
+    if(Error.captureStackTrace) {
+      Error.captureStackTrace(this, this.constructor || APIError);
+    }
 
     // Use a Proxy to handle coercing status, code etc.
     // to strings on set (including below in the constructor).
@@ -86,7 +95,14 @@ export default class APIError extends Error {
     // If the error is marked as ready for JSON API display, it's secure
     // to read values off it and show them to the user. (Note: most of
     // the args below will probably be null/undefined, but that's fine.)
-    else if(err.isJSONAPIDisplayReady) {
+    else if(err[displaySafe] || err.isJSONAPIDisplayReady) {
+      if(err.isJSONAPIDisplayReady) {
+        deprecate(
+          "isJSONAPIDisplayReady magic property: " +
+          "use the APIError.displaySafe symbol instead."
+        );
+      }
+
       return new ErrorConstructor(
         err.status || err.statusCode || 500,
         err.code,
