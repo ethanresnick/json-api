@@ -22,6 +22,7 @@ export default class MaybeDataWithLinks<T extends (Resource | ResourceIdentifier
         links: Links;
         data: U | U[] | null | undefined;
     };
+    unwrapDataWith<U>(fn: (it: T) => U): U | U[] | null | undefined;
     every(fn: PredicateFn<T>): boolean;
     some(fn: PredicateFn<T>): boolean;
     reduce<U>(fn: Reducer<T, U>, initialValue?: U): U | undefined;

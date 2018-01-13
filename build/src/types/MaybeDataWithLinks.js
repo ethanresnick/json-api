@@ -30,8 +30,11 @@ class MaybeDataWithLinks {
     unwrapWith(fn, linkTemplateData) {
         return {
             links: type_handling_1.mapObject(this.links, (template) => template(linkTemplateData)),
-            data: this.data && this.data.map(fn).unwrap()
+            data: this.unwrapDataWith(fn)
         };
+    }
+    unwrapDataWith(fn) {
+        return this.data && this.data.map(fn).unwrap();
     }
     every(fn) {
         return this.data ? this.data.every(fn) : true;
