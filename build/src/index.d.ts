@@ -18,6 +18,7 @@ import UpdateQuery from './types/Query/UpdateQuery';
 import DeleteQuery from './types/Query/DeleteQuery';
 import AddToRelationshipQuery from './types/query/AddToRelationshipQuery';
 import RemoveFromRelationshipQuery from './types/Query/RemoveFromRelationshipQuery';
+export { Request, Result, HTTPResponse } from './types';
 export { Document, Error, Resource, ResourceIdentifier, ResourceSet, Relationship, API as APIController, Documentation as DocumentationController, CreateQuery, FindQuery, UpdateQuery, DeleteQuery, AddToRelationshipQuery, RemoveFromRelationshipQuery, Field, FieldType, ResourceTypeRegistry, displaySafeError };
 export declare const dbAdapters: {
     readonly Mongoose: typeof MongooseAdapter;
