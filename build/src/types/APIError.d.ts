@@ -14,6 +14,7 @@ export declare type Opts = {
     links?: object;
     paths?: string[];
 };
+export declare const displaySafe: symbol;
 export default class APIError extends Error {
     status?: string;
     code?: string;
