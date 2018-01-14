@@ -4,6 +4,7 @@ import pluralize = require("pluralize");
 
 import { AndPredicate } from "../../types/";
 import { deleteNested } from "../../util/misc";
+import { values as objectValues } from '../../util/objectValueEntries';
 import { forEachArrayOrVal, groupResourcesByType } from "../../util/type-handling";
 import * as util from "./lib";
 import Data from "../../types/Generic/Data";
@@ -143,18 +144,26 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       let includedResources: Resource[] = [];
       primaryDocumentsPromise = Promise.resolve(queryBuilder.exec()).then((docOrDocs) => {
         includedResources =
-          Data.fromJSON(docOrDocs) // fromJSON to handle docOrDocs === null.
-            .flatMap((doc) => {
-              return Data.of(populatedPaths).flatMap((path) => {
-                // Handle case that doc[path], which should hold id(s) of the
-                // referenced documents, is undefined b/c the relationship isn't set.
-                return typeof doc[path] === 'undefined'
-                  ? Data.empty
-                  : Data.fromJSON(doc[path]).map(doc => {
-                      return this.constructor.docToResource(doc, pluralizer, fields);
-                    })
+          objectValues(
+            Data.fromJSON(docOrDocs) // fromJSON to handle docOrDocs === null.
+              .flatMap((doc) => {
+                return Data.of(populatedPaths).flatMap((path) => {
+                  // Handle case that doc[path], which should hold id(s) of the
+                  // referenced documents, is undefined b/c the relationship isn't set.
+                  return typeof doc[path] === 'undefined'
+                    ? Data.empty as Data<Resource>
+                    : Data.fromJSON(doc[path]).map(doc => {
+                        return this.constructor.docToResource(doc, pluralizer, fields);
+                      })
+                })
               })
-            }).values;
+              .values
+              // Remove duplicates
+              .reduce((acc: object, resource) => {
+                acc[`${resource.type}/${resource.id}`] = resource;
+                return acc;
+              }, {})
+          );
 
         return docOrDocs;
       });

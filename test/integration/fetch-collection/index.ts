@@ -205,6 +205,20 @@ describe("Fetching Collection", () => {
         });
     });
   });
+
+  describe("Fetching with includes", () => {
+    it("should not contain duplicate resources", () => {
+      return Agent.request("GET", '/organizations')
+        .query('include=liaisons')
+        .accept("application/vnd.api+json")
+        .then(res => {
+          const janeDoes =
+            res.body.included.filter(it => it.attributes.name === 'Jane Doe');
+
+          expect(janeDoes).to.have.length(1);
+        })
+    });
+  });
 });
 
     // "[S]erver implementations MUST ignore
