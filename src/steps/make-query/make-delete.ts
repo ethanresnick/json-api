@@ -9,7 +9,7 @@ import RemoveFromRelationshipQuery from "../../types/Query/RemoveFromRelationshi
 export default function(request: FinalizedRequest, registry: ResourceTypeRegistry, makeDoc: makeDocument) {
   const type = request.type;
   // There may not be a document, but if there is it'll have primary data.
-  const primary = request.document && (request.document.primary as any).data;
+  const primary = request.document && (request.document.primary as any)._data;
 
   if(request.aboutRelationship) {
     if(!request.id || !request.relationship) {

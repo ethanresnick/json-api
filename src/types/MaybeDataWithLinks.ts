@@ -20,19 +20,19 @@ export type DataSyncMethods = "flatMap" | "map" | "filter";
 export type DataAsyncMethods = "flatMapAsync" | "mapAsync";
 
 export default class MaybeDataWithLinks<T extends (Resource | ResourceIdentifier)> {
-  protected data: Data<T> | undefined;
+  protected _data: Data<T> | undefined;
   public links: UrlTemplateFns;
 
   protected constructor({ data, links = {} }: MaybeDataWithLinksArgs<T>) {
     this.links = links;
 
-    this.data = typeof data === 'undefined' || data instanceof Data
+    this._data = typeof data === 'undefined' || data instanceof Data
       ? data
       : Data.fromJSON(data);
   }
 
   get values() {
-    return this.data ? [...this.data.values] : [];
+    return this._data ? [...this._data.values] : [];
   }
 
   map(fn: Mapper<T, T>) {
@@ -78,51 +78,51 @@ export default class MaybeDataWithLinks<T extends (Resource | ResourceIdentifier
    * Like {@see unwrapWith}, but only gives you the data back.
    */
   unwrapDataWith<U>(fn: (it: T) => U) {
-    return this.data && this.data.map(fn).unwrap();
+    return this._data && this._data.map(fn).unwrap();
   }
 
 
   every(fn: PredicateFn<T>): boolean {
-    return this.data ? this.data.every(fn) : true;
+    return this._data ? this._data.every(fn) : true;
   }
 
   some(fn: PredicateFn<T>): boolean {
-    return this.data ? this.data.some(fn) : false;
+    return this._data ? this._data.some(fn) : false;
   }
 
   reduce<U>(fn: Reducer<T, U>, initialValue?: U) {
-    return this.data ? this.data.reduce(fn, initialValue) : initialValue;
+    return this._data ? this._data.reduce(fn, initialValue) : initialValue;
   }
 
   forEach(fn: (it: T) => void) {
-    this.data && this.data.forEach(fn);
+    this._data && this._data.forEach(fn);
     return this; // for chaining
   }
 
   protected clone(): this {
     const Ctor = this.constructor as any;
     return new Ctor({
-      data: this.data,
+      data: this._data,
       links: this.links
     });
   }
 
   protected delegateDataTransformToParent(methodName: DataSyncMethods, args) {
-    return this.data
-      ? this.withNewData((this.data[methodName] as any)(...args))
+    return this._data
+      ? this.withNewData((this._data[methodName] as any)(...args))
       : this
   }
 
   protected delegateDataTransformToParentAsync(methodName: DataAsyncMethods, args) {
-    return this.data
-      ? (this.data[methodName] as (...args: any[]) => Promise<Data<T>>)(...args)
+    return this._data
+      ? (this._data[methodName] as (...args: any[]) => Promise<Data<T>>)(...args)
           .then(newData => this.withNewData(newData))
       : Promise.resolve(this)
   }
 
   protected withNewData(newData): this {
     const res = this.clone();
-    res.data = newData;
+    res._data = newData;
     return res;
   }
 };

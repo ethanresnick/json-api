@@ -27,7 +27,7 @@ export default class Relationship extends MaybeDataWithLinks<ResourceIdentifier>
 
   protected clone(): this {
     return (this.constructor as any).of({
-      data: this.data,
+      data: this._data,
       links: this.links,
       owner: this.owner
     });

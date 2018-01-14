@@ -189,7 +189,7 @@ export default class APIController {
       if(!parseAsLinkage(request)) {
         await validateRequestResources(
           request.type,
-          (request.document.primary as any).data as Data<Resource>,
+          (request.document.primary as any)._data as Data<Resource>,
           opts.registry
         );
       }
@@ -452,15 +452,14 @@ function parseAsLinkage(request: Request) {
   return request.aboutRelationship || isBulkDelete(request);
 }
 
-
 async function transformDoc(doc: Document, mode: TransformMode, extras: Extras) {
   // Create Data, or read private internal Data if it exists, and transform it.
   const res = doc.clone();
-  const primaryData = res.primary && (<any>res.primary).data;
+  const primaryData = res.primary && (<any>res.primary)._data;
   const includedData = doc.included && Data.of(doc.included);
 
   if(primaryData) {
-    (<any>res.primary).data =
+    (<any>res.primary)._data =
       await applyTransform(primaryData, mode, extras);
   }
 

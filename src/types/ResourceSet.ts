@@ -4,7 +4,7 @@ import { UrlTemplateFnsByType, DataWithLinksArgs } from "./index";
 import MaybeDataWithLinks from "./MaybeDataWithLinks";
 
 export default class ResourceSet extends MaybeDataWithLinks<Resource> {
-  protected data: Data<Resource>;
+  protected _data: Data<Resource>;
 
   protected constructor(it: DataWithLinksArgs<Resource>) {
     if(typeof it.data === 'undefined') {
@@ -15,11 +15,11 @@ export default class ResourceSet extends MaybeDataWithLinks<Resource> {
   }
 
   get ids() {
-    return this.data.map(it => it.id);
+    return this._data.map(it => it.id);
   }
 
   get types() {
-    return this.data.map(it => it.type);
+    return this._data.map(it => it.type);
   }
 
   toJSON(urlTemplates: UrlTemplateFnsByType) {

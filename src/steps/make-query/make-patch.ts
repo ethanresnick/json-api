@@ -10,7 +10,7 @@ import { FinalizedRequest, makeDocument } from "../../types";
 
 export default function(request: FinalizedRequest, registry: ResourceTypeRegistry, makeDoc: makeDocument) {
   const type = request.type;
-  const primary = <Data<Resource> | Data<ResourceIdentifier>>(request.document!.primary as any).data;
+  const primary = <Data<Resource> | Data<ResourceIdentifier>>(request.document!.primary as any)._data;
   let changedResourceData;
 
   if(!request.aboutRelationship) {

@@ -10,7 +10,7 @@ import ResourceTypeRegistry from "../../ResourceTypeRegistry";
 import templating = require("url-template");
 
 export default function(request: FinalizedRequest, registry: ResourceTypeRegistry, makeDoc) {
-  const primary = (request.document!.primary as any).data;
+  const primary = (request.document!.primary as any)._data;
   const type    = request.type;
 
   // We're going to do an adapter.create, below, EXCEPT if we're adding to
