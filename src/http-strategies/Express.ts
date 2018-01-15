@@ -179,7 +179,10 @@ export default class ExpressStrategy extends Base {
     }
 
     catch(err) {
-      logger.warn("Hit an unexpected error creating or sending response. This shouldn't happen.");
+      logger.error(
+        "Hit an unexpected error creating or sending response." +
+        "This shouldn't happen."
+      );
       next(err);
     }
   }
@@ -191,7 +194,10 @@ export default class ExpressStrategy extends Base {
     }
 
     catch(err) {
-      logger.warn("Hit an unexpected error creating or sending response. This shouldn't happen.");
+      logger.error(
+        "Hit an unexpected error creating or sending response." +
+        "This shouldn't happen."
+      );
       next(err);
     }
   }

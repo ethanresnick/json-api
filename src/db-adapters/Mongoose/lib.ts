@@ -108,7 +108,7 @@ export function toMongoCriteria(constraintOrPredicate: FieldConstraint | Predica
 export function resourceToDocObject(resource: Resource): object {
   const res = {...resource.attrs};
   for(const key in resource.relationships) {
-    res[key] = resource.relationships[key].unwrapWith(it => it.id, {}).data;
+    res[key] = resource.relationships[key].unwrapDataWith(it => it.id);
   }
 
   return res;
