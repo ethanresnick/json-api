@@ -101,7 +101,7 @@
     "lint": "npm run lint:src & npm run lint:test",
     "lint:src": "tslint --project tsconfig.json --format verbose --exclude 'test/**/*' --config node_modules/@ethanresnick/tslint-config/tslint.json",
     "lint:test": "tslint --project tsconfig.json --format verbose --exclude 'src/**/*' --config ./test/tslint.json",
-    "test": "export NODE_ENV=testing; mocha --compilers ts:ts-node/register --recursive test/unit/ test/integration/ --full-trace",
+    "test": "export NODE_ENV=testing; mocha --compilers ts:ts-node/register --recursive test/unit/ test/integration/index.ts --full-trace --check-leaks",
     "test:debug": "npm run test -- --inspect-brk",
     "build:lintfree": "npm run clean && cpr templates build/templates && echo Using TypeScript && tsc --version && tsc --pretty",
     "build": "npm run build:lintfree",
