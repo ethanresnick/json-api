@@ -52,7 +52,9 @@ describe("Creating Resources", () => {
     });
 
     describe("Links", () => {
-      it.skip("should have a top-level self link");
+      it("should have a top-level self link", () => {
+        expect(res.body.links.self).to.match(/\/organizations$/);
+      });
     });
 
     describe("Transforms", () => {

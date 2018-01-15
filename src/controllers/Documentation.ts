@@ -3,7 +3,6 @@ import path = require("path");
 import jade = require("jade");
 import Negotiator = require("negotiator");
 import dasherize = require("dasherize");
-import mapValues = require("lodash/object/mapValues");
 
 import ResourceTypeRegistry, { ResourceTypeDescription, ResourceTypeInfo } from "../ResourceTypeRegistry";
 import { HTTPResponse, ServerReq, ServerRes, Request } from "../types";
@@ -53,8 +52,8 @@ export default class DocumentationController {
     response.headers.vary = "Accept";
 
     // process templateData (just the type infos for now) for this particular request.
-    const templateData = _.cloneDeep(this.templateData, cloneCustomizer);
-    templateData.resourcesMap = mapValues(templateData.resourcesMap, (typeInfo, typeName) => {
+    const templateData = _.cloneDeepWith(this.templateData, cloneCustomizer);
+    templateData.resourcesMap = _.mapValues(templateData.resourcesMap, (typeInfo, typeName) => {
       return this.transformTypeInfo(typeName, typeInfo, request, response, serverReq, serverRes);
     });
 
@@ -195,7 +194,7 @@ function cloneCustomizer(value) {
     // handle the possibiliy that a key in state was itself a non-plain object
     for(const key in state) {
       if(isCustomObject(value[key])) {
-        state[key] = _.cloneDeep(value[key], cloneCustomizer);
+        state[key] = _.cloneDeepWith(value[key], cloneCustomizer);
       }
     }
 

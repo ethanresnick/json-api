@@ -5,7 +5,7 @@ import pluralize = require("pluralize");
 import { AndPredicate } from "../../types/";
 import { deleteNested } from "../../util/misc";
 import { values as objectValues } from '../../util/objectValueEntries';
-import { forEachArrayOrVal, groupResourcesByType } from "../../util/type-handling";
+import { groupResourcesByType } from "../../util/type-handling";
 import * as util from "./lib";
 import Data from "../../types/Generic/Data";
 import Resource, { ResourceWithId } from "../../types/Resource";
@@ -195,26 +195,23 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
   async create(query: CreateQuery) {
     const { records: resourceData } = query;
     const resourcesByType = groupResourcesByType(resourceData);
+    const setIdWithGenerator = (doc) => { doc._id = this.idGenerator(doc); };
 
     // Note: creating the resources as we do below means that we do one
     // query for each type, as opposed to only one query for all of the
     // documents. That's unfortunately much slower, but it ensures that
     // mongoose runs all the user's hooks.
-    const creationPromises: Array<Promise<mongoose.Document[]>> = [];
-    const setIdWithGenerator = (doc) => { doc._id = this.idGenerator(doc); };
-
-    // tslint:disable-next-line:forin
-    for(const type in resourcesByType) {
+    const creationPromises = Object.keys(resourcesByType).map(type => {
       const model = this.getModel(this.constructor.getModelName(type));
       const resources: Resource[] = resourcesByType[type];
       const docObjects = resources.map(util.resourceToDocObject);
 
       if(typeof this.idGenerator === "function") {
-        forEachArrayOrVal(docObjects, setIdWithGenerator);
+        docObjects.forEach(setIdWithGenerator);
       }
 
-      creationPromises.push(model.create(docObjects));
-    }
+      return model.create(docObjects) as Promise<mongoose.Document[]>;
+    });
 
     return Promise.all(creationPromises).then((docArrays) => {
       const makeCollection = !resourceData.isSingular;

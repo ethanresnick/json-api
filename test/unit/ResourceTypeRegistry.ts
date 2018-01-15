@@ -129,6 +129,20 @@ describe("ResourceTypeRegistry", function() {
       expect(testType2Behaviors.dasherizeOutput.enabled).to.be.false;
       expect(testType2Behaviors.dasherizeOutput.exceptions).to.deep.equal([]);
     });
+
+    it("should only look for descriptions at own, enumerable props of descs arg", () => {
+      const typeDescs = Object.create({
+        prototypeKey: {}
+      }, {
+        legitDesc: { value: {}, enumerable: true },
+        nonEnumerableKey: { value: {}, enumerable: false }
+      });
+
+      const registeredTypes = new ResourceTypeRegistry(typeDescs).typeNames();
+      expect(registeredTypes).to.contain('legitDesc');
+      expect(registeredTypes).to.not.contain('nonEnumerableKey');
+      expect(registeredTypes).to.not.contain('prototypeKey');
+    });
   });
 
   it("Should allow null/undefined to overwrite all defaults", () => {

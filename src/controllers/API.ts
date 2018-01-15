@@ -1,4 +1,5 @@
 import templating = require("url-template");
+import mapObject = require('lodash/mapValues');
 import R = require("ramda");
 import {
    Request, FinalizedRequest, Result, HTTPResponse,
@@ -17,7 +18,6 @@ import ResourceSet from '../types/ResourceSet';
 import ResourceIdentifierSet from "../types/ResourceIdentifierSet";
 import Relationship from "../types/Relationship";
 import logger from '../util/logger';
-import { mapObject } from '../util/type-handling';
 
 import * as requestValidators from "../steps/http/validate-request";
 import negotiateContentType from "../steps/http/content-negotiation/negotiate-content-type";
@@ -90,6 +90,7 @@ export default class APIController {
       opts.filterParser || (<any>this.constructor).defaultFilterParamParser;
 
     this.urlTemplateFns = mapObject(registry.urlTemplates(), (templatesForType) => {
+      // tslint:disable-next-line:no-unbound-method
       return mapObject(templatesForType, (it) => templating.parse(it).expand);
     });
   }
@@ -174,7 +175,7 @@ export default class APIController {
    *
    * @param {QueryBuildingContext} opts [description]
    */
-  public async makeQuery(opts: QueryBuildingContext) {
+  public async makeQuery(this: undefined, opts: QueryBuildingContext) {
     const { request } = opts;
     let requestAfterBeforeSave = request;
 
@@ -206,7 +207,7 @@ export default class APIController {
       };
     }
 
-    const baseQuery = await (() => {
+    const baseQuery = (() => {
       switch(<"get"|"post"|"patch"|"delete">request.method) {
         case "get":
           return makeGET(requestAfterBeforeSave, opts.registry, opts.makeDocument)
@@ -216,6 +217,9 @@ export default class APIController {
           return makePATCH(requestAfterBeforeSave, opts.registry, opts.makeDocument)
         case "delete":
           return makeDELETE(requestAfterBeforeSave, opts.registry, opts.makeDocument)
+        default:
+          // Should never run because we validate the method above.
+          throw new Error("Unknown/unexpected method.");
       }
     })();
 

@@ -1,10 +1,10 @@
+import mapObject = require('lodash/mapValues');
 import Data from './Generic/Data';
 import Resource from './Resource';
 import ResourceIdentifier from './ResourceIdentifier';
 import {
   Reducer, PredicateFn, UrlTemplateFns, Mapper, AsyncMapper, Links
 } from "./index";
-import { mapObject } from '../util/type-handling';
 
 /**
  * A parent class used by the Relationship and ResourceSet classes
@@ -69,7 +69,10 @@ export default class MaybeDataWithLinks<T extends (Resource | ResourceIdentifier
    */
   unwrapWith<U>(fn: (it: T) => U, linkTemplateData: any) {
     return {
-      links: mapObject(this.links, (template) => template(linkTemplateData)) as Links,
+      links: mapObject(
+        this.links || {},
+        (template) => template && template(linkTemplateData)
+      ) as Links,
       data: this.unwrapDataWith(fn)
     };
   }

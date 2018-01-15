@@ -78,7 +78,7 @@ export default class ResourceTypeRegistry {
     // which there is an edge from A to that node.
     const nodes: string[] = [], roots: string[] = [], edges = {};
 
-    for(const typeName in typeDescs) {
+    Object.keys(typeDescs).forEach(typeName => {
       const nodeParentType = typeDescs[typeName].parentType;
       nodes.push(typeName);
 
@@ -89,7 +89,7 @@ export default class ResourceTypeRegistry {
       else {
         roots.push(typeName);
       }
-    }
+    });
 
     const typeRegistrationOrder = pseudoTopSort(nodes, edges, roots);
 
@@ -139,10 +139,10 @@ export default class ResourceTypeRegistry {
         .getOrDefault(undefined);
     }
 
-    return Object.keys(this._types).reduce((prev, typeName) => {
+    return Object.keys(this._types).reduce<URLTemplates>((prev, typeName) => {
       prev[typeName] = this.urlTemplates(typeName);
       return prev;
-    }, <URLTemplates>{});
+    }, {});
   }
 
   dbAdapter(type) {
