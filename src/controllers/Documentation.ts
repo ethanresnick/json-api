@@ -1,6 +1,6 @@
 import _ = require("lodash");
 import path = require("path");
-import jade = require("jade");
+import pug = require("pug");
 import Negotiator = require("negotiator");
 import dasherize = require("dasherize");
 
@@ -21,7 +21,7 @@ export default class DocumentationController {
   constructor(registry, apiInfo, templatePath = undefined, dasherizeJSONKeys = true) {
     this.registry = registry;
 
-    const defaultTempPath = "../../templates/documentation.jade";
+    const defaultTempPath = "../../templates/documentation.pug";
     this.template = templatePath || path.resolve(__dirname, defaultTempPath);
 
     this.dasherizeJSONKeys = dasherizeJSONKeys;
@@ -58,7 +58,7 @@ export default class DocumentationController {
     });
 
     if(contentType && contentType.toLowerCase() === "text/html") {
-      response.body = jade.renderFile(this.template, templateData);
+      response.body = pug.renderFile(this.template, templateData);
     }
 
     else {

@@ -22,11 +22,11 @@ html(lang='en')
 
       mixin navItemForModel(modelInfo, typeName)
         li
-          a(href=("#resources-" + typeName))= modelInfo.name.model
+          a(href=`#resources-${typeName}`)= modelInfo.name.model
           if modelInfo.childTypes.length > 0
             ul
               each subType in modelInfo.childTypes
-                li: a(href=("#resources-" + subType))= resourcesMap[subType].name.model
+                li: a(href=`#resources-${subType}`)= resourcesMap[subType].name.model
 
       mixin resource-doc-name-and-desc(modelInfo, type)
         h3(class=(modelInfo.description ? "with-p" : ""))= modelInfo.name.model
@@ -80,7 +80,7 @@ html(lang='en')
                 - orderedFields = idFieldArray.concat(orderedFields)
 
               each field in orderedFields
-                - var fieldId = "resources-"+type+'-'+field.name
+                - var fieldId = `resources-${type}-${field.name}`
                 - var parentFields = modelInfo.parentType && resourcesMap[modelInfo.parentType].fields
                 - var isThisField = function(it) { return it.name === field.name; }
 
