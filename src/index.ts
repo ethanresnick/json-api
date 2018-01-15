@@ -28,7 +28,7 @@ import CreateQuery from './types/Query/CreateQuery';
 import FindQuery from './types/Query/FindQuery';
 import UpdateQuery from './types/Query/UpdateQuery';
 import DeleteQuery from './types/Query/DeleteQuery';
-import AddToRelationshipQuery from './types/query/AddToRelationshipQuery';
+import AddToRelationshipQuery from './types/Query/AddToRelationshipQuery';
 import RemoveFromRelationshipQuery from './types/Query/RemoveFromRelationshipQuery';
 
 // Export types for typescript
