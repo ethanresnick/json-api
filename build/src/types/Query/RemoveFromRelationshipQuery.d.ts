@@ -1,10 +1,9 @@
 import Query, { QueryOptions } from "./Query";
-import Data from '../Generic/Data';
 import ResourceIdentifier from '../ResourceIdentifier';
 export declare type RemoveFromRelationshipQueryOptions = QueryOptions & {
     id: string | number;
     relationshipName: string;
-    linkage: Data<ResourceIdentifier>;
+    linkage: ResourceIdentifier[];
 };
 export default class RemoveFromRelationshipQuery extends Query {
     protected query: {
@@ -18,5 +17,5 @@ export default class RemoveFromRelationshipQuery extends Query {
     constructor(opts: RemoveFromRelationshipQueryOptions);
     readonly id: string | number;
     readonly relationshipName: string;
-    readonly linkage: Data<ResourceIdentifier>;
+    readonly linkage: ResourceIdentifier[];
 }

@@ -9,7 +9,7 @@ class Relationship extends MaybeDataWithLinks_1.default {
     }
     clone() {
         return this.constructor.of({
-            data: this.data,
+            data: this._data,
             links: this.links,
             owner: this.owner
         });

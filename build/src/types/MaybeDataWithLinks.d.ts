@@ -9,7 +9,7 @@ export declare type MaybeDataWithLinksArgs<T> = {
 export declare type DataSyncMethods = "flatMap" | "map" | "filter";
 export declare type DataAsyncMethods = "flatMapAsync" | "mapAsync";
 export default class MaybeDataWithLinks<T extends (Resource | ResourceIdentifier)> {
-    protected data: Data<T> | undefined;
+    protected _data: Data<T> | undefined;
     links: UrlTemplateFns;
     protected constructor({data, links}: MaybeDataWithLinksArgs<T>);
     readonly values: T[];

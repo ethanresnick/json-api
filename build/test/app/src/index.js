@@ -93,6 +93,14 @@ exports.default = index_1.default.then(function (dbModule) {
             })));
         }
     }));
+    app.get('/with-error', Front.customAPIRequest({
+        queryFactory: ({ request }) => {
+            if (request.queryParams['customError']) {
+                throw new APIError_1.default(400, undefined, "Custom");
+            }
+            throw new Error("test");
+        }
+    }));
     app.get("/", Front.docsRequest);
     app.route("/:type(people|organizations|schools)").all(Front.apiRequest);
     app.route("/:type(people|organizations|schools)/:id")

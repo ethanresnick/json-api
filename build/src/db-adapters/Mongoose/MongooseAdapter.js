@@ -11,6 +11,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose = require("mongoose");
 const pluralize = require("pluralize");
 const misc_1 = require("../../util/misc");
+const objectValueEntries_1 = require("../../util/objectValueEntries");
 const type_handling_1 = require("../../util/type-handling");
 const util = require("./lib");
 const Data_1 = require("../../types/Generic/Data");
@@ -78,7 +79,7 @@ class MongooseAdapter {
                 let includedResources = [];
                 primaryDocumentsPromise = Promise.resolve(queryBuilder.exec()).then((docOrDocs) => {
                     includedResources =
-                        Data_1.default.fromJSON(docOrDocs)
+                        objectValueEntries_1.values(Data_1.default.fromJSON(docOrDocs)
                             .flatMap((doc) => {
                             return Data_1.default.of(populatedPaths).flatMap((path) => {
                                 return typeof doc[path] === 'undefined'
@@ -87,7 +88,12 @@ class MongooseAdapter {
                                         return this.constructor.docToResource(doc, pluralizer, fields);
                                     });
                             });
-                        }).values;
+                        })
+                            .values
+                            .reduce((acc, resource) => {
+                            acc[`${resource.type}/${resource.id}`] = resource;
+                            return acc;
+                        }, {}));
                     return docOrDocs;
                 });
                 includedResourcesPromise =

@@ -1,17 +1,21 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const database_1 = require("../app/database");
-before((done) => {
-    database_1.default.then((module) => {
+before(() => {
+    return database_1.default.then((module) => {
         return module.fixturesReset().then((data) => {
-            require("./http-compliance");
             require("./content-negotiation");
-            require("./fetch-collection");
             require("./create-resource");
-            require("./patch-relationship");
+            require("./custom-query");
             require("./delete-resource");
             require("./documentation");
-            done();
+            require("./error-handling");
+            require("./fetch-collection");
+            require("./fetch-relationship");
+            require("./fetch-resource");
+            require("./http-compliance");
+            require("./patch-relationship");
+            require("./update-resource");
         });
-    }).catch(done);
+    });
 });

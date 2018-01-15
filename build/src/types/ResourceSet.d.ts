@@ -3,7 +3,7 @@ import Data from './Generic/Data';
 import { UrlTemplateFnsByType, DataWithLinksArgs } from "./index";
 import MaybeDataWithLinks from "./MaybeDataWithLinks";
 export default class ResourceSet extends MaybeDataWithLinks<Resource> {
-    protected data: Data<Resource>;
+    protected _data: Data<Resource>;
     protected constructor(it: DataWithLinksArgs<Resource>);
     readonly ids: Data<string | undefined>;
     readonly types: Data<string>;

@@ -5,7 +5,7 @@ const DeleteQuery_1 = require("../../types/Query/DeleteQuery");
 const RemoveFromRelationshipQuery_1 = require("../../types/Query/RemoveFromRelationshipQuery");
 function default_1(request, registry, makeDoc) {
     const type = request.type;
-    const primary = request.document && request.document.primary.data;
+    const primary = request.document && request.document.primary._data;
     if (request.aboutRelationship) {
         if (!request.id || !request.relationship) {
             throw new APIError_1.default(400, undefined, "To remove linkage from a relationship, you must send your request to a relationship endpoint.");
@@ -14,7 +14,7 @@ function default_1(request, registry, makeDoc) {
             type: type,
             id: request.id,
             relationshipName: request.relationship,
-            linkage: primary,
+            linkage: primary.values,
             returning: () => ({ status: 204 })
         });
     }

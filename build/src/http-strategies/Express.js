@@ -64,7 +64,8 @@ class ExpressStrategy extends Base_1.default {
                 this.sendResponse(responseObj, res, next);
             }
             catch (err) {
-                logger_1.default.warn("Hit an unexpected error creating or sending response. This shouldn't happen.");
+                logger_1.default.error("Hit an unexpected error creating or sending response." +
+                    "This shouldn't happen.");
                 next(err);
             }
         });
@@ -74,7 +75,8 @@ class ExpressStrategy extends Base_1.default {
                 this.sendResponse(responseObj, res, next);
             }
             catch (err) {
-                logger_1.default.warn("Hit an unexpected error creating or sending response. This shouldn't happen.");
+                logger_1.default.error("Hit an unexpected error creating or sending response." +
+                    "This shouldn't happen.");
                 next(err);
             }
         });

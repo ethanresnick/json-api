@@ -139,7 +139,7 @@ class APIController {
             yield requestValidators.checkBodyExistence(request);
             if (request.document && request.document.primary) {
                 if (!parseAsLinkage(request)) {
-                    yield validate_resources_1.default(request.type, request.document.primary.data, opts.registry);
+                    yield validate_resources_1.default(request.type, request.document.primary._data, opts.registry);
                 }
                 requestAfterBeforeSave = Object.assign({}, request, { document: yield opts.transformDocument(request.document, "beforeSave") });
             }
@@ -235,10 +235,10 @@ function parseAsLinkage(request) {
 function transformDoc(doc, mode, extras) {
     return __awaiter(this, void 0, void 0, function* () {
         const res = doc.clone();
-        const primaryData = res.primary && res.primary.data;
+        const primaryData = res.primary && res.primary._data;
         const includedData = doc.included && Data_1.default.of(doc.included);
         if (primaryData) {
-            res.primary.data =
+            res.primary._data =
                 yield apply_transform_1.default(primaryData, mode, extras);
         }
         if (includedData) {

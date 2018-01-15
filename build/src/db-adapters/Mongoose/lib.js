@@ -65,7 +65,7 @@ exports.toMongoCriteria = toMongoCriteria;
 function resourceToDocObject(resource) {
     const res = Object.assign({}, resource.attrs);
     for (const key in resource.relationships) {
-        res[key] = resource.relationships[key].unwrapWith(it => it.id, {}).data;
+        res[key] = resource.relationships[key].unwrapDataWith(it => it.id);
     }
     return res;
 }

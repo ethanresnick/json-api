@@ -8,7 +8,7 @@ const Data_1 = require("../../types/Generic/Data");
 const ResourceSet_1 = require("../../types/ResourceSet");
 function default_1(request, registry, makeDoc) {
     const type = request.type;
-    const primary = request.document.primary.data;
+    const primary = request.document.primary._data;
     let changedResourceData;
     if (!request.aboutRelationship) {
         if (request.id) {

@@ -5,12 +5,12 @@ const type_handling_1 = require("../util/type-handling");
 class MaybeDataWithLinks {
     constructor({ data, links = {} }) {
         this.links = links;
-        this.data = typeof data === 'undefined' || data instanceof Data_1.default
+        this._data = typeof data === 'undefined' || data instanceof Data_1.default
             ? data
             : Data_1.default.fromJSON(data);
     }
     get values() {
-        return this.data ? [...this.data.values] : [];
+        return this._data ? [...this._data.values] : [];
     }
     map(fn) {
         return this.delegateDataTransformToParent("map", arguments);
@@ -34,42 +34,42 @@ class MaybeDataWithLinks {
         };
     }
     unwrapDataWith(fn) {
-        return this.data && this.data.map(fn).unwrap();
+        return this._data && this._data.map(fn).unwrap();
     }
     every(fn) {
-        return this.data ? this.data.every(fn) : true;
+        return this._data ? this._data.every(fn) : true;
     }
     some(fn) {
-        return this.data ? this.data.some(fn) : false;
+        return this._data ? this._data.some(fn) : false;
     }
     reduce(fn, initialValue) {
-        return this.data ? this.data.reduce(fn, initialValue) : initialValue;
+        return this._data ? this._data.reduce(fn, initialValue) : initialValue;
     }
     forEach(fn) {
-        this.data && this.data.forEach(fn);
+        this._data && this._data.forEach(fn);
         return this;
     }
     clone() {
         const Ctor = this.constructor;
         return new Ctor({
-            data: this.data,
+            data: this._data,
             links: this.links
         });
     }
     delegateDataTransformToParent(methodName, args) {
-        return this.data
-            ? this.withNewData(this.data[methodName](...args))
+        return this._data
+            ? this.withNewData(this._data[methodName](...args))
             : this;
     }
     delegateDataTransformToParentAsync(methodName, args) {
-        return this.data
-            ? this.data[methodName](...args)
+        return this._data
+            ? this._data[methodName](...args)
                 .then(newData => this.withNewData(newData))
             : Promise.resolve(this);
     }
     withNewData(newData) {
         const res = this.clone();
-        res.data = newData;
+        res._data = newData;
         return res;
     }
 }

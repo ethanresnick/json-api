@@ -9,10 +9,10 @@ class ResourceSet extends MaybeDataWithLinks_1.default {
         super(it);
     }
     get ids() {
-        return this.data.map(it => it.id);
+        return this._data.map(it => it.id);
     }
     get types() {
-        return this.data.map(it => it.type);
+        return this._data.map(it => it.type);
     }
     toJSON(urlTemplates) {
         return this.unwrapWith((it) => it.toJSON(urlTemplates[it.type] || {}), {});

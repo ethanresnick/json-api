@@ -6,7 +6,7 @@ const AddToRelationshipQuery_1 = require("../../types/Query/AddToRelationshipQue
 const ResourceSet_1 = require("../../types/ResourceSet");
 const templating = require("url-template");
 function default_1(request, registry, makeDoc) {
-    const primary = request.document.primary.data;
+    const primary = request.document.primary._data;
     const type = request.type;
     if (request.aboutRelationship) {
         if (primary.isSingular) {
@@ -19,7 +19,7 @@ function default_1(request, registry, makeDoc) {
             type,
             id: request.id,
             relationshipName: request.relationship,
-            linkage: primary,
+            linkage: primary.values,
             returning: () => ({ status: 204 })
         });
     }
