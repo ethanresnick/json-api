@@ -175,7 +175,7 @@ export default class APIController {
    *
    * @param {QueryBuildingContext} opts [description]
    */
-  public async makeQuery(this: undefined, opts: QueryBuildingContext) {
+  public async makeQuery(opts: QueryBuildingContext) {
     const { request } = opts;
     let requestAfterBeforeSave = request;
 
