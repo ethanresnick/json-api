@@ -1,3 +1,7 @@
+# 3.0.0-beta.9
+## Breaking Changes
+- Update Jade to Pug 2. See https://pugjs.org/api/migration-v2.html
+
 # 3.0.0-beta.5 through 3.0.0-beta.8
 ## New Features
 - The library's types are exported from the main file in a way that should be more convenient for use with ESM and Typescript. Note: this shouldn't break current code to import the module, but module loading in our not-quite-ESM world is tricky, so lmk if something broke.
