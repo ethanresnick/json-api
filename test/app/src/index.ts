@@ -135,7 +135,17 @@ export default database.then(function(dbModule) {
         })
       );
     }
-  }))
+  }));
+
+  app.get('/with-error', Front.customAPIRequest({
+    queryFactory: ({ request }) => {
+      if(request.queryParams['customError']) {
+        throw new APIError(400, undefined, "Custom");
+      }
+
+      throw new Error("test");
+    }
+  }));
 
   // Now, add the routes.
   // Note: below, express incorrectly passes requests using PUT and other
