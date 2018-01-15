@@ -10,7 +10,7 @@ export function objectIsEmpty(obj) {
 }
 
 export function groupResourcesByType(data: Data<Resource>) {
-  return data.reduce((acc: { [type: string]: Resource[] }, it) => {
+  return data.reduce<{ [type: string]: Resource[] }>((acc, it) => {
     acc[it.type] = [...(acc[it.type] || []), it];
     return acc;
   }, Object.create(null));

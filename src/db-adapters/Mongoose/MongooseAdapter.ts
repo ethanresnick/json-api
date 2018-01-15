@@ -203,7 +203,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     // mongoose runs all the user's hooks.
     const creationPromises = Object.keys(resourcesByType).map(type => {
       const model = this.getModel(this.constructor.getModelName(type));
-      const resources: Resource[] = resourcesByType[type];
+      const resources = resourcesByType[type];
       const docObjects = resources.map(util.resourceToDocObject);
 
       if(typeof this.idGenerator === "function") {
