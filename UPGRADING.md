@@ -1,3 +1,13 @@
+# 3.0.0-beta.5 through 3.0.0-beta.8
+## New Features
+- The library's types are exported from the main file in a way that should be more convenient for use with ESM and Typescript. Note: this shouldn't break current code to import the module, but module loading in our not-quite-ESM world is tricky, so lmk if something broke.
+- The `MaybeDataWithLinks` class now has an `unwrapDataWith` method for convenience.
+
+## Breaking Changes
+- The server will no longer return duplicate resources in the `included` section. This is more compliant with the JSON:API spec, and shouldn't harm clients, but it is technically a breaking change.
+- The `AddToRelationshipQuery` and `RemoveFromRelationshipQuery` classes now take a `ResourceIdentifier[]` as their `linkage` property, rather than a `Data<ResourceIdentifier>`. If you were manually reading/setting this property in a query transform or query factory, please update your code accordingly.
+- Adding an `isJSONAPIDisplayReady` property to error objects to signal that their details can be shown to the user is deprecated; throw a proper APIError instead or use the symbol property exported from the APIError class.
+
 # 3.0.0-beta.4
 
 ## New Features
@@ -21,8 +31,6 @@
 - `ExpressStrategy.sendError` should now be provided with the `next` function as an argument; not providing this will be an error when v3 is finalized.
 
 - On `APIController` signature of `handle` method has changed, and the `responseFromExternalError` method has been renamed to `responseFromError`. These changes should only effect you if you have written a custom HTTP strategy.
-
-- Adding an `isJSONAPIDisplayReady` property to error objects to signal that their details can be shown to the user is deprecated; throw a proper APIError instead or use the symbol property exported from the APIError class.
  
 # 3.0.0-beta.3
 

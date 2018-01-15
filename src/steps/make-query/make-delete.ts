@@ -24,7 +24,7 @@ export default function(request: FinalizedRequest, registry: ResourceTypeRegistr
       type: type,
       id: request.id,
       relationshipName: request.relationship,
-      linkage: <Data<ResourceIdentifier>>primary,
+      linkage: (<Data<ResourceIdentifier>>primary).values,
       returning: () => ({ status: 204 })
     });
   }
