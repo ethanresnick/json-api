@@ -82,5 +82,13 @@ export const controllers = {
   Documentation
 };
 
-const defaultExp = { types, controllers, httpStrategies, dbAdapters, displaySafeError };
+const defaultExp = {
+  types,
+  controllers,
+  httpStrategies,
+  dbAdapters,
+  displaySafeError,
+  ResourceTypeRegistry
+};
+
 export default defaultExp;
