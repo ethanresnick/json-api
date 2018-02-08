@@ -210,15 +210,66 @@ describe("ResourceTypeRegistry", function() {
     );
   });
 
-  describe("parentTypeName", () => {
+  describe("type tree functions", () => {
     const registry = new ResourceTypeRegistry({
-      "b": {"parentType": "a"},
-      "a": {}
+      "kindergartens": { "parentType": "schools" },
+      "schools": { "parentType": "organizations" },
+      "organizations": {},
+      "people": {},
+      "law-schools": { parentType: "schools" }
     });
 
-    it("should be a getter for a type's parentType", () => {
-      expect(registry.parentTypeName("b")).to.equal("a");
-      expect(registry.parentTypeName("a")).to.be.undefined;
+    describe("parentTypeName", () => {
+      it("should be a getter for a type's parentType", () => {
+        expect(registry.parentTypeName("schools")).to.equal("organizations");
+        expect(registry.parentTypeName("organizations")).to.be.undefined;
+      });
     });
+
+    describe("rootTypeNameOf", () => {
+      it("should be a getter for a type's top-most parentType", () => {
+        expect(registry.rootTypeNameOf("kindergartens")).to.equal("organizations");
+        expect(registry.rootTypeNameOf("schools")).to.equal("organizations");
+        expect(registry.rootTypeNameOf("organizations")).to.equal("organizations");
+      });
+    });
+
+    describe("typePathTo", () => {
+      it("should return the path through the type tree to the provided type", () => {
+        expect(registry.typePathTo("kindergartens"))
+          .to.deep.equal(["kindergartens", "schools", "organizations"]);
+
+        expect(registry.typePathTo("schools"))
+          .to.deep.equal(["schools", "organizations"]);
+
+        expect(registry.typePathTo("people")).to.deep.equal(["people"]);
+      });
+    });
+
+    describe("isUnorderedPathThroughType", () => {
+      it("should return whether the types provided exactly lead to a child type of the other type provided", () => {
+        const sut = registry.isUnorderedPathThroughType.bind(registry);
+
+        // path must start at the root node (i.e., needs "organizations" to get to 'schools')
+        expect(sut(["schools"], "schools")).to.be.false;
+        expect(sut(["schools", "organizations"], "schools")).to.be.true;
+        expect(sut(["organizations", "schools"], "schools")).to.be.true;
+
+        // a path to kindergartens or law-schools still works as a path to schools,
+        // because those are child types of is a child of schools.
+        expect(sut(["organizations", "schools", "kindergartens"], "schools")).to.be.true;
+        expect(sut(["organizations", "schools", "law-schools"], "schools")).to.be.true;
+
+        // same idea as above tests, but when type to lead to is a root type
+        expect(sut(["people"], "people")).to.be.true;
+
+        // but the path is invalid if there are two siblings from the same level
+        expect(sut(["organizations", "schools", "kindergartens", "law-schools"], "schools")).to.be.false;
+
+        // or if there are any extra members at all, for that matter
+        expect(sut(["organizations", "schools", "people"], "schools")).to.be.false;
+        expect(sut(["people", "john-does"], "people")).to.be.false;
+      })
+    })
   });
 });

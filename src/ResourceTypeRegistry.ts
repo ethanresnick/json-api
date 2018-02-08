@@ -61,6 +61,16 @@ export default class ResourceTypeRegistry {
     [typeName: string]: Immutable.Map<string, any> | undefined
   };
 
+  // Metadata about the structure of the type hierarchy.
+  private _typesMetadata: {
+    nodes: string[], // a list of all type names,
+    roots: string[], // a list of all type names that don't have a parent type
+
+    // A map, with each key being the name of a starting node A, and the value
+    // being a set of node names for which there is an edge from A to that node.
+    edges: { [srcNodeName: string]: { [targetNodeName: string]: true } }
+  }
+
   constructor(
     typeDescs: ResourceTypeDescriptions = Object.create(null),
     descDefaults: object|Immutable.Map<string, any> = {}
@@ -74,10 +84,7 @@ export default class ResourceTypeRegistry {
     // parentType. First, we pre-process the typeDescriptions to create edges
     // pointing to each node's children (rather than the links we have by
     // default, which point to the parent). Then we do an abridged topological
-    // sort that works in this case. Below, nodes is a list of type names.
-    // Roots are nodes with no parents. Edges is a map, with each key being the
-    // name of a starting node A, and the value being a set of node names for
-    // which there is an edge from A to that node.
+    // sort that works in this case.
     const nodes: string[] = [], roots: string[] = [], edges = {};
 
     Object.keys(typeDescs).forEach(typeName => {
@@ -92,6 +99,9 @@ export default class ResourceTypeRegistry {
         roots.push(typeName);
       }
     });
+
+    // Store the sorted type metadata for later use.
+    this._typesMetadata = { nodes, edges, roots };
 
     const typeRegistrationOrder = pseudoTopSort(nodes, edges, roots);
 
@@ -125,10 +135,6 @@ export default class ResourceTypeRegistry {
 
   hasType(typeName) {
     return typeName in this._types;
-  }
-
-  typeNames() {
-    return Object.keys(this._types);
   }
 
   urlTemplates(): URLTemplates;
@@ -190,6 +196,80 @@ export default class ResourceTypeRegistry {
 
   parentTypeName(typeName) {
     return this.doGet("parentType", typeName);
+  }
+
+  typeNames() {
+    return Object.keys(this._types);
+  }
+
+  childTypeNames(typeName) {
+    return Object.keys(this._typesMetadata.edges[typeName] || {});
+  }
+
+  // Returns the top-most parent type's name for this type.
+  rootTypeNameOf(typeName) {
+    const pathToType = this.typePathTo(typeName);
+    return pathToType[pathToType.length - 1];
+  }
+
+  typePathTo(typeName) {
+    let path = [typeName];
+    let parentType;
+
+    while (parentType = this.parentTypeName(path[path.length - 1])) {
+      path.push(parentType);
+    }
+
+    return path;
+  }
+
+  /**
+   * Takes an list of types and checks if (were they appropriately reordered)
+   * they would constitute a path through the types tree that ultimately points
+   * to a type that is (or is a child of) parentType.
+   *
+   * @param {[type]} typesList A list of type names.
+   * @param {[type]} parentType [description]
+   */
+  isUnorderedPathThroughType(typesList, parentType): boolean {
+    const pathToParentType = this.typePathTo(parentType);
+    const remainingTypes = typesList.slice();
+
+    for(const type of pathToParentType) {
+      const indexOfType = remainingTypes.indexOf(type);
+
+      // If the typelist doesn't have an item in the path to the parent type,
+      // it can't be a path to that type or one of its children.
+      if(indexOfType === -1) {
+        return false;
+      }
+
+      remainingTypes.splice(indexOfType, 1);
+    }
+
+    // After we've checked that all the parent types are included in typesList,
+    // any remaining types must be child types of parentType.
+    let currentTypeChildren = this.childTypeNames(parentType);
+
+    while(remainingTypes.length && currentTypeChildren.length) {
+      let nextTypeFound = false;
+
+      for(const child of currentTypeChildren) {
+        const indexOfChild = remainingTypes.indexOf(child);
+        if(indexOfChild > -1) {
+          nextTypeFound = true;
+          remainingTypes.splice(indexOfChild, 1);
+          currentTypeChildren = this.childTypeNames(child);
+          break;
+        }
+      }
+
+      if(!nextTypeFound) {
+        return false;
+      }
+    }
+
+    return !remainingTypes.length;
   }
 
   private doGet<T extends keyof ResourceTypeDescription>(attrName: T, type): ResourceTypeDescription[T] | undefined {
