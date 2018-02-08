@@ -210,15 +210,15 @@ describe("ResourceTypeRegistry", function() {
     );
   });
 
-  describe("parentType", () => {
+  describe("parentTypeName", () => {
     const registry = new ResourceTypeRegistry({
       "b": {"parentType": "a"},
       "a": {}
     });
 
-    it("should be a getter for a type for a type's parentType", () => {
-      expect(registry.parentType("b")).to.equal("a");
-      expect(registry.parentType("a")).to.be.undefined;
+    it("should be a getter for a type's parentType", () => {
+      expect(registry.parentTypeName("b")).to.equal("a");
+      expect(registry.parentTypeName("a")).to.be.undefined;
     });
   });
 });

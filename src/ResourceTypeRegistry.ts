@@ -1,4 +1,5 @@
 import Immutable = require("immutable");
+import depd = require('depd');
 import { pseudoTopSort } from "./util/misc";
 import Maybe from "./types/Generic/Maybe";
 import { ResourceTransformFn, FullTransformFn, TransformFn } from "./steps/apply-transform";
@@ -6,6 +7,7 @@ import { AdapterInstance } from "./db-adapters/AdapterInterface";
 import Resource from "./types/Resource";
 import ResourceIdentifier from "./types/ResourceIdentifier";
 export { Resource, ResourceIdentifier, TransformFn };
+const deprecate = depd("json-api");
 
 /**
  * Global defaults for all resource descriptions, to be merged into the
@@ -177,12 +179,17 @@ export default class ResourceTypeRegistry {
     return this.doGet("info", type);
   }
 
+  transformLinkage(type) {
+    return <boolean>this.doGet("transformLinkage", type);
+  }
+
   parentType(type) {
+    deprecate('parentType: use parentTypeName instead.');
     return this.doGet("parentType", type);
   }
 
-  transformLinkage(type) {
-    return <boolean>this.doGet("transformLinkage", type);
+  parentTypeName(typeName) {
+    return this.doGet("parentType", typeName);
   }
 
   private doGet<T extends keyof ResourceTypeDescription>(attrName: T, type): ResourceTypeDescription[T] | undefined {

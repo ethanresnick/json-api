@@ -141,7 +141,7 @@ export default class DocumentationController {
         "plural": type.split("-").map(ucFirst).join(" ")
       },
       fields: schema,
-      parentType: this.registry.parentType(type),
+      parentType: this.registry.parentTypeName(type),
       childTypes: adapter.constructor.getChildTypes(model)
     };
 
