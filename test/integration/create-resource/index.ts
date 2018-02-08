@@ -147,18 +147,16 @@ describe("Creating Resources", () => {
 
   describe("Creating a Resource With a Missing Relationship Data Key", () => {
     let err;
-    before((done) => {
-      Agent.request("POST", "/organizations")
+    before(() => {
+      return Agent.request("POST", "/organizations")
         .type("application/vnd.api+json")
         .send({"data": INVALID_ORG_RESOURCE_NO_DATA_IN_RELATIONSHIP})
         .promise()
-        .then(
-          () => { done("Should not run!"); },
-          (error) => {
-            err = error;
-            done();
-          }
-        );
+        .then(() => {
+          throw new Error("Should not run!");
+        }, (error) => {
+          err = error;
+        });
     });
 
     describe("HTTP", () => {

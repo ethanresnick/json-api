@@ -286,13 +286,13 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
   // TODO: Update to use findOneAndRemove/findAndRemove,
   // rather than find then remove? Would parallel how update() works.
   async delete(query: DeleteQuery) {
-    const { type: parentType, singular } = query;
+    const { type, singular } = query;
 
     const mode = singular ? 'findOne' : 'find';
     const filters = query.getFilters();
     const mongofiedFilters = util.toMongoCriteria(filters);
 
-    const model = this.getModel(this.constructor.getModelName(parentType));
+    const model = this.getModel(this.constructor.getModelName(type));
 
     this.constructor.assertIdsValid(filters, singular);
 
@@ -556,7 +556,6 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       if(path === "_id") {
         return new FieldTypeDocumentation("Id", false);
       }
-
 
       const typeOptions = schemaType.options.type;
       const holdsArray = Array.isArray(typeOptions);
