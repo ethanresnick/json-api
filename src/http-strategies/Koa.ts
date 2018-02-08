@@ -34,7 +34,7 @@ export default class KoaStrategy extends Base {
   // and DELETE /:type/:id/links/:relationship.
   apiRequest() {
     const strategy = this;
-    return function *(next){
+    return function *(this: any, next: any){
       const ctx = this;
       try {
         const reqObj = yield strategy.buildRequestObject(ctx.req, ctx.protocol, ctx.host, ctx.params);
@@ -53,7 +53,7 @@ export default class KoaStrategy extends Base {
   // For requests for the documentation.
   docsRequest() {
     const strategy = this;
-    return function *(next){
+    return function *(this: any, next: any){
       const ctx = this;
       try {
         const reqObj = yield strategy.buildRequestObject(ctx.req, ctx.protocol, ctx.host, ctx.params);
@@ -100,7 +100,7 @@ export default class KoaStrategy extends Base {
    * @param {Error|APIError|Error[]|APIError[]} errors Error or array of errors
    * @param {Object} ctx Koa's context object
    */
-  sendError(errors, ctx) {
+  sendError(this: any, errors, ctx) {
     API.responseFromError(errors, ctx.headers.accept).then(
       (responseObject) => this.sendResources(responseObject, ctx)
     ).catch((err) => {

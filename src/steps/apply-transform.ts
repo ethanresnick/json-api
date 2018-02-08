@@ -63,7 +63,10 @@ export default function transform<T extends Transformable>(
       return it;
     }
 
-    return (<TransformFn<T>>parentTransform)(it, req, res, superFn, extras);
+    // TODO: fix so we can remove any cast. I think there may be a genuine bug
+    // here around passing in superFn again (and the assignability there may be
+    // triggering the type error).
+    return (<TransformFn<T>><any>parentTransform)(it, req, res, superFn, extras);
   };
 
   return toTransform.flatMapAsync(async function(it) {
@@ -83,13 +86,16 @@ export default function transform<T extends Transformable>(
     }
 
     // Type cast below is ok because of skipTransform check above
-    const transformFn = <TransformFn<T>>registry[mode](it.type);
+    const transformFn = registry[mode](it.type);
 
     if (!transformFn) {
       return Data.pure(it);
     }
 
-    const transformed = await transformFn(
+    // TODO: fix so we can remove any cast. I think there may be a genuine bug
+    // here around passing in superFn again (and the assignability there may be
+    // triggering the type error).
+    const transformed = await (<TransformFn<T>><any>transformFn)(
       it,
       extras.serverReq,
       extras.serverRes,

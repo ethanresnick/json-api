@@ -27,7 +27,9 @@ describe("Mongoose Adapter", () => {
     describe("getType", () => {
       it("should lowercase & pluralize the model name; use dashes in camelCased names", () => {
         for(const type in typesToModelNames) { //tslint:disable-line:forin
-          expect(MongooseAdapter.getType(typesToModelNames[type])).to.equal(type);
+          expect(MongooseAdapter.getType(
+            typesToModelNames[type as keyof typeof typesToModelNames]
+          )).to.equal(type);
         }
       });
 
@@ -40,7 +42,7 @@ describe("Mongoose Adapter", () => {
     describe("getModelName", () => {
       it("should reverse getType", () => {
         for(const type in typesToModelNames) { //tslint:disable-line:forin
-          const modelName = typesToModelNames[type];
+          const modelName = typesToModelNames[type as keyof typeof typesToModelNames];
           expect(MongooseAdapter.getModelName(type)).to.equal(modelName);
         }
       });
@@ -159,7 +161,7 @@ describe("Mongoose Adapter", () => {
     });
 
     describe("getStandardizedSchema", () => {
-      let schemaRaw;
+      let schemaRaw: any;
       let standardizedSchema;
 
       before(() => {

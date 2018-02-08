@@ -9,8 +9,9 @@
     "outDir": "./build",
     "preserveConstEnums": true,
     "removeComments": true,
-    "strictNullChecks": true,
-    "alwaysStrict": true,
+    "strict": true,
+    "noImplicitAny": false,
+    "strictPropertyInitialization": false,
     "target": "es6",
     "declaration": true
   },

@@ -38,7 +38,7 @@ export default class APIError extends Error {
     status?: Opts['status'], code?: Opts['code'], title?: Opts['title'],
     detail?: Opts['detail'], links?: Opts['links'], paths?: Opts['paths']
   );
-  constructor(...args) {
+  constructor(...args: any[]) {
     super();
 
     if(Error.captureStackTrace) {
@@ -54,7 +54,7 @@ export default class APIError extends Error {
         const coercePropToString =
           ["status", "code", "title", "detail"].indexOf(<string>prop) > -1;
 
-        obj[prop] = coercePropToString
+        (obj as any)[prop] = coercePropToString
           ? (value == null ? undefined : String(value))
           : value;
 
@@ -83,7 +83,7 @@ export default class APIError extends Error {
    * Creates a JSON-API Compliant Error Object from a JS Error object
    *
    */
-  static fromError(err) {
+  static fromError(err: any) {
     const ErrorConstructor = this || APIError; // in case `this` isn't bound.
     const fallbackTitle =
       "An unknown error occurred while trying to process this request.";

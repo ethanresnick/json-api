@@ -9,9 +9,11 @@ const schema = new mongoose.Schema({
   }
 });
 
-schema.virtual('virtualName').get(function() {
+type PersonDoc = { name: string };
+
+schema.virtual('virtualName').get(function(this: PersonDoc) {
   return this.name + ' (virtualized)'; // tslint:disable-line:no-invalid-this
-}).set(function(v) {
+}).set(function(this: PersonDoc, v: string) {
   // tslint:disable-next-line:no-invalid-this
   this.name = v.substr(0, v.lastIndexOf(' (virtualized)'));
 });

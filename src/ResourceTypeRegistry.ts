@@ -85,7 +85,9 @@ export default class ResourceTypeRegistry {
     // pointing to each node's children (rather than the links we have by
     // default, which point to the parent). Then we do an abridged topological
     // sort that works in this case.
-    const nodes: string[] = [], roots: string[] = [], edges = {};
+    const nodes: string[] = [],
+      roots: string[] = [],
+      edges: { [a: string]: { [b: string]: true } } = {};
 
     Object.keys(typeDescs).forEach(typeName => {
       const nodeParentType = typeDescs[typeName].parentType;
@@ -127,13 +129,13 @@ export default class ResourceTypeRegistry {
     });
   }
 
-  type(typeName) {
+  type(typeName: string) {
     return Maybe(this._types[typeName])
       .map(it => <ResourceTypeDescription>it.toJS())
       .getOrDefault(undefined);
   }
 
-  hasType(typeName) {
+  hasType(typeName: string) {
     return typeName in this._types;
   }
 
@@ -153,8 +155,8 @@ export default class ResourceTypeRegistry {
     }, {});
   }
 
-  dbAdapter(type) {
-    const adapter = this.doGet("dbAdapter", type);
+  dbAdapter(typeName: string) {
+    const adapter = this.doGet("dbAdapter", typeName);
     if(typeof adapter === 'undefined') {
       throw new Error(
         "Tried to get db adapter for a type registered without one. " +
@@ -165,36 +167,36 @@ export default class ResourceTypeRegistry {
     return adapter;
   }
 
-  beforeSave(type) {
-    return this.doGet("beforeSave", type);
+  beforeSave(typeName: string) {
+    return this.doGet("beforeSave", typeName);
   }
 
-  beforeRender(type) {
-    return this.doGet("beforeRender", type);
+  beforeRender(typeName: string) {
+    return this.doGet("beforeRender", typeName);
   }
 
-  behaviors(type) {
-    return this.doGet("behaviors", type);
+  behaviors(typeName: string) {
+    return this.doGet("behaviors", typeName);
   }
 
-  defaultIncludes(type) {
-    return this.doGet("defaultIncludes", type);
+  defaultIncludes(typeName: string) {
+    return this.doGet("defaultIncludes", typeName);
   }
 
-  info(type) {
-    return this.doGet("info", type);
+  info(typeName: string) {
+    return this.doGet("info", typeName);
   }
 
-  transformLinkage(type) {
-    return <boolean>this.doGet("transformLinkage", type);
+  transformLinkage(typeName: string) {
+    return <boolean>this.doGet("transformLinkage", typeName);
   }
 
-  parentType(type) {
+  parentType(typeName: string) {
     deprecate('parentType: use parentTypeName instead.');
-    return this.doGet("parentType", type);
+    return this.doGet("parentType", typeName);
   }
 
-  parentTypeName(typeName) {
+  parentTypeName(typeName: string) {
     return this.doGet("parentType", typeName);
   }
 
@@ -202,17 +204,17 @@ export default class ResourceTypeRegistry {
     return Object.keys(this._types);
   }
 
-  childTypeNames(typeName) {
+  childTypeNames(typeName: string) {
     return Object.keys(this._typesMetadata.edges[typeName] || {});
   }
 
   // Returns the top-most parent type's name for this type.
-  rootTypeNameOf(typeName) {
+  rootTypeNameOf(typeName: string) {
     const pathToType = this.typePathTo(typeName);
     return pathToType[pathToType.length - 1];
   }
 
-  typePathTo(typeName) {
+  typePathTo(typeName: string) {
     let path = [typeName];
     let parentType;
 
@@ -228,10 +230,10 @@ export default class ResourceTypeRegistry {
    * they would constitute a path through the types tree that ultimately points
    * to a type that is (or is a child of) parentType.
    *
-   * @param {[type]} typesList A list of type names.
-   * @param {[type]} parentType [description]
+   * @param {string[]} typesList A list of type names.
+   * @param {string} parentType [description]
    */
-  isUnorderedPathThroughType(typesList, parentType): boolean {
+  isUnorderedPathThroughType(typesList: string[], parentType: string): boolean {
     const pathToParentType = this.typePathTo(parentType);
     const remainingTypes = typesList.slice();
 
@@ -272,8 +274,8 @@ export default class ResourceTypeRegistry {
     return !remainingTypes.length;
   }
 
-  private doGet<T extends keyof ResourceTypeDescription>(attrName: T, type): ResourceTypeDescription[T] | undefined {
-    return Maybe(this._types[type])
+  private doGet<T extends keyof ResourceTypeDescription>(attrName: T, typeName: string): ResourceTypeDescription[T] | undefined {
+    return Maybe(this._types[typeName])
       .map(it => it.get(attrName))
       .map(it => it instanceof Immutable.Map || it instanceof Immutable.List
         ? it.toJS()

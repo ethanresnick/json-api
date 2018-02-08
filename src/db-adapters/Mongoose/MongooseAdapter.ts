@@ -247,7 +247,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       upsert: false
     };
 
-    return resourceData.map((resourceUpdate: ResourceWithId) => {
+    return (resourceData as Data<ResourceWithId>).map((resourceUpdate) => {
       const newModelName = this.constructor.getModelName(resourceUpdate.type, singular);
       const NewModelConstructor = this.getModel(newModelName);
       const changeSet = util.resourceToDocObject(resourceUpdate);

@@ -17,7 +17,7 @@ export { Just, Nothing };
  */
 export function getFilterList(queryString?: string) {
   return Maybe(queryString).map(it =>
-    it.split('&').reduce((acc, paramString) => {
+    it.split('&').reduce((acc: string | undefined, paramString) => {
       const [rawKey, rawValue] = splitSingleQueryParamString(paramString);
       return rawKey === 'filter' ? rawValue : acc;
     }, undefined)

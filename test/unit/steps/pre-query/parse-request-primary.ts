@@ -58,20 +58,19 @@ describe("Resource Parser", () => {
       }, done);
     });
 
-    it("should load up the id, type, and attributes", (done) => {
+    it("should load up the id, type, and attributes", () => {
       const json = {
         "id": "21", "type": "people",
         "attributes": {"name": "bob", "isBob": true}
       };
 
-      parsePrimary(json).then((resourceData: Data<Resource>) => {
+      return parsePrimary(json).then((resourceData) => {
         const resource = resourceData.unwrap() as Resource;
         expect(resource).to.be.instanceof(Resource);
         expect(resource.id).to.equal("21");
         expect(resource.type).to.equal("people");
         expect(resource.attrs).to.deep.equal({"name": "bob", "isBob": true});
-        done();
-      }, done);
+      });
     });
 
     it("should reject invalid resources", () => {
@@ -93,7 +92,7 @@ describe("Resource Parser", () => {
         }
       };
 
-      return parsePrimary(json).then((resourceData: Data<Resource>) => {
+      return parsePrimary(json).then((resourceData) => {
         const resource = resourceData.unwrap() as Resource;
         expect(resource.relationships.parents).to.be.instanceof(Relationship);
         expect(resource.relationships.parents.toJSON({}).data).to.deep.equal(parents);

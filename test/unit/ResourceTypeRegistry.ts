@@ -7,7 +7,7 @@ import ResourceTypeRegistry, {
 
 chai.use(chaiSubset);
 const expect = chai.expect;
-const makeGetterTest = function(value, type, methodName) {
+const makeGetterTest = function(value: any, type: string, methodName: string) {
   return function() {
     const registry = new ResourceTypeRegistry({
       [type]: {
@@ -20,16 +20,16 @@ const makeGetterTest = function(value, type, methodName) {
     // value == null below is a hack around typeof null == "object".
     switch((value === null) || typeof value) {
       case "function":
-        expect(registry[methodName](type)).to.deep.equal(value);
+        expect((registry as any)[methodName](type)).to.deep.equal(value);
         break;
 
       // account for the possibility of other defaults
       case "object":
-        expect(registry[methodName](type)).to.containSubset(value);
+        expect((registry as any)[methodName](type)).to.containSubset(value);
         break;
 
       default:
-        expect(registry[methodName](type)).to.equal(value);
+        expect((registry as any)[methodName](type)).to.equal(value);
     }
   };
 };
@@ -91,13 +91,13 @@ describe("ResourceTypeRegistry", function() {
 
     it("should give the description precedence over the provided default", () => {
       const someTypeDesc = {
-        beforeSave: (resource, req, res) => { return resource; }
+        beforeSave: (resource: any, req: any, res: any) => { return resource; }
       };
 
       const registry = new ResourceTypeRegistry({
         "someType": someTypeDesc
       }, {
-        beforeSave: (resource, req, res) => { return resource; },
+        beforeSave: (resource: any, req: any, res: any) => { return resource; },
       });
 
       expect((<any>registry.type("someType")).beforeSave).to.equal(someTypeDesc.beforeSave);

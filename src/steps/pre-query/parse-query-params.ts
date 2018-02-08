@@ -25,7 +25,7 @@ export default function(params: RawParams): ParsedQueryParams {
   const paramsToParserFns = {
     include: parseCommaSeparatedParamString,
     sort: R.pipe(parseCommaSeparatedParamString, R.map(parseSortField)),
-    page: R.pipe(parseScopedParam, R.map((it: any) => parseInt(String(it), 10))),
+    page: R.pipe(parseScopedParam, R.map<ScopedParam, ScopedParam>((it: any) => parseInt(String(it), 10))),
     fields: parseFieldsParam
   };
 

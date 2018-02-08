@@ -17,10 +17,10 @@ export type ResourceWithId = Resource & { id: string };
 
 export default class Resource {
   private _id: string | undefined;
-  private _type: string;
-  private _relationships: { [name: string]: Relationship };
-  private _attrs: {[name: string]: any};
-  private _meta: object;
+  private _type!: string;
+  private _relationships!: { [name: string]: Relationship };
+  private _attrs!: {[name: string]: any};
+  private _meta!: object;
 
   constructor(type: string, id?: string, attrs = {}, relationships = {}, meta: object = {}) {
     [this.type, this.id, this.attrs, this.relationships, this.meta] =
@@ -48,7 +48,7 @@ export default class Resource {
     this._type = String(type);
   }
 
-  equals(otherResource) {
+  equals(otherResource: Resource) {
     return this.id === otherResource.id && this.type === otherResource.type;
   }
 
@@ -73,7 +73,7 @@ export default class Resource {
     return this._relationships;
   }
 
-  set relationships(relationships) {
+  set relationships(relationships: { [name: string]: Relationship }) {
     validateFieldGroup(relationships, this._attrs);
     this._relationships = relationships;
   }
@@ -90,13 +90,13 @@ export default class Resource {
     return this._meta;
   }
 
-  removeAttr(attrPath) {
+  removeAttr(attrPath: string) {
     if(this._attrs) {
       deleteNested(attrPath, this._attrs);
     }
   }
 
-  removeRelationship(relationshipPath) {
+  removeRelationship(relationshipPath: string) {
     if(this._relationships) {
       deleteNested(relationshipPath, this._relationships);
     }
@@ -154,7 +154,7 @@ export default class Resource {
  * @return {undefined}
  * @throws {Error} If the field group is invalid given the other fields.
  */
-function validateFieldGroup(group, otherFields, isAttributes = false) {
+function validateFieldGroup(group: object, otherFields: object, isAttributes = false) {
   if(!isPlainObject(group)) {
     throw new Error("Attributes and relationships must be provided as an object.");
   }
@@ -165,16 +165,16 @@ function validateFieldGroup(group, otherFields, isAttributes = false) {
 
   for(const field in group) {
     if(isAttributes) {
-      validateComplexAttribute(group[field]);
+      validateComplexAttribute((group as any)[field]);
     }
 
-    if(otherFields !== undefined && typeof otherFields[field] !== "undefined") {
+    if(otherFields !== undefined && typeof (otherFields as any)[field] !== "undefined") {
       throw new Error("A resource can't have an attribute and a relationship with the same name.");
     }
   }
 }
 
-function validateComplexAttribute(attrOrAttrPart) {
+function validateComplexAttribute(attrOrAttrPart: any) {
   if(isPlainObject(attrOrAttrPart)) {
     if(typeof attrOrAttrPart.relationships !== "undefined" || typeof attrOrAttrPart.links !== "undefined") {
       throw new Error('Complex attributes may not have "relationships" or "links" keys.');

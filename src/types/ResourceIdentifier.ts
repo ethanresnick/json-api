@@ -26,6 +26,6 @@ export default class ResourceIdentifier {
   }
 }
 
-export function isValidLinkageObject(it) {
+export function isValidLinkageObject(it: any): it is ResourceIdentifierJSON {
   return it && typeof it.type === "string" && typeof it.id === "string";
 }

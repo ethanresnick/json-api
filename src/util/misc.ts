@@ -3,13 +3,13 @@
  * corresponding property on an object `obj` and deletes it (ie. does
  * `delete obj.user.contact.phone`). It doesn't use eval, which makes it safer.
  */
-export function deleteNested(path, object) {
+export function deleteNested(path: string, object: object) {
   try {
     const pathParts = path.split(".");
     const lastPartIndex = pathParts.length - 1;
     const lastPart = pathParts[lastPartIndex];
     const containingParts = pathParts.slice(0, lastPartIndex);
-    const container = containingParts.reduce(((obj, part) => obj[part]), object);
+    const container = containingParts.reduce(((obj, part) => (obj as any)[part]), object);
 
     if(container.hasOwnProperty(lastPart)) {
       delete container[lastPart];
@@ -29,13 +29,13 @@ export function deleteNested(path, object) {
  * Returns whether one array's items are a subset of those in the other.
  * Both array's elements are assumed to be unique.
  */
-export function isSubsetOf(setArr, potentialSubsetArr) {
+export function isSubsetOf(setArr: any[], potentialSubsetArr: any[]) {
   const set = new Set(setArr);
 
   return potentialSubsetArr.every((it) => set.has(it) === true);
 }
 
-export function isPlainObject(obj) {
+export function isPlainObject(obj: object) {
   return typeof obj === "object" && !(Array.isArray(obj) || obj === null);
 }
 
@@ -43,7 +43,7 @@ export function isPlainObject(obj) {
  * Note that this is only safe with chars in the BMP.
  * See: https://mathiasbynens.be/notes/javascript-unicode
  */
-export const stripLeadingBMPChar = (char) => (string) => {
+export const stripLeadingBMPChar = (char: string) => (string: string) => {
   // The below works because, though string[0] could be a surrogate,
   // it will only === char if it's not: "the ranges for the
   // high surrogates, low surrogates, and valid BMP characters
@@ -68,7 +68,11 @@ export const stripLeadingBMPChar = (char) => (string) => {
  *
  * @return {string[]} The nodes, sorted.
  */
-export function pseudoTopSort(nodes, edges: {[from: string]: {[to: string]: true}}, roots) {
+export function pseudoTopSort(
+  nodes: string[],
+  edges: {[from: string]: {[to: string]: true}},
+  roots: string[]
+) {
   // Do some defensive copying, in case the caller didn't.
   roots = roots.slice();
   nodes = nodes.slice();
