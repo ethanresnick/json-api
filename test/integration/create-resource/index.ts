@@ -9,22 +9,22 @@ import {
 
 describe("Creating Resources", () => {
   let Agent;
+  before(() => {
+    return AgentPromise.then((A) => { Agent = A; })
+  });
 
   describe("Creating a Valid Resource (With an Extra Member)", () => {
     let createdResource, res;
-    before(done => {
-      AgentPromise.then((A) => {
-        Agent = A;
-        return Agent.request("POST", "/organizations")
-          .type("application/vnd.api+json")
-          .send({"data": VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER, "extra": false})
-          .promise()
-          .then((response) => {
-            res = response;
-            createdResource = res.body.data;
-            done();
-          });
-      }).catch(done);
+    before(() => {
+      return Agent.request("POST", "/organizations")
+        .type("application/vnd.api+json")
+        .send({"data": VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER, "extra": false})
+        .then((response) => {
+          res = response;
+          createdResource = res.body.data;
+        }, (e) => {
+          console.log(e, e.response.body);
+        });
     });
 
     describe("HTTP", () => {

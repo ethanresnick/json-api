@@ -366,15 +366,6 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     return this.models[modelName];
   }
 
-  getTypesAllowedInCollection(parentType) {
-    const parentModel = this.getModel(
-      this.constructor.getModelName(parentType, this.inflector.singular)
-    );
-    return [parentType].concat(
-      this.constructor.getChildTypes(parentModel, this.inflector.plural)
-    );
-  }
-
   /**
    * Return the paths that, for the provided type, must always must be filled
    * with relationship info, if they're present. Occassionally, a path might be
@@ -535,14 +526,6 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
 
   static getReferencedType(model, path, pluralizer = pluralize.plural) {
     return this.getType(util.getReferencedModelName(model, path), pluralizer);
-  }
-
-  static getChildTypes(model, pluralizer = pluralize.plural) {
-    if(!model.discriminators) {
-      return [];
-    }
-
-    return Object.keys(model.discriminators).map(it => this.getType(it, pluralizer));
   }
 
   static getStandardizedSchema(model, pluralizer = pluralize.plural) {

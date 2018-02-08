@@ -8,7 +8,7 @@ export default function(endpointParentType, data: Data<Resource>, registry) {
   return new Promise(function(resolve, reject) {
     // validate that all resources are of types appropriate for the endpoint.
     const adapter = registry.dbAdapter(endpointParentType);
-    const allowedTypes = adapter.getTypesAllowedInCollection(endpointParentType);
+    const allowedTypes = [endpointParentType, ...registry.childTypeNames(endpointParentType)];
     const resourcesByType = groupResourcesByType(data);
 
     if(!isSubsetOf(allowedTypes, Object.keys(resourcesByType))) {

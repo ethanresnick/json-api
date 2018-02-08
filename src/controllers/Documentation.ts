@@ -142,7 +142,7 @@ export default class DocumentationController {
       },
       fields: schema,
       parentType: this.registry.parentTypeName(type),
-      childTypes: adapter.constructor.getChildTypes(model)
+      childTypes: this.registry.childTypeNames(type)
     };
 
     const defaultIncludes = this.registry.defaultIncludes(type);

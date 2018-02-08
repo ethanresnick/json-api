@@ -14,7 +14,6 @@ export interface AdapterInstance<T extends new (...args: any[]) => any> {
   addToRelationship(query: AddToRelationshipQuery): Promise<any>;
   removeFromRelationship(query: RemoveFromRelationshipQuery): Promise<any>;
   getModel(modelName)
-  getTypesAllowedInCollection(parentType: any): any;
   getRelationshipNames(type: any): any;
   doQuery(query: any): Promise<any>;
 };
@@ -22,7 +21,6 @@ export interface AdapterInstance<T extends new (...args: any[]) => any> {
 export interface AdapterClass {
   new (...args: any[]): AdapterInstance<{new (...args: any[]): any}>;
   getStandardizedSchema(model: any, pluralizer: any): any;
-  getChildTypes(type: string): string[];
   unaryFilterOperators: string[]; // must include "and"
   binaryFilterOperators: string[]; // must include "eq"
 }

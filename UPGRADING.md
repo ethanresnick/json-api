@@ -1,3 +1,10 @@
+# 3.0.0-beta.10 and 3.0.0-beta.11
+## Breaking Changes
+- Removed `MongooseAdapter`'s static `getChildTypes` method `getTypesAllowedInCollection` instance method. The ResourceTypeRegistry can  figure out the parent and child types based on the type descriptions provided to it, so there's no point in making adapters implement these methods. See the new methods on ResourceTypeRegistry if you need/were using this functionality.
+
+## Deprecations
+- `ResourceTypeRegistry::parentType`. Use `parentTypeName` instead.
+
 # 3.0.0-beta.9
 ## Breaking Changes
 - Update Jade to Pug 2. See https://pugjs.org/api/migration-v2.html
