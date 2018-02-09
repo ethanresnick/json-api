@@ -129,10 +129,23 @@ export default class Data<T> {
     return this; // for chaining
   }
 
-  reduce<U>(fn: Reducer<T, U>): U | undefined;
+  reduce(fn: Reducer<T, T>): T | undefined;
   reduce<U>(fn: Reducer<T, U>, initialValue: U): U;
-  reduce<U>(fn: Reducer<T, U>, initialValue?: U): U | undefined {
-    return this.value.data.reduce(fn, initialValue);
+  reduce<U>(fn: Reducer<T, U>, initialValue?: U): U | T | undefined {
+    // When the array is empty, return the initial value,
+    // which is what A.p.reduce(emptyArr, initial) does anyway,
+    // except that, if there is no initial value, we're returning undefined,
+    // whereas A.p.reduce(emptyArr) throws. It's easier to have clients handle
+    // undefined than have them need to worry about a possible exception.
+    // If the user *really* cares about identifying the empty array with no
+    // initial value case, for some rare reason, there are hacks to do that.
+    if(!this.value.data.length) {
+      return initialValue;
+    }
+
+    return arguments.length > 1
+      ? this.value.data.reduce(fn, initialValue as U)
+      : this.value.data.reduce(fn as any as Reducer<T,T>);
   }
 
   filter(fn: PredicateFn<T>) {

@@ -94,6 +94,25 @@ describe("Data type", () => {
           expect((<any>mapped).value).to.deep.equal((<any>b.flatMap(toEmpty)).value)),
       ]);
     })
+  });
+
+  describe("reduce", () => {
+    it("should use the initialValue on empty data", () => {
+      expect(Data.empty.reduce(it => it, 4)).to.equal(4);
+    });
+
+    it("should return undefined on empty data with no initialValue", () => {
+      expect(Data.empty.reduce(it => it)).to.equal(undefined);
+    });
+
+    it("should work with no initialValue", () => {
+      expect(Data.of([1, 2, 3]).reduce((acc, it) => acc + it)).to.equal(6);
+    });
+
+    it("should use the initialValue provided", () => {
+      expect(Data.of([1, 2, 3]).reduce(((acc, it) => acc + it), 3)).to.equal(9);
+      expect(Data.of([1, 2, 3]).reduce(((acc, it) => acc + it), "0")).to.equal("0123");
+    });
   })
 
   describe("empty", () => {

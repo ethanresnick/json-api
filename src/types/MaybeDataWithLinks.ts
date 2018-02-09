@@ -93,8 +93,16 @@ export default class MaybeDataWithLinks<T extends (Resource | ResourceIdentifier
     return this._data ? this._data.some(fn) : false;
   }
 
-  reduce<U>(fn: Reducer<T, U>, initialValue?: U) {
-    return this._data ? this._data.reduce(fn, initialValue) : initialValue;
+  reduce(fn: Reducer<T, T>): T | undefined;
+  reduce<U>(fn: Reducer<T, U>, initialValue: U): U;
+  reduce<U>(fn: Reducer<T, U>, initialValue?: U): U | T | undefined {
+    if(!this._data) {
+      return initialValue;
+    }
+
+    return arguments.length > 1
+      ? this._data.reduce(fn, initialValue as U)
+      : this._data.reduce(fn as any as Reducer<T, T>);
   }
 
   forEach(fn: (it: T) => void) {
