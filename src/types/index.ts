@@ -26,6 +26,7 @@ export type Reducer<T,U = any> = (acc: U, it: T, i: number, arr: T[]) => U;
 export type PredicateFn<T> = (it: T, i: number, arr: T[]) => boolean;
 export type Mapper<T,U> = (it: T, i: number, arr: T[]) => U;
 export type AsyncMapper<T,U> = (it: T, i: number, arr: T[]) => U | Promise<U>;
+export type Reduceable<T, U> = { reduce: (fn: Reducer<T, U>, init?: U) => U };
 
 // Types for interacting with the underlying server
 export type ServerReq = IncomingMessage;
