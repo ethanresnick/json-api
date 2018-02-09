@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import AgentPromise from "../../app/agent";
-import { VALID_ORG_VIRTUAL_PATCH } from "../fixtures/updates";
+import { VALID_ORG_VIRTUAL_PATCH, INVALID_ORG_PATCH_NO_ID } from "../fixtures/updates";
 
 describe("Updating Resources", () => {
   let Agent;
@@ -54,6 +54,34 @@ describe("Updating Resources", () => {
         }, (err) => {
           expect(err.status).to.equal(404);
           return true;
+        });
+    });
+  });
+
+  describe("Updating a resource without providing an id in json", () => {
+    it("should 400", () => {
+      return Agent.request("PATCH", `/organizations/59ac9c0ecc4c356fcda65202`)
+        .type("application/vnd.api+json")
+        .send({ "data": INVALID_ORG_PATCH_NO_ID })
+        .promise()
+        .then((response) => {
+          throw new Error("Should 400");
+        }, (err) => {
+          expect(err.status).to.equal(400);
+        });
+    });
+  });
+
+  describe("Bulk updates", () => {
+    it("should 400 if any resources don't have ids", () => {
+      return Agent.request("PATCH", `/organizations`)
+        .type("application/vnd.api+json")
+        .send({ "data": [ VALID_ORG_VIRTUAL_PATCH, INVALID_ORG_PATCH_NO_ID ] })
+        .promise()
+        .then((response) => {
+          throw new Error("Should 400");
+        }, (err) => {
+          expect(err.status).to.equal(400);
         });
     });
   })

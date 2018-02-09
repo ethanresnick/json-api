@@ -15,6 +15,14 @@ export const VALID_ORG_VIRTUAL_PATCH = {
   }
 };
 
+export const INVALID_ORG_PATCH_NO_ID = {
+  "type": "organizations",
+  "attributes": {
+    "name": "changed name",
+    "echo": "Hello!"
+  }
+};
+
 export const VALID_ORG_RELATIONSHIP_PATCH = {
   "data": [{
     "type": "people", "id": "53f54dd98d1e62ff12539db3"

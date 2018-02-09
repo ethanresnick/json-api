@@ -30,9 +30,18 @@ export default function(request: FinalizedRequest, registry: ResourceTypeRegistr
     }
 
     // No request.id
-    else if(primary.isSingular) {
-      const title = "You must provide an array of resources to do a bulk update.";
-      throw new APIError(400, undefined, title);
+    else {
+      if(primary.isSingular) {
+        const title = "You must provide an array of resources to do a bulk update.";
+        throw new APIError(400, undefined, title);
+      }
+
+      if(!(primary as Data<Resource>).every(it => it.id !== undefined)) {
+        throw new APIError({
+          status: 400,
+          title: "All resources provided for update must have ids."
+        });
+      }
     }
 
     changedResourceData = primary;
