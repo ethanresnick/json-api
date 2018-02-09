@@ -246,30 +246,80 @@ describe("ResourceTypeRegistry", function() {
       });
     });
 
-    describe("isUnorderedPathThroughType", () => {
-      it("should return whether the types provided exactly lead to a child type of the other type provided", () => {
-        const sut = registry.isUnorderedPathThroughType.bind(registry);
+    describe("asTypePath", () => {
+      const sut = registry.asTypePath.bind(registry);
+      const validPaths = [
+        { path: ["people"] },
+        { path: ["organizations", "schools"], ordered: ["schools", "organizations"]  },
 
-        // path must start at the root node (i.e., needs "organizations" to get to 'schools')
-        expect(sut(["schools"], "schools")).to.be.false;
-        expect(sut(["schools", "organizations"], "schools")).to.be.true;
-        expect(sut(["organizations", "schools"], "schools")).to.be.true;
+        // order doesn't matter
+        { path: ["schools", "organizations"] },
 
-        // a path to kindergartens or law-schools still works as a path to schools,
-        // because those are child types of is a child of schools.
-        expect(sut(["organizations", "schools", "kindergartens"], "schools")).to.be.true;
-        expect(sut(["organizations", "schools", "law-schools"], "schools")).to.be.true;
+        { path: ["kindergartens", "organizations", "schools"],
+          ordered: ["kindergartens", "schools", "organizations"] },
 
-        // same idea as above tests, but when type to lead to is a root type
-        expect(sut(["people"], "people")).to.be.true;
+        { path: ["law-schools", "schools", "organizations"] },
+      ];
 
-        // but the path is invalid if there are two siblings from the same level
-        expect(sut(["organizations", "schools", "kindergartens", "law-schools"], "schools")).to.be.false;
+      const invalidPaths = [
+        // paths must start at a root node (i.e., needs organizations too).
+        { path: ["schools"] },
 
-        // or if there are any extra members at all, for that matter
-        expect(sut(["organizations", "schools", "people"], "schools")).to.be.false;
-        expect(sut(["people", "john-does"], "people")).to.be.false;
+        // path can't contain two siblings from the same level in the tree
+        { path: ["organizations", "schools", "kindergartens", "law-schools"] },
+
+        // orgs + people are siblings; people is extra if we go orgs -> schools
+        { path: ["organizations", "schools", "people"] },
+
+        // john-does is an unknown type.
+        { path: ["people", "john-does"] }
+      ];
+
+      it("should not accept an empty path as valid", () => {
+        expect(sut([])).to.be.false;
+        expect(sut([], "schools")).to.be.false;
       })
-    })
+
+      describe("without throughType", () => {
+        it("should return the ordered path if path points to a type; else false", () => {
+          validPaths.forEach(path => {
+            expect(sut(path.path)).to.deep.equal(path.ordered || path.path);
+          });
+
+          invalidPaths.forEach(path => {
+            expect(sut(path.path)).to.be.false;
+          });
+        })
+      })
+
+      describe("with throughType", () => {
+        it("should return the ordered path if path points to throughType or a child of it; else false", () => {
+          const typeNames = registry.typeNames();
+
+          // Invalid paths should continue to be invalid, regardless of throughType.
+          invalidPaths.forEach(path => {
+            const throughType = Math.random() < .5 ? "schools" : "people";
+            expect(sut(path.path, throughType)).to.be.false;
+          });
+
+          // Valid paths should be valid for any type name along the path as
+          // the through type, and invalid otherwise.
+          validPaths.forEach(path => {
+            const pathTypesSet = new Set(path.path);
+            const validThroughType = getRandomElm(path.path);
+            const invalidThroughType = getRandomElm(
+              [...new Set(typeNames.filter(it => !pathTypesSet.has(it)))]
+            );
+
+            expect(sut(path.path, validThroughType)).to.deep.equal(path.ordered || path.path);
+            expect(sut(path.path, invalidThroughType)).to.be.false;
+          });
+        });
+      });
+    });
   });
 });
+
+function getRandomElm(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}

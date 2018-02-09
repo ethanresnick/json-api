@@ -208,6 +208,11 @@ export default class ResourceTypeRegistry {
     return Object.keys(this._typesMetadata.edges[typeName] || {});
   }
 
+  rootTypeNames() {
+    return Object.keys(this._types)
+      .filter(typeName => this.parentTypeName(typeName) === undefined);
+  }
+
   // Returns the top-most parent type's name for this type.
   rootTypeNameOf(typeName: string) {
     const pathToType = this.typePathTo(typeName);
@@ -227,15 +232,20 @@ export default class ResourceTypeRegistry {
 
   /**
    * Takes an list of types and checks if (were they appropriately reordered)
-   * they would constitute a path through the types tree that ultimately points
-   * to a type that is (or is a child of) parentType.
+   * they would constitute a single path through the types tree. If the second
+   * argument is provided, that path must point to (a child of) parentType.
+   * If these conditions hold, it returns the types path; else false.
    *
    * @param {string[]} typesList A list of type names.
-   * @param {string} parentType [description]
+   * @param {string?} throughType A type name that the path must be or go through.
    */
-  isUnorderedPathThroughType(typesList: string[], parentType: string): boolean {
-    const pathToParentType = this.typePathTo(parentType);
+  asTypePath(typesList: string[], throughType?: string): false | string[] {
+    const pathToParentType = throughType ? this.typePathTo(throughType) : [];
     const remainingTypes = typesList.slice();
+
+    if(!typesList.length) {
+      return false;
+    }
 
     for(const type of pathToParentType) {
       const indexOfType = remainingTypes.indexOf(type);
@@ -251,7 +261,10 @@ export default class ResourceTypeRegistry {
 
     // After we've checked that all the parent types are included in typesList,
     // any remaining types must be child types of parentType.
-    let currentTypeChildren = this.childTypeNames(parentType);
+    let finalPath = [...pathToParentType];
+    let currentTypeChildren = throughType
+      ? this.childTypeNames(throughType)
+      : this.rootTypeNames();
 
     while(remainingTypes.length && currentTypeChildren.length) {
       let nextTypeFound = false;
@@ -262,6 +275,7 @@ export default class ResourceTypeRegistry {
           nextTypeFound = true;
           remainingTypes.splice(indexOfChild, 1);
           currentTypeChildren = this.childTypeNames(child);
+          finalPath.unshift(child);
           break;
         }
       }
@@ -271,7 +285,7 @@ export default class ResourceTypeRegistry {
       }
     }
 
-    return !remainingTypes.length;
+    return remainingTypes.length ? false : finalPath;
   }
 
   private doGet<T extends keyof ResourceTypeDescription>(attrName: T, typeName: string): ResourceTypeDescription[T] | undefined {
