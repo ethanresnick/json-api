@@ -234,9 +234,10 @@ export default class APIController {
       return result;
     };
 
+    // TODO: remove R as any casts when there are available typings for R.pipeP.
     return baseQuery.resultsIn(
-      R.pipe(origReturning, transformResultDocument),
-      R.pipe(origCatch, transformResultDocument),
+      (R as any).pipeP(R.pipe(origReturning, Promise.resolve.bind(Promise)), transformResultDocument),
+      (R as any).pipeP(R.pipe(origCatch, Promise.resolve.bind(Promise)), transformResultDocument),
     );
   }
 
