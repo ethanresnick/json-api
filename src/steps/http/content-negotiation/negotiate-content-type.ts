@@ -1,6 +1,6 @@
 import Negotiator = require("negotiator");
 import APIError from "../../../types/APIError";
-import {objectIsEmpty} from "../../../util/type-handling";
+import {objectIsEmpty} from "../../../util/misc";
 
 /**
  * Negotiate the Content-Type to use for the response.

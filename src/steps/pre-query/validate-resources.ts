@@ -1,5 +1,4 @@
-import { groupResourcesByType } from "../../util/type-handling";
-import { isSubsetOf } from "../../util/misc";
+import { isSubsetOf, partition } from "../../util/misc";
 import APIError from "../../types/APIError";
 import Data from "../../types/Generic/Data";
 import Resource from "../../types/Resource";
@@ -9,7 +8,7 @@ export default function(endpointParentType, data: Data<Resource>, registry) {
     // validate that all resources are of types appropriate for the endpoint.
     const adapter = registry.dbAdapter(endpointParentType);
     const allowedTypes = [endpointParentType, ...registry.childTypeNames(endpointParentType)];
-    const resourcesByType = groupResourcesByType(data);
+    const resourcesByType = partition('type', data);
 
     if(!isSubsetOf(allowedTypes, Object.keys(resourcesByType))) {
       const title = "Some of the resources you provided are of a type that " +

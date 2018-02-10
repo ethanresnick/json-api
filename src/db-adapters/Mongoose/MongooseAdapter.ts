@@ -3,9 +3,8 @@ import mongoose = require("mongoose");
 import pluralize = require("pluralize");
 
 import { AndPredicate } from "../../types/";
-import { deleteNested } from "../../util/misc";
+import { deleteNested, partition } from "../../util/misc";
 import { values as objectValues } from '../../util/objectValueEntries';
-import { groupResourcesByType } from "../../util/type-handling";
 import * as util from "./lib";
 import Data from "../../types/Generic/Data";
 import Resource, { ResourceWithId } from "../../types/Resource";
@@ -194,7 +193,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
    */
   async create(query: CreateQuery) {
     const { records: resourceData } = query;
-    const resourcesByType = groupResourcesByType(resourceData);
+    const resourcesByType = partition('type', resourceData);
     const setIdWithGenerator = (doc) => { doc._id = this.idGenerator(doc); };
 
     // Note: creating the resources as we do below means that we do one

@@ -1,6 +1,6 @@
 import contentTypeParser = require("content-type");
 import APIError from "../../../types/APIError";
-import {objectIsEmpty} from "../../../util/type-handling";
+import { objectIsEmpty } from "../../../util/misc";
 
 export default function validateContentType(request, supportedExt?) {
   return new Promise(function(resolve, reject) {

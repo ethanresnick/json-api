@@ -1,7 +1,7 @@
 import { LinkageJSON, UrlTemplateFns } from "./index";
 import MaybeDataWithLinks, { MaybeDataWithLinksArgs } from "./MaybeDataWithLinks";
 import ResourceIdentifier from "./ResourceIdentifier";
-import { objectIsEmpty } from '../util/type-handling';
+import { objectIsEmpty } from '../util/misc';
 
 export type RelationshipJSON = {
   data?: LinkageJSON

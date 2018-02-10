@@ -1,5 +1,4 @@
-import { deleteNested, isPlainObject } from "../util/misc";
-import { objectIsEmpty } from "../util/type-handling";
+import { deleteNested, isPlainObject, objectIsEmpty } from "../util/misc";
 import Relationship, { RelationshipJSON } from "./Relationship";
 import { UrlTemplateFns } from "./index";
 

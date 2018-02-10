@@ -1,7 +1,6 @@
 import Resource, { ResourceJSON } from "./Resource";
 import APIError, { APIErrorJSON } from './APIError';
-import { objectIsEmpty } from "../util/type-handling";
-import { isPlainObject } from "../util/misc";
+import { isPlainObject, objectIsEmpty } from "../util/misc";
 import { PrimaryDataJSON, UrlTemplateFnsByType, UrlTemplateFns, Links } from './index';
 import Relationship from './Relationship';
 import ResourceSet from './ResourceSet';
