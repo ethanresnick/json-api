@@ -1,6 +1,39 @@
 # 3.0.0-beta.10 and 3.0.0-beta.11
+## New Features
+- Improved subtype handling (see #149)
+
 ## Breaking Changes
-- Removed `MongooseAdapter`'s static `getChildTypes` method `getTypesAllowedInCollection` instance method. The ResourceTypeRegistry can  figure out the parent and child types based on the type descriptions provided to it, so there's no point in making adapters implement these methods. See the new methods on ResourceTypeRegistry if you need/were using this functionality.
+### Subtypes
+By far the biggest breaking change in this beta is how the library handles subtypes (i.e., resource types registered with another resource type as their parent type). For details on the problem that needed to be solved and the approach taken, see https://github.com/ethanresnick/json-api/issues/149.
+
+**If you're not using subtypes, none of these changes should effect you, unless you're using query factories (in which case you may need to do some mechanical work to set the new `typePath` property; see below).**
+
+Here are the most important changes:
+
+- In the past, a `Resource` instance's `type` field held the name of its subtype; now, it holds the name of the parent-most type that the resource belongs to. **The serialized JSON `type` key for the resource is now also the root most type, no the subytpe.** The subtypes are instead stored in `Resource.typePath`. They're then serialized to (and, on create, parsed from) `resourceJSON.meta.types`.
+
+- If you're constructing a `Resource` instance yourself (e.g., in a query factory), you must be very careful to set `typePath` correctly, as its used to run the appropriate `beforeSave`/`beforeRender` functions and potentially mongoose validation. See the [Resource class](https://github.com/ethanresnick/json-api/blob/v3-evolution-over-rewrite/src/types/Resource.ts) for more details on its format, and the distinction between it and the `typeList`. To help setting the type path, query factory functions are now passed a function (at the `setTypePaths` key of their first argument) that, if passed an array of `Resource`s will mutate them to set their type paths correctly. It can set the type path of existing resources by looking their type paths up in the adapter, or can validate + save a list of user-provided types at the type a resource is being created.
+
+- If you were using linkage transforms, and some of your linkage was serialized to JSON with a subtype in its `type` key (rare, but it could happen if your Mongoose model `ref` referred to a child model), that linkage was previously transformed with the beforeSave/beforeRender functions from the subtype's resource description. Now, it'll be transformed only with the beforeSave/beforeRender functions of the parent type's description, and only if that type has `transformLinkage: true` set. It'll also always be serialized with the parent type's name in its `type` key, so that it points to the appropriate resource.
+
+### Custom Adapters
+If you've written a custom adapter.... 
+
+- You must now implement an instance method called `getTypePaths`. See MongooseAdapter for an example, and the AdapterInterface file for the signature. If you aren't supporting subtypes, you can generate the typePath for each input item by simply making a one-item array with the serialized, JSON:API `type` value.
+
+- If you want to support subtypes, you must update your methods that return `Resource`s to return the parent type in `type` and the type path in `typePath`. Also, you must update your query methods (create/update/delete/addToRelationship/removeFromRelationship) to be aware of the `typePath` key. The library will guarantee that the resources passed in the query to `adapter.create` and `adapter.update` have a true type (i.e., their smallest type) of `Query.type` or one of its subtypes, but you otherwise must validate the data yourself. Note that `Query.type` still represents whatever type the query is scoped to (likely based on `request.params.type`), and could be a subtype.
+
+- Finally, you must provide an instance method called `getModelName`. (Before, this was required as a static method; that is no longer needed.)
+
+- If you were subclassing MongooseAdapter, see below for the changes to it.
+
+### Multiple Adapters
+- Using multiple adapters simultaneously (i.e., different ones for different resource types) is no longer possible, for the moment. The fix isn't too hard, though, so open an issue if having this feature is important.
+
+### MongooseAdapter
+- Removed `MongooseAdapter`'s static `getChildTypes` method and `getTypesAllowedInCollection` instance method. The ResourceTypeRegistry can  figure out the parent and child types based on the type descriptions provided to it, so there's no point in making adapters implement these methods. See the new methods on ResourceTypeRegistry if you need/were using this functionality.
+
+- Removed various static `MongooseAdapter` methods (e.g. `docToResource`, `getType`, `getReferencedType`) from the class; they're now utility methods instead in a separate file. None of these methods were intended to be part of the class's public API (though that wasn't clearly defined), so hopefully this breakage isn't too bad. Open an issue if you were depending on these for some reason.
 
 ## Deprecations
 - `ResourceTypeRegistry::parentType`. Use `parentTypeName` instead.

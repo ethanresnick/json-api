@@ -2,7 +2,7 @@ import Immutable = require("immutable");
 import depd = require('depd');
 import { pseudoTopSort } from "./util/misc";
 import Maybe from "./types/Generic/Maybe";
-import { ResourceTransformFn, FullTransformFn, TransformFn } from "./steps/apply-transform";
+import { ResourceTransformFn, FullTransformFn, TransformFn } from "./steps/make-transform-fn";
 import { AdapterInstance } from "./db-adapters/AdapterInterface";
 import Resource from "./types/Resource";
 import ResourceIdentifier from "./types/ResourceIdentifier";
@@ -165,6 +165,19 @@ export default class ResourceTypeRegistry {
     }
 
     return adapter;
+  }
+
+  uniqueAdapters() {
+    const adaptersToTypeNames = new Map<AdapterInstance<any>, string[]>();
+    Object.keys(this._types).map(typeName => {
+      const adapter = this.dbAdapter(typeName);
+      adaptersToTypeNames.set(
+        adapter,
+        (adaptersToTypeNames.get(adapter) || []).concat(typeName)
+      );
+    });
+
+    return adaptersToTypeNames;
   }
 
   beforeSave(typeName: string) {

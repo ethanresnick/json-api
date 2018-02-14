@@ -2,54 +2,85 @@ import {expect} from "chai";
 import AgentPromise from "../../app/agent";
 import { VALID_SCHOOL_RESOURCE_NO_ID } from "../fixtures/creation";
 
-describe("Deleting a resource", () => {
-  let Agent, creationId, creationIds;
+describe("Deleting resources", () => {
+  let Agent;
+  before(() => AgentPromise.then(A => { Agent = A; }));
 
-  before(() => {
-    return AgentPromise.then(A => {
-      Agent = A;
+  describe("Single resource deletion", () => {
+    let creationId;
+    before(() => createSchool(Agent).then(school => creationId = school.id));
 
-      return Promise.all([
-        createSchool(Agent), createSchool(Agent), createSchool(Agent)
-      ]).then(schools => {
-        [creationId, ...creationIds] = schools.map(it => it.id);
-      })
+    it("should delete a resource by id", () => {
+      return Agent.request("DEL", `/schools/${creationId}`)
+        .type("application/vnd.api+json")
+        .send()
+        .then(() => {
+          return Agent.request("GET", `/schools/${creationId}`)
+            .accept("application/vnd.api+json")
+            .then(() => {
+              throw new Error("shouldn't run");
+            }, err => {
+              expect(err.response.statusCode).to.equal(404);
+            });
+        });
     });
-  });
 
-  it("should delete a resource by id", () => {
-    return Agent.request("DEL", `/schools/${creationId}`)
-      .type("application/vnd.api+json")
-      .send()
-      .then(() => {
-        return Agent.request("GET", `/schools/${creationId}`)
-          .accept("application/vnd.api+json")
-          .then(() => {
-            throw new Error("shouldn't run");
-          }, err => {
-            expect(err.response.statusCode).to.equal(404);
-          });
+     it('should return 404 if deleting a resoucrce that doesn\'t exist', () => {
+      return Agent.request("DELETE", "/people/5a5934cfc810949cebeecc33")
+        .then(() => {
+          throw new Error("shoudln't run");
+        }, (err) => {
+          expect(err.status).to.equal(404);
+        })
+    });
+  })
+
+  describe("Bulk delete", () => {
+    let creationIds;
+    beforeEach(() => {
+      return Promise.all([createSchool(Agent), createSchool(Agent)]).then(schools => {
+        creationIds = schools.map(it => it.id);
       });
-  });
+    });
 
-  it('should support bulk delete', () => {
-    return Agent.request("DEL", `/schools`)
-      .type("application/vnd.api+json")
-      .send({ data: creationIds.map(id => ({ type: "schools", id })) })
-      .then(() => {
-        const notFoundPromises =
-          creationIds.map(id =>
-            Agent.request("GET", `/schools/${id}`)
-              .accept("application/vnd.api+json")
-              .then(() => {
-                throw new Error("shouldn't run");
-              }, err => {
-                expect(err.response.statusCode).to.equal(404);
-              }));
+    it('should support bulk delete', () => {
+      return Agent.request("DEL", `/schools`)
+        .type("application/vnd.api+json")
+        .send({ data: creationIds.map(id => ({ type: "organizations", id })) })
+        .then(() => {
+          const notFoundPromises =
+            creationIds.map(id =>
+              Agent.request("GET", `/schools/${id}`)
+                .accept("application/vnd.api+json")
+                .then(() => {
+                  throw new Error("shouldn't run");
+                }, err => {
+                  expect(err.response.statusCode).to.equal(404);
+                }));
 
-        return Promise.all(notFoundPromises);
-      });
-  });
+          return Promise.all(notFoundPromises);
+        });
+    });
+
+    it("should delete all matching resources, even if some are not found", () => {
+      // First id below doesn't exist; should not trigger a 404 in the bulk case.
+      const idsToDelete = ['56beb8500000000000000000', ...creationIds];
+
+      return Agent.request("DEL", `/schools`)
+        .type("application/vnd.api+json")
+        .send({ data: idsToDelete.map(id => ({ type: "organizations", id })) })
+        .then((resp) => {
+          expect(resp.status).to.equal(204);
+          return Promise.all(creationIds.map(it => {
+            return Agent.request("GET", `/organizations/${it}`).then((resp) => {
+              throw new Error("Should not run!");
+            }, (e) => {
+              expect(e.status).to.equal(404);
+            });
+          }));
+        });
+    });
+  })
 });
 
 function createSchool(Agent) {

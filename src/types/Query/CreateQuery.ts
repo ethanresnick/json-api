@@ -1,9 +1,10 @@
 import Query, { QueryOptions } from "./Query";
-import Resource from '../Resource';
+import Resource, { ResourceWithTypePath }  from '../Resource';
+export { Resource, ResourceWithTypePath };
 import Data from '../Generic/Data';
 
 export type CreateQueryOptions = QueryOptions & {
-  records: Data<Resource>
+  records: Data<ResourceWithTypePath>
 }
 
 export default class CreateQuery extends Query {

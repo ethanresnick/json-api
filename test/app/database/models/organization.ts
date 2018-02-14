@@ -19,7 +19,14 @@ export class OrganizationSchema extends mongoose.Schema {
         type: String
       },
       liaisons: [{ref: "Person", type: ObjectId}],
-      modified: { type: Date, default: new Date() }
+      modified: { type: Date, default: new Date() },
+
+      // This variable is never set by the user on create,
+      // but we want to test that mongoose sets it with the default.
+      neverSet: {
+        type: String,
+        default: "set from mongoose default"
+      }
     });
 
     this.virtual('virtualName').get(function(this: OrgDoc) {

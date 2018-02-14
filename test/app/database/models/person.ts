@@ -6,7 +6,9 @@ const schema = new mongoose.Schema({
   gender: {
     type: String,
     enum: ["male", "female", "other"]
-  }
+  },
+  manages: { type: mongoose.SchemaTypes.ObjectId, ref: 'Organization' },
+  homeSchool: { type: mongoose.SchemaTypes.ObjectId, ref: 'School' }
 });
 
 type PersonDoc = { name: string };

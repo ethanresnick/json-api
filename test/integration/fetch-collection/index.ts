@@ -69,8 +69,10 @@ describe("Fetching Collection", () => {
 
         // This test is good on its own, and the next couple tests also assume it passes.
         it("should contain both organizations and schools", () => {
-          expect(res.body.data.some(it => it.type === "schools")).to.be.true;
-          expect(res.body.data.some(it => it.type === "organizations")).to.be.true;
+          expect(res.body.data.some(it =>
+            it.meta && it.meta.types && it.meta.types.includes("schools")
+          )).to.be.true;
+          expect(res.body.data.every(it => it.type === "organizations")).to.be.true;
         });
 
         it("should have transformed all resources, including sub types", () => {

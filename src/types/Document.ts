@@ -11,6 +11,11 @@ import ResourceIdentifierSet from "../types/ResourceIdentifierSet";
 // TODO: Make the constructor API sane in the presence of types;
 // actually define the API for this class (e.g., which fields are public?)
 // TODO: use more Maybes for optional fields?
+//
+// TODO: Require that, if doc.primary is a Relationship, the Relationship
+// must have a data key, as a relationship without data, which is valid in
+// resource objects, is invalid as primary data because it would result in
+// an invalid response document (with no data key).
 export type DocumentJSON = ({
   data: PrimaryDataJSON,
   errors: undefined,
@@ -116,6 +121,13 @@ export default class Document {
   clone() {
     const Ctor = (this.constructor || Document) as typeof Document;
     return new Ctor(this);
+  }
+
+  getContents(): (Resource | ResourceIdentifier)[] {
+    return [
+      ...(this.included || []),
+      ...(this.primary ? this.primary.values : [])
+    ];
   }
 
   /**

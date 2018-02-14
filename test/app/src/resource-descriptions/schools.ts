@@ -16,10 +16,22 @@ module.exports = {
     }
   },
 
-  beforeSave: function(resource, req, res, superFn) {
-    return Promise.resolve().then(() => {
-      resource.attrs.modified = new Date("2015-10-27T05:16:57.257Z");
-      return resource;
-    }).then((transformed) => superFn(transformed, req, res));
+  // Async just to test promises are allowed.
+  async beforeSave(resource, req, res, superFn) {
+    const transformed = await superFn(resource);
+    transformed.attrs.modified = new Date("2015-10-27T05:16:57.257Z");
+
+    // A special test for whether this beforeSave runs when patching
+    // (organizations, 5a5934cfc810949cebeecc33), which happens to be a school.
+    if(resource.id === '5a5934cfc810949cebeecc33') {
+      transformed.attrs.description = "Special, beforeSave description.";
+    }
+
+    return transformed;
+  },
+
+  beforeRender(resource, req, res, superFn) {
+    resource.attrs.schoolBeforeRender = true;
+    return superFn(resource);
   }
 };

@@ -24,11 +24,14 @@ import negotiateContentType from "../steps/http/content-negotiation/negotiate-co
 import validateContentType from "../steps/http/content-negotiation/validate-content-type";
 
 import parseRequestPrimary from "../steps/pre-query/parse-request-primary";
+import setTypePaths from "../steps/set-type-paths";
 import validateRequestDocument from "../steps/pre-query/validate-document";
-import validateRequestResources from "../steps/pre-query/validate-resources";
+import validateRequestResourceTypes from "../steps/pre-query/validate-resource-types";
+import validateRequestResourceIds from "../steps/pre-query/validate-resource-ids";
+import validateRequestResourceData from '../steps/pre-query/validate-resource-data';
 import parseQueryParams from "../steps/pre-query/parse-query-params";
 import filterParamParser, { getFilterList } from "../steps/pre-query/filter-param-parser";
-import applyTransform, { TransformMode, Extras } from "../steps/apply-transform";
+import makeTransformFunction, { TransformMode, Extras } from "../steps/make-transform-fn";
 
 import makeGET from "../steps/make-query/make-get";
 import makePOST from "../steps/make-query/make-post";
@@ -62,6 +65,11 @@ export type QueryBuildingContext = {
   serverReq: ServerReq,
   serverRes: ServerRes,
   transformDocument: (doc: Document, mode: TransformMode) => Promise<Document>,
+  setTypePaths: (
+    it: (Resource| ResourceIdentifier)[],
+    useInputData: boolean,
+    requiredThroughType?: string
+  ) => Promise<Document>,
   registry: ResourceTypeRegistry,
   makeDocument: makeDocument,
   makeQuery: QueryFactory
@@ -186,11 +194,55 @@ export default class APIController {
     await requestValidators.checkBodyExistence(request);
 
     if(request.document && request.document.primary) {
-      // validate the request's resources, if any
       if(!parseAsLinkage(request)) {
-        await validateRequestResources(
+        // We're assuming, for some of the calls below, that we'll only get
+        // full resources on a patch (an update) or a post (for create) request.
+        // If that's not true somehow, throw now so we don't run into trouble
+        // with letting users set types they shouldn't be able to.
+        if(!['post', 'patch'].includes(request.method)) {
+          throw new Error("Unexpected method.");
+        }
+
+        await validateRequestResourceTypes(
           request.type,
-          (request.document.primary as any)._data as Data<Resource>,
+          request.document.primary as ResourceSet,
+          opts.registry
+        );
+
+        // If we're dealing with an update, ensure all provided resources
+        // to patch have `id` keys. This must be guaranteed before we use
+        // setResourceTypesList and tell it to look up the type/id in the db.
+        // This is already ensured on bulk delete by basic linkage parsing rules.
+        if(request.method === 'patch') {
+          await validateRequestResourceIds(request.document.primary as ResourceSet);
+        }
+
+        // See comment at top of steps/set-type-paths for details.
+        // Note: this call mutates reource objects in request.document
+        // and can throw if user-provided types in `meta.types` are invalid
+        // (on create) or are present when they shouldn't be (on update).
+        await opts.setTypePaths(
+          request.document.getContents(),
+          request.method === 'post',
+          request.type
+        );
+
+        // Apply some minimal validation the data in the resource patch/creation,
+        // only after we've set the type path (so we can find the right model to
+        // validate with).
+        validateRequestResourceData(
+          request.document.primary as ResourceSet,
+          opts.registry
+        );
+      }
+
+      // On bulk deletes, we don't set the typePath (that's unnecessary overhead),
+      // but we should verify that the resources the identifiers are refering to
+      // are using the right json-api `type` key.
+      if(isBulkDelete(request)) {
+        await validateRequestResourceTypes(
+          request.type,
+          request.document.primary as ResourceSet,
           opts.registry
         );
       }
@@ -207,7 +259,7 @@ export default class APIController {
       };
     }
 
-    const baseQuery = (() => {
+    const baseQuery = await (async () => {
       switch(<"get"|"post"|"patch"|"delete">request.method) {
         case "get":
           return makeGET(requestAfterBeforeSave, opts.registry, opts.makeDocument)
@@ -287,7 +339,8 @@ export default class APIController {
         ...transformExtras,
         makeDocument: this.makeDoc, // already this bound.
         transformDocument: R.partialRight(transformDoc, [transformExtras]),
-        makeQuery: this.makeQuery
+        makeQuery: this.makeQuery,
+        setTypePaths: R.partialRight(setTypePaths, [transformExtras.registry])
       });
 
       // If the type in the request hasn't been registered,
@@ -458,20 +511,8 @@ function parseAsLinkage(request: Request) {
 }
 
 async function transformDoc(doc: Document, mode: TransformMode, extras: Extras) {
-  // Create Data, or read private internal Data if it exists, and transform it.
-  const res = doc.clone();
-  const primaryData = res.primary && (<any>res.primary)._data;
-  const includedData = doc.included && Data.of(doc.included);
+  const transformLinkage =
+    extras.registry.typeNames().some(it => extras.registry.transformLinkage(it))
 
-  if(primaryData) {
-    (<any>res.primary)._data =
-      await applyTransform(primaryData, mode, extras);
-  }
-
-  if(includedData) {
-    res.included =
-      (await applyTransform(includedData, mode, extras)).values;
-  }
-
-  return res;
+  return doc.transform(makeTransformFunction(mode, extras), !transformLinkage);
 }

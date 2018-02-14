@@ -20,6 +20,8 @@ before(() => {
       require("./http-compliance");
       require("./patch-relationship");
       require("./update-resource");
+      require("./subtypes");
+      require("./mongoose-adapter");
     });
   })
 });

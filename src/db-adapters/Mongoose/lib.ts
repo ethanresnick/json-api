@@ -38,25 +38,6 @@ export function errorHandler(err): never {
   throw errors;
 }
 
-export function getReferencePaths(model) {
-  const paths: string[] = [];
-  model.schema.eachPath((name, type) => {
-    if(isReferencePath(type)) paths.push(name);
-  });
-  return paths;
-}
-
-export function isReferencePath(schemaType) {
-  const options = (schemaType.caster || schemaType).options;
-  return options && options.ref !== undefined;
-}
-
-export function getReferencedModelName(model, path) {
-  const schemaType = model.schema.path(path);
-  const schemaOptions = (schemaType.caster || schemaType).options;
-  return schemaOptions && schemaOptions.ref;
-}
-
 export function toMongoCriteria(constraintOrPredicate: FieldConstraint | Predicate) {
   const mongoOperator = "$" +
     (constraintOrPredicate.operator === 'neq' // mongo calls neq $ne instead
@@ -105,8 +86,12 @@ export function toMongoCriteria(constraintOrPredicate: FieldConstraint | Predica
  * outside of the document) or the meta (as storing that like a field may not
  * be what we want to do).
  */
-export function resourceToDocObject(resource: Resource): object {
-  const res = {...resource.attrs};
+export function resourceToDocObject(resource: Resource, typePathFn?): object {
+  const res = {
+    ...resource.attrs,
+    ...(typePathFn ? typePathFn(resource.typePath) : {})
+  };
+
   for(const key in resource.relationships) {
     res[key] = resource.relationships[key].unwrapDataWith(it => it.id);
   }

@@ -1,9 +1,10 @@
 import Query, { QueryOptions } from "./Query";
-import Resource from '../Resource';
+import Resource, { ResourceWithId, ResourceWithTypePath } from '../Resource';
+export { Resource, ResourceWithTypePath, ResourceWithId };
 import Data from '../Generic/Data';
 
 export type UpdateQueryOptions = QueryOptions & {
-  patch: Data<Resource>
+  patch: Data<ResourceWithId & ResourceWithTypePath>
 }
 
 export default class UpdateQuery extends Query {

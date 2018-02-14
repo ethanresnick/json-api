@@ -17,6 +17,21 @@ export function objectIsEmpty(obj: object) {
 }
 
 /**
+ * Returns a reducer function that'll add the input value
+ * to the accumunlated object at the key determined by makeKey.
+ */
+export const reduceToObject = (makeKey) => (acc, it) => {
+  acc[makeKey(it)] = it;
+  return acc;
+}
+
+/**
+ * A reducer function encapsulating the common pattern of reducing
+ * into an object where the values are keyed by the input's id.
+ */
+export const reduceById = reduceToObject(it => it.id);
+
+/**
  * Takes an arbitrary path string e.g. "user.contact.phone" and locates the
  * corresponding property on an object `obj` and deletes it (ie. does
  * `delete obj.user.contact.phone`). It doesn't use eval, which makes it safer.
@@ -51,6 +66,12 @@ export function isSubsetOf(setArr: any[], potentialSubsetArr: any[]) {
   const set = new Set(setArr);
 
   return potentialSubsetArr.every((it) => set.has(it) === true);
+}
+
+export function setDifference(minuendArr: any[], subtrahendArr: any[]) {
+  const res = new Set(minuendArr);
+  subtrahendArr.forEach(it => res.delete(it));
+  return res;
 }
 
 /**

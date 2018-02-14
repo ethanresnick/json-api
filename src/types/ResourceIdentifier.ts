@@ -10,7 +10,23 @@ export type ResourceIdentifierJSON = { type: string; id: string };
  * Resource being a class and isn't really any nicer.
  */
 export default class ResourceIdentifier {
+  public typePath: string[] | undefined;
+  public adapterExtra: any;
+
   constructor(public type: string, public id: string) {}
+
+  /**
+   * Based on its meaning in the Resource class, the typesList would,
+   * conceptually, refer to a provisional, user-provided version of the
+   * typePath. However, in practice, users never provide any subtype info for
+   * resource identifier objects, so typesList doesn't really make sense here.
+   * Or, depending on how you look at it, it should always be undefined. We use
+   * the latter strategy here so we can easily make functions that are
+   * polymorphic on Resources and ResourceIdentifiers.
+   */
+  get typesList() {
+    return undefined;
+  }
 
   toJSON() {
     return { id: this.id, type: this.type };

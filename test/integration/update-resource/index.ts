@@ -45,16 +45,34 @@ describe("Updating Resources", () => {
   describe("Updating a non-existent resource", () => {
     it("should 404", () => {
       const missingOId = "507f191e810c19729de860ea";
-      return Agent.request("PATCH", `/organizations/${missingOId}`)
-        .type("application/vnd.api+json")
-        .send({"data": { ...VALID_ORG_VIRTUAL_PATCH, id: missingOId } })
-        .promise()
-        .then((response) => {
-          throw new Error("Should 404");
-        }, (err) => {
-          expect(err.status).to.equal(404);
-          return true;
-        });
+      return Promise.all([
+        Agent.request("PATCH", `/organizations/${missingOId}`)
+          .type("application/vnd.api+json")
+          .send({"data": { ...VALID_ORG_VIRTUAL_PATCH, id: missingOId } })
+          .then((response) => {
+            throw new Error("Should 404");
+          }, (err) => {
+            expect(err.status).to.equal(404);
+          }),
+
+
+        // Important to test people too, as types that don't have subtypes
+        // can go down a different path than types that do.
+        Agent.request("PATCH", `/people/${missingOId}`)
+          .type("application/vnd.api+json")
+          .send({
+            "data": {
+              "type": "people",
+              id: missingOId,
+              attributes: { name: "N/A" }
+            }
+          })
+          .then((response) => {
+            throw new Error("Should 404");
+          }, (err) => {
+            expect(err.status).to.equal(404);
+          })
+      ]);
     });
   });
 

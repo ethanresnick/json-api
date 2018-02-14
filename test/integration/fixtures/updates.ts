@@ -6,6 +6,24 @@ export const VALID_ORG_STATE_GOVT_PATCH = {
   }
 };
 
+// These patches may be submitted, but should never be accepted by the API,
+// because we'll always modify them in various ways on use to make them invalid.
+export const NEVER_APPLIED_STATE_GOVT_PATCH = {
+  "type": "organizations",
+  "id": "54419d550a5069a2129ef254",
+  "attributes": {
+    "name": "astienaseti"
+  }
+};
+
+export const NEVER_APPLIED_SCHOOL_PATCH = {
+  "type": "organizations",
+  "id": "59af14d3bbd18cd55ea08ea3",
+  "attributes": {
+    "name": "astienaseti"
+  }
+}
+
 export const VALID_ORG_VIRTUAL_PATCH = {
   "type": "organizations",
   "id": "59ac9c0ecc4c356fcda65202",

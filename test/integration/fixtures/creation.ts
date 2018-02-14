@@ -32,16 +32,24 @@ export const ORG_RESOURCE_CLIENT_ID = {
 };
 
 export const VALID_SCHOOL_RESOURCE_NO_ID = {
-  "type": "schools",
+  "type": "organizations",
+  "meta": {
+    "types": ["organizations", "schools"]
+  },
   "attributes": {
-    "name": "Test School"
+    "name": "Test School",
+    "isCollege": false
   }
 };
 
 export const VALID_SCHOOL_RESOURCE_NO_ID_EMPTY_PRINCIPAL = {
-  "type": "schools",
+  "type": "organizations",
+  "meta": {
+    "types": ["organizations", "schools"]
+  },
   "attributes": {
-    "name": "Test School"
+    "name": "Test School",
+    "isCollege": false
   },
   "relationships": {
     "principal": { "data": null }

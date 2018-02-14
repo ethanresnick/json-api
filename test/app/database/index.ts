@@ -1,6 +1,5 @@
 import mongoose = require("mongoose");
 import fixtures = require("node-mongoose-fixtures");
-
 import PersonModel from "./models/person";
 import makeSchoolModelConstructor from "./models/school";
 import OrganizationModelSchema from "./models/organization";
@@ -14,6 +13,7 @@ const echoOrgId = ObjectId("59ac9c0ecc4c356fcda65202");
 const genderPersonId = ObjectId("59af14d3bbd18cd55ea08ea1");
 const invisibleResourceId = ObjectId("59af14d3bbd18cd55ea08ea2");
 const elementaryId = ObjectId("59af14d3bbd18cd55ea08ea3");
+const justForSubtypePatchId = ObjectId("5a5934cfc810949cebeecc33");
 /*eslint-enable new-cap */
 
 const OrganizationModel = OrganizationModelSchema.model;
@@ -31,7 +31,7 @@ fixtures.save("all", {
   // as the query transform and sorting tests depend on those.
   Person: [
     { name: "John Smith", email: "jsmith@gmail.com", gender: "male", _id: smithId },
-    { name: "Jane Doe", gender: "female", _id: doeId },
+    { name: "Jane Doe", gender: "female", _id: doeId, manages: elementaryId, homeSchool: elementaryId },
     { name: "Doug Wilson", gender: "male" },
     { name: "Jordi Jones", _id: genderPersonId, gender: "other" },
     { name: "An Inivisible Sorcerer", gender: "other", _id: invisibleResourceId },
@@ -43,7 +43,8 @@ fixtures.save("all", {
   School: [
     {name: "City College", description: "Just your average local college.", liaisons: [smithId]},
     {name: "State College", description: "Just your average state college."},
-    {name: "Elementary School", description: "For the youngins.", principal: invisibleResourceId, _id: elementaryId }
+    {name: "Elementary School", description: "For the youngins.", principal: invisibleResourceId, _id: elementaryId },
+    {name: "TO PATCH BY SUBTYPES TESTS", _id: justForSubtypePatchId }
   ]
 });
 

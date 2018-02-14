@@ -1,5 +1,5 @@
 import APIError from "../../types/APIError";
-import Resource from "../../types/Resource";
+import Resource, { ResourceWithTypePath } from "../../types/Resource";
 import CreateQuery from "../../types/Query/CreateQuery";
 import AddToRelationshipQuery from '../../types/Query/AddToRelationshipQuery';
 import { FinalizedRequest, Result } from "../../types";
@@ -48,8 +48,8 @@ export default function(request: FinalizedRequest, registry: ResourceTypeRegistr
 
     return new CreateQuery({
       type,
-      records: <Data<Resource>>primary,
-      returning: (created: Data<Resource>) => {
+      records: <Data<ResourceWithTypePath>>primary,
+      returning: (created: Data<ResourceWithTypePath>) => {
         const res: Result = {
           status: 201,
           document: makeDoc({ primary: ResourceSet.of({ data: created }) })

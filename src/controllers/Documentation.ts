@@ -84,7 +84,7 @@ export default class DocumentationController {
   // as much info about the models' structure as they would like.
   getTypeInfo(type) {
     const adapter   = this.registry.dbAdapter(type);
-    const modelName = adapter.constructor.getModelName(type);
+    const modelName = adapter.getModelName(type);
     const model     = adapter.getModel(modelName);
 
     // Combine the docs in the Resource description with the standardized schema

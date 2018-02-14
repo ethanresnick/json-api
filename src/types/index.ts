@@ -32,6 +32,9 @@ export type Reduceable<T, U> = { reduce: (fn: Reducer<T, U>, init?: U) => U };
 export type ServerReq = IncomingMessage;
 export type ServerRes = ServerResponse;
 
+// Types for generalizing/defining protocols between the internal types.
+export type StrictDictMap<T> = { [it: string]: T | undefined };
+
 // Types related to queries
 export type Sort = { field: string; direction: 'ASC' | 'DESC' };
 

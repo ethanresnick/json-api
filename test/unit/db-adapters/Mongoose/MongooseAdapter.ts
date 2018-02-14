@@ -15,44 +15,6 @@ describe("Mongoose Adapter", () => {
   });
 
   describe("its static methods", () => {
-    const typesToModelNames = {
-      "teams": "Team",
-      "jobs": "Job",
-      "events": "Event",
-      "venues": "Venue",
-      "related-clubs": "RelatedClub",
-      "team-memberships": "TeamMembership"
-    };
-
-    describe("getType", () => {
-      it("should lowercase & pluralize the model name; use dashes in camelCased names", () => {
-        for(const type in typesToModelNames) { //tslint:disable-line:forin
-          expect(MongooseAdapter.getType(
-            typesToModelNames[type as keyof typeof typesToModelNames]
-          )).to.equal(type);
-        }
-      });
-
-      it("should use a custom pluralize if provided", () => {
-        const pluralize = () => "customplural";
-        expect(MongooseAdapter.getType("TestModel", pluralize)).to.equal("customplural");
-      });
-    });
-
-    describe("getModelName", () => {
-      it("should reverse getType", () => {
-        for(const type in typesToModelNames) { //tslint:disable-line:forin
-          const modelName = typesToModelNames[type as keyof typeof typesToModelNames];
-          expect(MongooseAdapter.getModelName(type)).to.equal(modelName);
-        }
-      });
-
-      it("should use a custom singularizer if provided", () => {
-        const singularize = () => "customsingular";
-        expect(MongooseAdapter.getModelName("test-models", singularize)).to.equal("TestCustomsingular");
-      });
-    });
-
     describe("getFriendlyName", () => {
       it("should detect camel-cased words, and separate and capitalize each one", () => {
         expect(MongooseAdapter.toFriendlyName("twitterId")).to.equal("Twitter Id");

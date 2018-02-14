@@ -5,7 +5,9 @@ export default function(Organization, OrganizationSchema) {
   //School extends Organization,
   //adding the following properties
   const schema = new OrganizationSchema({
-    isCollege: Boolean,
+    isCollege: {
+      type: Boolean
+    },
     principal: { ref: "Person", type: ObjectId },
   });
 

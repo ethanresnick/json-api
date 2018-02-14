@@ -135,6 +135,16 @@ export default class WithCriteriaQuery extends Query {
     return R.clone(this.query.criteria.where);
   }
 
+  /**
+   * @return {boolean} Whether this query is exactly matching an id or set of ids,
+   *   with no other filters.
+   */
+  isSimpleIdQuery(): boolean {
+    const filters = this.query.criteria.where.value;
+    return filters.length === 1 && filters[0].field === 'id'
+      && (filters[0].operator === 'eq' || filters[0].operator === 'in');
+  }
+
   // Still experimental
   protected removeFilter(filter: FieldConstraint | Predicate) {
     const res = this.clone();

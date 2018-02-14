@@ -14,6 +14,9 @@ export type ResourceJSON = {
 // Used after an id has been assigned by the server.
 export type ResourceWithId = Resource & { id: string };
 
+// Used after the typePath has been set.
+export type ResourceWithTypePath = Resource & { typePath: string[] };
+
 export default class Resource {
   private _id: string | undefined;
   private _type!: string;
@@ -21,7 +24,31 @@ export default class Resource {
   private _attrs!: {[name: string]: any};
   private _meta!: object;
 
-  constructor(type: string, id?: string, attrs = {}, relationships = {}, meta: object = {}) {
+  /**
+   * A key that can hold arbitrary extra data that the adapter has asked to be
+   * associated with this resource. Used by the MongooseAdapter for updates.
+   */
+  public adapterExtra: any;
+
+  /**
+   * The type path is an array of all the type names that apply to this
+   * resource, ordered with the smallest sub type first and parent types later.
+   * It is set after confirming the resource's types from the adapter or
+   * validating the user's `meta.types` input. By contrast, the typesList
+   * (see below) represents a provisional, unvalidated typePath as provided by
+   * the user, if any. Having this list, in this order, is important for the
+   * beforeSave/beforeRender transforms, which use it to lookup the transform
+   * functions from the right resource type descriptions.
+   */
+  public typePath: string[] | undefined;
+
+  constructor(
+    type: string,
+    id?: string,
+    attrs = Object.create(null),
+    relationships = Object.create(null),
+    meta: { types?: string[] } = Object.create(null)
+  ) {
     [this.type, this.id, this.attrs, this.relationships, this.meta] =
       [type, id, attrs, relationships, meta];
   }
@@ -45,6 +72,17 @@ export default class Resource {
     }
 
     this._type = String(type);
+  }
+
+  /**
+   * The typesList is intended to represent a list of type names provided by
+   * the end-user. It should only be defined on resources that are created from
+   * end-user data, and it may not be a valid typePath. Resources instantiated
+   * by the server should never have a typesList, but should instead have a
+   * typePath. See Resource.typePath.
+   */
+  get typesList() {
+    return (this.meta as any).types;
   }
 
   equals(otherResource: Resource) {
@@ -102,11 +140,17 @@ export default class Resource {
   }
 
   toJSON(urlTemplates: UrlTemplateFns): ResourceJSON {
+    const hasMeta = !objectIsEmpty(this.meta);
+    const showTypePath = this.typePath && this.typePath.length > 1;
+    const meta = showTypePath
+      ? { ...this.meta, types: this.typePath }
+      : this.meta;
+
     const json = <ResourceJSON>{
       id: this.id,
       type: this.type,
       attributes: this.attrs,
-      ...(!objectIsEmpty(this.meta) ? { meta: this.meta } : {}),
+      ...(showTypePath || hasMeta ? { meta } : {}),
     };
 
     // use type, id, meta and attrs for template data, even though building

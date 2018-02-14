@@ -5,6 +5,11 @@ import UpdateQuery from "../types/Query/UpdateQuery";
 import AddToRelationshipQuery from "../types/Query/AddToRelationshipQuery";
 import RemoveFromRelationshipQuery from "../types/Query/RemoveFromRelationshipQuery";
 
+export type TypeInfo = { typePath: string[], extra?: any };
+export type TypeIdMapOf<T> = {
+  [type: string]: { [id: string]: T | undefined } | undefined
+};
+
 export interface AdapterInstance<T extends new (...args: any[]) => any> {
   constructor: T;
   find(query: FindQuery): Promise<any>;
@@ -15,7 +20,9 @@ export interface AdapterInstance<T extends new (...args: any[]) => any> {
   removeFromRelationship(query: RemoveFromRelationshipQuery): Promise<any>;
   getModel(modelName): any;
   getRelationshipNames(typeName: string): string[];
+  getModelName(typeName: string): string;
   doQuery(query: any): Promise<any>;
+  getTypePaths(items: {type: string, id: string}[]): Promise<TypeIdMapOf<TypeInfo>>
 };
 
 export interface AdapterClass {

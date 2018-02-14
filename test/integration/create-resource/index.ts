@@ -3,7 +3,6 @@ import AgentPromise from "../../app/agent";
 import {
   ORG_RESOURCE_CLIENT_ID,
   VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER,
-  VALID_SCHOOL_RESOURCE_NO_ID,
   INVALID_ORG_RESOURCE_NO_DATA_IN_RELATIONSHIP
 } from "../fixtures/creation";
 
@@ -63,42 +62,8 @@ describe("Creating Resources", () => {
           expect(createdResource.attributes.description).to.equal("Added a description in beforeSave");
           expect(createdResource.attributes.modified).to.equal("2015-01-01T00:00:00.000Z");
         });
-
-        it("should allow beforeSave to return a Promise and support super()", (done) => {
-          Agent.request("POST", "/schools")
-            .type("application/vnd.api+json")
-            .send({"data": VALID_SCHOOL_RESOURCE_NO_ID})
-            .promise()
-            .then((response) => {
-              expect(response.body.data.attributes.description).to.equal("Added a description in beforeSave");
-              expect(response.body.data.attributes.modified).to.equal("2015-10-27T05:16:57.257Z");
-              done();
-            }, done).catch(done);
-        });
       });
     });
-
-    describe("Setters and virtuals", () => {
-      it("should run setters on create", () => {
-        expect(createdResource.attributes.name).to.equal(
-          VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER.attributes.name.toUpperCase()
-        );
-
-        expect(createdResource.attributes.echo).to.equal(
-          VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER.attributes.echo
-        );
-      });
-
-      it("should show virtuals in the response", () => {
-        expect(createdResource.attributes.virtualName).to.equal(
-          VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER.attributes.name.toUpperCase() + ' (virtualized)'
-        );
-
-        expect(createdResource.attributes.reversed).to.equal(
-          VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER.attributes.echo.split("").reverse().join("")
-        );
-      })
-    })
 
     describe("The Created Resource", () => {
       it("should be returned in the body", () => {
