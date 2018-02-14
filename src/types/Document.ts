@@ -1,9 +1,11 @@
-import Resource, { ResourceJSON } from "./Resource";
 import APIError, { APIErrorJSON } from './APIError';
 import { isPlainObject, objectIsEmpty } from "../util/misc";
 import { PrimaryDataJSON, UrlTemplateFnsByType, UrlTemplateFns, Links } from './index';
-import Relationship from './Relationship';
+import Data from "./Generic/Data";
+import Resource, { ResourceJSON } from "./Resource";
+import ResourceIdentifier from "./ResourceIdentifier";
 import ResourceSet from './ResourceSet';
+import Relationship from './Relationship';
 import ResourceIdentifierSet from "../types/ResourceIdentifierSet";
 
 // TODO: Make the constructor API sane in the presence of types;
@@ -21,6 +23,10 @@ export type DocumentJSON = ({
   meta?: object,
   links?: Links
 };
+
+export type DocTransformFn<T> = (resourceOrIdentifier: T) => Promise<T | undefined>;
+export type DocResourceTransformFn = DocTransformFn<Resource>;
+export type DocFullTransformFn = DocTransformFn<Resource | ResourceIdentifier>;
 
 export type DocumentData = {
   meta?: object;
@@ -110,5 +116,86 @@ export default class Document {
   clone() {
     const Ctor = (this.constructor || Document) as typeof Document;
     return new Ctor(this);
+  }
+
+  /**
+   * The transform function walks over the items in the document and calls the
+   * user-provided function for each one, building a new document with the results.
+   *
+   * @param {DocResourceTransformFn | DocFullTransformFn} fn The function to run
+   *   over all items in the document. This function can return undefined to
+   *   indicate that the argument provided to it should be removed altogether
+   *   from the resulting document. By default, the user-provided function will
+   *   be run on all resources and resource identifier objects in the document.
+   *   When passed a resource, it must return a resource (or undefined) and,
+   *   when passed a resource identifier, it must return a resource identifier
+   *   (or undefined). When the document has resource identifier objects within
+   *   a resource object, i.e., in relationships, transform traverses down to
+   *   the resource identifier objects first and runs the function on those,
+   *   storing the result in the outer resource, which is then ultimately run
+   *   through the function itself.
+   *
+   * @param {boolean} resourcesOnly If this argument is true, resource identifier
+   *   objects will be skipped when walking the document, and the user-provided
+   *   function will only be run on full resources. Note: setting this false
+   *   could incur a pretty sizable performance penalty (and, of course, requires
+   *   that your transform function be able to work on ResoruceIdentifiers).
+   */
+  async transform(
+    fn: DocResourceTransformFn | DocFullTransformFn,
+    resourcesOnly: boolean = true
+  ): Promise<Document> {
+    const res = this.clone();
+
+    // Turn the user's function into a function that we can use with flatMap
+    // and that's aware of our "if undefined, then remove" pattern.
+    const flatMapper = async (it: Resource | ResourceIdentifier) => {
+      const result = await (fn as any)(it);
+      return result === undefined ? Data.empty : Data.pure(result);
+    };
+
+    // Create a function used to flatMap resources that knows to walk down
+    // relationships, iff we're supposed to be doing that.
+    const resourceFlatMapper = resourcesOnly
+      ? flatMapper
+      : async function (it: Resource): Promise<Data<Resource>> {
+          const relationshipNames = Object.keys(it.relationships);
+          const newRelationshipPromises = relationshipNames.map(k =>
+            it.relationships[k].flatMapAsync(flatMapper)
+          )
+
+          const newRelationships = await Promise.all(newRelationshipPromises);
+          newRelationships.forEach((newRelationship, i) => {
+            it.relationships[relationshipNames[i]] = newRelationship;
+          });
+
+          const res = await flatMapper(it);
+          return res;
+        };
+
+    // Makes sure we kick off both the primary and included promises
+    // before awaiting anything, for speed.
+    const newPrimaryPromiseOrUndefined = (() => {
+      if(res.primary instanceof ResourceSet) {
+        return res.primary.flatMapAsync(resourceFlatMapper);
+      }
+
+      // We don't have `.primary`, or we have linkage there,
+      // and the user's asked not to tranform that, so we leave primary as-is.
+      if(!res.primary || resourcesOnly) {
+        return res.primary;
+      }
+
+      // We have, and are transforming, linkage.
+      return res.primary.flatMapAsync(flatMapper);
+    })();
+
+    if(res.included) {
+      res.included =
+        (await Data.of(res.included).flatMapAsync(resourceFlatMapper)).values;
+    }
+
+    res.primary = await newPrimaryPromiseOrUndefined;
+    return res;
   }
 }
