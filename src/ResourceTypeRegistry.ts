@@ -240,14 +240,14 @@ export default class ResourceTypeRegistry {
    * @param {string?} throughType A type name that the path must be or go through.
    */
   asTypePath(typesList: string[], throughType?: string): false | string[] {
-    const pathToParentType = throughType ? this.typePathTo(throughType) : [];
+    const pathToThroughType = throughType ? this.typePathTo(throughType) : [];
     const remainingTypes = typesList.slice();
 
     if(!typesList.length) {
       return false;
     }
 
-    for(const type of pathToParentType) {
+    for(const type of pathToThroughType) {
       const indexOfType = remainingTypes.indexOf(type);
 
       // If the typelist doesn't have an item in the path to the parent type,
@@ -261,7 +261,7 @@ export default class ResourceTypeRegistry {
 
     // After we've checked that all the parent types are included in typesList,
     // any remaining types must be child types of parentType.
-    let finalPath = [...pathToParentType];
+    let finalPath = [...pathToThroughType];
     let currentTypeChildren = throughType
       ? this.childTypeNames(throughType)
       : this.rootTypeNames();

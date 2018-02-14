@@ -323,7 +323,7 @@ export default class APIController {
     // copying over a couple properties. In the future, though, one HTTP request
     // might generate multiple queries, and then multiple jsonAPIResponses,
     // which would be merged into a single HTTP Response.
-    logger.info('Creating HTTPResponse');
+    logger.info('Creating HTTPResponse', jsonAPIResult);
     return resultToHTTPResponse(jsonAPIResult, contentType);
   }
 
