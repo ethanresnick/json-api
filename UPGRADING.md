@@ -31,6 +31,8 @@ If you've written a custom adapter....
 - Using multiple adapters simultaneously (i.e., different ones for different resource types) is no longer possible, for the moment. The fix isn't too hard, though, so open an issue if having this feature is important.
 
 ### MongooseAdapter
+- You must now use a mongoose version greater than 4.8.0. Versions between 4.8.x and 5 are known to work. Versions 5+ haven't been tested yet, but may work.
+
 - Removed `MongooseAdapter`'s static `getChildTypes` method and `getTypesAllowedInCollection` instance method. The ResourceTypeRegistry can  figure out the parent and child types based on the type descriptions provided to it, so there's no point in making adapters implement these methods. See the new methods on ResourceTypeRegistry if you need/were using this functionality.
 
 - Removed various static `MongooseAdapter` methods (e.g. `docToResource`, `getType`, `getReferencedType`) from the class; they're now utility methods instead in a separate file. None of these methods were intended to be part of the class's public API (though that wasn't clearly defined), so hopefully this breakage isn't too bad. Open an issue if you were depending on these for some reason.
