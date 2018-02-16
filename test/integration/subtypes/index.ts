@@ -44,19 +44,20 @@ describe("Subtypes", () => {
       });
 
       it("should apply ?fields restrictions based on the rendered `type`", () => {
+        const hasNameOrDesc = (resource) => {
+          const { attributes } = resource;
+          return ('name' in attributes) || ('description' in attributes);
+        };
+
         return Promise.all([
           Agent.request("GET", '/schools?fields[schools]=isCollege')
             .then((resp) => {
-              expect(resp.body.data.every(resource => {
-                return 'name' in resource && 'description' in resource
-              }));
+              expect(resp.body.data.every(hasNameOrDesc)).to.be.true;
             }),
 
           Agent.request("GET", '/schools?fields[organizations]=isCollege')
             .then((resp) => {
-              expect(resp.body.data.every(resource => {
-                return !('name' in resource) && !('description' in resource);
-              }));
+              expect(resp.body.data.some(hasNameOrDesc)).to.be.false;
             })
         ]);
       });
