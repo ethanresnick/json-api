@@ -139,7 +139,7 @@ export default database.then(function(dbModule) {
 
   app.get('/with-error', Front.customAPIRequest({
     queryFactory: ({ request }) => {
-      if(request.queryParams['customError']) {
+      if(request.queryParams.customError) {
         throw new APIError(400, undefined, "Custom");
       }
 

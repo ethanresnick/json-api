@@ -3,9 +3,11 @@ import { Response } from "superagent";
 import appPromise from "../src/index";
 import { Application } from "express";
 
+/* tslint:disable no-unbound-method */
 const JSONAPIContentType = "application/vnd.api+json";
 superagent.serialize[JSONAPIContentType] = JSON.stringify;
 superagent.parse[JSONAPIContentType] = superagent.parse["application/json"];
+/* tslint:enable no-unbound-method */
 
 /**
  * Export a Promise for a module that can make requests to the app.
