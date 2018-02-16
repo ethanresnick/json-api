@@ -63,7 +63,7 @@ export default class Data<T> {
    * @param {Data<T>[]} newDatas The result of running the bind function
    *   on each element in our internal list to get a new Data<T>.
    */
-  private flatMapHelper<U>(newDatas: Data<U>[]) {
+  private flatMapHelper<U>(newDatas: Data<U>[]): Data<U> {
     const newValues = newDatas.map(it => it.value);
     const Constructor = this.constructor as typeof Data;
 

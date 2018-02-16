@@ -1,4 +1,4 @@
-# 3.0.0-beta.10 and 3.0.0-beta.11
+# 3.0.0-beta.11
 ## New Features
 - Improved subtype handling (see #149)
 
