@@ -70,11 +70,11 @@ export default class Document {
     // This function renames the "relationship" template on the resource type
     // description to "self" for the purposes of passing templates to Relationship.
     const templatesForRelationship = (templatesForOwnerType: UrlTemplateFns) => {
-      const { related = undefined, relationship = undefined } = templatesForOwnerType;
+      const { related, relationship } = templatesForOwnerType;
       return { related, self: relationship };
     }
 
-    const { data = undefined, links = {} } = (() => {
+    const { data, links = {} } = (() => {
       if(this.primary instanceof ResourceSet) {
         return this.primary.toJSON(this.urlTemplates);
       }
@@ -181,8 +181,7 @@ export default class Document {
             it.relationships[relationshipNames[i]] = newRelationship;
           });
 
-          const res = await flatMapper(it);
-          return res;
+          return flatMapper(it);
         };
 
     // Makes sure we kick off both the primary and included promises

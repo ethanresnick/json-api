@@ -33,9 +33,9 @@ export default class KoaStrategy extends Base {
   // PATCH /:type/:id/links/:relationship, POST /:type/:id/links/:relationship,
   // and DELETE /:type/:id/links/:relationship.
   apiRequest() {
-    const strategy = this;
+    const strategy = this; // tslint:disable-line no-this-assignment
     return function *(this: any, next: any){
-      const ctx = this;
+      const ctx = this; // tslint:disable-line no-this-assignment
       try {
         const reqObj = yield strategy.buildRequestObject(ctx.req, ctx.protocol, ctx.host, ctx.params);
         const resObj = yield strategy.api.handle(reqObj, ctx.request, ctx.response);
@@ -52,9 +52,9 @@ export default class KoaStrategy extends Base {
 
   // For requests for the documentation.
   docsRequest() {
-    const strategy = this;
+    const strategy = this; // tslint:disable-line no-this-assignment
     return function *(this: any, next: any){
-      const ctx = this;
+      const ctx = this; // tslint:disable-line no-this-assignment
       try {
         const reqObj = yield strategy.buildRequestObject(ctx.req, ctx.protocol, ctx.host, ctx.params);
         const resObj = yield strategy.docs.handle(reqObj, ctx.request, ctx.response);

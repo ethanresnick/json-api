@@ -6,10 +6,13 @@ import API, { RequestOpts, QueryBuildingContext } from "../controllers/API";
 import Base, { HTTPStrategyOptions, Controller } from "./Base";
 import Query from "../types/Query/Query";
 import { HTTPResponse, Request as JSONAPIRequest, Result } from "../types";
-import { Request, Response, NextFunction } from "express";
+import {
+  Request, Response, NextFunction,
+  RequestHandler, ErrorRequestHandler
+} from "express";
 const deprecate = depd("json-api");
 
-// Note: however, having one object type with both possible callback signatures
+// Note: having one object type with both possible callback signatures
 // in it doesn't work, but splitting these function signatures into separate
 // types, and then unioning those types, does. Seems like they should be the
 // same, but whatever works. Possibly, the difference comes from the limitation
@@ -18,10 +21,12 @@ const deprecate = depd("json-api");
 // https://github.com/Microsoft/TypeScript/pull/17819). However, it's the
 // approach that the express typings seem to use, so I imagine it's safe enough.
 export type DeprecatedQueryTransformNoReq = {
+  // tslint:disable-next-line callable-types
   (first: Query): Query;
 };
 
 export type DeprecatedQueryTransformWithReq = {
+  // tslint:disable-next-line callable-types
   (first: Request, second: Query): Query
 }
 
@@ -60,6 +65,8 @@ export default class ExpressStrategy extends Base {
   }
 
   protected buildRequestObject(req: Request): Promise<JSONAPIRequest> {
+    // req.host is broken in express 4; doesn't include the port
+    // tslint:disable-next-line deprecation
     return super.buildRequestObject(req, req.protocol, req.host, req.params, req.query)
   }
 
@@ -71,7 +78,8 @@ export default class ExpressStrategy extends Base {
     }
 
     if(response.status === 406 && !this.config.handleContentNegotiation) {
-      return next();
+      next();
+      return;
     }
 
     res.status(response.status || 200);
@@ -113,7 +121,7 @@ export default class ExpressStrategy extends Base {
    * See: https://expressjs.com/en/guide/migrating-5.html#req.host
    * The workaround is to use the host configuration option.
    */
-  docsRequest = R.partial(this.doRequest, [this.docs.handle]);
+  docsRequest: RequestHandler = R.partial(this.doRequest, [this.docs.handle]);
 
   /**
    * A middleware to handle supported API requests.
@@ -129,7 +137,7 @@ export default class ExpressStrategy extends Base {
    * See: https://expressjs.com/en/guide/migrating-5.html#req.host
    * The workaround is to use the host configuration option.
    */
-  apiRequest = R.partial(this.doRequest, [this.api.handle]);
+  apiRequest: RequestHandler = R.partial(this.doRequest, [this.api.handle]);
 
   /**
    * Takes arguments for how to build the query, and returns a middleware
@@ -167,10 +175,10 @@ export default class ExpressStrategy extends Base {
    * @param {Object} req Express's request object
    * @param {Object} res Express's response object
    */
-  sendError = async (errors, req, res, next) => {
+  sendError: ErrorRequestHandler = async (errors, req, res, next) => {
     if(!next) {
       deprecate("sendError with 3 arguments: must now provide next function.");
-      next = (err: any) => {}
+      next = (err: any) => {} // tslint:disable-line no-empty
     }
 
     try {
@@ -187,7 +195,12 @@ export default class ExpressStrategy extends Base {
     }
   }
 
-  sendResult = async (result: Result, req, res, next) => {
+  sendResult = async (
+    result: Result,
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       const responseObj = await API.responseFromResult(result, req.headers.accept, true);
       this.sendResponse(responseObj, res, next)
@@ -202,10 +215,7 @@ export default class ExpressStrategy extends Base {
     }
   }
 
-  /**
-   * @TODO Uses this ExpressStrategy to create an express app with
-   * preconfigured routes that can be mounted as a subapp.
-  toApp(typesToExcludedMethods) {
-  }
-  */
+  // @TODO Uses this ExpressStrategy to create an express app with
+  // preconfigured routes that can be mounted as a subapp.
+  // toApp(typesToExcludedMethods) { }
 }

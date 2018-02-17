@@ -167,13 +167,13 @@ export default class Resource {
     if(!objectIsEmpty(this.relationships)) {
       json.relationships = {};
 
-      for(const path in this.relationships) {
-        const { related = undefined, relationship = undefined } = urlTemplates;
+      Object.keys(this.relationships).forEach(path => {
+        const { related, relationship } = urlTemplates;
         const finalTemplates = { related, self: relationship };
 
-        json.relationships[path] =
+        (json.relationships as any)[path] =
           this.relationships[path].toJSON(finalTemplates);
-      }
+      });
     }
 
     return json;
@@ -206,7 +206,7 @@ function validateFieldGroup(group: object, otherFields: object, isAttributes = f
     throw new Error("`type` and `id` cannot be used as attribute or relationship names.");
   }
 
-  for(const field in group) {
+  Object.keys(group).forEach(field => {
     if(isAttributes) {
       validateComplexAttribute((group as any)[field]);
     }
@@ -214,7 +214,7 @@ function validateFieldGroup(group: object, otherFields: object, isAttributes = f
     if(otherFields !== undefined && typeof (otherFields as any)[field] !== "undefined") {
       throw new Error("A resource can't have an attribute and a relationship with the same name.");
     }
-  }
+  });
 }
 
 function validateComplexAttribute(attrOrAttrPart: any) {
@@ -222,9 +222,10 @@ function validateComplexAttribute(attrOrAttrPart: any) {
     if(typeof attrOrAttrPart.relationships !== "undefined" || typeof attrOrAttrPart.links !== "undefined") {
       throw new Error('Complex attributes may not have "relationships" or "links" keys.');
     }
-    for(const key in attrOrAttrPart) {
+
+    Object.keys(attrOrAttrPart).forEach(key => {
       validateComplexAttribute(attrOrAttrPart[key]);
-    }
+    });
   }
   else if(Array.isArray(attrOrAttrPart)) {
     attrOrAttrPart.forEach(validateComplexAttribute);

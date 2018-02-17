@@ -14,6 +14,7 @@ export default function(data: ResourceSet, registry: ResourceTypeRegistry) {
   // adapter to decide how to handle that, depending on the model. But,
   // if there are paths that must be relationship names listed under the
   // attributes, that's a case that we can identify here and throw for.
+  // tslint:disable-next-line forin
   for(const type in resourcesByChildMostType) {
     const adapter = registry.dbAdapter(type);
     const resources = resourcesByChildMostType[type];

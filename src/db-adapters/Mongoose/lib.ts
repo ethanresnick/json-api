@@ -13,7 +13,7 @@ export function errorHandler(err): never {
   const errors: APIError[] = [];
   //Convert validation errors collection to something reasonable
   if(err.errors) {
-    for(const errKey in err.errors) {
+    Object.keys(err.errors).forEach(errKey => {
       const thisError = err.errors[errKey];
       errors.push(
         new APIError(
@@ -25,7 +25,7 @@ export function errorHandler(err): never {
           (thisError.path) ? [thisError.path] : undefined
         )
       );
-    }
+    });
   }
 
   // Send the raw error.
@@ -92,9 +92,9 @@ export function resourceToDocObject(resource: Resource, typePathFn?): object {
     ...(typePathFn ? typePathFn(resource.typePath) : {})
   };
 
-  for(const key in resource.relationships) {
+  Object.keys(resource.relationships).forEach(key => {
     res[key] = resource.relationships[key].unwrapDataWith(it => it.id);
-  }
+  });
 
   return res;
 }

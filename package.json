@@ -76,7 +76,7 @@
     "@types/mongodb": "^2.2.20",
     "@types/mongoose": "^4.7.32",
     "@types/superagent": "^3.5.6",
-    "chai": "^4.0.0",
+    "chai": "^4.1.2",
     "chai-subset": "^1.6.0",
     "coveralls": "^2.13.3",
     "cpr": "^2.2.0",
@@ -93,7 +93,7 @@
     "superagent": "^3.8.2",
     "ts-node": "^3.3.0",
     "tslint": "^5.9.1",
-    "typescript": "^2.8.0-dev.20180215"
+    "typescript": "^2.8.0-insiders.20180127"
   },
   "peerDependencies": {
     "mongoose": "^4.7.0",
@@ -102,7 +102,7 @@
   "scripts": {
     "clean": "rimraf build",
     "lint": "npm run lint:src & npm run lint:test",
-    "lint:src": "tslint --project tsconfig.json --format verbose --exclude 'test/**/*' --config node_modules/@ethanresnick/tslint-config/tslint.json",
+    "lint:src": "tslint --project tsconfig.json --format verbose --exclude 'test/**/*' --config ./src/tslint.json",
     "lint:test": "tslint --project tsconfig.json --format verbose --exclude 'src/**/*' --config ./test/tslint.json",
     "test": "npm run test:install-fixtures && npm run test:fixtures-installed",
     "test:install-fixtures": "NODE_ENV=testing ts-node test/app/database/install-fixtures.ts",

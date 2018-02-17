@@ -95,9 +95,9 @@ export default class WithCriteriaQuery extends Query {
    * the outer-most and predicate in the where so it can't be overriden.
    * See https://thecodebarbarian.wordpress.com/2014/09/04/defending-against-query-selector-injection-attacks/
    *
-   * @param {string | string[] | undefined = undefined} idOrIds [description]
+   * @param {string | string[] | undefined} idOrIds [description]
    */
-  matchingIdOrIds(idOrIds: string | string[] | undefined = undefined) {
+  matchingIdOrIds(idOrIds: string | string[] | undefined) {
     let res;
 
     if(Array.isArray(idOrIds)) {

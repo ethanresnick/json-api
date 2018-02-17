@@ -86,7 +86,7 @@ export default function docToResource(
 
     // get value at the path w/ the reference, in both the json'd + full docs.
     const pathParts = path.split(".");
-    let jsonValAtPath = pathParts.reduce(getProp, attrs);
+    const jsonValAtPath = pathParts.reduce(getProp, attrs);
     const referencedModelName = getReferencedModelName(model, path);
 
     if(!referencedModelName || !models[referencedModelName]) {

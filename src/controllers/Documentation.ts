@@ -18,7 +18,7 @@ export default class DocumentationController {
   private dasherizeJSONKeys: boolean;
   private templateData: object;
 
-  constructor(registry, apiInfo, templatePath = undefined, dasherizeJSONKeys = true) {
+  constructor(registry, apiInfo, templatePath?, dasherizeJSONKeys = true) {
     this.registry = registry;
 
     const defaultTempPath = "../../templates/documentation.pug";
@@ -66,11 +66,11 @@ export default class DocumentationController {
       const descriptionResources: Resource[] = [];
 
       // Add a description resource for each resource type to the collection.
-      for(const type in templateData.resourcesMap) {
+      Object.keys(templateData.resourcesMap).forEach(type => {
         descriptionResources.push(
           new Resource("jsonapi-descriptions", type, templateData.resourcesMap[type])
         );
-      }
+      });
 
       response.body = new Document({
         primary: ResourceSet.of({ data: descriptionResources })

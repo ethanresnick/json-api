@@ -9,7 +9,10 @@ import pluralize = require("pluralize");
  * @param {string} typeName The json-api type string.
  * @param {(string) => string} singularizer A function that singularizes its argument.
  */
-export function getModelName(typeName: string, singularizer = pluralize.singular) {
+export function getModelName(
+  typeName: string,
+  singularizer: typeof pluralize.singular = pluralize.singular.bind(pluralize)
+) {
   const words = typeName.split("-");
   words[words.length - 1] = singularizer(words[words.length - 1]);
   return words.map((it) => it.charAt(0).toUpperCase() + it.slice(1)).join("");
@@ -22,6 +25,9 @@ export function getModelName(typeName: string, singularizer = pluralize.singular
  * @param {string} modelName The name of a model, in Mongoose's PascalCase format.
  * @param {(string) => string} pluralizer A function that pluralizes its argument.
  */
-export function getTypeName(modelName, pluralizer = pluralize.plural) {
+export function getTypeName(
+  modelName: string,
+  pluralizer: typeof pluralize.plural = pluralize.plural.bind(pluralize)
+) {
   return pluralizer(modelName.replace(/([A-Z])/g, "\-$1").slice(1).toLowerCase());
 }

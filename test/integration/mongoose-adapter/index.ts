@@ -28,8 +28,7 @@ describe("MongooseAdapter", () => {
     });
   });
 
-  describe("Deletion", () => {
-  });
+  describe.skip("Deletion", () => { /* TODO */ });
 
   describe("Creation", () => {
     let createdResource;

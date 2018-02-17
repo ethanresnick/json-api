@@ -66,7 +66,7 @@ function processFilterCriteria(
   validBinaryOps: string[] = [],
   listNode
 ): Predicate | FieldConstraint {
-  const isList = Array.isArray;
+  const isList = Array.isArray.bind(Array);
   type SymbolNode = { type: "symbol"; value: string };
   const isSymbol = (it): it is SymbolNode => it && it.type === 'symbol';
   const isValidUnaryOperator = (it) => isSymbol(it) && validUnaryOps.includes(it.value);
@@ -170,7 +170,7 @@ function parseExpression(tokens) {
     remainingTokens.shift();
 
     while(remainingTokens[0] !== closingDelim) {
-      let entry = parseExpression(remainingTokens);
+      const entry = parseExpression(remainingTokens);
 
       listNode.push(entry.expr);
       remainingTokens = entry.rest;
@@ -207,10 +207,12 @@ function atomFromToken(token) {
 
   // the regex below matches floats and integers; assigns to match,
   // which will be falsey if the pattern doesn't match.
+  // tslint:disable-next-line no-conditional-assignment
   else if (match = /^\d+(\.\d+)?$/.exec(token))
     return Number(match[0]);
 
   // symbols, like field names and operators
+  // tslint:disable-next-line no-conditional-assignment
   else if (match = /^[^()',]+$/.exec(token))
     return { type: "symbol", value: token };
 
@@ -227,12 +229,13 @@ function atomFromToken(token) {
  * parsing later.
  */
 function tokenize(program) {
-  var delimiters = /^[(),]/,
-      tokens: string[] = [],
-      currToken = "",
+  const delimiters = /^[(),]/,
+    tokens: string[] = [],
+    lastProgramIndex = program.length - 1;
+
+  let currToken = "",
       currPos = 0,
-      char = program[0],
-      lastProgramIndex = program.length - 1;
+      char = program[0];
 
   const finalizeToken = () => {
     if(currToken.length)

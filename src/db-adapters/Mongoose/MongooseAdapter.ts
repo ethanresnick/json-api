@@ -1,4 +1,6 @@
 import R = require('ramda');
+// Import mongo just for one of its type declarations (not imported at runtime).
+// tslint:disable-next-line no-implicit-dependencies
 import mongodb = require("mongodb");
 import mongoose = require("mongoose");
 import pluralize = require("pluralize");
@@ -21,7 +23,7 @@ import APIError from "../../types/APIError";
 import FieldDocumentation from "../../types/Documentation/Field";
 import FieldTypeDocumentation from "../../types/Documentation/FieldType";
 import RelationshipTypeDocumentation from "../../types/Documentation/RelationshipType";
-import { Adapter } from '../AdapterInterface';
+import { Adapter, TypeInfo, TypeIdMapOf } from '../AdapterInterface';
 import CreateQuery from "../../types/Query/CreateQuery";
 import FindQuery from "../../types/Query/FindQuery";
 import DeleteQuery from "../../types/Query/DeleteQuery";
@@ -48,8 +50,10 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
   ) {
     this.typeNamesToModelNames = {};
     this.modelNamesToTypeNames = {};
+    const pluralizer = inflector.plural.bind(inflector);
+
     for(const modelName of Object.keys(models)) {
-      const typeName = getTypeName(modelName, inflector.plural);
+      const typeName = getTypeName(modelName, pluralizer);
       this.typeNamesToModelNames[typeName] = modelName;
       this.modelNamesToTypeNames[modelName] = typeName;
     }
@@ -178,23 +182,23 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
         includedResources =
           objectValues(
             Data.fromJSON(docOrDocs) // fromJSON to handle docOrDocs === null.
-              .flatMap((doc) => {
+              .flatMap<Resource>((doc) => {
                 return Data.of(populatedPaths).flatMap((path) => {
                   // Handle case that doc[path], which should hold id(s) of the
                   // referenced documents, is undefined b/c the relationship isn't set.
                   return typeof doc[path] === 'undefined'
                     ? Data.empty as Data<Resource>
-                    : Data.fromJSON(doc[path]).map(doc => {
-                        return this.docToResource(doc, fields);
+                    : Data.fromJSON(doc[path]).map(docAtPath => {
+                        return this.docToResource(docAtPath, fields);
                       })
                 })
               })
               .values
               // Remove duplicates
-              .reduce((acc: object, resource) => {
+              .reduce((acc, resource) => {
                 acc[`${resource.type}/${resource.id}`] = resource;
                 return acc;
-              }, {})
+              }, {} as { [id: string]: Resource })
           );
 
         return docOrDocs;
@@ -288,10 +292,10 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     const parentModel = this.getModel(this.typeNamesToModelNames[parentType]);
 
     const prefetchedDocs = patch.map(it => it.adapterExtra).values.filter(it => !!it);
-    const getOIdAsString = R.pipe(R.prop('_id'), String);
+    const getOIdAsString = R.pipe(R.prop<mongodb.ObjectID>('_id'), String);
 
     const docIdsToFetch = [...setDifference(
-      patch.map(R.prop('id')).values,
+      patch.map(R.prop<string>('id')).values,
       prefetchedDocs.map(getOIdAsString),
     )];
 
@@ -318,9 +322,9 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       strict: true
     };
 
-    const queries = await patch.mapAsync(async (resourceUpdate) => {
+    const singleDocUpdateQueries = await patch.mapAsync(async (resourceUpdate) => {
       const modelName = this.typeNamesToModelNames[resourceUpdate.typePath[0]];
-      const Model = this.getModel(modelName);
+      const Model = this.getModel(modelName); // tslint:disable-line no-shadowed-variable
       const versionKey = getVersionKey(Model);
 
       if(!Model) {
@@ -388,8 +392,8 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
 
     // Don't run ANY of the queries unless all could be built successfully
     // (I.e., every changeset was valid).
-    return await queries.flatMapAsync(async ([query]) => {
-      const doc = await (query.exec().catch(util.errorHandler) as Promise<mongoose.Document>);
+    return singleDocUpdateQueries.flatMapAsync(async ([docUpdateQuery]) => {
+      const doc = await (docUpdateQuery.exec().catch(util.errorHandler) as Promise<mongoose.Document>);
 
       if(!doc) {
         throw new APIError({
@@ -510,7 +514,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     const options = {runValidators: true, context: 'query'};
     const update = {
       $addToSet: {
-        [relationshipName]: { $each: newLinkage.map(it => it.id).values }
+        [relationshipName]: { $each: newLinkage.map(it => it.id) }
       },
       $inc: { [getVersionKey(model)]: 1 }
     };
@@ -548,7 +552,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
 
     const update = {
       $pullAll: {
-        [relationshipName]: linkageToRemove.map(it => it.id).values
+        [relationshipName]: linkageToRemove.map(it => it.id)
       },
       $inc: { [getVersionKey(model)]: 1 }
     };
@@ -589,7 +593,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
         res[type] = theseItems.reduce((acc, item) => {
           acc[item.id] = { typePath: this.getTypePath(BaseModel) };
           return acc;
-        }, {});
+        }, {} as { [id: string]: TypeInfo });
       }
 
       else {
@@ -603,7 +607,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
               extra: doc
             };
             return acc;
-          }, {});
+          }, {} as { [id: string]: TypeInfo });
         })
       }
     }
@@ -612,7 +616,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     return types.reduce((acc, type, i) => {
       acc[type] = values[i];
       return acc;
-    }, {});
+    }, {} as TypeIdMapOf<TypeInfo>);
   }
 
   getModel(modelName) {
@@ -692,11 +696,13 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     return isPlural ? Data.of<Resource>(resources) : Data.pure<Resource>(resources[0]);
   }
 
-  static getStandardizedSchema(model, pluralizer = pluralize.plural) {
-    const schemaOptions = model.schema.options;
-    const versionKey = schemaOptions.versionKey;
-    const discriminatorKey = schemaOptions.discriminatorKey;
-    const virtuals = model.schema.virtuals;
+  static getStandardizedSchema(
+    model: mongoose.Model<any>,
+    pluralizer: typeof pluralize.plural = pluralize.plural.bind(pluralize)
+  ) {
+    const versionKey = getVersionKey(model);
+    const discriminatorKey = getDiscriminatorKey(model);
+    const virtuals = (model.schema as any).virtuals;
     const schemaFields: FieldDocumentation[] = [];
 
     const getFieldType = (path, schemaType) => {
@@ -723,12 +729,16 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
         return;
       }
 
-      const fieldType = getFieldType(name, type);
+      // cast type to any for typescript because we're using
+      // an uncomfortable number of undocumented properties below.
+      const schemaType = type as any;
+      const fieldType = getFieldType(name, schemaType);
+
       name = (name === "_id") ? "id" : name;
       const likelyAutoGenerated = name === "id" || (
         fieldType.baseType === "Date" &&
         /created|updated|modified/.test(name) &&
-        typeof type.options.default === "function"
+        typeof schemaType.options.default === "function"
       );
 
       let defaultVal;
@@ -736,22 +746,22 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
         defaultVal = "__AUTO__";
       }
 
-      else if(type.options.default && typeof type.options.default !== "function") {
-        defaultVal = type.options.default;
+      else if(schemaType.options.default && typeof schemaType.options.default !== "function") {
+        defaultVal = schemaType.options.default;
       }
 
       // find the "base type's" options (used below), in case
       // we have an array of values of the same type at this path.
-      const baseTypeOptions = Array.isArray(type.options.type) ? type.options.type[0] : type.options;
+      const baseTypeOptions = Array.isArray(schemaType.options.type) ? schemaType.options.type[0] : schemaType.options;
 
       // Add validation info
       const validationRules = {
-        required: !!type.options.required,
-        oneOf: baseTypeOptions.enum ? type.enumValues || (type.caster && type.caster.enumValues) : undefined,
-        max: type.options.max || undefined
+        required: !!schemaType.options.required,
+        oneOf: baseTypeOptions.enum ? schemaType.enumValues || (schemaType.caster && schemaType.caster.enumValues) : undefined,
+        max: schemaType.options.max || undefined
       };
 
-      type.validators.forEach((validatorObj) => {
+      schemaType.validators.forEach((validatorObj) => {
         Object.assign(validationRules, validatorObj.validator.JSONAPIDocumentation);
       });
 
@@ -799,6 +809,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     const words: string[] = [];
     const wordsRe = /[A-Z]([A-Z]*(?![^A-Z])|[^A-Z]*)/g;
 
+    // tslint:disable-next-line no-conditional-assignment
     while((matches = wordsRe.exec(pascalCasedString)) !== null) {
       words.push(matches[0]);
     }
@@ -846,6 +857,6 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     throw new Error(`Couldn't find corresponding model for type: ${typeName}.`);
   }
 
-  static unaryFilterOperators = ["and", "or"];
-  static binaryFilterOperators = ['eq', 'neq', 'ne', 'in', 'nin', 'lt', 'gt', 'lte', 'gte'];
+  static unaryFilterOperators: string[] = ["and", "or"];
+  static binaryFilterOperators: string[] = ['eq', 'neq', 'ne', 'in', 'nin', 'lt', 'gt', 'lte', 'gte'];
 }

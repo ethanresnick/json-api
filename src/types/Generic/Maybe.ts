@@ -8,6 +8,7 @@
  */
 export type Maybe<U> = Just<U> | Nothing<U>;
 
+// tslint:disable max-classes-per-file
 export class Nothing<T> {
   getOrDefault(defaultVal?: T): T | undefined {
     return defaultVal;
@@ -50,7 +51,7 @@ export class Just<T> {
   }
 }
 
-const NOTHING = new Nothing();
+const NOTHING = new Nothing<any>();
 export default function Maybe<T>(x: T | undefined): Maybe<T> {
   // Sometimes, null is a valid value, so we only make undefined into Nothing.
   return x !== undefined ? new Just(x) : (NOTHING as Nothing<T>);

@@ -200,7 +200,7 @@ export default class Data<T> {
    * is appended to in flatMap not reset.
    * @type {[type]}
    */
-  static empty =
+  static empty: Data<any> =
     new Data<any>({ data: [], isSingular: true });
 
   /**

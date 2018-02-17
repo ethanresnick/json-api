@@ -62,31 +62,36 @@ describe("Mongoose Adapter", () => {
         ];
 
         const results = validInputs.map(it =>
+          // tslint:disable-next-line: no-void-expression
           MongooseAdapter.assertIdsValid((it as any as AndPredicate), true));
 
         expect(results.every(it => it === undefined)).to.be.true;
       });
 
       it("should throw on an invalid id, or if any id in an array is invalid", () => {
-        const fn = () => MongooseAdapter.assertIdsValid({
-          operator: <"and">"and",
-          value: [
-            { field: "a", value: <any>"b", operator: "eq"},
-            { field: "id", value: "1", operator: "eq"}
-          ],
-          field: undefined
-        }, true);
+        const fn = () => {
+          MongooseAdapter.assertIdsValid({
+            operator: <"and">"and",
+            value: [
+              { field: "a", value: <any>"b", operator: "eq"},
+              { field: "id", value: "1", operator: "eq"}
+            ],
+            field: undefined
+          }, true);
+        }
+
         expect(fn).to.throw(APIError);
 
-
-        const fn2 = () => MongooseAdapter.assertIdsValid({
-          operator: <"and">"and",
-          value: [
-            { field: "a", value: "b", operator: "eq"},
-            { field: "id", value: ["1", "552c5e1c604d41e5836bb174"], operator: "in"}
-          ],
-          field: undefined
-        }, false);
+        const fn2 = () => {
+          MongooseAdapter.assertIdsValid({
+            operator: <"and">"and",
+            value: [
+              { field: "a", value: "b", operator: "eq"},
+              { field: "id", value: ["1", "552c5e1c604d41e5836bb174"], operator: "in"}
+            ],
+            field: undefined
+          }, false);
+        };
 
         expect(fn2).to.throw(APIError);
       });

@@ -233,9 +233,10 @@ export default class ResourceTypeRegistry {
   }
 
   typePathTo(typeName: string) {
-    let path = [typeName];
+    const path = [typeName];
     let parentType;
 
+    // tslint:disable-next-line:no-conditional-assignment
     while (parentType = this.parentTypeName(path[path.length - 1])) {
       path.push(parentType);
     }
@@ -274,7 +275,7 @@ export default class ResourceTypeRegistry {
 
     // After we've checked that all the parent types are included in typesList,
     // any remaining types must be child types of parentType.
-    let finalPath = [...pathToThroughType];
+    const finalPath = [...pathToThroughType];
     let currentTypeChildren = throughType
       ? this.childTypeNames(throughType)
       : this.rootTypeNames();

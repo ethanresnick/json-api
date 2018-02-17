@@ -10,6 +10,7 @@ import ResourceTypeRegistry from "../../ResourceTypeRegistry";
 import templating = require("url-template");
 
 export default function(request: FinalizedRequest, registry: ResourceTypeRegistry, makeDoc) {
+  // tslint:disable-next-line no-non-null-assertion
   const primary = (request.document!.primary as any)._data;
   const type    = request.type;
 
@@ -58,8 +59,8 @@ export default function(request: FinalizedRequest, registry: ResourceTypeRegistr
         // We can only generate a Location url for a single resource.
         if(created.isSingular) {
           const createdResource = created.unwrap() as Resource;
-          const { self: selfTemplate = undefined } =
-            (registry.urlTemplates(createdResource.type) || {});
+          const { self: selfTemplate } =
+            (registry.urlTemplates(createdResource.type) || { self: undefined });
 
           if(selfTemplate) {
             res.headers = {

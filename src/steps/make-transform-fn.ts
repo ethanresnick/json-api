@@ -57,6 +57,7 @@ export default function makeTransformFn(mode: TransformMode, extras: Extras) {
   // is no parentType or the parentType doesn't define an appropriate transformer.
   // Otherwise, it'll return the result of calling the parentType's transformer
   // with the provided arguments.
+  // tslint:disable-next-line no-shadowed-variable
   const makeSuperFunction = (remainingTypes: string[], extras: Extras) => {
     return (it) => {
       const parentType = remainingTypes[0];
@@ -108,7 +109,7 @@ export default function makeTransformFn(mode: TransformMode, extras: Extras) {
       return it;
     }
 
-    return (await transformFn as TransformFn<Transformable>)(
+    return (transformFn as TransformFn<Transformable>)(
       it,
       extras.serverReq,
       extras.serverRes,

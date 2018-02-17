@@ -1,4 +1,4 @@
-import mapObject = require('lodash/mapValues');
+import mapObject = require('lodash/mapValues'); // tslint:disable-line no-submodule-imports
 import Data from './Generic/Data';
 import Resource from './Resource';
 import ResourceIdentifier from './ResourceIdentifier';

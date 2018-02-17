@@ -12,6 +12,7 @@ import setTypePaths from '../set-type-paths';
 export default async function(request: FinalizedRequest, registry: ResourceTypeRegistry, makeDoc: makeDocument) {
   const type = request.type;
   // Note: we verify presence of id in steps/pre-query/validate-resource-ids.ts.
+  // tslint:disable-next-line no-non-null-assertion
   const primary = <Data<ResourceWithId> | Data<ResourceIdentifier>>(request.document!.primary as any)._data;
   let changedResourceData;
 

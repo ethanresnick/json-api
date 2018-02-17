@@ -3,6 +3,7 @@
 // but I'm abridging this below considerablyfor simplicity. If it's a problem, I'll expand.
 export const MEMBER_NAME_REGEXP = /^[a-zA-Z0-9][a-zA-Z0-9\-_\u0020]*[a-zA-Z0-9]$/u;
 
+// tslint:disable-next-line variable-name
 export function isValidMemberName(string: string) {
   return MEMBER_NAME_REGEXP.test(string);
 }

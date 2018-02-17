@@ -5,6 +5,7 @@ import ResourceTypeRegistry from "../../../src/ResourceTypeRegistry";
 import sut from "../../../src/steps/make-transform-fn";
 
 describe("makeTransformFn", () => {
+  /* tslint:disable no-shadowed-variable */
   const registry = new ResourceTypeRegistry({
     "law-schools": {
       parentType: "schools",
@@ -76,6 +77,7 @@ describe("makeTransformFn", () => {
       }
     }
   });
+  /* tslint:enable no-shadowed-variable */
 
   const makeWithTypePath = (klass) => (childTypeName) => {
     const res = new klass(registry.rootTypeNameOf(childTypeName), "2");

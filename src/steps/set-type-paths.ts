@@ -1,8 +1,7 @@
 import APIError from "../types/APIError";
-import Resource from "../types/Resource";
+import Resource, { ResourceWithId } from "../types/Resource";
 import ResourceIdentifier from "../types/ResourceIdentifier";
 import ResourceTypeRegistry from "../ResourceTypeRegistry";
-import { ResourceWithId } from "../types/Resource";
 
 /**
  * When we get incoming resource objects in a request, we have to determine
@@ -41,7 +40,7 @@ import { ResourceWithId } from "../types/Resource";
 export default async function(
   resourcesAndIds: (Resource|ResourceIdentifier)[],
   useInputTypesList: boolean,
-  requiredThroughType: string | undefined = undefined,
+  requiredThroughType: string | undefined,
   registry: ResourceTypeRegistry
 ) {
   if(useInputTypesList) {
@@ -123,7 +122,7 @@ function getTypePathFromUserInput(
   requiredThroughType?: string,
 ) {
   // Get the typelist straight from the user provided input.
-  let provisionalTypePath = resourceOrId.typesList || [resourceOrId.type];
+  const provisionalTypePath = resourceOrId.typesList || [resourceOrId.type];
 
   // typesList was set straight from the user's json, so might not be an array.
   if(!Array.isArray(provisionalTypePath)) {

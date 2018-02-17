@@ -1,16 +1,11 @@
+import { isPlainObject } from "../../util/misc";
 import APIError from "../../types/APIError";
 
-export default function(body) {
-  return new Promise(function(resolve, reject) {
-    const ownProp = Object.prototype.hasOwnProperty;
-    const errMessage = "Request body is not a valid JSON API document.";
-
-    if(typeof body !== "object" || !ownProp.call(body, "data")) {
-      reject(new APIError(400, undefined, errMessage));
-    }
-
-    else {
-      resolve(undefined);
-    }
-  });
+export default async function(body) {
+  if(!isPlainObject(body) || !Object.prototype.hasOwnProperty.call(body, "data")) {
+    throw new APIError({
+      status: 400,
+      title: "Request body is not a valid JSON API document."
+    });
+  }
 }

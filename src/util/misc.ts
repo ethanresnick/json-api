@@ -8,9 +8,10 @@ export function isPlainObject(obj: object) {
  * Returns whether it's argument has no enumerable, own properties.
  */
 export function objectIsEmpty(obj: object) {
-  const hasOwnProperty = Object.prototype.hasOwnProperty;
   for (const key in obj) {
-    if (hasOwnProperty.call(obj, key)) return false;
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      return false;
+    }
   }
 
   return true;
@@ -78,13 +79,13 @@ export function setDifference(minuendArr: any[], subtrahendArr: any[]) {
  * Note that this is only safe with chars in the BMP.
  * See: https://mathiasbynens.be/notes/javascript-unicode
  */
-export const stripLeadingBMPChar = (char: string) => (string: string) => {
+export const stripLeadingBMPChar = (char: string) => (it: string) => {
   // The below works because, though string[0] could be a surrogate,
   // it will only === char if it's not: "the ranges for the
   // high surrogates, low surrogates, and valid BMP characters
   // are disjoint, [so] it is not possible for a surrogate to
   // match a BMP character".
-  return string[0] === char ? string.slice(1) : string;
+  return it[0] === char ? it.slice(1) : it;
 };
 
 
@@ -135,7 +136,7 @@ export function pseudoTopSort(
   roots = roots.slice();
   nodes = nodes.slice();
   edges = {...edges};
-  for(const key in edges) { edges[key] = {...edges[key]}; }
+  Object.keys(edges).forEach(key => { edges[key] = { ...edges[key] }; });
 
   // "L = Empty list that will contain the sorted elements"
   const sortResult: string[] = [];
@@ -152,7 +153,7 @@ export function pseudoTopSort(
     sortResult.push(thisRoot);
 
     // "for each node m with an edge e from n to m do"
-    for(const child in thisRootChildren) {
+    Object.keys(thisRootChildren).forEach(child => {
       // "remove edge e from the graph"
       delete thisRootChildren[child];
 
@@ -160,7 +161,7 @@ export function pseudoTopSort(
       // we don't need this check because we assumed max 1 incoming edge.
       // But: "then insert m into S".
       roots.push(child);
-    }
+    });
   }
 
   return sortResult;

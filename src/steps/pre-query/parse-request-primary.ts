@@ -34,7 +34,7 @@ function toResource(json) {
   const relationships = json.relationships || {};
 
   //build Relationships
-  for(let key in relationships) {
+  Object.keys(relationships).forEach(key => {
     if(typeof relationships[key].data === 'undefined') {
       throw new APIError(
         400,
@@ -48,7 +48,7 @@ function toResource(json) {
       data: relationships[key].data,
       owner: { type: json.type, id: json.id, path: key }
     }).map(toResourceIdentifier);
-  }
+  });
 
   // resource data validated by resource constructor.
   return new Resource(json.type, json.id, json.attributes, relationships, json.meta);

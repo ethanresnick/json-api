@@ -72,7 +72,7 @@ describe("Deleting resources", () => {
         .then((resp) => {
           expect(resp.status).to.equal(204);
           return Promise.all(creationIds.map(it => {
-            return Agent.request("GET", `/organizations/${it}`).then((resp) => {
+            return Agent.request("GET", `/organizations/${it}`).then(() => {
               throw new Error("Should not run!");
             }, (e) => {
               expect(e.status).to.equal(404);

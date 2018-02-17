@@ -1,5 +1,5 @@
 import templating = require("url-template");
-import mapObject = require('lodash/mapValues');
+import mapObject = require('lodash/mapValues'); //tslint:disable-line no-submodule-imports
 import R = require("ramda");
 import {
    Request, FinalizedRequest, Result, HTTPResponse,
@@ -181,6 +181,8 @@ export default class APIController {
    * should be in the same option set that we give user-provided query factory
    * functions.
    *
+   * TODO: in light of the above, consider making this a static function.
+   *
    * @param {QueryBuildingContext} opts [description]
    */
   public async makeQuery(opts: QueryBuildingContext) {
@@ -288,8 +290,20 @@ export default class APIController {
 
     // TODO: remove R as any casts when there are available typings for R.pipeP.
     return baseQuery.resultsIn(
-      (R as any).pipeP(R.pipe(origReturning, Promise.resolve.bind(Promise)), transformResultDocument),
-      (R as any).pipeP(R.pipe(origCatch, Promise.resolve.bind(Promise)), transformResultDocument),
+      (R as any).pipeP(
+        R.pipe(
+          origReturning,
+          Promise.resolve.bind(Promise) as typeof Promise.resolve
+        ),
+        transformResultDocument
+      ),
+      (R as any).pipeP(
+        R.pipe(
+          origCatch,
+          Promise.resolve.bind(Promise) as typeof Promise.resolve
+        ),
+        transformResultDocument
+      ),
     );
   }
 
@@ -325,6 +339,7 @@ export default class APIController {
       const finalizedRequest = await this.finalizeRequest(request);
 
       // Actually fulfill the request!
+      // tslint:disable-next-line no-unbound-method
       const queryFactory = opts.queryFactory || this.makeQuery;
 
       const transformExtras = {
@@ -337,9 +352,9 @@ export default class APIController {
       logger.info('Creating request query');
       const query = await queryFactory({
         ...transformExtras,
-        makeDocument: this.makeDoc, // already this bound.
+        makeDocument: this.makeDoc, // tslint:disable-line no-unbound-method
         transformDocument: R.partialRight(transformDoc, [transformExtras]),
-        makeQuery: this.makeQuery,
+        makeQuery: this.makeQuery, // tslint:disable-line no-unbound-method
         setTypePaths: R.partialRight(setTypePaths, [transformExtras.registry])
       });
 
@@ -431,7 +446,7 @@ export default class APIController {
     }
   }
 
-  public static supportedExt = Object.freeze([]);
+  public static supportedExt: ReadonlyArray<string> = Object.freeze([]);
 
   static defaultFilterParamParser(legalUnary, legalBinary, rawQuery, params) {
     return getFilterList(rawQuery)
