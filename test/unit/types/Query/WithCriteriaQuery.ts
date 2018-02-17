@@ -50,7 +50,7 @@ describe("WithCriteriaQuery", () => {
 
     describe("matching undefined", () => {
       it('should be a noop', () => {
-        expect(queries.map(it => it.matchingIdOrIds())).to.deep.equal(queries);
+        expect(queries.map(it => it.matchingIdOrIds(undefined))).to.deep.equal(queries);
       });
     })
   });
