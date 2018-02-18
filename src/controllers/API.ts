@@ -460,14 +460,15 @@ export default class APIController {
  * Creates a JSON:API Result from an error or array of errors.
  */
 function makeResultFromErrors(makeDoc: makeDocument, errors: ErrOrErrArr): Result {
-  const errorsArray =
-    (Array.isArray(errors) ? errors : [errors])
-      .map(<(v: any) => APIError>APIError.fromError.bind(APIError));
+  const rawErrorsArray = (Array.isArray(errors) ? errors : [errors]);
+  const finalErrorsArray: APIError[] =
+    rawErrorsArray.map(APIError.fromError.bind(APIError));
 
-  const status = pickStatus(errorsArray.map((v) => Number(v.status)));
+  logger.warn("Errors converted to json-api Result", ...rawErrorsArray);
+  const status = pickStatus(finalErrorsArray.map((v) => Number(v.status)));
 
   return {
-    document: makeDoc({ errors: errorsArray }),
+    document: makeDoc({ errors: finalErrorsArray }),
     status
   };
 }
