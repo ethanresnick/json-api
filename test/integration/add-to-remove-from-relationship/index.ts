@@ -9,7 +9,7 @@ import {
 } from "../fixtures/creation";
 
 describe("Partially modifying a relationship at a relationship endpoint", () => {
-  let Agent, url;
+  let Agent, relationshipEndpointUrl;
   before(() => {
     return AgentPromise.then(A => {
       Agent = A;
@@ -18,7 +18,8 @@ describe("Partially modifying a relationship at a relationship endpoint", () => 
         .type("application/vnd.api+json")
         .send({"data": VALID_SCHOOL_RESOURCE_NO_ID_EMPTY_PRINCIPAL_NO_LIAISONS })
         .then((response) => {
-          url = `/organizations/${response.body.data.id}/relationships/liaisons`;
+          relationshipEndpointUrl =
+            `/organizations/${response.body.data.id}/relationships/liaisons`;
         })
     })
   });
@@ -48,53 +49,53 @@ describe("Partially modifying a relationship at a relationship endpoint", () => 
 
   describe("Adding to a to-many relationship at a relationship endpoint", () => {
     it("should work", () => {
-      return modifyRelationship("POST", VALID_ORG_RELATIONSHIP_PATCH, url).then(() => {
-        return testRelationshipState(VALID_ORG_RELATIONSHIP_PATCH, url);
+      return modifyRelationship("POST", VALID_ORG_RELATIONSHIP_PATCH, relationshipEndpointUrl).then(() => {
+        return testRelationshipState(VALID_ORG_RELATIONSHIP_PATCH, relationshipEndpointUrl);
       })
     });
 
     it("should not add a resource that's already in the relationship", () => {
-      return modifyRelationship("POST", VALID_ORG_RELATIONSHIP_PATCH, url).then(() => {
-        return testRelationshipState(VALID_ORG_RELATIONSHIP_PATCH, url);
+      return modifyRelationship("POST", VALID_ORG_RELATIONSHIP_PATCH, relationshipEndpointUrl).then(() => {
+        return testRelationshipState(VALID_ORG_RELATIONSHIP_PATCH, relationshipEndpointUrl);
       });
     });
 
     it("should ignore duplicates in linkage to add", () => {
-      return modifyRelationship("POST", duplicateLinkage, url).then(() => {
-        return testRelationshipState(VALID_ORG_RELATIONSHIP_PATCH, url);
+      return modifyRelationship("POST", duplicateLinkage, relationshipEndpointUrl).then(() => {
+        return testRelationshipState(VALID_ORG_RELATIONSHIP_PATCH, relationshipEndpointUrl);
       });
     });
 
     it("should do nothing when adding an empty linkage array", () => {
-      return modifyRelationship("POST", VALID_TO_MANY_RELATIONSHIP_EMPTY_PATCH, url).then(() => {
-        return testRelationshipState(VALID_ORG_RELATIONSHIP_PATCH, url);
+      return modifyRelationship("POST", VALID_TO_MANY_RELATIONSHIP_EMPTY_PATCH, relationshipEndpointUrl).then(() => {
+        return testRelationshipState(VALID_ORG_RELATIONSHIP_PATCH, relationshipEndpointUrl);
       });
     });
   });
 
   describe("removing from a to-many relationship at a relationship endpoint", () => {
     it("should work", () => {
-      return modifyRelationship("DEL", VALID_ORG_RELATIONSHIP_PATCH, url).then(() => {
-        return testRelationshipState(VALID_TO_MANY_RELATIONSHIP_EMPTY_PATCH, url);
+      return modifyRelationship("DEL", VALID_ORG_RELATIONSHIP_PATCH, relationshipEndpointUrl).then(() => {
+        return testRelationshipState(VALID_TO_MANY_RELATIONSHIP_EMPTY_PATCH, relationshipEndpointUrl);
       })
     });
 
     it("should be a no-op when removing an item that isn't in the relationship", () => {
-      return modifyRelationship("DEL", VALID_ORG_RELATIONSHIP_PATCH, url).then(() => {
-        return testRelationshipState(VALID_TO_MANY_RELATIONSHIP_EMPTY_PATCH, url);
+      return modifyRelationship("DEL", VALID_ORG_RELATIONSHIP_PATCH, relationshipEndpointUrl).then(() => {
+        return testRelationshipState(VALID_TO_MANY_RELATIONSHIP_EMPTY_PATCH, relationshipEndpointUrl);
       });
     });
 
     it("should ignore duplicates in linkage to remove", () => {
-      return modifyRelationship("POST", VALID_ORG_RELATIONSHIP_PATCH, url)
-        .then(() => modifyRelationship("DEL", duplicateLinkage, url))
-        .then(() => testRelationshipState(VALID_TO_MANY_RELATIONSHIP_EMPTY_PATCH, url));
+      return modifyRelationship("POST", VALID_ORG_RELATIONSHIP_PATCH, relationshipEndpointUrl)
+        .then(() => modifyRelationship("DEL", duplicateLinkage, relationshipEndpointUrl))
+        .then(() => testRelationshipState(VALID_TO_MANY_RELATIONSHIP_EMPTY_PATCH, relationshipEndpointUrl));
     });
 
     it("should do nothing when removing an empty linkage array", () => {
-      return modifyRelationship("POST", VALID_ORG_RELATIONSHIP_PATCH, url)
-        .then(() => modifyRelationship("DEL", VALID_TO_MANY_RELATIONSHIP_EMPTY_PATCH, url))
-        .then(() => testRelationshipState(VALID_ORG_RELATIONSHIP_PATCH, url));
+      return modifyRelationship("POST", VALID_ORG_RELATIONSHIP_PATCH, relationshipEndpointUrl)
+        .then(() => modifyRelationship("DEL", VALID_TO_MANY_RELATIONSHIP_EMPTY_PATCH, relationshipEndpointUrl))
+        .then(() => testRelationshipState(VALID_ORG_RELATIONSHIP_PATCH, relationshipEndpointUrl));
     });
   });
 
