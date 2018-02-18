@@ -6,9 +6,12 @@ import {
   VALID_SCHOOL_PRINCIPAL_PATCH,
   VALID_TO_ONE_RELATIONSHIP_EMPTY_PATCH
 } from "../fixtures/updates";
-import { VALID_ORG_RESOURCE_NO_ID, VALID_SCHOOL_RESOURCE_NO_ID_EMPTY_PRINCIPAL } from "../fixtures/creation";
+import {
+  VALID_ORG_RESOURCE_NO_ID,
+  VALID_SCHOOL_RESOURCE_NO_ID_EMPTY_PRINCIPAL_NO_LIAISONS
+} from "../fixtures/creation";
 
-describe("Patching a relationship", () => {
+describe("Replacing a relationship at a relationship endpoint", () => {
   let Agent;
   before(() => {
     return AgentPromise.then(A => {
@@ -68,7 +71,7 @@ describe("Patching a relationship", () => {
   it("should support patching at a to-one relationship endpoint", () => {
     return Agent.request("POST", "/schools")
       .type("application/vnd.api+json")
-      .send({"data": VALID_SCHOOL_RESOURCE_NO_ID_EMPTY_PRINCIPAL })
+      .send({"data": VALID_SCHOOL_RESOURCE_NO_ID_EMPTY_PRINCIPAL_NO_LIAISONS })
       .promise()
       .then((response) => {
         expect(response.body.data.relationships.principal.data).to.equal(null);

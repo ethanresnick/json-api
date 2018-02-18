@@ -42,7 +42,7 @@ export const VALID_SCHOOL_RESOURCE_NO_ID = {
   }
 };
 
-export const VALID_SCHOOL_RESOURCE_NO_ID_EMPTY_PRINCIPAL = {
+export const VALID_SCHOOL_RESOURCE_NO_ID_EMPTY_PRINCIPAL_NO_LIAISONS = {
   "type": "organizations",
   "meta": {
     "types": ["organizations", "schools"]

@@ -519,7 +519,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       $inc: { [getVersionKey(model)]: 1 }
     };
 
-    return model.findOneAndUpdate({"_id": id}, update, options).exec()
+    return model.findOneAndUpdate({ "_id": id }, update, options).exec()
       .catch(util.errorHandler);
   }
 
