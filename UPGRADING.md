@@ -1,3 +1,10 @@
+# 3.0.0-beta.13
+## Breaking Changes
+### MongooseAdapter/AdapterInterface
+- The second argument to `MongooseAdapter`'s constructor, if provided, must now be a function that returns a type name when given a mongoose model name. Previously, the argument was a function that pluralized its input.
+- `MongooseAdapter.getModelName` has been removed. `Adapter.getModelName` is no longer a required function on the adapter interface. If you were customizing the pluralization/singularization behavior of the adapter, you may want to provide a function for the new `toModelName` argument on the `DocumentationController`'s constructor.
+- `AdapterInterface.getModel` now takes a type name instead of a model name as its argument. `MongooseAdapter.getModel` has been updated accordingly.
+
 # 3.0.0-beta.11
 ## New Features
 - Improved subtype handling (see #149)

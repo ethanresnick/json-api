@@ -9,7 +9,7 @@ describe("Mongoose Adapter", () => {
     describe("getModel", () => {
       it("should throw an exception for unknown models", () => {
         const adapter = new MongooseAdapter({});
-        expect(() => { adapter.getModel("x"); }).to.throw(/model .+ has not been registered/);
+        expect(() => { adapter.getModel("x"); }).to.throw(/no model .+ registered/i);
       });
     });
   });

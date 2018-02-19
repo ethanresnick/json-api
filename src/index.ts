@@ -31,6 +31,8 @@ import DeleteQuery from './types/Query/DeleteQuery';
 import AddToRelationshipQuery from './types/Query/AddToRelationshipQuery';
 import RemoveFromRelationshipQuery from './types/Query/RemoveFromRelationshipQuery';
 
+import * as namingHelpers from './util/naming-conventions';
+
 // Export types for typescript
 export { FinalizedRequest as Request, Result, HTTPResponse } from './types';
 export {
@@ -55,6 +57,8 @@ export const httpStrategies = {
     return <typeof KoaStrategy>require('./http-strategies/Koa').default
   }
 };
+
+export const helpers = { ...namingHelpers };
 
 export const types = {
   Document,
@@ -87,6 +91,7 @@ const defaultExp = {
   controllers,
   httpStrategies,
   dbAdapters,
+  helpers,
   displaySafeError,
   ResourceTypeRegistry
 };

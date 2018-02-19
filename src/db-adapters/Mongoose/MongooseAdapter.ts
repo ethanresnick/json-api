@@ -15,10 +15,11 @@ import {
 } from './utils/schema';
 import { getTypePath } from "./utils/subtyping";
 import docToResource from "./utils/doc-to-resource";
-import { getTypeName } from './utils/naming-conventions';
+import { getTypeName } from '../../util/naming-conventions';
 import * as util from "./lib";
 import Data from "../../types/Generic/Data";
 import Resource, { ResourceWithTypePath } from "../../types/Resource";
+import ResourceIdentifier from "../../types/ResourceIdentifier";
 import APIError from "../../types/APIError";
 import FieldDocumentation from "../../types/Documentation/Field";
 import FieldTypeDocumentation from "../../types/Documentation/FieldType";
@@ -36,24 +37,25 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
   // Doing this makes our implements declaration work.
   "constructor": typeof MongooseAdapter;
 
-  // Some precomuted name mappings that we need throughout.
+  // Some precomputed name mappings that we use throughout.
   // Note: a type name here can be a subtype (in the sense of Query.type,
   // or what goes in a typePath), even though subtypes aren't rendered in
-  // the json-api type key.
+  // the json-api `type` key. We need these mappings to read discriminator key
+  // values correctly, and it's also just more convenient for users to pass in
+  // models keyed by model name b/c that's how mongoose stores them.
   protected typeNamesToModelNames: { [typeName: string]: string | undefined };
   protected modelNamesToTypeNames: { [modelName: string]: string | undefined };
 
   constructor(
     protected models: { [modelName: string]: Model<any> } = (mongoose as any).models,
-    protected inflector: typeof pluralize = pluralize,
+    protected toTypeName: (modelName: string) => string = getTypeName,
     protected idGenerator?: ((doc: Document) => mongodb.ObjectID)
   ) {
     this.typeNamesToModelNames = {};
     this.modelNamesToTypeNames = {};
-    const pluralizer = inflector.plural.bind(inflector);
 
     for(const modelName of Object.keys(models)) {
-      const typeName = getTypeName(modelName, pluralizer);
+      const typeName = toTypeName(modelName);
       this.typeNamesToModelNames[typeName] = modelName;
       this.modelNamesToTypeNames[modelName] = typeName;
     }
@@ -103,7 +105,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     const filters = query.getFilters();
     const mongofiedFilters = util.toMongoCriteria(filters);
 
-    const model = this.getModel(this.typeNamesToModelNames[type]);
+    const model = this.getModel(type);
 
     this.constructor.assertIdsValid(filters, singular);
 
@@ -230,22 +232,19 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
    */
   async create(query: CreateQuery) {
     const { records: resourceData } = query;
+    const getSmallestSubType = (it: ResourceWithTypePath) => it.typePath[0];
     const setIdWithGenerator =
       typeof this.idGenerator === "function" &&
         ((doc) => { doc._id = (this.idGenerator as Function)(doc); });
 
     const resourcesByParentType = partition('type', resourceData);
     const creationPromises = Object.keys(resourcesByParentType).map(type => {
-      const model = this.getModel(this.typeNamesToModelNames[type]);
+      const model = this.getModel(type);
       const discriminatorKey = getDiscriminatorKey(model);
-
-      // Get model for a particular resource (may be a child model of `model`).
-      const getResourceDirectModelName =
-        (it: ResourceWithTypePath) => this.typeNamesToModelNames[it.typePath[0]];
 
       const resources = resourcesByParentType[type];
       const docObjects = resources.map((resource) => {
-        const finalModel = this.getModel(getResourceDirectModelName(resource));
+        const finalModel = this.getModel(getSmallestSubType(resource));
         const forbiddenKeys = getMetaKeys(finalModel);
 
         if(forbiddenKeys.some(k => k in resource.attrs || k in resource.relationships)) {
@@ -260,12 +259,12 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
             return {};
           }
 
-          const potentialModelName = getResourceDirectModelName(resource);
-          if(!discriminatorKey || !this.getModel(potentialModelName)) {
+          const smallestSubType = getSmallestSubType(resource);
+          if(!discriminatorKey || !this.getModel(smallestSubType)) {
             throw new Error("Unexpected model name. Should've been caught earlier.");
           }
 
-          return { [discriminatorKey]: potentialModelName };
+          return { [discriminatorKey]: this.typeNamesToModelNames[smallestSubType] };
         });
       });
 
@@ -289,7 +288,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
    */
   async update(query: UpdateQuery) {
     const { type: parentType, patch } = query;
-    const parentModel = this.getModel(this.typeNamesToModelNames[parentType]);
+    const parentModel = this.getModel(parentType);
 
     const prefetchedDocs = patch.map(it => it.adapterExtra).values.filter(it => !!it);
     const getOIdAsString = R.pipe(R.prop<mongodb.ObjectID>('_id'), String);
@@ -323,8 +322,8 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     };
 
     const singleDocUpdateQueries = await patch.mapAsync(async (resourceUpdate) => {
-      const modelName = this.typeNamesToModelNames[resourceUpdate.typePath[0]];
-      const Model = this.getModel(modelName); // tslint:disable-line no-shadowed-variable
+      // tslint:disable-next-line no-shadowed-variable
+      const Model = this.getModel(resourceUpdate.typePath[0]);
       const versionKey = getVersionKey(Model);
 
       if(!Model) {
@@ -435,9 +434,9 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     // if we query with the subtype model, ids that don't match the subtype will
     // just not match any docs, and we won't be able to distinguish the
     // "a doc is missing (404)" case from the "invalid type (400)" case.
-    const QueryTypeModel = this.getModel(this.typeNamesToModelNames[type]);
+    const QueryTypeModel = this.getModel(type);
     const baseModelName = QueryTypeModel.baseModelName || QueryTypeModel.modelName;
-    const BaseModel = this.getModel(baseModelName);
+    const BaseModel = this.getModel(<string>this.modelNamesToTypeNames[baseModelName]);
 
     const queryBuilder = mode === 'findOne' // ternary is a hack for TS compiler
       ? BaseModel[mode](mongofiedFilters)
@@ -499,8 +498,9 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     // update on it so that save middleware can run and so we know the subtype
     // of the owning document. Right now, we always run the parent model's
     // findOneAndUpdate middleware, even if type/id points to a subtype resource.
-    const model = this.getModel(this.typeNamesToModelNames[type]);
-    const refModel = this.getModel(getReferencedModelName(model, relationshipName));
+    const model = this.getModel(type);
+    const refModelName = getReferencedModelName(model, relationshipName);
+    const refModel = this.getModel(<string>this.modelNamesToTypeNames[<string>refModelName]);
     const rootTypeNameForRefModel = this.getTypePath(refModel).pop();
 
     if(!newLinkage.every(it => it.type === rootTypeNameForRefModel)) {
@@ -538,8 +538,9 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     // update on it so that save middleware can run and so we know the subtype
     // of the owning document. Right now, we always run the parent model's
     // findOneAndUpdate middleware, even if type/id points to a subtype resource.
-    const model = this.getModel(this.typeNamesToModelNames[type]);
-    const refModel = this.getModel(getReferencedModelName(model, relationshipName));
+    const model = this.getModel(type);
+    const refModelName = getReferencedModelName(model, relationshipName);
+    const refModel = this.getModel(<string>this.modelNamesToTypeNames[<string>refModelName]);
     const rootTypeNameForRefModel = this.getTypePath(refModel).pop();
 
     if(!linkageToRemove.every(it => it.type === rootTypeNameForRefModel)) {
@@ -576,7 +577,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
 
     for(const type of types) {
       const theseItems = itemsByType[type];
-      const BaseModel = this.getModel(this.typeNamesToModelNames[type]);
+      const BaseModel = this.getModel(type);
       const discriminatorKey = getDiscriminatorKey(BaseModel);
 
       // When we have a .lean() doc straight from mongo, we can't
@@ -584,7 +585,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       // a bit more clever.
       const modelForLeanDoc = (it: any) =>
         (discriminatorKey && it[discriminatorKey])
-          ? this.getModel(it[discriminatorKey])
+          ? this.getModel(<string>this.modelNamesToTypeNames[it[discriminatorKey]])
           : BaseModel;
 
       // If we know the model has no subtypes,
@@ -619,13 +620,14 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     }, {} as TypeIdMapOf<TypeInfo>);
   }
 
-  getModel(modelName) {
-    if(!this.models[modelName]) {
+  getModel(typeName: string) {
+    const modelName = this.typeNamesToModelNames[typeName];
+    if(!modelName || !this.models[modelName]) {
       // don't use an APIError here, since we don't want to
       // show this internals-specific method to the user.
-      const err = new Error(`The model "${modelName}" has not been registered with the MongooseAdapter.`);
-      (<any>err).status = 404;
-      throw err;
+      throw new Error(
+        `No model for type "${typeName}" is registered with the MongooseAdapter.`
+      );
     }
     return this.models[modelName];
   }
@@ -636,7 +638,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
    * optionally fillable w/ relationship info; this shouldn't return those paths.
    */
   getRelationshipNames(typeName) {
-    const model = this.getModel(this.typeNamesToModelNames[typeName]);
+    const model = this.getModel(typeName);
     return getReferencePaths(model);
   }
 
@@ -671,9 +673,12 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
    * the query returned no documents when we needed one, such that we must 404.
    * This function centralizes all that logic.
    *
-   * @param docs The docs to turn into a Data<Resource>
-   * @param isPlural Whether the result is not conceptually singular.
-   * @param pluralizer An inflector function for setting the Resource's type
+   * @param {object} models A model name => model dictionary
+   * @param {object} modelNamesToTypeNames A model name => type name dictionary
+   * @param {null | mongoose.Document | mongoose.Document[]} docs The docs to
+   *   turn into a Data<Resource>
+   * @param {boolean} isPlural Whether the result is not conceptually singular.
+   * @param {object} fields
    */
   static docsToResourceData(
     models: any,
@@ -842,19 +847,6 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
 
   static idIsValid(id) {
     return typeof id === "string" && /^[0-9a-fA-F]{24}$/.test(id);
-  }
-
-  /**
-   * Returns the model name corresponding to the provided json-api type.
-   * Used by the documentation controller and actually does, therefore,
-   * need to be part of the adapter.
-   */
-  getModelName(typeName: string) {
-    if(this.typeNamesToModelNames[typeName]) {
-      return this.typeNamesToModelNames[typeName] as string;
-    }
-
-    throw new Error(`Couldn't find corresponding model for type: ${typeName}.`);
   }
 
   static unaryFilterOperators: string[] = ["and", "or"];

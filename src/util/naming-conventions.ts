@@ -19,8 +19,8 @@ export function getModelName(
 }
 
 /**
- * Takes a mongoose model name and returns the corresponding name according to
- * the dasherized, pluralized conventions used by the json-api `type` key.
+ * Takes a mongoose-style model name and returns the corresponding name according
+ * to the dasherized, pluralized conventions used by the json-api `type` key.
  *
  * @param {string} modelName The name of a model, in Mongoose's PascalCase format.
  * @param {(string) => string} pluralizer A function that pluralizes its argument.

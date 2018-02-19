@@ -9,18 +9,22 @@ import { HTTPResponse, ServerReq, ServerRes, Request } from "../types";
 import ResourceSet from "../types/ResourceSet";
 import Document from "../types/Document";
 import Resource from "../types/Resource";
+import { getModelName } from '../util/naming-conventions';
 import { IncomingMessage, ServerResponse } from 'http';
 export { IncomingMessage, ServerResponse };
 
 export default class DocumentationController {
-  private registry: ResourceTypeRegistry;
   private template: string;
   private dasherizeJSONKeys: boolean;
   private templateData: object;
 
-  constructor(registry, apiInfo, templatePath?, dasherizeJSONKeys = true) {
-    this.registry = registry;
-
+  constructor(
+    private registry: ResourceTypeRegistry,
+    apiInfo: object,
+    templatePath?: string,
+    dasherizeJSONKeys = true,
+    private toModelName: (typeName: string) => string = getModelName
+  ) {
     const defaultTempPath = "../../templates/documentation.pug";
     this.template = templatePath || path.resolve(__dirname, defaultTempPath);
 
@@ -84,8 +88,8 @@ export default class DocumentationController {
   // as much info about the models' structure as they would like.
   getTypeInfo(type) {
     const adapter   = this.registry.dbAdapter(type);
-    const modelName = adapter.getModelName(type);
-    const model     = adapter.getModel(modelName);
+    const model     = adapter.getModel(type);
+    const modelName = this.toModelName(type);
 
     // Combine the docs in the Resource description with the standardized schema
     // from the adapter in order to build the final schema for the template.

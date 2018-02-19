@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import * as sut from "../../../../../src/db-adapters/Mongoose/utils/naming-conventions";
+import * as sut from "../../../src/util/naming-conventions";
 
 describe("Mongoose Adapter Conventional Naming Utils", () => {
   const typeNamesToModelNames = {
@@ -27,7 +27,7 @@ describe("Mongoose Adapter Conventional Naming Utils", () => {
   });
 
   describe("getModelName", () => {
-    it("should reverse getType", () => {
+    it("should reverse getTypeName", () => {
       for(const type in typeNamesToModelNames) { //tslint:disable-line:forin
         const modelName = typeNamesToModelNames[type as keyof typeof typeNamesToModelNames];
         expect(sut.getModelName(type)).to.equal(modelName);
