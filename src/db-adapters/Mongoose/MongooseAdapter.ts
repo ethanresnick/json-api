@@ -492,26 +492,18 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     // TODO: if the relationship is supposed to hold resources only of a
     // specific subtype, validate that the linkage provided actually points to
     // a document of that subtype (and actually points to an existing document
-    // at all).
+    // at all!).
     //
     // TODO: update this to work like update(), where we find the doc and do an
     // update on it so that save middleware can run and so we know the subtype
     // of the owning document. Right now, we always run the parent model's
     // findOneAndUpdate middleware, even if type/id points to a subtype resource.
+    // Likewise, we always read the supertype's schema when deciding which linkage
+    // types are allowed. That's bad too.
     const model = this.getModel(type);
-    const refModelName = getReferencedModelName(model, relationshipName);
-    const refModel = this.getModel(<string>this.modelNamesToTypeNames[<string>refModelName]);
-    const rootTypeNameForRefModel = this.getTypePath(refModel).pop();
+    this.assertRelationshipLinkageTypeValid(model, relationshipName, newLinkage);
 
-    if(!newLinkage.every(it => it.type === rootTypeNameForRefModel)) {
-      throw new APIError({
-        status: 400,
-        title: "Invalid linkage provided.",
-        detail: `All linkage must have type: ${rootTypeNameForRefModel}.`
-      });
-    }
-
-    const options = {runValidators: true, context: 'query'};
+    const options = { runValidators: true, context: 'query' };
     const update = {
       $addToSet: {
         [relationshipName]: { $each: newLinkage.map(it => it.id) }
@@ -538,18 +530,10 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     // update on it so that save middleware can run and so we know the subtype
     // of the owning document. Right now, we always run the parent model's
     // findOneAndUpdate middleware, even if type/id points to a subtype resource.
+    // Likewise, we always read the supertype's schema when deciding which linkage
+    // types are allowed. That's bad too.
     const model = this.getModel(type);
-    const refModelName = getReferencedModelName(model, relationshipName);
-    const refModel = this.getModel(<string>this.modelNamesToTypeNames[<string>refModelName]);
-    const rootTypeNameForRefModel = this.getTypePath(refModel).pop();
-
-    if(!linkageToRemove.every(it => it.type === rootTypeNameForRefModel)) {
-      throw new APIError({
-        status: 400,
-        title: "Invalid linkage provided.",
-        detail: `All linkage must have type: ${rootTypeNameForRefModel}.`
-      });
-    }
+    this.assertRelationshipLinkageTypeValid(model, relationshipName, linkageToRemove);
 
     const update = {
       $pullAll: {
@@ -662,6 +646,31 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     return method.call(this, query);
   }
 
+  protected assertRelationshipLinkageTypeValid(
+    ownerModel: Model<any>,
+    relationshipName: string,
+    linkage: ResourceIdentifier[]
+  ) {
+    const rootTypeNameForRefModel = (() => {
+      try {
+        const refModelName = getReferencedModelName(ownerModel, relationshipName);
+        const refModelType = this.modelNamesToTypeNames[refModelName as string];
+        const refModel = this.getModel(refModelType as string);
+        return this.getTypePath(refModel).pop();
+      } catch(e) {
+        throw new Error(`Missing/invalid model name for relationship ${relationshipName}.`);
+      }
+    })();
+
+    if(!linkage.every(it => it.type === rootTypeNameForRefModel)) {
+      throw new APIError({
+        status: 400,
+        title: "Invalid linkage provided.",
+        detail: `All linkage must have type: ${rootTypeNameForRefModel}.`
+      });
+    }
+  }
+
   /**
    * We want return a singular Data<Resource> when the result is conceptually
    * singular, and a non-singular one otherwise. But, because mongoose returns
@@ -757,7 +766,9 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
 
       // find the "base type's" options (used below), in case
       // we have an array of values of the same type at this path.
-      const baseTypeOptions = Array.isArray(schemaType.options.type) ? schemaType.options.type[0] : schemaType.options;
+      const baseTypeOptions = Array.isArray(schemaType.options.type)
+        ? schemaType.options.type[0]
+        : schemaType.options;
 
       // Add validation info
       const validationRules = {
