@@ -60,7 +60,7 @@
     "flat": "^1.2.1",
     "immutable": "^3.7.5",
     "jade": "1.11.x",
-    "lodash": "^3.10.0",
+    "lodash": "^4.17.5",
     "negotiator": "github:ethanresnick/negotiator#full-parse-access",
     "pluralize": "0.0.11",
     "q": "1.4.1",
