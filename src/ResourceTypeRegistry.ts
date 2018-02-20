@@ -2,11 +2,15 @@ import Immutable = require("immutable");
 import depd = require('depd');
 import { pseudoTopSort } from "./util/misc";
 import Maybe from "./types/Generic/Maybe";
-import { ResourceTransformFn, FullTransformFn, TransformFn } from "./steps/make-transform-fn";
+import {
+  ResourceTransformFn, FullTransformFn, TransformFn ,
+  BeforeRenderFullTransformFn, BeforeRenderResourceTransformFn
+} from "./steps/make-transform-fn";
 import { AdapterInstance } from "./db-adapters/AdapterInterface";
 import Resource from "./types/Resource";
 import ResourceIdentifier from "./types/ResourceIdentifier";
-export { Resource, ResourceIdentifier, TransformFn };
+import { IncomingMessage, ServerResponse } from "http";
+export { Resource, ResourceIdentifier, TransformFn, IncomingMessage, ServerResponse };
 const deprecate = depd("json-api");
 
 /**
@@ -37,7 +41,7 @@ export type ResourceTypeDescription = {
   parentType?: string,
   urlTemplates?: URLTemplatesForType,
   beforeSave?: ResourceTransformFn | FullTransformFn,
-  beforeRender?: ResourceTransformFn | FullTransformFn,
+  beforeRender?: BeforeRenderResourceTransformFn | BeforeRenderFullTransformFn,
   behaviors?: object,
   transformLinkage?: boolean
 }

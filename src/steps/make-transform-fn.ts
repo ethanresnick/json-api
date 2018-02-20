@@ -2,31 +2,38 @@ import depd = require("depd");
 import logger from "../util/logger";
 import ResourceTypeRegistry from "../ResourceTypeRegistry";
 import { FinalizedRequest, ServerReq, ServerRes } from '../types/';
-import Resource from "../types/Resource";
+import Resource, { ResourceWithId } from "../types/Resource";
 import ResourceIdentifier from "../types/ResourceIdentifier";
 const deprecate = depd("json-api");
 
-export type Extras = {
+export type Extras<U extends ServerReq = ServerReq, V extends ServerRes = ServerRes> = {
   request: FinalizedRequest,
-  serverReq: ServerReq,
-  serverRes: ServerRes,
-  frameworkReq?: ServerReq,
-  frameworkRes?: ServerRes,
+  serverReq: U,
+  serverRes: V,
+  frameworkReq?: U,
+  frameworkRes?: V,
   registry: ResourceTypeRegistry
 };
 
 export type Transformable = Resource | ResourceIdentifier;
 export type TransformMode = 'beforeSave' | 'beforeRender';
-export type TransformFn<T> = (
+export type TransformFn<T, U extends ServerReq = ServerReq, V extends ServerRes = ServerRes> = (
   resourceOrIdentifier: T,
-  serverReq: Extras['serverReq'],
-  serverRes: Extras['serverRes'],
+  serverReq: U,
+  serverRes: V,
   superFn: TransformFn<T>,
-  extras: Extras
+  extras: Extras<U, V>
 ) => T | undefined | Promise<T | undefined>;
 
 export type ResourceTransformFn = TransformFn<Resource>;
 export type FullTransformFn = TransformFn<Transformable>;
+
+// In beforeRender fns, we know that any resources will have an id assigned.
+// They'll also likely have a typePath set, but that's a bit less safe to
+// assume (e.g., it might not be true with some custom queries).
+export type BeforeRenderResourceTransformFn = TransformFn<ResourceWithId>;
+export type BeforeRenderFullTransformFn =
+  TransformFn<ResourceWithId | ResourceIdentifier>;
 
 /**
  * Makes a transform function for use with Document.prototype.transform.
