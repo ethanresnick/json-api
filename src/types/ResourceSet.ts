@@ -14,10 +14,6 @@ export default class ResourceSet extends MaybeDataWithLinks<Resource> {
     super(it);
   }
 
-  protected clone() {
-    return super.clone() as ResourceSet;
-  }
-
   get ids() {
     return this._data.map(it => it.id);
   }

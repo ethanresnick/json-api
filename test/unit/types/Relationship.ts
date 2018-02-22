@@ -23,7 +23,7 @@ describe("Relationship type", () => {
     });
 
     it("should preserve the Relationship's owner", () => {
-      expect(rel1.owner).to.deep.equal((mapped as Relationship).owner);
+      expect(rel1.owner).to.deep.equal(mapped.owner);
     });
   });
 

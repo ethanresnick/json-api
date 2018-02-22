@@ -178,7 +178,7 @@ export default class Document {
 
           const newRelationships = await Promise.all(newRelationshipPromises);
           newRelationships.forEach((newRelationship, i) => {
-            it.relationships[relationshipNames[i]] = newRelationship as Relationship;
+            it.relationships[relationshipNames[i]] = newRelationship;
           });
 
           return flatMapper(it);
@@ -206,7 +206,7 @@ export default class Document {
         (await Data.of(res.included).flatMapAsync(resourceFlatMapper)).values;
     }
 
-    res.primary = await newPrimaryPromiseOrUndefined as Document["primary"];
+    res.primary = await newPrimaryPromiseOrUndefined;
     return res;
   }
 }

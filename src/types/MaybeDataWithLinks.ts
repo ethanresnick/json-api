@@ -110,7 +110,7 @@ export default class MaybeDataWithLinks<T extends (Resource | ResourceIdentifier
     return this; // for chaining
   }
 
-  protected clone(): MaybeDataWithLinks<T> {
+  protected clone(): this {
     const Ctor = this.constructor as any;
     return new Ctor({
       data: this._data,
@@ -131,7 +131,7 @@ export default class MaybeDataWithLinks<T extends (Resource | ResourceIdentifier
       : Promise.resolve(this)
   }
 
-  protected withNewData(newData) {
+  protected withNewData(newData): this {
     const res = this.clone();
     res._data = newData;
     return res;
