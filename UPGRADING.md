@@ -1,3 +1,6 @@
+# 3.0.0-beta.14 – 3.0.0-beta.16
+- Small new features and typings improvements
+
 # 3.0.0-beta.13
 ## Breaking Changes
 ### MongooseAdapter/AdapterInterface
