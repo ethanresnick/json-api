@@ -14,6 +14,7 @@ import KoaStrategy from "./http-strategies/Koa";
 // These imports are part of the compiled output and aren't lazy loaded.
 import Document from './types/Document'
 import Error, { displaySafe as displaySafeError } from './types/APIError'
+import Data from "./types/Generic/Data"
 import Resource from './types/Resource'
 import ResourceIdentifier from './types/ResourceIdentifier'
 import ResourceSet from './types/ResourceSet'
@@ -39,7 +40,7 @@ export {
   Document, Error, Resource, ResourceIdentifier, ResourceSet, Relationship,
   API as APIController, Documentation as DocumentationController,
   CreateQuery, FindQuery, UpdateQuery, DeleteQuery, AddToRelationshipQuery, RemoveFromRelationshipQuery,
-  Field, FieldType, ResourceTypeRegistry, displaySafeError
+  Field, FieldType, ResourceTypeRegistry, displaySafeError, Data
 };
 
 
