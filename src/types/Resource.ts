@@ -1,5 +1,5 @@
 import { deleteNested, isPlainObject, objectIsEmpty } from "../util/misc";
-import Relationship, { RelationshipJSON } from "./Relationship";
+import Relationship, { RelationshipJSON, RelationshipArgs } from "./Relationship";
 import { UrlTemplateFns } from "./index";
 
 export type ResourceJSON = {
@@ -137,6 +137,14 @@ export default class Resource {
     if(this._relationships) {
       deleteNested(relationshipPath, this._relationships);
     }
+  }
+
+  setRelationship(relationshipPath: string, data: RelationshipArgs['data']) {
+    validateFieldGroup({ relationshipPath: true }, this._attrs);
+    this._relationships[relationshipPath] = Relationship.of({
+      data,
+      owner: { type: this._type, id: this._id, path: relationshipPath }
+    });
   }
 
   toJSON(urlTemplates: UrlTemplateFns): ResourceJSON {

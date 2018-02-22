@@ -13,7 +13,14 @@ export type RelationshipLinksJSON = {
   related?: string
 };
 
-export type RelationshipOwner = { type: string, id: string, path: string };
+export type RelationshipOwner = {
+  type: string,
+  // id will be undefined in the Relationships on Resources that have
+  // yet to be assigned an id. Luckily, links are never rendered for those,
+  // so templates don't worry about that case.
+  id: string | undefined,
+  path: string
+};
 export type RelationshipArgs =
   MaybeDataWithLinksArgs<ResourceIdentifier> & { owner: RelationshipOwner };
 
