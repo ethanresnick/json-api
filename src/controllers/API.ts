@@ -192,6 +192,9 @@ export default class APIController {
     // check that a valid method is in use
     // and that, if the body is supposed to be present, it is (or vice-versa).
     // We await these in order to be deterministic about the error message.
+    // TODO: It might be slightly preferable to do the body existence check
+    // in each of the makeQuery functions, we're we're actually trying to use
+    // the parsed body.
     await requestValidators.checkMethod(request);
     await requestValidators.checkBodyExistence(request);
 

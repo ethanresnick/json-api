@@ -80,23 +80,25 @@ export default class BaseStrategy {
    * @param {Object} [parsedQuery] object containing pre-parsed query parameters
    */
   protected async buildRequestObject(
-    req,
-    protocol,
-    fallbackHost,
-    params,
-    parsedQuery?
+    req: ServerReq,
+    protocol: string,
+    fallbackHost: string,
+    params: any,
+    parsedQuery?: object
   ): Promise<Request> {
-    const queryStartIndex = req.url.indexOf("?");
+    const reqUrl = req.url as string;
+    const queryStartIndex = reqUrl.indexOf("?");
     const hasQuery = queryStartIndex !== -1;
-    const rawQueryString = hasQuery && req.url.substr(queryStartIndex + 1);
+    const rawQueryString = hasQuery && reqUrl.substr(queryStartIndex + 1);
 
-    const protocolGuess = protocol || (req.connection.encrypted ? "https" : "http");
+    // TODO: investigate use of req.connection.encrypted. Is there a better way?
+    const protocolGuess = protocol || ((req.connection as any).encrypted ? "https" : "http");
     const host = this.config.host || fallbackHost;
     const body = await this.getParsedBodyJSON(req); // could throw, rejecting promise.
 
     return {
       // Handle route & query params
-      queryParams: parsedQuery || (hasQuery && qs.parse(rawQueryString)) || {},
+      queryParams: parsedQuery || (hasQuery && qs.parse(rawQueryString as string)) || {},
       rawQueryString: rawQueryString || undefined,
 
       id: params.id,
@@ -109,9 +111,12 @@ export default class BaseStrategy {
       method: (() => {
         // Support Verb tunneling, but only for PATCH and only if user turns it on.
         // Turning on any tunneling automatically could be a security issue.
-        const usedMethod = req.method.toLowerCase();
+        // String() cast below is for the rare case that x-http-method-override
+        // header is provided twice (so node parses an array), which we don't support.
+        const usedMethod = (req.method as string).toLowerCase();
         const requestedMethod =
-          (req.headers["x-http-method-override"] || "").toLowerCase();
+          req.headers["x-http-method-override"] &&
+            String(req.headers["x-http-method-override"]).toLowerCase();
 
         if(this.config.tunnel && usedMethod === "post" && requestedMethod === "patch") {
           return "patch";
@@ -134,7 +139,7 @@ export default class BaseStrategy {
     };
   }
 
-  protected async getParsedBodyJSON(req: any): Promise<string | undefined> {
+  protected async getParsedBodyJSON(req: ServerReq): Promise<string | undefined> {
     if(!hasBody(req)) {
       return undefined;
     }
@@ -148,10 +153,10 @@ export default class BaseStrategy {
       );
     }
 
-    // Note: we always treat the encoding as utf-8 because
-    // JSON is specified to always be utf-8, and letting the sender specify
+    // Note: we always treat the encoding as utf-8 because JSON
+    // is specified to always be utf-8, and letting the sender specify
     // the encoding we'll parse with (e.g., in req.headers['content-type'])
-    // seeems lnike poor security hygiene.
+    // seeems like poor security hygiene.
     const bodyParserOptions: (getRawBody.Options & { encoding: string }) = {
       encoding: "utf-8",
       limit: "1mb",
@@ -179,15 +184,18 @@ export default class BaseStrategy {
   }
 }
 
-function hasBody(req) {
+function hasBody(req: ServerReq) {
   return req.headers["transfer-encoding"] !== undefined || hasValidContentLength(req);
 }
 
-function hasValidContentLength(req) {
+function hasValidContentLength(req: ServerReq) {
   // intentionally not using Number.isNaN below to cover undefined case
-  return !isNaN(req.headers["content-length"]);
+  // Note that the Node http parser explicitly checks that content-length
+  // is set at most once, so this'll never be an array.
+  return !isNaN(req.headers["content-length"] as any);
 }
 
-function isReadableStream(req) {
-  return typeof req._readableState === "object" && req._readableState.endEmitted === false;
+function isReadableStream(req: ServerReq) {
+  return typeof (req as any)._readableState === "object"
+    && (req as any)._readableState.endEmitted === false;
 }

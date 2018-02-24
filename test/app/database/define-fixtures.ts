@@ -26,8 +26,8 @@ fixtures.save("all", {
     { name: "An Inivisible Sorcerer", gender: "other", _id: invisibleResourceId },
   ],
   Organization: [
-    {name: "State Government", description: "Representing the good people.", liaisons: [doeId, smithId], _id: govtId},
-    {name: "Org whose echo prop I'll change", reversed: "Test", _id: echoOrgId, liaisons: [doeId], modified: new Date("2015-01-01")}
+    { name: "State Government", description: "Representing the good people.", liaisons: [doeId, smithId], _id: govtId },
+    { name: "Org whose echo prop I'll change", reversed: "Test", _id: echoOrgId, liaisons: [doeId], modified: new Date("2015-01-01") },
   ],
   School: [
     {name: "City College", description: "Just your average local college.", liaisons: [smithId]},

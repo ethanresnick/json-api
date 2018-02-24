@@ -1,8 +1,10 @@
 import contentTypeParser = require("content-type");
+import { Request } from "../../../types";
 import APIError from "../../../types/APIError";
 import { objectIsEmpty } from "../../../util/misc";
 
-export default async function validateContentType(request, supportedExt?) {
+export default async function validateContentType(request: Request, supportedExt?) {
+  // note: contentTypeParser correctly handles undefined.
   const contentType = contentTypeParser.parse(request.contentType);
 
   // Removed due to issues with Firefox automatically adding charset parameter

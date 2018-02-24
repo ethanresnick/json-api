@@ -25,4 +25,14 @@ describe("HTTP Compliance", () => {
     });
   });
 
+  it("should reject requests with a body but no content-type", () => {
+    return Agent
+      .request("DELETE", "/organizations/59af14d3bbd18cd55ea08ea3/relationships/liaisons")
+      .send({ data: [] })
+      .then((it) => {
+        throw new Error("Should not run");
+      }, (err) => {
+        expect(err.status).to.equal(415);
+      });
+  });
 });
