@@ -24,7 +24,6 @@ describe("Resource type", () => {
 
     it("should allow construction with no or valid id", () => {
       // valid/no ids should construct w/o error
-      // TODO: change this? why is this alllowed????
       new Resource("type", undefined, {}); // no id case
       new Resource("aoin", "39.20nA_-xgGr", {}); // invalid id case
     });
@@ -33,6 +32,13 @@ describe("Resource type", () => {
       const r = new Resource("type", <any>19339, {});
       expect(r.id === "19339").to.be.true;
     });
+
+    // Note: this behavior may change.
+    // See https://github.com/json-api/json-api/issues/1261
+    it("should allow empty id as a string", () => {
+      expect(new Resource("type", undefined, {}).id).to.be.undefined;
+      expect(new Resource("type", "", {}).id).to.equal("");
+    })
 
     it("should reject non-object attrs", () => {
       // allow construction with no/empty attributes

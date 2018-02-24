@@ -2,6 +2,8 @@ import {expect} from "chai";
 import AgentPromise from "../../app/agent";
 import {
   ORG_RESOURCE_CLIENT_ID,
+  ORG_RESOURCE_FALSEY_CLIENT_ID,
+  ORG_RESOURCE_FALSEY_CLIENT_ID_2,
   VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER,
   INVALID_ORG_RESOURCE_NO_DATA_IN_RELATIONSHIP
 } from "../fixtures/creation";
@@ -17,7 +19,7 @@ describe("Creating Resources", () => {
     before(() => {
       return Agent.request("POST", "/organizations")
         .type("application/vnd.api+json")
-        .send({"data": VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER, "extra": false})
+        .send({ "data": VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER, "extra": false })
         .then((response) => {
           res = response;
           createdResource = res.body.data;
@@ -82,26 +84,36 @@ describe("Creating Resources", () => {
   });
 
   describe("Creating a Resource With A Client-Id", () => {
-    let err;
+    let errs: any[] = [];
+    const clientIdObjects = [
+      ORG_RESOURCE_CLIENT_ID,
+      ORG_RESOURCE_FALSEY_CLIENT_ID,
+      ORG_RESOURCE_FALSEY_CLIENT_ID_2
+    ];
+
     before(() => {
-      return Agent.request("POST", "/organizations")
-        .type("application/vnd.api+json")
-        .send({ "data": ORG_RESOURCE_CLIENT_ID })
-        .then(
-          () => { throw new Error("Should not run"); },
-          (error) => { err = error; }
-        );
+      return Promise.all(
+        clientIdObjects.map(data => {
+          return Agent.request("POST", "/organizations")
+            .type("application/vnd.api+json")
+            .send({ data })
+            .then(
+              (resp) => { throw new Error("Should not run"); },
+              (error) => { errs.push(error); }
+            );
+        })
+      );
     });
 
     describe("HTTP", () => {
       it("should return 403", () => {
-        expect(err.response.status).to.equal(403);
+        expect(errs.every(it => it.response.status === 403)).to.be.true;
       });
     });
 
     describe("Document Structure", () => {
       it("should contain an error", () => {
-        expect(err.response.body.errors).to.be.an("array");
+        expect(errs.every(it => Array.isArray(it.response.body.errors))).to.be.true;
       });
     });
   });

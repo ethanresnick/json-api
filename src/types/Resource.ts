@@ -59,7 +59,7 @@ export default class Resource {
 
   set id(id) {
     // allow empty id for the case of a new resource POST.
-    this._id = (id) ? String(id) : undefined;
+    this._id = (typeof id !== 'undefined') ? String(id) : undefined;
   }
 
   get type() {

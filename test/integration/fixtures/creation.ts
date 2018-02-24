@@ -31,6 +31,16 @@ export const ORG_RESOURCE_CLIENT_ID = {
   "id": "53f54dd98d1e62ff12539db3"
 };
 
+export const ORG_RESOURCE_FALSEY_CLIENT_ID = {
+  ...VALID_ORG_RESOURCE_NO_ID,
+  "id": "0"
+};
+
+export const ORG_RESOURCE_FALSEY_CLIENT_ID_2 = {
+  ...VALID_ORG_RESOURCE_NO_ID,
+  "id": ""
+};
+
 export const VALID_SCHOOL_RESOURCE_NO_ID = {
   "type": "organizations",
   "meta": {
