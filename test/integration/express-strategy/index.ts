@@ -27,4 +27,12 @@ describe("Express Strategy", () => {
       ));
     });
   });
+
+  describe("building the request object", () => {
+    it("should properly detect the incoming url on mounted sub apps", () => {
+      return Agent.request("GET", '/subapp/people').then(resp => {
+        expect(resp.body.links.self).to.equal('http://127.0.0.1:3000/subapp/people');
+      });
+    });
+  });
 })

@@ -1,5 +1,6 @@
 import varyLib = require("vary");
 import depd = require('depd');
+import url = require("url");
 import R = require('ramda');
 import logger from '../util/logger';
 import API, { RequestOpts, QueryBuildingContext } from "../controllers/API";
@@ -64,10 +65,31 @@ export default class ExpressStrategy extends Base {
     super(apiController, docsController, options);
   }
 
-  protected buildRequestObject(req: Request): Promise<JSONAPIRequest> {
+  protected async buildRequestObject(req: Request): Promise<JSONAPIRequest> {
     // req.host is broken in express 4; doesn't include the port
     // tslint:disable-next-line deprecation
-    return super.buildRequestObject(req, req.protocol, req.host, req.params, req.query)
+    const genericReqPromise =
+      super.buildRequestObject(req, req.protocol, req.host, req.params, req.query);
+
+    // If express rewrote req.url on us, update the result to use req.originalUrl.
+    if(req.url !== req.originalUrl) {
+      const genericReq = await genericReqPromise;
+
+      // find the real pathname and search from req.originalUrl
+      const { pathname, search } =
+        url.parse('http://example.com' + req.originalUrl, false, false);
+
+      // apply them.
+      const newUri = url.format({
+        ...url.parse(genericReq.uri, false, false),
+        pathname,
+        search
+      });
+
+      return { ...genericReq, uri: newUri };
+    }
+
+    return genericReqPromise;
   }
 
   protected sendResponse(response: HTTPResponse, res: Response, next: NextFunction) {

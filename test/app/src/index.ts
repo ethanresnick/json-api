@@ -166,6 +166,9 @@ export default database.then(function(dbModule) {
   app.route("/:type(people|organizations|schools)/:id/relationships/:relationship")
     .get(apiReqHandler).post(apiReqHandler).patch(apiReqHandler).delete(apiReqHandler);
 
+
+  app.use('/subapp', express().get('/:type(people)', Front.apiRequest));
+
   app.use(function(req, res, next) {
     Front.sendError({ "message": "Not Found", "status": 404 }, req, res, next);
   });
