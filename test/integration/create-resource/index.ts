@@ -83,17 +83,13 @@ describe("Creating Resources", () => {
 
   describe("Creating a Resource With A Client-Id", () => {
     let err;
-    before(done => {
-      Agent.request("POST", "/organizations")
+    before(() => {
+      return Agent.request("POST", "/organizations")
         .type("application/vnd.api+json")
-        .send({"data": ORG_RESOURCE_CLIENT_ID})
-        .promise()
+        .send({ "data": ORG_RESOURCE_CLIENT_ID })
         .then(
-          () => { done("Should not run!"); },
-          (error) => {
-            err = error;
-            done();
-          }
+          () => { throw new Error("Should not run"); },
+          (error) => { err = error; }
         );
     });
 
