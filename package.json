@@ -71,6 +71,7 @@
     "@types/mongodb": "^2.2.20",
     "@types/mongoose": "^4.7.32",
     "@types/superagent": "^3.5.6",
+    "body-parser": "^1.18.2",
     "chai": "^4.1.2",
     "chai-subset": "^1.6.0",
     "coveralls": "^2.13.3",

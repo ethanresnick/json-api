@@ -1,4 +1,5 @@
 import express = require("express");
+import bodyParser = require('body-parser');
 import R = require("ramda");
 import API = require("../../../src/index");
 import Document from "../../../src/types/Document";
@@ -146,6 +147,11 @@ export default database.then(function(dbModule) {
       throw new Error("test");
     }
   }));
+
+  // Test already-parsed bodies reaching the express strategy.
+  app.post("/parsed/json/:type(organizations)", bodyParser.json({ type: '*/*' }), Front.apiRequest);
+  app.post("/parsed/raw/:type(organizations)", bodyParser.raw({ type: '*/*' }), Front.apiRequest)
+  app.post("/parsed/text/:type(organizations)", bodyParser.text({ type: '*/*' }), Front.apiRequest)
 
   // Now, add the routes.
   // Note: below, express incorrectly passes requests using PUT and other

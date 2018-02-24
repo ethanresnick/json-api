@@ -144,15 +144,6 @@ export default class BaseStrategy {
       return undefined;
     }
 
-    if(!isReadableStream(req)) {
-      throw new APIError(
-        500,
-        undefined,
-        "Request body could not be parsed. " +
-        "Make sure other no other middleware has already parsed the request body."
-      );
-    }
-
     // Note: we always treat the encoding as utf-8 because JSON
     // is specified to always be utf-8, and letting the sender specify
     // the encoding we'll parse with (e.g., in req.headers['content-type'])
@@ -165,7 +156,50 @@ export default class BaseStrategy {
           : {})
     };
 
-    const bodyString = await getRawBody(req, bodyParserOptions);
+    const bodyString = await (() => {
+      const reqBody = (req as any).body;
+      const reqRawBody = (req as any).rawBody;
+
+      if(isReadableStream(req)) {
+        return getRawBody(req, bodyParserOptions);
+      }
+
+      else if(Buffer.isBuffer(reqBody)) {
+        return reqBody.toString('utf8');
+      }
+
+      else if(typeof reqBody === 'string') {
+        return reqBody;
+      }
+
+      else if(Buffer.isBuffer(reqRawBody)) {
+        return reqRawBody.toString('utf8');
+      }
+
+      else if(typeof reqRawBody === 'string') {
+        return reqRawBody;
+      }
+
+      return undefined;
+    })();
+
+    // If we couldn't find/make a raw body string, check for something in
+    // req.body before giving up, and just pray that it's the fully-parsed
+    // json we expect (knowing that it can't be a string or a buffer, or
+    // we'd have used it as the bodyString).
+    if(typeof bodyString === 'undefined') {
+      if('body' in req) {
+        return (req as any).body;
+      }
+
+      throw new APIError({
+        status: 500,
+        title: "Request body could not be parsed. Ensure that no other " +
+          "middleware has already read the request or, if that's not " +
+          "possible, ensure that it sets req.rawBody with the unparsed body " +
+          "string, or req.body with parsed JSON."
+      });
+    }
 
     // Even though we passed the hasBody check, the body could still be
     // empty, so we check the length. (We can't check this before doing
