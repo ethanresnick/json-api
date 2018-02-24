@@ -22,6 +22,10 @@ export default class ResourceSet extends MaybeDataWithLinks<Resource> {
     return this._data.map(it => it.type);
   }
 
+  get isSingular() {
+    return super.isSingular as boolean;
+  }
+
   toJSON(urlTemplates: UrlTemplateFnsByType) {
     return this.unwrapWith((it) => it.toJSON(urlTemplates[it.type] || {}), {});
   }

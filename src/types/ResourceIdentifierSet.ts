@@ -25,6 +25,10 @@ export default class ResourceIdentifierSet extends MaybeDataWithLinks<ResourceId
     super(it);
   }
 
+  get isSingular() {
+    return super.isSingular as boolean;
+  }
+
   toJSON() {
     return this.unwrapWith((it) => it.toJSON(), {});
   }

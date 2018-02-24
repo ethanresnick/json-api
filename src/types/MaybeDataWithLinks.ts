@@ -35,6 +35,10 @@ export default class MaybeDataWithLinks<T extends (Resource | ResourceIdentifier
     return this._data ? [...this._data.values] : [];
   }
 
+  get isSingular() {
+    return this._data ? this._data.isSingular : undefined;
+  }
+
   map(fn: Mapper<T, T>) {
     return this.delegateDataTransformToParent("map", arguments);
   }
