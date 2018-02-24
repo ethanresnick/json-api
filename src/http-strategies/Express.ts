@@ -1,5 +1,5 @@
 import varyLib = require("vary");
-import depd = require('depd')
+import depd = require('depd');
 import R = require('ramda');
 import logger from '../util/logger';
 import API, { RequestOpts, QueryBuildingContext } from "../controllers/API";

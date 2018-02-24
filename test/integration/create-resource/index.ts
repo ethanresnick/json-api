@@ -84,7 +84,7 @@ describe("Creating Resources", () => {
   });
 
   describe("Creating a Resource With A Client-Id", () => {
-    let errs: any[] = [];
+    const errs: any[] = [];
     const clientIdObjects = [
       ORG_RESOURCE_CLIENT_ID,
       ORG_RESOURCE_FALSEY_CLIENT_ID,
