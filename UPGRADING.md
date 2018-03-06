@@ -1,5 +1,7 @@
-# 3.0.0-beta.14 – 3.0.0-beta.16
-- Small new features and typings improvements
+# 3.0.0-beta.14 – 3.0.0-beta.17
+- Support sending requests with already-parsed bodies into ExpressStrategy
+- Other small new features and typings improvements
+- Bugfixes
 
 # 3.0.0-beta.13
 ## Breaking Changes
