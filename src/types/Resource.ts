@@ -140,7 +140,7 @@ export default class Resource {
   }
 
   setRelationship(relationshipPath: string, data: RelationshipArgs['data']) {
-    validateFieldGroup({ relationshipPath: true }, this._attrs);
+    validateFieldGroup({ [relationshipPath]: true }, this._attrs);
     this._relationships[relationshipPath] = Relationship.of({
       data,
       owner: { type: this._type, id: this._id, path: relationshipPath }
