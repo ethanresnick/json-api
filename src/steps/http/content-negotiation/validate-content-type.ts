@@ -3,7 +3,7 @@ import { Request } from "../../../types";
 import APIError from "../../../types/APIError";
 import { objectIsEmpty } from "../../../util/misc";
 
-export default async function validateContentType(request: Request, supportedExt?) {
+export default async function validateContentType(request: Pick<Request, "contentType">, supportedExt?) {
   // note: contentTypeParser correctly handles undefined.
   const contentType = contentTypeParser.parse(request.contentType);
 

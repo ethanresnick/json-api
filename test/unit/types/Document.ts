@@ -263,12 +263,12 @@ describe("Document class", () => {
       });
     });
 
-    it("should properly call the tranform function on each resource/identifier with proper meta", async () => {
+    it("should call the tranform function on each resource/identifier with proper meta", async () => {
       const transformFn = sinon.spy(function(resourceOrId) {
         // Test that linkage is transformed before the full resource by
         // throwing if we encounter person3 and its linkage isn't yet {test, 4}.
         if(resourceOrId instanceof Resource && resourceOrId.id === "33") {
-          const linkage = resourceOrId.relationships["organization"].values;
+          const linkage = resourceOrId.relationships.organization.values;
           expect(linkage).to.deep.equal([new ResourceIdentifier("test", "4")]);
         }
 
@@ -277,6 +277,7 @@ describe("Document class", () => {
           : Promise.resolve(resourceOrId);
       });
 
+      // tslint:disable-next-line no-shadowed-variable
       const hasMatchingCall = (calls: any[], args: any[]) => {
         return calls.findIndex((call) => {
           try { expect(call.args).to.deep.equal(args); return true; }
@@ -286,6 +287,7 @@ describe("Document class", () => {
 
       // Capture some data so we can test that our spy was called with it.
       const [person1, person3] = (collectionWithLinkageDoc.primary as ResourceSet).values;
+      //tslint:disable-next-line no-shadowed-variable no-non-null-assertion
       const [person2] = collectionWithLinkageDoc.included!;
 
       // Exercise the spy and capture what happened.

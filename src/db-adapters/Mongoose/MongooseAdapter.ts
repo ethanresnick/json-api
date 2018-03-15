@@ -291,10 +291,10 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     const parentModel = this.getModel(parentType);
 
     const prefetchedDocs = patch.map(it => it.adapterExtra).values.filter(it => !!it);
-    const getOIdAsString = R.pipe(R.prop<mongodb.ObjectID>('_id'), String);
+    const getOIdAsString = R.pipe<Record<"_id", mongodb.ObjectID>, mongodb.ObjectID, string>(R.prop('_id'), String);
 
     const docIdsToFetch = [...setDifference(
-      patch.map(R.prop<string>('id')).values,
+      patch.map(R.prop('id')).values,
       prefetchedDocs.map(getOIdAsString),
     )];
 

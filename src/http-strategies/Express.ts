@@ -67,8 +67,8 @@ export default class ExpressStrategy extends Base {
 
   protected async buildRequestObject(req: Request): Promise<JSONAPIRequest> {
     // req.host is broken in express 4; doesn't include the port
-    // tslint:disable-next-line deprecation
     const genericReqPromise =
+      // tslint:disable-next-line deprecation
       super.buildRequestObject(req, req.protocol, req.host, req.params, req.query);
 
     // If express rewrote req.url on us, update the result to use req.originalUrl.

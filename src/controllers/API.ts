@@ -69,7 +69,7 @@ export type QueryBuildingContext = {
     it: (Resource| ResourceIdentifier)[],
     useInputData: boolean,
     requiredThroughType?: string
-  ) => Promise<Document>,
+  ) => Promise<void>,
   registry: ResourceTypeRegistry,
   makeDocument: makeDocument,
   makeQuery: QueryFactory
@@ -356,7 +356,7 @@ export default class APIController {
       const query = await queryFactory({
         ...transformExtras,
         makeDocument: this.makeDoc, // tslint:disable-line no-unbound-method
-        transformDocument: R.partialRight(transformDoc, [transformExtras]),
+        transformDocument: R.partialRight(transformDoc, [transformExtras as Extras]),
         makeQuery: this.makeQuery, // tslint:disable-line no-unbound-method
         setTypePaths: R.partialRight(setTypePaths, [transformExtras.registry])
       });
