@@ -4,6 +4,7 @@ import ResourceTypeRegistry from "../ResourceTypeRegistry";
 import { FinalizedRequest, ServerReq, ServerRes } from '../types/';
 import Resource, { ResourceWithId } from "../types/Resource";
 import ResourceIdentifier from "../types/ResourceIdentifier";
+import { TransformMeta } from "../types/Document";
 const deprecate = depd("json-api");
 
 export type Extras<U extends ServerReq = ServerReq, V extends ServerRes = ServerRes> = {
@@ -22,7 +23,8 @@ export type TransformFn<T, U extends ServerReq = ServerReq, V extends ServerRes 
   serverReq: U,
   serverRes: V,
   superFn: TransformFn<T>,
-  extras: Extras<U, V>
+  extras: Extras<U, V>,
+  meta: TransformMeta
 ) => T | undefined | Promise<T | undefined>;
 
 export type ResourceTransformFn = TransformFn<Resource>;
@@ -53,6 +55,11 @@ export default function makeTransformFn(mode: TransformMode, extras: Extras) {
   const { registry } = extras;
 
   // Copy properties for backwards compatibility, with deprecation warning.
+  // TODO: when v3 is finalized, make the signature beforeSave(it, meta, extras, super)
+  // and have superFn() only prebind super & extras, so the user calls
+  // superFn(it, meta), or have it only prebind super, so the user calls
+  // `superFn(it, meta, extras)`. The latter is arguably the most intiutive and
+  // flexible, though it requires a bit more typing.
   extras.frameworkReq = extras.serverReq;
   extras.frameworkRes = extras.serverRes;
   deprecate.property(extras, 'frameworkReq', 'frameworkReq: use serverReq prop instead.');
@@ -65,7 +72,7 @@ export default function makeTransformFn(mode: TransformMode, extras: Extras) {
   // Otherwise, it'll return the result of calling the parentType's transformer
   // with the provided arguments.
   // tslint:disable-next-line no-shadowed-variable
-  const makeSuperFunction = (remainingTypes: string[], extras: Extras) => {
+  const makeSuperFunction = (remainingTypes: string[], extras: Extras, meta: TransformMeta) => {
     return (it) => {
       const parentType = remainingTypes[0];
       const parentTransform = parentType && registry[mode](parentType);
@@ -74,18 +81,19 @@ export default function makeTransformFn(mode: TransformMode, extras: Extras) {
         return it;
       }
 
-      const nextSuper = makeSuperFunction(remainingTypes.slice(1), extras);
+      const nextSuper = makeSuperFunction(remainingTypes.slice(1), extras, meta);
       return (parentTransform as TransformFn<Transformable>)(
         it,
         extras.serverReq,
         extras.serverRes,
         nextSuper,
-        extras
+        extras,
+        meta
       );
     }
   }
 
-  return async function(it: Transformable) {
+  return async function(it: Transformable, meta: TransformMeta) {
     // If this is linkage that we should not be transforming), skip it.
     // For linkage, we always look at its `type` key, which'll be a root type.
     // TODO: We could skip the instanceof check if we had an argument to the
@@ -120,8 +128,9 @@ export default function makeTransformFn(mode: TransformMode, extras: Extras) {
       it,
       extras.serverReq,
       extras.serverRes,
-      makeSuperFunction(applicableTypes.slice(1), extras),
-      extras
+      makeSuperFunction(applicableTypes.slice(1), extras, meta),
+      extras,
+      meta
     );
   }
 }

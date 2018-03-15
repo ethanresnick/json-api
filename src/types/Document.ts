@@ -29,7 +29,11 @@ export type DocumentJSON = ({
   links?: Links
 };
 
-export type DocTransformFn<T> = (resourceOrIdentifier: T) => Promise<T | undefined>;
+export type TransformMeta = {
+  section: "primary" | "included";
+};
+
+export type DocTransformFn<T> = (resourceOrIdentifier: T, meta: TransformMeta) => Promise<T | undefined>;
 export type DocResourceTransformFn = DocTransformFn<Resource>;
 export type DocFullTransformFn = DocTransformFn<Resource | ResourceIdentifier>;
 
@@ -161,19 +165,22 @@ export default class Document {
 
     // Turn the user's function into a function that we can use with flatMap
     // and that's aware of our "if undefined, then remove" pattern.
-    const flatMapper = async (it: Resource | ResourceIdentifier) => {
-      const result = await (fn as any)(it);
+    // Note: we still need to partially apply meta before handing this to flatMap.
+    const flatMapper = async (it: Resource | ResourceIdentifier, meta: TransformMeta) => {
+      const result = await (fn as DocFullTransformFn)(it, meta);
       return result === undefined ? Data.empty : Data.pure(result);
     };
 
     // Create a function used to flatMap resources that knows to walk down
-    // relationships, iff we're supposed to be doing that.
+    // relationships, iff we're supposed to be doing that. Again, we still
+    // need to partially apply meta before using with flatMap.
     const resourceFlatMapper = resourcesOnly
       ? flatMapper
-      : async function (it: Resource): Promise<Data<Resource>> {
+      : async function (it: Resource, meta: TransformMeta): Promise<Data<Resource>> {
           const relationshipNames = Object.keys(it.relationships);
+          const flatMapperWithMeta = (it2: any) => flatMapper(it2, meta);
           const newRelationshipPromises = relationshipNames.map(k =>
-            it.relationships[k].flatMapAsync(flatMapper)
+            it.relationships[k].flatMapAsync(flatMapperWithMeta)
           )
 
           const newRelationships = await Promise.all(newRelationshipPromises);
@@ -181,14 +188,19 @@ export default class Document {
             it.relationships[relationshipNames[i]] = newRelationship;
           });
 
-          return flatMapper(it);
+          // After transforming all the relationships, transform the resource.
+          return flatMapper(it, meta);
         };
 
     // Makes sure we kick off both the primary and included promises
     // before awaiting anything, for speed.
     const newPrimaryPromiseOrUndefined = (() => {
+      const primaryMeta: TransformMeta = { section: "primary" };
+      const resourceFlatMapperWithMeta = (it2: any) =>
+        (resourceFlatMapper as any)(it2, primaryMeta);
+
       if(res.primary instanceof ResourceSet) {
-        return res.primary.flatMapAsync(resourceFlatMapper);
+        return res.primary.flatMapAsync(resourceFlatMapperWithMeta);
       }
 
       // We don't have `.primary`, or we have linkage there,
@@ -198,12 +210,16 @@ export default class Document {
       }
 
       // We have, and are transforming, linkage.
-      return res.primary.flatMapAsync(flatMapper);
+      return res.primary.flatMapAsync((it2: any) => flatMapper(it2, primaryMeta));
     })();
 
     if(res.included) {
+      const includedMeta: TransformMeta = { section: "included" };
+      const resourceFlatMapperWithMeta = (it2: any) =>
+        (resourceFlatMapper as any)(it2, includedMeta);
+
       res.included =
-        (await Data.of(res.included).flatMapAsync(resourceFlatMapper)).values;
+        (await Data.of(res.included).flatMapAsync<any>(resourceFlatMapperWithMeta)).values;
     }
 
     res.primary = await newPrimaryPromiseOrUndefined;

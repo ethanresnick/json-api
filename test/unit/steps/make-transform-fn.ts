@@ -18,7 +18,7 @@ describe("makeTransformFn", () => {
     "kindergartens": {
       parentType: "schools",
       transformLinkage: true,
-      async beforeSave(it, req, res, superFn, extras) {
+      async beforeSave(it, req, res, superFn, extras, meta) {
         it.kindergartens = true;
         return superFn(it);
       }
@@ -26,11 +26,12 @@ describe("makeTransformFn", () => {
     "schools": {
       parentType: "organizations",
       transformLinkage: false, // shouldn't effect anything.
-      beforeSave(it, req, res, superFn, extras) {
+      beforeSave(it, req, res, superFn, extras, meta) {
         it.schools = true;
         it.schoolReq = req;
         it.schoolRes = res;
         it.schoolExtras = extras;
+        it.schoolMeta = meta;
         return superFn(it);
       },
       // Dont' define beforeRender here. Our law schools test relies on that.
@@ -88,6 +89,9 @@ describe("makeTransformFn", () => {
   const makeResource = makeWithTypePath(Resource);
   const makeResourceId = makeWithTypePath(ResourceIdentifier);
 
+  // Dummy meta we'll pass to all calls of the transform fn.
+  const meta = { section: "included" as "included" };
+
   const extras = {
     registry,
     serverReq: { serverReq: true } as any,
@@ -96,18 +100,19 @@ describe("makeTransformFn", () => {
   };
 
   describe("super function", () => {
-    it("should be unary, with req, res, extras already bound", () => {
+    it("should be unary, with req, res, extras, meta already bound", () => {
       const resource = makeResource("kindergartens");
       const transformFn = sut("beforeSave", extras);
 
       // If this below is true, the schools beforeSave was called with
       // the right req parameter, even though it wasn't provided explicitly
       // when kindergartens' beforeSave called superFn.
-      return transformFn(resource).then(newResource => {
+      return transformFn(resource, meta).then(newResource => {
         expect((newResource as any).kindergartens).to.be.true;
         expect((newResource as any).schoolReq).to.equal(extras.serverReq);
         expect((newResource as any).schoolRes).to.equal(extras.serverRes);
         expect((newResource as any).schoolExtras).to.equal(extras);
+        expect((newResource as any).schoolMeta).to.equal(meta);
       });
     });
 
@@ -115,7 +120,7 @@ describe("makeTransformFn", () => {
       const resource = makeResource("kindergartens");
       const transformFn = sut("beforeSave", extras);
 
-      return transformFn(resource).then(newResource => {
+      return transformFn(resource, meta).then(newResource => {
         const { kindergartens, schools, organizations } = newResource as any;
         expect(kindergartens).to.be.true;
         expect(schools).to.be.true;
@@ -127,7 +132,7 @@ describe("makeTransformFn", () => {
       const resource = makeResource("law-schools");
       const transformFn = sut("beforeRender", extras);
 
-      return transformFn(resource).then(newResource => {
+      return transformFn(resource, meta).then(newResource => {
         const { lawSchools, organizations } = newResource as any;
         expect(lawSchools).to.be.true;
         expect(organizations).to.be.undefined;
@@ -138,7 +143,7 @@ describe("makeTransformFn", () => {
       const resource = makeResource("sponsorships");
       const transformFn = sut("beforeSave", extras);
 
-      return transformFn(resource).then(newResource => {
+      return transformFn(resource, meta).then(newResource => {
         expect(newResource).to.have.property('sponsorships', true);
         expect(newResource).to.not.have.property('incomes');
       });
@@ -160,9 +165,9 @@ describe("makeTransformFn", () => {
       const renderTransformFn = sut("beforeRender", extras);
 
       return Promise.all([
-        saveTransformFn(linkage1),
-        renderTransformFn(linkage2),
-        saveTransformFn(linkage3)
+        saveTransformFn(linkage1, meta),
+        renderTransformFn(linkage2, meta),
+        saveTransformFn(linkage3, meta)
       ]).then(([newLinkage1, newLinkage2, newLinkage3]) => {
         expect(newLinkage1).to.have.property('organizations', true);
         expect(newLinkage1).to.not.have.property('schools');

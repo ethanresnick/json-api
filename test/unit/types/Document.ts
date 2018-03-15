@@ -1,4 +1,5 @@
 import chai = require("chai");
+import sinon = require("sinon");
 import chaiSubset = require("chai-subset");
 import Data from "../../../src/types/Generic/Data";
 import Resource from "../../../src/types/Resource";
@@ -165,6 +166,7 @@ describe("Document class", () => {
 
     let collectionDoc: Document,
       relationshipDoc: Document,
+      collectionWithLinkageDoc: Document,
       singleResourceDoc: Document,
       resourceIdDoc: Document;
 
@@ -176,6 +178,11 @@ describe("Document class", () => {
       });
 
       relationshipDoc = new Document({ primary: makeFullRelation() });
+
+      collectionWithLinkageDoc = new Document({
+        primary: ResourceSet.of({ data: [makePerson(), makePerson3()] }),
+        included: [makePerson2()]
+      })
 
       singleResourceDoc = new Document({
         primary: ResourceSet.of({ data: Data.pure(makePerson3()) }),
@@ -250,10 +257,54 @@ describe("Document class", () => {
       });
     });
 
-    it("should leave meta alone", () => {
+    it("should leave document.meta alone", () => {
       return singleResourceDoc.transform(removeTransform).then((newDoc) => {
         expect(newDoc.meta).to.deep.equal(singleResourceDoc.meta);
       });
-    })
+    });
+
+    it("should properly call the tranform function on each resource/identifier with proper meta", async () => {
+      const transformFn = sinon.spy(function(resourceOrId) {
+        // Test that linkage is transformed before the full resource by
+        // throwing if we encounter person3 and its linkage isn't yet {test, 4}.
+        if(resourceOrId instanceof Resource && resourceOrId.id === "33") {
+          const linkage = resourceOrId.relationships["organization"].values;
+          expect(linkage).to.deep.equal([new ResourceIdentifier("test", "4")]);
+        }
+
+        return resourceOrId instanceof ResourceIdentifier
+          ? Promise.resolve(new ResourceIdentifier("test", "4"))
+          : Promise.resolve(resourceOrId);
+      });
+
+      const hasMatchingCall = (calls: any[], args: any[]) => {
+        return calls.findIndex((call) => {
+          try { expect(call.args).to.deep.equal(args); return true; }
+          catch(e) { return false; }
+        }) > -1;
+      }
+
+      // Capture some data so we can test that our spy was called with it.
+      const [person1, person3] = (collectionWithLinkageDoc.primary as ResourceSet).values;
+      const [person2] = collectionWithLinkageDoc.included!;
+
+      // Exercise the spy and capture what happened.
+      await collectionWithLinkageDoc.transform(transformFn, false);
+      const calls = transformFn.getCalls();
+
+      // Called on all three resources and the linkage.
+      expect(transformFn.callCount).to.equal(4);
+
+      // Test for call on the linkage with proper meta.
+      expect(hasMatchingCall(calls, [
+        new ResourceIdentifier("organizations", "1"),
+        { section: "primary" },
+      ])).to.be.true;
+
+      // Test for call on the resources
+      expect(hasMatchingCall(calls, [person3, { section: "primary" }])).to.be.true;
+      expect(hasMatchingCall(calls, [person1, { section: "primary" }])).to.be.true;
+      expect(hasMatchingCall(calls, [person2, { section: "included" }])).to.be.true;
+    });
   })
 });
