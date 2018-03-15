@@ -1,3 +1,7 @@
+# 3.0.0-beta.18
+- `beforeSave`/`beforeRender` now receive an additional argument providing some metadata about the resource/identifier being transformed. At the moment, this metadata is simply what section of the document ("included" or "primary") the the resource/identifier is from.
+- Some protected methods of the `MaybeDataWithLinks` class has been renamed. If you were subclassing this class (which you probably shouldn't, as it's really an internal detail), you may have to update your code.
+
 # 3.0.0-beta.14 – 3.0.0-beta.17
 - Support sending requests with already-parsed bodies into ExpressStrategy
 - Other small new features and typings improvements
