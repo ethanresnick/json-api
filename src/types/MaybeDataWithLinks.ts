@@ -40,23 +40,23 @@ export default class MaybeDataWithLinks<T extends (Resource | ResourceIdentifier
   }
 
   map(fn: Mapper<T, T>) {
-    return this.delegateDataTransformToParent("map", arguments);
+    return this.delegateTransformToData("map", arguments);
   }
 
   flatMap(fn: (it: T) => Data<T>) {
-    return this.delegateDataTransformToParent("flatMap", arguments);
+    return this.delegateTransformToData("flatMap", arguments);
   }
 
   filter(fn: PredicateFn<T>) {
-    return this.delegateDataTransformToParent("filter", arguments);
+    return this.delegateTransformToData("filter", arguments);
   }
 
   mapAsync(fn: AsyncMapper<T, T>) {
-    return this.delegateDataTransformToParentAsync("mapAsync", arguments);
+    return this.delegateTransformToDataAsync("mapAsync", arguments);
   }
 
   flatMapAsync(fn: (it: T) => Data<T> | Promise<Data<T>>) {
-    return this.delegateDataTransformToParentAsync("flatMapAsync", arguments);
+    return this.delegateTransformToDataAsync("flatMapAsync", arguments);
   }
 
   /**
@@ -122,13 +122,13 @@ export default class MaybeDataWithLinks<T extends (Resource | ResourceIdentifier
     });
   }
 
-  protected delegateDataTransformToParent(methodName: DataSyncMethods, args) {
+  protected delegateTransformToData(methodName: DataSyncMethods, args) {
     return this._data
       ? this.withNewData((this._data[methodName] as any)(...args))
       : this
   }
 
-  protected delegateDataTransformToParentAsync(methodName: DataAsyncMethods, args) {
+  protected delegateTransformToDataAsync(methodName: DataAsyncMethods, args) {
     return this._data
       ? (this._data[methodName] as (...args: any[]) => Promise<Data<T>>)(...args)
           .then(newData => this.withNewData(newData))
