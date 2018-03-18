@@ -1,4 +1,4 @@
-import {expect} from "chai";
+import { expect } from "chai";
 import AgentPromise from "../../app/agent";
 import {
   ORG_RESOURCE_CLIENT_ID,
@@ -123,7 +123,7 @@ describe("Creating Resources", () => {
     before(() => {
       return Agent.request("POST", "/organizations")
         .type("application/vnd.api+json")
-        .send({"data": INVALID_ORG_RESOURCE_NO_DATA_IN_RELATIONSHIP})
+        .send({ data: INVALID_ORG_RESOURCE_NO_DATA_IN_RELATIONSHIP })
         .promise()
         .then(() => {
           throw new Error("Should not run!");

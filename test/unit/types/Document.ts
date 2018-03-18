@@ -18,7 +18,7 @@ describe("Document class", () => {
     Relationship.of({
       data: Data.empty,
       owner: { type: "people", path: "organization", id: "31" }
-    })
+    });
 
   const makeDatalessRelation = () =>
     Relationship.of({
@@ -38,33 +38,35 @@ describe("Document class", () => {
     new Resource(
       "people",
       "31",
-      { "name": "mark" },
-      { "organization": makeEmptyRelation() }
+      { name: "mark" },
+      { organization: makeEmptyRelation() }
     );
 
   const makePerson2 = () =>
     new Resource(
       "people",
       "32",
-      { "name": "ethan" },
-      { "organization": makeDatalessRelation() });
+      { name: "ethan" },
+      { organization: makeDatalessRelation() }
+    );
 
   const makePerson3 = () =>
     new Resource(
       "people",
       "33",
-      { "name": "john" },
-      { "organization": makeFullRelation() });
+      { name: "john" },
+      { organization: makeFullRelation() }
+    );
 
   const person = makePerson();
   const person2 = makePerson2();
   const people = Data.of([person, person2]);
 
-  const topLevelMeta = { "mcawesome": true };
+  const topLevelMeta = { mcawesome: true };
   const urlTemplates = {
-    "people": {
+    people: {
       // tslint:disable-next-line:no-unbound-method
-      "relationship": templating.parse("RELATIONSHIP{ownerId}{path}").expand
+      relationship: templating.parse("RELATIONSHIP{ownerId}{path}").expand
     }
   };
 
@@ -75,7 +77,7 @@ describe("Document class", () => {
         meta: (["bob"] as any)
       })).to.throw(/meta.*object/i);
     });
-  })
+  });
 
   describe("Rendering a document", () => {
     const relationshipDocJSON = new Document({
@@ -152,7 +154,7 @@ describe("Document class", () => {
       expect(collectionDocJSON.data[1].relationships.organization.links.self).to.equal("http://localhost/a?filter=32");
     });
 
-    it('should render top-level links when a relationship is primary data', () => {
+    it("should render top-level links when a relationship is primary data", () => {
       expect(relationshipDocJSON.links).to.be.an("object");
       expect((relationshipDocJSON.links as any).self).to.equal("http://localhost/a?filter=32");
     })
@@ -162,7 +164,7 @@ describe("Document class", () => {
     const removeTransform = it => Promise.resolve(undefined);
     const removeLinkageTransform = (it) => {
       return Promise.resolve(it instanceof Resource ? it : undefined);
-    }
+    };
 
     let collectionDoc: Document,
       relationshipDoc: Document,
@@ -182,7 +184,7 @@ describe("Document class", () => {
       collectionWithLinkageDoc = new Document({
         primary: ResourceSet.of({ data: [makePerson(), makePerson3()] }),
         included: [makePerson2()]
-      })
+      });
 
       singleResourceDoc = new Document({
         primary: ResourceSet.of({ data: Data.pure(makePerson3()) }),
@@ -226,7 +228,7 @@ describe("Document class", () => {
               }
             }
           }
-        })
+        });
       });
     });
 
@@ -253,7 +255,7 @@ describe("Document class", () => {
               }
             }
           }
-        })
+        });
       });
     });
 
@@ -308,5 +310,5 @@ describe("Document class", () => {
       expect(hasMatchingCall(calls, [person1, { section: "primary" }])).to.be.true;
       expect(hasMatchingCall(calls, [person2, { section: "included" }])).to.be.true;
     });
-  })
+  });
 });

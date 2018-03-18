@@ -21,7 +21,7 @@ export class Nothing<T> {
   map<U>(transform: (v: T) => U | undefined): Maybe<U> {
     return this as any as Nothing<U>;
   }
-};
+}
 
 export class Just<T> {
   private val: T;

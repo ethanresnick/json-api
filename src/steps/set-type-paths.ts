@@ -38,7 +38,7 @@ import ResourceTypeRegistry from "../ResourceTypeRegistry";
  * @param {ResourceTypeRegistry} registry The central registry
  */
 export default async function(
-  resourcesAndIds: (Resource|ResourceIdentifier)[],
+  resourcesAndIds: (Resource | ResourceIdentifier)[],
   useInputTypesList: boolean,
   requiredThroughType: string | undefined,
   registry: ResourceTypeRegistry

@@ -1,8 +1,8 @@
-import Resource, { ResourceJSON } from './Resource';
+import Resource, { ResourceJSON } from "./Resource";
 import ResourceIdentifier, { ResourceIdentifierJSON } from "./ResourceIdentifier";
 import Document, { DocumentData } from "./Document";
 import Data from "./Generic/Data";
-import { ParsedQueryParams } from '../steps/pre-query/parse-query-params';
+import { ParsedQueryParams } from "../steps/pre-query/parse-query-params";
 import { IncomingMessage, ServerResponse } from "http";
 
 // A helper type to capture the ability of
@@ -12,8 +12,8 @@ export type DataOf<T> = null | T | T[];
 // Types used in the code as function arguments for JSON:API structures.
 export type PrimaryData = DataOf<Resource> | DataOf<ResourceIdentifier>;
 export type DataWithLinksArgs<T> = {
-  data: T | T[] | null | Data<T>,
-  links?: UrlTemplateFns
+  data: T | T[] | null | Data<T>;
+  links?: UrlTemplateFns;
 };
 
 // Types for JSON values
@@ -22,10 +22,10 @@ export type PrimaryDataJSON = DataOf<ResourceJSON> | LinkageJSON;
 export type Links = { [linkName: string]: any };
 
 // Types for convenience, for built-in js array helpers.
-export type Reducer<T,U = any> = (acc: U, it: T, i: number, arr: T[]) => U;
+export type Reducer<T, U = any> = (acc: U, it: T, i: number, arr: T[]) => U;
 export type PredicateFn<T> = (it: T, i: number, arr: T[]) => boolean;
-export type Mapper<T,U> = (it: T, i: number, arr: T[]) => U;
-export type AsyncMapper<T,U> = (it: T, i: number, arr: T[]) => U | Promise<U>;
+export type Mapper<T, U> = (it: T, i: number, arr: T[]) => U;
+export type AsyncMapper<T, U> = (it: T, i: number, arr: T[]) => U | Promise<U>;
 export type Reduceable<T, U> = { reduce: (fn: Reducer<T, U>, init?: U) => U };
 
 // Types for interacting with the underlying server
@@ -36,7 +36,7 @@ export type ServerRes = ServerResponse;
 export type StrictDictMap<T> = { [it: string]: T | undefined };
 
 // Types related to queries
-export type Sort = { field: string; direction: 'ASC' | 'DESC' };
+export type Sort = { field: string; direction: "ASC" | "DESC" };
 
 export type Predicate = {
   operator: "and" | "or";
@@ -63,11 +63,11 @@ export type FieldConstraint = ({
 };
 
 export type UrlTemplateFnsByType = {
-  [typeName: string]: UrlTemplateFns
+  [typeName: string]: UrlTemplateFns;
 };
 
 export type UrlTemplateFns = {
-  [linkName: string]: ((data: any) => string) | undefined
+  [linkName: string]: ((data: any) => string) | undefined;
 };
 
 // I'm gonna start introducing more intermediate representations
@@ -106,14 +106,14 @@ export type Request = {
 
   // The prop below will be used in the future with the JSON:API ext system.
   //ext: string[];
-}
+};
 
 // A request, with its query parameters parsed for their
 // JSON:API-specific format, and the body (if any) parsed into a Document.
 export type FinalizedRequest = Request & {
-  queryParams: ParsedQueryParams,
-  document: Document | undefined
-}
+  queryParams: ParsedQueryParams;
+  document: Document | undefined;
+};
 
 // Result is different than HTTPResponse in that it contains details of the
 // result that are salient for JSON:API, not structured in HTTP terms.
@@ -123,8 +123,8 @@ export type Result = {
   headers?: { [headerName: string]: string };
   ext?: string[];
   status?: number;
-  document?: Document
-}
+  document?: Document;
+};
 
 export interface HTTPResponse {
   // Note: header names are all lowercase.
@@ -133,7 +133,7 @@ export interface HTTPResponse {
   headers: {
     "content-type"?: string;
     vary?: string;
-  },
+  };
   status: number;
   body?: string;
 }

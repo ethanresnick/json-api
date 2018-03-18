@@ -84,7 +84,7 @@ export default class KoaStrategy extends Base {
 
     Object.keys(otherHeaders).forEach(k => {
       ctx.res.set(k, otherHeaders[k]);
-    })
+    });
 
     if(responseObject.body !== undefined) {
       ctx.body = new Buffer(responseObject.body);
@@ -101,11 +101,11 @@ export default class KoaStrategy extends Base {
    * @param {Object} ctx Koa's context object
    */
   sendError(this: any, errors, ctx) {
-    API.responseFromError(errors, ctx.headers.accept).then(
-      (responseObject) => this.sendResources(responseObject, ctx)
-    ).catch((err) => {
-      // if we hit an error generating our error...
-      ctx.throw(err.message, err.status);
-    });
+    API.responseFromError(errors, ctx.headers.accept)
+      .then(responseObject => this.sendResources(responseObject, ctx))
+      .catch(err => {
+        // if we hit an error generating our error...
+        ctx.throw(err.message, err.status);
+      });
   }
 }

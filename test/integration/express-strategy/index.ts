@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import AgentPromise from "../../app/agent";
-import { VALID_ORG_RESOURCE_NO_ID } from "../fixtures/creation"
+import { VALID_ORG_RESOURCE_NO_ID } from "../fixtures/creation";
 
 describe("Express Strategy", () => {
   let Agent;
@@ -16,15 +16,16 @@ describe("Express Strategy", () => {
         "/parsed/json/organizations"
       ];
 
-      return Promise.all(urls.map(url =>
-        Agent
-          .request("POST", url)
-          .type("application/vnd.api+json")
-          .send({ data: VALID_ORG_RESOURCE_NO_ID })
-          .then(resp => {
-            expect(resp.status).to.equal(201);
-          })
-      ));
+      return Promise.all(
+        urls.map(url =>
+          Agent.request("POST", url)
+            .type("application/vnd.api+json")
+            .send({ data: VALID_ORG_RESOURCE_NO_ID })
+            .then(resp => {
+              expect(resp.status).to.equal(201);
+            })
+        )
+      );
     });
   });
 
@@ -35,4 +36,4 @@ describe("Express Strategy", () => {
       });
     });
   });
-})
+});

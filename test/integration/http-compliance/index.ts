@@ -1,4 +1,4 @@
-import {expect} from "chai";
+import { expect } from "chai";
 import AgentPromise from "../../app/agent";
 
 describe("HTTP Compliance", () => {

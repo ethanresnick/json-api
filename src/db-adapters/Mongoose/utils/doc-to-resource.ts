@@ -5,7 +5,7 @@ import ResourceIdentifier from "../../../types/ResourceIdentifier";
 import Relationship from "../../../types/Relationship";
 import { deleteNested } from "../../../util/misc";
 import { StrictDictMap } from "../../../types";
-import { getTypePath } from './subtyping';
+import { getTypePath } from "./subtyping";
 import {
   getReferencePaths,
   getReferencedModelName,
@@ -112,7 +112,7 @@ export default function docToResource(
     // just converting undefined to null first, since that's what JSON:API
     // uses to represent the missing, singular case.
     const normalizedValAtPath =
-      typeof jsonValAtPath === 'undefined' ? null : jsonValAtPath;
+      typeof jsonValAtPath === "undefined" ? null : jsonValAtPath;
 
     const linkage = Data.fromJSON(normalizedValAtPath).map((docOrId) => {
       // Below, if docOrId has an _id prop, we're dealing with a mongoose doc

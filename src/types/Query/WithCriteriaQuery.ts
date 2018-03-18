@@ -4,7 +4,7 @@
 // So, we give up on that and just use a superclass instead.
 // Also, we give up on using Immutable because its typing suck so we have to
 // give up basically all type safety in order to use it.
-import Query, { QueryOptions } from './Query';
+import Query, { QueryOptions } from "./Query";
 import { FieldConstraint, Predicate, AndPredicate } from "../index";
 import R = require("ramda");
 
@@ -24,14 +24,16 @@ export default class WithCriteriaQuery extends Query {
       singular: boolean;
       offset?: number;
       limit?: number;
-    }
+    };
   };
 
   constructor(opts: WithCriteriaQueryOptions) {
     super(opts);
 
     if(opts.id && opts.ids) {
-      throw new Error("Can't provide both the id and the ids options. Pick one.");
+      throw new Error(
+        "Can't provide both the id and the ids options. Pick one."
+      );
     }
 
     this.query = {
@@ -78,7 +80,7 @@ export default class WithCriteriaQuery extends Query {
           ]
         }
       }
-    }
+    };
     return res;
   }
 
@@ -141,8 +143,11 @@ export default class WithCriteriaQuery extends Query {
    */
   isSimpleIdQuery(): boolean {
     const filters = this.query.criteria.where.value;
-    return filters.length === 1 && filters[0].field === 'id'
-      && (filters[0].operator === 'eq' || filters[0].operator === 'in');
+    return (
+      filters.length === 1 &&
+      filters[0].field === "id" &&
+      (filters[0].operator === "eq" || filters[0].operator === "in")
+    );
   }
 
   // Still experimental

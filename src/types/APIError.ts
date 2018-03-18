@@ -8,7 +8,7 @@ export type APIErrorJSON = {
   detail?: string;
   links?: any;
   paths?: any;
-}
+};
 
 export type Opts = {
   status?: string | number;
@@ -19,7 +19,7 @@ export type Opts = {
   paths?: string[];
 };
 
-export const displaySafe = Symbol('isJSONAPIDisplayReady');
+export const displaySafe = Symbol("isJSONAPIDisplayReady");
 
 // TODO: refactor args list to be:
 // constructor(title, status, [code, detail, links, paths])
@@ -35,8 +35,12 @@ export default class APIError extends Error {
 
   constructor(opts: Opts);
   constructor(
-    status?: Opts['status'], code?: Opts['code'], title?: Opts['title'],
-    detail?: Opts['detail'], links?: Opts['links'], paths?: Opts['paths']
+    status?: Opts["status"],
+    code?: Opts["code"],
+    title?: Opts["title"],
+    detail?: Opts["detail"],
+    links?: Opts["links"],
+    paths?: Opts["paths"]
   );
   constructor(...args: any[]) {
     super();
@@ -55,7 +59,7 @@ export default class APIError extends Error {
           ["status", "code", "title", "detail"].indexOf(<string>prop) > -1;
 
         (obj as any)[prop] = coercePropToString
-          ? (value == null ? undefined : String(value))
+          ? value == null ? undefined : String(value)
           : value;
 
         return true;
@@ -76,7 +80,7 @@ export default class APIError extends Error {
   }
 
   toJSON(): APIErrorJSON {
-    return {...(this as object)};
+    return { ...(this as object) };
   }
 
   /**

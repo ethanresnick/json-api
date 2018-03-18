@@ -1,9 +1,9 @@
-import {expect} from "chai";
+import { expect } from "chai";
 import Data from "../../../../src/types/Generic/Data";
 
 describe("Data type", () => {
-  const item1 = {"type": "a", "id": "1"};
-  const item2 = {"type": "b", "id": "2"};
+  const item1 = { type: "a", id: "1" };
+  const item2 = { type: "b", id: "2" };
 
   const a = Data.of([item1, item2]);
   const b = Data.pure(item2);
@@ -14,11 +14,11 @@ describe("Data type", () => {
   const emptyVal = (<any>Data.empty).value;
 
   // Callbacks
-  const mapper = it => ({...it, type: it.type + 'here'});
+  const mapper = it => ({ ...it, type: it.type + "here" });
   const asyncMapper = it => Promise.resolve(mapper(it));
 
   const toEmpty = it => Data.empty;
-  const toPlural = (it) => Data.of([it]);
+  const toPlural = it => Data.of([it]);
   const twice = it => Data.of([it, it]);
   const twiceAsync = it => Promise.resolve(twice(it));
   const toEmptyAsync = it => Promise.resolve(Data.empty);
@@ -30,7 +30,7 @@ describe("Data type", () => {
         mapper(item2)
       ]);
 
-      const bMapped = (<any>b.map(mapper));
+      const bMapped = <any>b.map(mapper);
       expect(bMapped.value.data).to.deep.equal([mapper(item2)]);
       expect(bMapped.value.isSingular).to.be.true;
     });
@@ -40,7 +40,7 @@ describe("Data type", () => {
     it("should produce a promise for the result of a normal map", () => {
       return Promise.all([
         a.mapAsync(asyncMapper).then(mapped => {
-          expect(mapped).to.deep.equal(a.map(mapper))
+          expect(mapped).to.deep.equal(a.map(mapper));
         }),
 
         b.mapAsync(asyncMapper).then(mapped => {
@@ -73,15 +73,15 @@ describe("Data type", () => {
           (<any>a.flatMap(pair[0]).flatMap(pair[1])).value
         ).to.deep.equal(
           (<any>a.flatMap(x => (<any>pair[0](x)).flatMap(pair[1]))).value
-        )
+        );
 
         expect(
           (<any>b.flatMap(pair[0]).flatMap(pair[1])).value
         ).to.deep.equal(
           (<any>b.flatMap(x => (<any>pair[0](x)).flatMap(pair[1]))).value
-        )
+        );
       });
-    })
+    });
   });
 
   describe("flatMapAsync", () => {
@@ -93,7 +93,7 @@ describe("Data type", () => {
         (<any>b.flatMapAsync(toEmptyAsync)).then(mapped =>
           expect((<any>mapped).value).to.deep.equal((<any>b.flatMap(toEmpty)).value)),
       ]);
-    })
+    });
   });
 
   describe("reduce", () => {
@@ -113,7 +113,7 @@ describe("Data type", () => {
       expect(Data.of([1, 2, 3]).reduce(((acc, it) => acc + it), 3)).to.equal(9);
       expect(Data.of([1, 2, 3]).reduce(((acc, it) => acc + it), "0")).to.equal("0123");
     });
-  })
+  });
 
   describe("empty", () => {
     it("should follow empty >>= f ≡ empty", () => {

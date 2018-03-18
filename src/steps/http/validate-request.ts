@@ -2,7 +2,7 @@ import APIError from "../../types/APIError";
 import { Request } from "../../types";
 
 export async function checkBodyExistence(request: Request) {
-  const hasBody = typeof request.body !== 'undefined';
+  const hasBody = typeof request.body !== "undefined";
 
   const needsBody =
     ["post", "patch"].indexOf(<string>request.method) !== -1 ||

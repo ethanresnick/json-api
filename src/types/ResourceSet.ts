@@ -1,5 +1,5 @@
-import Resource from './Resource';
-import Data from './Generic/Data';
+import Resource from "./Resource";
+import Data from "./Generic/Data";
 import { UrlTemplateFnsByType, DataWithLinksArgs } from "./index";
 import MaybeDataWithLinks from "./MaybeDataWithLinks";
 
@@ -7,7 +7,7 @@ export default class ResourceSet extends MaybeDataWithLinks<Resource> {
   protected _data: Data<Resource>;
 
   protected constructor(it: DataWithLinksArgs<Resource>) {
-    if(typeof it.data === 'undefined') {
+    if(typeof it.data === "undefined") {
       throw new Error("Cannot construct a ResourceSet with missing data.");
     }
 

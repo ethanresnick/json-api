@@ -18,7 +18,7 @@ export class OrganizationSchema extends mongoose.Schema {
       reversed: {
         type: String
       },
-      liaisons: [{ref: "Person", type: ObjectId}],
+      liaisons: [{ ref: "Person", type: ObjectId }],
       modified: { type: Date, default: new Date() },
 
       // This variable is never set by the user on create,
@@ -29,8 +29,8 @@ export class OrganizationSchema extends mongoose.Schema {
       }
     });
 
-    this.virtual('virtualName').get(function(this: OrgDoc) {
-      return this.name + ' (virtualized)';
+    this.virtual("virtualName").get(function(this: OrgDoc) {
+      return this.name + " (virtualized)";
     });
 
     this.virtual('echo').set(function(this: OrgDoc, v: string) {
@@ -44,4 +44,4 @@ export class OrganizationSchema extends mongoose.Schema {
 const schema = new OrganizationSchema();
 const model = mongoose.model("Organization", schema);
 
-export default {"model": model, schema: OrganizationSchema};
+export default { model: model, schema: OrganizationSchema };

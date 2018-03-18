@@ -3,7 +3,7 @@ import AgentPromise from "../../app/agent";
 import { VALID_ORG_RESOURCE_NO_ID } from "../fixtures/creation";
 import { VALID_ORG_STATE_GOVT_PATCH } from "../fixtures/updates";
 
-const {expect} = chai;
+const { expect } = chai;
 
 AgentPromise.then((Agent) => {
   describe("Content Negotiation", () => {
@@ -13,7 +13,7 @@ AgentPromise.then((Agent) => {
     it("must reject parameterized content-type", (done) => {
       Agent.request("POST", "/organizations")
         .type("application/vnd.api+json;ext=blah")
-        .send({"data": VALID_ORG_RESOURCE_NO_ID})
+        .send({ data: VALID_ORG_RESOURCE_NO_ID })
         .promise()
         .then(() => {
           done(new Error("Should not run!"));
@@ -30,7 +30,7 @@ AgentPromise.then((Agent) => {
     it("must accept charset parameter", (done) => {
       Agent.request("POST", "/organizations")
         .type("application/vnd.api+json;charset=utf-8")
-        .send({"data": VALID_ORG_RESOURCE_NO_ID})
+        .send({ data: VALID_ORG_RESOURCE_NO_ID })
         .promise()
         .then((res) => {
           expect(res.status).to.equal(201);
@@ -44,7 +44,7 @@ AgentPromise.then((Agent) => {
     it("must prefer sending JSON API media type, if its acceptable", (done) => {
       Agent.request("POST", "/organizations")
         .accept("application/vnd.api+json, application/json")
-        .send({"data": VALID_ORG_RESOURCE_NO_ID})
+        .send({ data: VALID_ORG_RESOURCE_NO_ID })
         .type("application/vnd.api+json")
         .promise()
         .then((res) => {
@@ -80,7 +80,7 @@ AgentPromise.then((Agent) => {
 
     it("should by default 406 if the client can't accept json", (done) => {
       Agent.request("GET", "/organizations")
-        .accept('text/html')
+        .accept("text/html")
         .promise()
         .then(res => {
           done(new Error("Should not run, since this request should be a 404"));
@@ -92,7 +92,7 @@ AgentPromise.then((Agent) => {
 
     it("should delegate 406s to express if strategy so configured", (done) => {
       Agent.request("GET", "/organizations/no-id/406-delegation-test")
-        .accept('text/html')
+        .accept("text/html")
         .promise()
         .then(res => {
           expect(res.text).to.equal("Hello from express");

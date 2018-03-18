@@ -1,4 +1,4 @@
-import {expect} from "chai";
+import { expect } from "chai";
 import APIError from "../../../src/types/APIError";
 
 describe("Error Objects", () => {
@@ -22,9 +22,9 @@ describe("Error Objects", () => {
     });
 
     it("should have status as an enumerable own property", () => {
-      expect(Object.keys(er)).to.include('status');
+      expect(Object.keys(er)).to.include("status");
     });
-  })
+  });
 
   describe("the fromError helper", () => {
     it("should pass APIError instances through as is", () => {

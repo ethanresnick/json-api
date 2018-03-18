@@ -29,5 +29,10 @@ export function getTypeName(
   modelName: string,
   pluralizer: typeof pluralize.plural = pluralize.plural.bind(pluralize)
 ) {
-  return pluralizer(modelName.replace(/([A-Z])/g, "\-$1").slice(1).toLowerCase());
+  return pluralizer(
+    modelName
+      .replace(/([A-Z])/g, "-$1")
+      .slice(1)
+      .toLowerCase()
+  );
 }

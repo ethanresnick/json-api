@@ -44,7 +44,7 @@ describe("ResourceTypeRegistry", function() {
       const resType = <ResourceTypeDescription>registry.type("someType");
       const resTypeInfo = <ResourceTypeInfo>resType.info;
 
-      expect(resType).to.be.an('object');
+      expect(resType).to.be.an("object");
       expect(resTypeInfo.description).to.equal("provided to constructor");
     });
 
@@ -139,9 +139,9 @@ describe("ResourceTypeRegistry", function() {
       });
 
       const registeredTypes = new ResourceTypeRegistry(typeDescs).typeNames();
-      expect(registeredTypes).to.contain('legitDesc');
-      expect(registeredTypes).to.not.contain('nonEnumerableKey');
-      expect(registeredTypes).to.not.contain('prototypeKey');
+      expect(registeredTypes).to.contain("legitDesc");
+      expect(registeredTypes).to.not.contain("nonEnumerableKey");
+      expect(registeredTypes).to.not.contain("prototypeKey");
     });
   });
 
@@ -258,7 +258,7 @@ describe("ResourceTypeRegistry", function() {
         { path: ["kindergartens", "organizations", "schools"],
           ordered: ["kindergartens", "schools", "organizations"] },
 
-        { path: ["law-schools", "schools", "organizations"] },
+        { path: ["law-schools", "schools", "organizations"] }
       ];
 
       const invalidPaths = [
@@ -278,7 +278,7 @@ describe("ResourceTypeRegistry", function() {
       it("should not accept an empty path as valid", () => {
         expect(sut([])).to.be.false;
         expect(sut([], "schools")).to.be.false;
-      })
+      });
 
       describe("without throughType", () => {
         it("should return the ordered path if path points to a type; else false", () => {
@@ -289,8 +289,8 @@ describe("ResourceTypeRegistry", function() {
           invalidPaths.forEach(path => {
             expect(sut(path.path)).to.be.false;
           });
-        })
-      })
+        });
+      });
 
       describe("with throughType", () => {
         it("should return the ordered path if path points to throughType or a child of it; else false", () => {
@@ -298,7 +298,7 @@ describe("ResourceTypeRegistry", function() {
 
           // Invalid paths should continue to be invalid, regardless of throughType.
           invalidPaths.forEach(path => {
-            const throughType = Math.random() < .5 ? "schools" : "people";
+            const throughType = Math.random() < 0.5 ? "schools" : "people";
             expect(sut(path.path, throughType)).to.be.false;
           });
 

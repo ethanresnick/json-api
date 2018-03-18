@@ -1,4 +1,4 @@
-import {expect} from "chai";
+import { expect } from "chai";
 import AgentPromise from "../../app/agent";
 import {
   VALID_TO_MANY_RELATIONSHIP_EMPTY_PATCH,
@@ -44,7 +44,10 @@ describe("Partially modifying a relationship at a relationship endpoint", () => 
 
   const duplicateLinkage = {
     ...VALID_ORG_RELATIONSHIP_PATCH,
-    data: [...VALID_ORG_RELATIONSHIP_PATCH.data, ...VALID_ORG_RELATIONSHIP_PATCH.data]
+    data: [
+      ...VALID_ORG_RELATIONSHIP_PATCH.data,
+      ...VALID_ORG_RELATIONSHIP_PATCH.data
+    ]
   };
 
   describe("Adding to a to-many relationship at a relationship endpoint", () => {

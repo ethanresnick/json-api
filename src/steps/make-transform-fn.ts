@@ -1,7 +1,7 @@
 import depd = require("depd");
 import logger from "../util/logger";
 import ResourceTypeRegistry from "../ResourceTypeRegistry";
-import { FinalizedRequest, ServerReq, ServerRes } from '../types/';
+import { FinalizedRequest, ServerReq, ServerRes } from "../types/";
 import Resource, { ResourceWithId } from "../types/Resource";
 import ResourceIdentifier from "../types/ResourceIdentifier";
 import { TransformMeta } from "../types/Document";
@@ -62,8 +62,16 @@ export default function makeTransformFn(mode: TransformMode, extras: Extras) {
   // flexible, though it requires a bit more typing.
   extras.frameworkReq = extras.serverReq;
   extras.frameworkRes = extras.serverRes;
-  deprecate.property(extras, 'frameworkReq', 'frameworkReq: use serverReq prop instead.');
-  deprecate.property(extras, 'frameworkRes', 'frameworkRes: use serverReq prop instead.');
+  deprecate.property(
+    extras,
+    "frameworkReq",
+    "frameworkReq: use serverReq prop instead."
+  );
+  deprecate.property(
+    extras,
+    "frameworkRes",
+    "frameworkRes: use serverReq prop instead."
+  );
 
   // A function that can create the super function, which has to happen
   // recursively. The super function is a function that the first transformer
@@ -90,8 +98,8 @@ export default function makeTransformFn(mode: TransformMode, extras: Extras) {
         extras,
         meta
       );
-    }
-  }
+    };
+  };
 
   return async function(it: Transformable, meta: TransformMeta) {
     // If this is linkage that we should not be transforming), skip it.
@@ -117,7 +125,8 @@ export default function makeTransformFn(mode: TransformMode, extras: Extras) {
       );
     }
 
-    const applicableTypes = it instanceof Resource && it.typePath ? it.typePath : [it.type];
+    const applicableTypes =
+      it instanceof Resource && it.typePath ? it.typePath : [it.type];
     const transformFn = registry[mode](applicableTypes[0]);
 
     if (!transformFn) {
@@ -132,5 +141,5 @@ export default function makeTransformFn(mode: TransformMode, extras: Extras) {
       extras,
       meta
     );
-  }
+  };
 }

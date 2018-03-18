@@ -1,8 +1,8 @@
 import varyLib = require("vary");
-import depd = require('depd');
+import depd = require("depd");
 import url = require("url");
-import R = require('ramda');
-import logger from '../util/logger';
+import R = require("ramda");
+import logger from "../util/logger";
 import API, { RequestOpts, QueryBuildingContext } from "../controllers/API";
 import Base, { HTTPStrategyOptions, Controller } from "./Base";
 import Query from "../types/Query/Query";
@@ -28,8 +28,8 @@ export type DeprecatedQueryTransformNoReq = {
 
 export type DeprecatedQueryTransformWithReq = {
   // tslint:disable-next-line callable-types
-  (first: Request, second: Query): Query
-}
+  (first: Request, second: Query): Query;
+};
 
 export type DeprecatedQueryTransform =
   DeprecatedQueryTransformNoReq | DeprecatedQueryTransformWithReq;
@@ -92,7 +92,11 @@ export default class ExpressStrategy extends Base {
     return genericReqPromise;
   }
 
-  protected sendResponse(response: HTTPResponse, res: Response, next: NextFunction) {
+  protected sendResponse(
+    response: HTTPResponse,
+    res: Response,
+    next: NextFunction
+  ) {
     const { vary, ...otherHeaders } = response.headers;
 
     if(vary) {
@@ -108,7 +112,7 @@ export default class ExpressStrategy extends Base {
 
     Object.keys(otherHeaders).forEach(k => {
       res.set(k, otherHeaders[k]);
-    })
+    });
 
     if(response.body !== undefined) {
       res.send(new Buffer(response.body)).end();
@@ -135,7 +139,7 @@ export default class ExpressStrategy extends Base {
       // controller should catch any internal errors and always returns a response.
       this.sendError(err, req, res, next);
     }
-  }
+  };
 
   /**
    * A middleware to handle requests for the documentation.
@@ -174,7 +178,7 @@ export default class ExpressStrategy extends Base {
     ]);
 
   transformedAPIRequest = (queryTransform: DeprecatedQueryTransform) => {
-    deprecate('transformedAPIRequest: use customAPIRequest instead.');
+    deprecate("transformedAPIRequest: use customAPIRequest instead.");
 
     return this.customAPIRequest({
       queryFactory: async (opts: QueryBuildingContext) => {
@@ -185,7 +189,7 @@ export default class ExpressStrategy extends Base {
           : (queryTransform as DeprecatedQueryTransformNoReq)(query);
       }
     });
-  }
+  };
 
   /**
    * A user of this library may wish to send an error response for an exception
@@ -200,7 +204,7 @@ export default class ExpressStrategy extends Base {
   sendError: ErrorRequestHandler = async (errors, req, res, next) => {
     if(!next) {
       deprecate("sendError with 3 arguments: must now provide next function.");
-      next = (err: any) => {} // tslint:disable-line no-empty
+      next = (err: any) => {}; // tslint:disable-line no-empty
     }
 
     try {
@@ -215,7 +219,7 @@ export default class ExpressStrategy extends Base {
       );
       next(err);
     }
-  }
+  };
 
   sendResult = async (
     result: Result,
@@ -235,7 +239,7 @@ export default class ExpressStrategy extends Base {
       );
       next(err);
     }
-  }
+  };
 
   // @TODO Uses this ExpressStrategy to create an express app with
   // preconfigured routes that can be mounted as a subapp.

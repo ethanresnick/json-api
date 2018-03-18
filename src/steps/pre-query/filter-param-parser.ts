@@ -17,22 +17,21 @@ export { Just, Nothing };
  */
 export function getFilterList(queryString?: string) {
   return Maybe(queryString).map(it =>
-    it.split('&').reduce((acc: string | undefined, paramString) => {
+    it.split("&").reduce((acc: string | undefined, paramString) => {
       const [rawKey, rawValue] = splitSingleQueryParamString(paramString);
-      return rawKey === 'filter' ? rawValue : acc;
+      return rawKey === "filter" ? rawValue : acc;
     }, undefined)
   );
 }
 
 function splitSingleQueryParamString(paramString: string) {
-  const bracketEqualsPos = paramString.indexOf(']=');
-  const delimiterPos = bracketEqualsPos === -1
-    ? paramString.indexOf('=')
-    : bracketEqualsPos + 1;
+  const bracketEqualsPos = paramString.indexOf("]=");
+  const delimiterPos =
+    bracketEqualsPos === -1 ? paramString.indexOf("=") : bracketEqualsPos + 1;
 
   // returning [undecoded key, undecoded value]
-  return (delimiterPos === -1)
-    ? [paramString, '']
+  return delimiterPos === -1
+    ? [paramString, ""]
     : [paramString.slice(0, delimiterPos), paramString.slice(delimiterPos + 1)];
 }
 
@@ -40,7 +39,7 @@ export default function parse(
   validUnaryOperators: string[],
   validBinaryOperators: string[],
   filterList: string
-): (Predicate|FieldConstraint)[] {
+): (Predicate | FieldConstraint)[] {
   const exprs: any[] = [];
   let currExpr = { rest: tokenize(filterList), expr: undefined };
 
@@ -50,7 +49,7 @@ export default function parse(
   }
 
   // Process each filter expression.
-  return exprs.map<Predicate|FieldConstraint>(
+  return exprs.map<Predicate | FieldConstraint>(
     processFilterCriteria.bind(null, validUnaryOperators, validBinaryOperators)
   );
 }
@@ -198,7 +197,7 @@ function atomFromToken(token) {
   let match;
 
   // tokens starting and ending with quotes are strings.
-  if (token[0] === "'" && token[token.length-1] === "'")
+  if (token[0] === "'" && token[token.length - 1] === "'")
     return token.slice(1, -1);
 
   // boolean & null literals
@@ -242,12 +241,12 @@ function tokenize(program) {
       tokens.push(currToken)
 
     currToken = "";
-  }
+  };
 
   const advance = () => {
     currPos++;
     char = program[currPos];
-  }
+  };
 
   while(currPos < program.length) {
     // When we get to the start of a string, immediately build

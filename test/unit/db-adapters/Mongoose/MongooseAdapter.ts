@@ -37,7 +37,7 @@ describe("Mongoose Adapter", () => {
       it("should return void on empty input, a valid id, or valid ids", () => {
         const basicPredicate = {
           operator: <"and">"and",
-          value: [{ field: "a", value: <any>"b", operator: "eq"}],
+          value: [{ field: "a", value: <any>"b", operator: "eq" }],
           field: undefined
         };
 
@@ -48,7 +48,7 @@ describe("Mongoose Adapter", () => {
             values: basicPredicate.value.concat({
               field: "id",
               value: "552c5e1c604d41e5836bb174",
-              operator: 'eq'
+              operator: "eq"
             })
           },
           {
@@ -56,14 +56,15 @@ describe("Mongoose Adapter", () => {
             values: basicPredicate.value.concat({
               field: "id",
               value: ["552c5e1c604d41e5836bb174", "552c5e1c604d41e5836bb175"],
-              operator: 'in'
+              operator: "in"
             })
           }
         ];
 
         const results = validInputs.map(it =>
           // tslint:disable-next-line: no-void-expression
-          MongooseAdapter.assertIdsValid((it as any as AndPredicate), true));
+          MongooseAdapter.assertIdsValid((it as any) as AndPredicate, true)
+        );
 
         expect(results.every(it => it === undefined)).to.be.true;
       });
@@ -190,7 +191,8 @@ describe("Mongoose Adapter", () => {
 
       it("should work with all the ways of declaring enums", () => {
         const fields = standardizedSchema.reduce((prev, field) => {
-          prev[field.name] = field; return prev;
+          prev[field.name] = field;
+          return prev;
         }, {});
 
         // Mongoose only supports the enum validator on string fields, but it

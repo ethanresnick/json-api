@@ -1,11 +1,16 @@
-import APIError, { APIErrorJSON } from './APIError';
+import APIError, { APIErrorJSON } from "./APIError";
 import { isPlainObject, objectIsEmpty } from "../util/misc";
-import { PrimaryDataJSON, UrlTemplateFnsByType, UrlTemplateFns, Links } from './index';
+import {
+  PrimaryDataJSON,
+  UrlTemplateFnsByType,
+  UrlTemplateFns,
+  Links
+} from "./index";
 import Data from "./Generic/Data";
 import Resource, { ResourceJSON } from "./Resource";
 import ResourceIdentifier from "./ResourceIdentifier";
-import ResourceSet from './ResourceSet';
-import Relationship from './Relationship';
+import ResourceSet from "./ResourceSet";
+import Relationship from "./Relationship";
 import ResourceIdentifierSet from "../types/ResourceIdentifierSet";
 
 // TODO: Make the constructor API sane in the presence of types;
@@ -46,10 +51,10 @@ export type DocumentData = {
 };
 
 export default class Document {
-  public meta: DocumentData['meta'];
-  public included: DocumentData['included'];
-  public primary: DocumentData['primary'];
-  public errors: DocumentData['errors'];
+  public meta: DocumentData["meta"];
+  public included: DocumentData["included"];
+  public primary: DocumentData["primary"];
+  public errors: DocumentData["errors"];
   public urlTemplates: UrlTemplateFnsByType;
 
   constructor(data: DocumentData) {
@@ -76,7 +81,7 @@ export default class Document {
     const templatesForRelationship = (templatesForOwnerType: UrlTemplateFns) => {
       const { related, relationship } = templatesForOwnerType;
       return { related, self: relationship };
-    }
+    };
 
     const { data, links = {} } = (() => {
       if(this.primary instanceof ResourceSet) {
@@ -181,7 +186,7 @@ export default class Document {
           const flatMapperWithMeta = (it2: any) => flatMapper(it2, meta);
           const newRelationshipPromises = relationshipNames.map(k =>
             it.relationships[k].flatMapAsync(flatMapperWithMeta)
-          )
+          );
 
           const newRelationships = await Promise.all(newRelationshipPromises);
           newRelationships.forEach((newRelationship, i) => {

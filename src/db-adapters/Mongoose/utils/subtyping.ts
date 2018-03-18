@@ -1,6 +1,6 @@
 import { Model } from "mongoose";
 import { isRootModel } from "./schema";
-import { StrictDictMap } from '../../../types';
+import { StrictDictMap } from "../../../types";
 
 export function getTypePath(
   model: Model<any>,

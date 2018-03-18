@@ -1,6 +1,6 @@
 import Negotiator = require("negotiator");
 import APIError from "../../../types/APIError";
-import {objectIsEmpty} from "../../../util/misc";
+import { objectIsEmpty } from "../../../util/misc";
 
 /**
  * Negotiate the Content-Type to use for the response.
@@ -33,7 +33,7 @@ export default function(acceptHeader, availableBaseTypes) {
     // Take a first stab at finding the preferred type with negotiator,
     // but then we'll only use that type below if it's *not* json api,
     // because we can't rely on negotiator to reason propery about parameters.
-    const acceptables = negotiator.mediaTypes(undefined, {"detailed": true});
+    const acceptables = negotiator.mediaTypes(undefined, { detailed: true });
     const preferredType = negotiator.mediaType(syntheticAvailableBaseTypes);
 
     // Find all the Accept clauses that specifically reference json api.

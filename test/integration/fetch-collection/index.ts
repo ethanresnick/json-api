@@ -1,4 +1,4 @@
-import {expect} from "chai";
+import { expect } from "chai";
 import AgentPromise from "../../app/agent";
 
 describe("Fetching Collection", () => {
@@ -27,7 +27,7 @@ describe("Fetching Collection", () => {
       // "A JSON object MUST be at the root of every
       // JSON API request and response containing data."
       it("should have an object/document at the top level", () => {
-        expect(res.body).to.be.an('object');
+        expect(res.body).to.be.an("object");
       });
 
       describe("Top-Level Links", () => {
@@ -101,9 +101,11 @@ describe("Fetching Collection", () => {
     });
 
     it("should have Jane above John", () => {
-      const johnJaneList = res.body.data.map((it) => it.attributes.name).filter((it) => {
-        return ["John Smith", "Jane Doe"].indexOf(it) > -1;
-      });
+      const johnJaneList = res.body.data
+        .map(it => it.attributes.name)
+        .filter(it => {
+          return ["John Smith", "Jane Doe"].indexOf(it) > -1;
+        });
       expect(johnJaneList[0]).to.equal("Jane Doe");
       expect(johnJaneList[1]).to.equal("John Smith");
     });
@@ -120,9 +122,11 @@ describe("Fetching Collection", () => {
     });
 
     it("Should have John above Jane", () => {
-      const johnJaneList = res.body.data.map((it) => it.attributes.name).filter((it) => {
-        return ["John", "Jane"].indexOf(it.substring(0, 4)) > -1;
-      });
+      const johnJaneList = res.body.data
+        .map(it => it.attributes.name)
+        .filter(it => {
+          return ["John", "Jane"].indexOf(it.substring(0, 4)) > -1;
+        });
       expect(johnJaneList).to.deep.equal(["John Smith", "Jane Doe"]);
     });
   });
@@ -175,8 +179,8 @@ describe("Fetching Collection", () => {
 
   describe("Filtering", () => {
     it("should support simple equality filters", (done) => {
-      Agent.request("GET", '/people')
-        .query('filter=(name,eq,Doug Wilson)')
+      Agent.request("GET", "/people")
+        .query("filter=(name,eq,Doug Wilson)")
         .accept("application/vnd.api+json")
         .then((res) => {
           expect(res.body.data).to.have.length(1);
@@ -197,28 +201,28 @@ describe("Fetching Collection", () => {
 
 
     it("should still return resource array even with a single id filter", () => {
-      return Agent.request("GET", '/organizations')
-        .query('filter=(id,54419d550a5069a2129ef254)')
+      return Agent.request("GET", "/organizations")
+        .query("filter=(id,54419d550a5069a2129ef254)")
         .accept("application/vnd.api+json")
         .then((res) => {
           expect(res.body.data).to.be.an("array");
           expect(res.body.data).to.have.length(1);
-          expect(res.body.data[0].id).to.equal('54419d550a5069a2129ef254');
+          expect(res.body.data[0].id).to.equal("54419d550a5069a2129ef254");
         });
     });
   });
 
   describe("Fetching with includes", () => {
     it("should not contain duplicate resources", () => {
-      return Agent.request("GET", '/organizations')
-        .query('include=liaisons')
+      return Agent.request("GET", "/organizations")
+        .query("include=liaisons")
         .accept("application/vnd.api+json")
         .then(res => {
           const janeDoes =
             res.body.included.filter(it => it.attributes.name === 'Jane Doe');
 
           expect(janeDoes).to.have.length(1);
-        })
+        });
     });
   });
 });

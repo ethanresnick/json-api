@@ -38,11 +38,11 @@ describe("Resource type", () => {
     it("should allow empty id as a string", () => {
       expect(new Resource("type", undefined, {}).id).to.be.undefined;
       expect(new Resource("type", "", {}).id).to.equal("");
-    })
+    });
 
     it("should reject non-object attrs", () => {
       // allow construction with no/empty attributes
-      const valid  = new Resource("type", "id");
+      const valid = new Resource("type", "id");
       new Resource("pyt", "id", {});
 
       // just don't allow setting attributes to a non-object.

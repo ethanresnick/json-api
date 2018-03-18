@@ -4,11 +4,11 @@ import {
   VALID_SCHOOL_RESOURCE_NO_ID,
   VALID_ORG_RESOURCE_NO_ID,
   VALID_PERSON_RESOURCE_NO_ID
-} from '../fixtures/creation';
+} from "../fixtures/creation";
 import {
   NEVER_APPLIED_STATE_GOVT_PATCH,
   NEVER_APPLIED_SCHOOL_PATCH
-} from '../fixtures/updates';
+} from "../fixtures/updates";
 
 /*
  * See https://github.com/ethanresnick/json-api/issues/149 for details
@@ -46,7 +46,7 @@ describe("Subtypes", () => {
       it("should apply ?fields restrictions based on the rendered `type`", () => {
         const hasNameOrDesc = (resource) => {
           const { attributes } = resource;
-          return ('name' in attributes) || ('description' in attributes);
+          return "name" in attributes || "description" in attributes;
         };
 
         return Promise.all([
@@ -106,11 +106,11 @@ describe("Subtypes", () => {
             }),
 
           Agent.request("DELETE", "/schools")
-            .type('application/vnd.api+json')
+            .type("application/vnd.api+json")
             .send({
               data: [
-                { type: 'organizations', id: newSchoolId },
-                { type: 'organizations', id: newOrganizationId }
+                { type: "organizations", id: newSchoolId },
+                { type: "organizations", id: newOrganizationId }
               ]
             })
             .then(() => {
@@ -121,7 +121,7 @@ describe("Subtypes", () => {
         ]);
       });
 
-      it('should be possible to delete a subtype at a parent endpoint', () => {
+      it("should be possible to delete a subtype at a parent endpoint", () => {
         return Agent.request("DELETE", `/organizations/${newSchoolId}`)
           .then((response) => {
             expect(response.status).to.equal(204);
@@ -132,8 +132,8 @@ describe("Subtypes", () => {
 
   describe("Creation", () => {
     it("should be possible at the parent type endpoint with meta.types", () => {
-      return Agent.request("POST", '/organizations')
-        .type('application/vnd.api+json')
+      return Agent.request("POST", "/organizations")
+        .type("application/vnd.api+json")
         .send({ data: VALID_SCHOOL_RESOURCE_NO_ID })
         .then((response) => {
           expect(response.status).to.equal(201);
@@ -145,8 +145,8 @@ describe("Subtypes", () => {
     });
 
     it("should be possible at the subtype endpoint with meta.types", () => {
-      return Agent.request("POST", '/schools')
-        .type('application/vnd.api+json')
+      return Agent.request("POST", "/schools")
+        .type("application/vnd.api+json")
         .send({ data: VALID_SCHOOL_RESOURCE_NO_ID })
         .then((response) => {
           expect(response.status).to.equal(201);
@@ -154,8 +154,8 @@ describe("Subtypes", () => {
         });
     });
 
-    it('should not be possible at any endpoint with subtype in `type` key, with or without meta.types', () => {
-      const endpoints = ['/schools', '/organizations'];
+    it("should not be possible at any endpoint with subtype in `type` key, with or without meta.types", () => {
+      const endpoints = ["/schools", "/organizations"];
       const bodies = [
         { ...VALID_SCHOOL_RESOURCE_NO_ID, type: "schools" }, // type=subtype and meta.types
         { ...VALID_SCHOOL_RESOURCE_NO_ID, type: "schools", meta: undefined } // type=subtype, w/o meta.types
@@ -179,13 +179,13 @@ describe("Subtypes", () => {
     });
 
     it("should always run the subtype's beforeSave on creation", () => {
-      const endpoints = ['/schools', '/organizations'];
+      const endpoints = ["/schools", "/organizations"];
 
       return Promise.all(
         endpoints.map(endpoint =>
           Agent.request("POST", endpoint)
             .type("application/vnd.api+json")
-            .send({"data": VALID_SCHOOL_RESOURCE_NO_ID })
+            .send({ data: VALID_SCHOOL_RESOURCE_NO_ID })
             .promise()
             .then((response) => {
               expect(response.body.data.attributes.description).to.equal("Added a description in beforeSave");
@@ -196,8 +196,8 @@ describe("Subtypes", () => {
     });
 
     it("should be impossible to create a parent type at the subtype endpoint", () => {
-      return Agent.request("POST", '/schools')
-        .type('application/vnd.api+json')
+      return Agent.request("POST", "/schools")
+        .type("application/vnd.api+json")
         .send({ data: VALID_ORG_RESOURCE_NO_ID })
         .then((resp) => {
           throw new Error("Shouldn't run");
@@ -211,19 +211,19 @@ describe("Subtypes", () => {
       const fixtureMeta = (VALID_PERSON_RESOURCE_NO_ID as any).meta || {};
       const fixutreMetaTypes = fixtureMeta.types || [];
 
-      return Agent.request("POST", '/organizations')
-        .type('application/vnd.api+json')
+      return Agent.request("POST", "/organizations")
+        .type("application/vnd.api+json")
         .send({
           data: {
             meta: {
               ...fixtureMeta,
               types: [
                 ...fixutreMetaTypes,
-                'organizations', // this is bs. resource is not an org or a school.
-                'schools'
+                "organizations", // this is bs. resource is not an org or a school.
+                "schools"
               ]
             },
-            ...VALID_PERSON_RESOURCE_NO_ID,
+            ...VALID_PERSON_RESOURCE_NO_ID
           }
         })
         .then((resp) => {
@@ -237,8 +237,8 @@ describe("Subtypes", () => {
 
   describe("Updating", () => {
     it("should be illegal to provide anything in `meta.types`", () => {
-      return Agent.request("PATCH", '/organizations/54419d550a5069a2129ef254')
-        .type('application/vnd.api+json')
+      return Agent.request("PATCH", "/organizations/54419d550a5069a2129ef254")
+        .type("application/vnd.api+json")
         .send({
           data: {
             type: "organizations",
@@ -258,8 +258,8 @@ describe("Subtypes", () => {
         });
     });
 
-    it('should fail with a subtype in `type` key, whether a lie or not', () => {
-      const endpoints = ['/schools', '/organizations'];
+    it("should fail with a subtype in `type` key, whether a lie or not", () => {
+      const endpoints = ["/schools", "/organizations"];
       const bodies = [
         { ...NEVER_APPLIED_STATE_GOVT_PATCH, type: "schools" }, // not actually a school
         { ...NEVER_APPLIED_SCHOOL_PATCH, type: "schools" } // a school, but still wrong type key.
@@ -289,15 +289,15 @@ describe("Subtypes", () => {
       const fixtureMeta = (NEVER_APPLIED_STATE_GOVT_PATCH as any).meta || {};
       const fixutreMetaTypes = fixtureMeta.types || [];
 
-      return Agent.request("PATCH", '/schools/54419d550a5069a2129ef254')
-        .type('application/vnd.api+json')
+      return Agent.request("PATCH", "/schools/54419d550a5069a2129ef254")
+        .type("application/vnd.api+json")
         .send({
           data: {
             meta: {
               ...fixtureMeta,
               types: [
                 ...fixutreMetaTypes,
-                'schools' // this is bs. the org is not a school.
+                "schools" // this is bs. the org is not a school.
               ]
             },
             ...NEVER_APPLIED_STATE_GOVT_PATCH
@@ -313,8 +313,8 @@ describe("Subtypes", () => {
 
     it("should be illegal to update a non-sub-type at a sub-type endpoint", () => {
       // State Govt is not a school, so this should fail.
-      return Agent.request("PATCH", '/schools/54419d550a5069a2129ef254')
-        .type('application/vnd.api+json')
+      return Agent.request("PATCH", "/schools/54419d550a5069a2129ef254")
+        .type("application/vnd.api+json")
         .send({ data: NEVER_APPLIED_STATE_GOVT_PATCH })
         .then((resp) => {
           throw new Error("Shouldn't run");
@@ -324,9 +324,9 @@ describe("Subtypes", () => {
         });
     });
 
-    it('should run the subtype\'s beforeSave + beforeRender function', () => {
-      return Agent.request("PATCH", '/schools/5a5934cfc810949cebeecc33')
-        .type('application/vnd.api+json')
+    it("should run the subtype's beforeSave + beforeRender function", () => {
+      return Agent.request("PATCH", "/schools/5a5934cfc810949cebeecc33")
+        .type("application/vnd.api+json")
         .send({
           data: {
             type: "organizations",

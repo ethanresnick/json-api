@@ -3,7 +3,10 @@ import { Request } from "../../../types";
 import APIError from "../../../types/APIError";
 import { objectIsEmpty } from "../../../util/misc";
 
-export default async function validateContentType(request: Pick<Request, "contentType">, supportedExt?) {
+export default async function validateContentType(
+  request: Pick<Request, "contentType">,
+  supportedExt?
+) {
   // note: contentTypeParser correctly handles undefined.
   const contentType = contentTypeParser.parse(request.contentType);
 
@@ -17,8 +20,9 @@ export default async function validateContentType(request: Pick<Request, "conten
     throw new APIError({
       status: 415,
       title: "Invalid Media Type",
-      detail: "The request's Content-Type must be application/vnd.api+json, " +
-                `but you provided ${contentType.type}.`
+      detail:
+        "The request's Content-Type must be application/vnd.api+json, " +
+        `but you provided ${contentType.type}.`
     });
   }
 
@@ -26,7 +30,8 @@ export default async function validateContentType(request: Pick<Request, "conten
     throw new APIError({
       status: 415,
       title: "Invalid Media Type Parameter(s)",
-      detail: "The request's Content-Type must be application/vnd.api+json, " +
+      detail:
+        "The request's Content-Type must be application/vnd.api+json, " +
         "with no parameters. But the Content-Type you provided contained the " +
         `parameters: ${Object.keys(contentType.parameters).join(", ")}.`
     });

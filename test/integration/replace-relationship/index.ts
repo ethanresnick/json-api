@@ -1,4 +1,4 @@
-import {expect} from "chai";
+import { expect } from "chai";
 import AgentPromise from "../../app/agent";
 import {
   VALID_ORG_RELATIONSHIP_PATCH,
@@ -16,7 +16,7 @@ describe("Replacing a relationship at a relationship endpoint", () => {
   before(() => {
     return AgentPromise.then(A => {
       Agent = A;
-    })
+    });
   });
 
   const setRelationship = (data, url) => { //eslint-disable-line no-shadow
@@ -42,7 +42,7 @@ describe("Replacing a relationship at a relationship endpoint", () => {
   it("should support full replacement at a to-many relationship endpoint", () => {
     return Agent.request("POST", "/organizations")
       .type("application/vnd.api+json")
-      .send({"data": VALID_ORG_RESOURCE_NO_ID })
+      .send({ data: VALID_ORG_RESOURCE_NO_ID })
       .promise()
       .then((response) => {
         return response.body.data.id;
@@ -71,7 +71,7 @@ describe("Replacing a relationship at a relationship endpoint", () => {
   it("should support patching at a to-one relationship endpoint", () => {
     return Agent.request("POST", "/schools")
       .type("application/vnd.api+json")
-      .send({"data": VALID_SCHOOL_RESOURCE_NO_ID_EMPTY_PRINCIPAL_NO_LIAISONS })
+      .send({ data: VALID_SCHOOL_RESOURCE_NO_ID_EMPTY_PRINCIPAL_NO_LIAISONS })
       .promise()
       .then((response) => {
         expect(response.body.data.relationships.principal.data).to.equal(null);

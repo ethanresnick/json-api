@@ -1,11 +1,7 @@
 import { expect } from "chai";
 import AgentPromise from "../../app/agent";
-import {
-  VALID_ORG_RESOURCE_NO_ID
-} from '../fixtures/creation';
-import {
-  VALID_ORG_VIRTUAL_PATCH
-} from '../fixtures/updates';
+import { VALID_ORG_RESOURCE_NO_ID } from "../fixtures/creation";
+import { VALID_ORG_VIRTUAL_PATCH } from "../fixtures/updates";
 
 /*
  * See https://github.com/ethanresnick/json-api/issues/149 for details

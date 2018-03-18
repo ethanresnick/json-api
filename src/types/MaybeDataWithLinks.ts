@@ -1,7 +1,7 @@
-import mapObject = require('lodash/mapValues'); // tslint:disable-line no-submodule-imports
-import Data from './Generic/Data';
-import Resource from './Resource';
-import ResourceIdentifier from './ResourceIdentifier';
+import mapObject = require("lodash/mapValues"); // tslint:disable-line no-submodule-imports
+import Data from "./Generic/Data";
+import Resource from "./Resource";
+import ResourceIdentifier from "./ResourceIdentifier";
 import {
   Reducer, PredicateFn, UrlTemplateFns, Mapper, AsyncMapper, Links
 } from "./index";
@@ -13,8 +13,10 @@ import {
  * to preserve that option for later), but doing that now seems to cause TS
  * to choke on the type parameter.
  */
-export type MaybeDataWithLinksArgs<T> =
-  { data: T | T[] | null | undefined | Data<T>, links?: UrlTemplateFns };
+export type MaybeDataWithLinksArgs<T> = {
+  data: T | T[] | null | undefined | Data<T>;
+  links?: UrlTemplateFns;
+};
 
 export type DataSyncMethods = "flatMap" | "map" | "filter";
 export type DataAsyncMethods = "flatMapAsync" | "mapAsync";
@@ -26,9 +28,10 @@ export default class MaybeDataWithLinks<T extends (Resource | ResourceIdentifier
   protected constructor({ data, links = {} }: MaybeDataWithLinksArgs<T>) {
     this.links = links;
 
-    this._data = typeof data === 'undefined' || data instanceof Data
-      ? data
-      : Data.fromJSON(data);
+    this._data =
+      typeof data === "undefined" || data instanceof Data
+        ? data
+        : Data.fromJSON(data);
   }
 
   get values() {
@@ -125,7 +128,7 @@ export default class MaybeDataWithLinks<T extends (Resource | ResourceIdentifier
   protected delegateTransformToData(methodName: DataSyncMethods, args) {
     return this._data
       ? this.withNewData((this._data[methodName] as any)(...args))
-      : this
+      : this;
   }
 
   protected delegateTransformToDataAsync(methodName: DataAsyncMethods, args) {
@@ -140,4 +143,4 @@ export default class MaybeDataWithLinks<T extends (Resource | ResourceIdentifier
     res._data = newData;
     return res;
   }
-};
+}

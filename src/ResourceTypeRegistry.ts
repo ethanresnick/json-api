@@ -1,10 +1,13 @@
 import Immutable = require("immutable");
-import depd = require('depd');
+import depd = require("depd");
 import { pseudoTopSort } from "./util/misc";
 import Maybe from "./types/Generic/Maybe";
 import {
-  ResourceTransformFn, FullTransformFn, TransformFn ,
-  BeforeRenderFullTransformFn, BeforeRenderResourceTransformFn
+  ResourceTransformFn,
+  FullTransformFn,
+  TransformFn,
+  BeforeRenderFullTransformFn,
+  BeforeRenderResourceTransformFn
 } from "./steps/make-transform-fn";
 import { AdapterInstance } from "./db-adapters/AdapterInterface";
 import Resource from "./types/Resource";
@@ -24,31 +27,31 @@ const globalResourceDefaults = Immutable.fromJS({
 
 export type URLTemplates = {
   [type: string]: URLTemplatesForType;
-}
+};
 
 export type URLTemplatesForType = { [linkName: string]: string };
 
 export type ResourceTypeInfo = {
-  fields?: {[fieldName: string]: any}
-  example?: string,
-  description?: string
-}
+  fields?: { [fieldName: string]: any };
+  example?: string;
+  description?: string;
+};
 
 export type ResourceTypeDescription = {
-  dbAdapter?: AdapterInstance<any>,
-  info?: ResourceTypeInfo,
-  defaultIncludes?: string[],
-  parentType?: string,
-  urlTemplates?: URLTemplatesForType,
-  beforeSave?: ResourceTransformFn | FullTransformFn,
-  beforeRender?: BeforeRenderResourceTransformFn | BeforeRenderFullTransformFn,
-  behaviors?: object,
-  transformLinkage?: boolean
-}
+  dbAdapter?: AdapterInstance<any>;
+  info?: ResourceTypeInfo;
+  defaultIncludes?: string[];
+  parentType?: string;
+  urlTemplates?: URLTemplatesForType;
+  beforeSave?: ResourceTransformFn | FullTransformFn;
+  beforeRender?: BeforeRenderResourceTransformFn | BeforeRenderFullTransformFn;
+  behaviors?: object;
+  transformLinkage?: boolean;
+};
 
 export type ResourceTypeDescriptions = {
-  [typeName: string]: ResourceTypeDescription
-}
+  [typeName: string]: ResourceTypeDescription;
+};
 
 /**
  * To fulfill a JSON API request, you often need to know about all the resources
@@ -62,22 +65,22 @@ export type ResourceTypeDescriptions = {
  */
 export default class ResourceTypeRegistry {
   private _types: {
-    [typeName: string]: Immutable.Map<string, any> | undefined
+    [typeName: string]: Immutable.Map<string, any> | undefined;
   };
 
   // Metadata about the structure of the type hierarchy.
   private _typesMetadata: {
-    nodes: string[], // a list of all type names,
-    roots: string[], // a list of all type names that don't have a parent type
+    nodes: string[]; // a list of all type names,
+    roots: string[]; // a list of all type names that don't have a parent type
 
     // A map, with each key being the name of a starting node A, and the value
     // being a set of node names for which there is an edge from A to that node.
-    edges: { [srcNodeName: string]: { [targetNodeName: string]: true } }
-  }
+    edges: { [srcNodeName: string]: { [targetNodeName: string]: true } };
+  };
 
   constructor(
     typeDescs: ResourceTypeDescriptions = Object.create(null),
-    descDefaults: object|Immutable.Map<string, any> = {}
+    descDefaults: object | Immutable.Map<string, any> = {}
   ) {
     this._types = {};
 
@@ -209,7 +212,7 @@ export default class ResourceTypeRegistry {
   }
 
   parentType(typeName: string) {
-    deprecate('parentType: use parentTypeName instead.');
+    deprecate("parentType: use parentTypeName instead.");
     return this.doGet("parentType", typeName);
   }
 
@@ -241,7 +244,7 @@ export default class ResourceTypeRegistry {
     let parentType;
 
     // tslint:disable-next-line:no-conditional-assignment
-    while (parentType = this.parentTypeName(path[path.length - 1])) {
+    while ((parentType = this.parentTypeName(path[path.length - 1]))) {
       path.push(parentType);
     }
 

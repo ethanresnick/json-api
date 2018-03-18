@@ -1,15 +1,15 @@
-import { Result } from '../index';
+import { Result } from "../index";
 export type QueryOptions = {
-  type: string,
-  returning: (result: any) => Result | Promise<Result>,
-  catch?: (err: any) => Result | Promise<Result>
+  type: string;
+  returning: (result: any) => Result | Promise<Result>;
+  catch?: (err: any) => Result | Promise<Result>;
 };
 
 abstract class Query {
   protected query: {
-    type: QueryOptions['type'],
-    returning: QueryOptions['returning'],
-    catch?: QueryOptions['catch']
+    type: QueryOptions["type"];
+    returning: QueryOptions["returning"];
+    catch?: QueryOptions["catch"];
   };
 
   constructor(opts: QueryOptions) {
@@ -21,7 +21,7 @@ abstract class Query {
       type: opts.type,
       returning: opts.returning,
       catch: opts.catch
-    }
+    };
   }
 
   protected clone(): this {
@@ -44,7 +44,7 @@ abstract class Query {
     return this.query.catch;
   }
 
-  resultsIn(success?: QueryOptions['returning'], fail?: QueryOptions['catch']) {
+  resultsIn(success?: QueryOptions["returning"], fail?: QueryOptions["catch"]) {
     const res = this.clone();
     if(success) {
       res.query.returning = success;

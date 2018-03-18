@@ -84,7 +84,7 @@ describe("makeTransformFn", () => {
     const res = new klass(registry.rootTypeNameOf(childTypeName), "2");
     res.typePath = registry.typePathTo(childTypeName);
     return res;
-  }
+  };
 
   const makeResource = makeWithTypePath(Resource);
   const makeResourceId = makeWithTypePath(ResourceIdentifier);
@@ -144,10 +144,10 @@ describe("makeTransformFn", () => {
       const transformFn = sut("beforeSave", extras);
 
       return transformFn(resource, meta).then(newResource => {
-        expect(newResource).to.have.property('sponsorships', true);
-        expect(newResource).to.not.have.property('incomes');
+        expect(newResource).to.have.property("sponsorships", true);
+        expect(newResource).to.not.have.property("incomes");
       });
-    })
+    });
   });
 
   describe("transforming linkage", () => {
@@ -169,14 +169,14 @@ describe("makeTransformFn", () => {
         renderTransformFn(linkage2, meta),
         saveTransformFn(linkage3, meta)
       ]).then(([newLinkage1, newLinkage2, newLinkage3]) => {
-        expect(newLinkage1).to.have.property('organizations', true);
-        expect(newLinkage1).to.not.have.property('schools');
+        expect(newLinkage1).to.have.property("organizations", true);
+        expect(newLinkage1).to.not.have.property("schools");
 
-        expect(newLinkage2).to.not.have.any.keys('incomes', 'sponsorships');
+        expect(newLinkage2).to.not.have.any.keys("incomes", "sponsorships");
 
-        expect(newLinkage3).to.have.property('organizations', true);
-        expect(newLinkage3).to.not.have.any.keys('schools', 'kindergartens');
-      })
+        expect(newLinkage3).to.have.property("organizations", true);
+        expect(newLinkage3).to.not.have.any.keys("schools", "kindergartens");
+      });
     });
   });
 });

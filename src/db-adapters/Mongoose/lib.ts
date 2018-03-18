@@ -22,7 +22,7 @@ export function errorHandler(err): never {
           thisError.message,
           undefined,
           undefined,
-          (thisError.path) ? [thisError.path] : undefined
+          thisError.path ? [thisError.path] : undefined
         )
       );
     });
@@ -74,7 +74,7 @@ export function toMongoCriteria(constraintOrPredicate: FieldConstraint | Predica
         [mongoField]: {
           [mongoOperator]: constraintOrPredicate.value
         }
-      }
+      };
   }
 }
 

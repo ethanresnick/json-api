@@ -1,4 +1,4 @@
-import R = require('ramda');
+import R = require("ramda");
 // Import mongo just for one of its type declarations (not imported at runtime).
 // tslint:disable-next-line no-implicit-dependencies
 import mongodb = require("mongodb");
@@ -8,14 +8,14 @@ import { Model, Document } from "mongoose";
 
 import { AndPredicate } from "../../types/";
 import { partition, setDifference, reduceToObject } from "../../util/misc";
-import { values as objectValues } from '../../util/objectValueEntries';
+import { values as objectValues } from "../../util/objectValueEntries";
 import {
   getReferencePaths, getReferencedModelName,
   getDiscriminatorKey, getVersionKey, getMetaKeys
 } from './utils/schema';
 import { getTypePath } from "./utils/subtyping";
 import docToResource from "./utils/doc-to-resource";
-import { getTypeName } from '../../util/naming-conventions';
+import { getTypeName } from "../../util/naming-conventions";
 import * as util from "./lib";
 import Data from "../../types/Generic/Data";
 import Resource, { ResourceWithTypePath } from "../../types/Resource";
@@ -24,7 +24,7 @@ import APIError from "../../types/APIError";
 import FieldDocumentation from "../../types/Documentation/Field";
 import FieldTypeDocumentation from "../../types/Documentation/FieldType";
 import RelationshipTypeDocumentation from "../../types/Documentation/RelationshipType";
-import { Adapter, TypeInfo, TypeIdMapOf } from '../AdapterInterface';
+import { Adapter, TypeInfo, TypeIdMapOf } from "../AdapterInterface";
 import CreateQuery from "../../types/Query/CreateQuery";
 import FindQuery from "../../types/Query/FindQuery";
 import DeleteQuery from "../../types/Query/DeleteQuery";
@@ -99,9 +99,9 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       offset,
       limit,
       singular
-    } = query
+    } = query;
 
-    const mode = singular ? 'findOne' : 'find';
+    const mode = singular ? "findOne" : "find";
     const filters = query.getFilters();
     const mongofiedFilters = util.toMongoCriteria(filters);
 
@@ -109,14 +109,16 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
 
     this.constructor.assertIdsValid(filters, singular);
 
-    const isPaginating = mode !== 'findOne' &&
-      (typeof offset !== 'undefined' || typeof limit !== 'undefined');
+    const isPaginating =
+      mode !== "findOne" &&
+      (typeof offset !== "undefined" || typeof limit !== "undefined");
 
     let primaryDocumentsPromise, includedResourcesPromise;
 
-    const queryBuilder = mode === 'findOne' // ternary is a hack for TS compiler
-      ? model[mode](mongofiedFilters)
-      : model[mode](mongofiedFilters);
+    const queryBuilder =
+      mode === "findOne" // ternary is a hack for TS compiler
+        ? model[mode](mongofiedFilters)
+        : model[mode](mongofiedFilters);
 
     // a promised query result that counts how many results we'd have if
     // we weren't paginating. this just resolves to null when we aren't paginating.
@@ -192,8 +194,8 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
                     ? Data.empty as Data<Resource>
                     : Data.fromJSON(doc[path]).map(docAtPath => {
                         return this.docToResource(docAtPath, fields);
-                      })
-                })
+                      });
+                });
               })
               .values
               // Remove duplicates
@@ -503,7 +505,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     const model = this.getModel(type);
     this.assertRelationshipLinkageTypeValid(model, relationshipName, newLinkage);
 
-    const options = { runValidators: true, context: 'query' };
+    const options = { runValidators: true, context: "query" };
     const update = {
       $addToSet: {
         [relationshipName]: { $each: newLinkage.map(it => it.id) }
@@ -541,7 +543,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       },
       $inc: { [getVersionKey(model)]: 1 }
     };
-    const options = {runValidators: true, context: 'query'};
+    const options = { runValidators: true, context: "query" };
 
     return model.findOneAndUpdate({"_id": id}, update, options).exec()
       .catch(util.errorHandler);
@@ -554,8 +556,8 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
    * resource, which will be stored with it, for use optimizing future queries.
    * Any resources that aren't found won't have an entry in the results object.
    */
-  async getTypePaths(items: {type: string, id: string}[]) {
-    const itemsByType = partition('type', items);
+  async getTypePaths(items: { type: string; id: string }[]) {
+    const itemsByType = partition("type", items);
     const types = Object.keys(itemsByType);
     const res = {};
 
@@ -748,12 +750,12 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       const schemaType = type as any;
       const fieldType = getFieldType(name, schemaType);
 
-      name = (name === "_id") ? "id" : name;
-      const likelyAutoGenerated = name === "id" || (
-        fieldType.baseType === "Date" &&
-        /created|updated|modified/.test(name) &&
-        typeof schemaType.options.default === "function"
-      );
+      name = name === "_id" ? "id" : name;
+      const likelyAutoGenerated =
+        name === "id" ||
+        (fieldType.baseType === "Date" &&
+          /created|updated|modified/.test(name) &&
+          typeof schemaType.options.default === "function");
 
       let defaultVal;
       if(likelyAutoGenerated) {
@@ -773,7 +775,10 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       // Add validation info
       const validationRules = {
         required: !!schemaType.options.required,
-        oneOf: baseTypeOptions.enum ? schemaType.enumValues || (schemaType.caster && schemaType.caster.enumValues) : undefined,
+        oneOf: baseTypeOptions.enum
+          ? schemaType.enumValues ||
+            (schemaType.caster && schemaType.caster.enumValues)
+          : undefined,
         max: schemaType.options.max || undefined
       };
 
@@ -781,13 +786,15 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
         Object.assign(validationRules, validatorObj.validator.JSONAPIDocumentation);
       });
 
-      schemaFields.push(new FieldDocumentation(
-        name,
-        fieldType,
-        validationRules,
-        this.toFriendlyName(name),
-        defaultVal
-      ));
+      schemaFields.push(
+        new FieldDocumentation(
+          name,
+          fieldType,
+          validationRules,
+          this.toFriendlyName(name),
+          defaultVal
+        )
+      );
     });
 
     for(const virtual in virtuals) {
@@ -799,12 +806,14 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       // for virtual properties, we can't infer type or validation rules at all,
       // so we add them with just a friendly name and leave the rest undefined.
       // The user is expected to override/set this in a resource type description.
-      schemaFields.push(new FieldDocumentation(
-        virtual,
-        undefined,
-        undefined,
-        this.toFriendlyName(virtual)
-      ));
+      schemaFields.push(
+        new FieldDocumentation(
+          virtual,
+          undefined,
+          undefined,
+          this.toFriendlyName(virtual)
+        )
+      );
     }
     return schemaFields;
   }

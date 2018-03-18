@@ -1,25 +1,25 @@
 import { LinkageJSON, UrlTemplateFns } from "./index";
 import MaybeDataWithLinks, { MaybeDataWithLinksArgs } from "./MaybeDataWithLinks";
 import ResourceIdentifier from "./ResourceIdentifier";
-import { objectIsEmpty } from '../util/misc';
+import { objectIsEmpty } from "../util/misc";
 
 export type RelationshipJSON = {
-  data?: LinkageJSON
-  links?: RelationshipLinksJSON
-}
+  data?: LinkageJSON;
+  links?: RelationshipLinksJSON;
+};
 
 export type RelationshipLinksJSON = {
-  self?: string,
-  related?: string
+  self?: string;
+  related?: string;
 };
 
 export type RelationshipOwner = {
-  type: string,
+  type: string;
   // id will be undefined in the Relationships on Resources that have
   // yet to be assigned an id. Luckily, links are never rendered for those,
   // so templates don't worry about that case.
-  id: string | undefined,
-  path: string
+  id: string | undefined;
+  path: string;
 };
 export type RelationshipArgs =
   MaybeDataWithLinksArgs<ResourceIdentifier> & { owner: RelationshipOwner };
@@ -42,9 +42,9 @@ export default class Relationship extends MaybeDataWithLinks<ResourceIdentifier>
 
   toJSON(fallbackTemplates: UrlTemplateFns): RelationshipJSON {
     const templateData = {
-      "ownerType": this.owner.type,
-      "ownerId": this.owner.id,
-      "path": this.owner.path
+      ownerType: this.owner.type,
+      ownerId: this.owner.id,
+      path: this.owner.path
     };
 
     const { data, links } = this.unwrapWith(it => it.toJSON(), templateData);
@@ -59,7 +59,7 @@ export default class Relationship extends MaybeDataWithLinks<ResourceIdentifier>
     };
 
     return {
-      ...(typeof data !== 'undefined' ? { data } : {}),
+      ...(typeof data !== "undefined" ? { data } : {}),
       ...(objectIsEmpty(finalLinks) ? {} : { links: finalLinks })
     };
   }

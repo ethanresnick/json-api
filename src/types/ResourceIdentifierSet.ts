@@ -1,5 +1,5 @@
-import Data from './Generic/Data';
-import ResourceIdentifier from './ResourceIdentifier';
+import Data from "./Generic/Data";
+import ResourceIdentifier from "./ResourceIdentifier";
 import { DataWithLinksArgs } from "./index";
 import MaybeDataWithLinks from "./MaybeDataWithLinks";
 
@@ -18,8 +18,10 @@ export default class ResourceIdentifierSet extends MaybeDataWithLinks<ResourceId
   protected _data: Data<ResourceIdentifier>;
 
   protected constructor(it: DataWithLinksArgs<ResourceIdentifier>) {
-    if(typeof it.data === 'undefined') {
-      throw new Error("Cannot construct a ResourceIdentifierSet with missing data.");
+    if(typeof it.data === "undefined") {
+      throw new Error(
+        "Cannot construct a ResourceIdentifierSet with missing data."
+      );
     }
 
     super(it);

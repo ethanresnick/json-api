@@ -1,7 +1,7 @@
 import chai = require("chai");
 import * as requestValidators from "../../../../src/steps/http/validate-request";
 
-const {expect} = chai;
+const { expect } = chai;
 
 describe("Request Validation functions", () => {
   describe("checkBodyExistence", () => {

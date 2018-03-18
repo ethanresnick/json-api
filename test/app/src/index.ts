@@ -1,5 +1,5 @@
 import express = require("express");
-import bodyParser = require('body-parser');
+import bodyParser = require("body-parser");
 import R = require("ramda");
 import API = require("../../../src/index");
 import Document from "../../../src/types/Document";
@@ -40,7 +40,7 @@ export default database.then(function(dbModule) {
           }]
         : undefined;
     }
-  })
+  });
 
   // Initialize the express app + front controller.
   const app: Express = express();
@@ -66,7 +66,13 @@ export default database.then(function(dbModule) {
   // we'll use them here as a faster alternative to old-style label mappers.
   app.get('/:type(people)/non-binary',
     Front.transformedAPIRequest((req, query) =>
-      (query as FindQuery).andWhere({ field: "gender", operator: "nin", value: ["male", "female"] })));
+      (query as FindQuery).andWhere({
+        field: "gender",
+        operator: "nin",
+        value: ["male", "female"]
+      })
+    )
+  );
 
   // Apply a query transform that returns a custom error
   app.get('/request-that-errors/:type(people)/:id(42)',
@@ -90,15 +96,18 @@ export default database.then(function(dbModule) {
     Front.transformedAPIRequest((query: Query) => {
       const origReturning = query.returning;
 
-      return query.resultsIn(async (...args) => {
-        const origResult = await (origReturning as any)(...args);
-        const origDocument = origResult.document as Document;
-        const names = (<ResourceSet>origDocument.primary).map(it => it.attrs.name).values;
-        origDocument.meta = { ...origDocument.meta, names };
-        return origResult;
-      }, (error) => ({
-        document: new Document({})
-      }))
+      return query.resultsIn(
+        async (...args) => {
+          const origResult = await (origReturning as any)(...args);
+          const origDocument = origResult.document as Document;
+          const names = (<ResourceSet>origDocument.primary).map(it => it.attrs.name).values;
+          origDocument.meta = { ...origDocument.meta, names };
+          return origResult;
+        },
+        error => ({
+          document: new Document({})
+        })
+      );
     })
   );
 
@@ -106,7 +115,7 @@ export default database.then(function(dbModule) {
   app.get('/:type(organizations)/no-id/406-delegation-test',
     FrontWith406Delegation.apiRequest,
     (req, res, next) => {
-      res.header('Content-Type', 'text/plain')
+      res.header("Content-Type", "text/plain");
       res.send("Hello from express");
     })
 
@@ -170,7 +179,7 @@ export default database.then(function(dbModule) {
   app.use('/subapp', express().get('/:type(people)', Front.apiRequest));
 
   app.use(function(req, res, next) {
-    Front.sendError({ "message": "Not Found", "status": 404 }, req, res, next);
+    Front.sendError({ message: "Not Found", status: 404 }, req, res, next);
   });
 
   return app;
@@ -199,7 +208,7 @@ function makeSignInQuery(opts: QueryBuildingContext) {
       return {
         // Note lack of beforeRender.
         document: new Document({ primary: ResourceSet.of({ data: userData }) })
-      }
+      };
     }
   });
 }

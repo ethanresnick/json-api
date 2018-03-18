@@ -1,4 +1,4 @@
-import {expect} from "chai";
+import { expect } from "chai";
 import AgentPromise from "../../app/agent";
 
 describe("Error handling", () => {
@@ -10,7 +10,7 @@ describe("Error handling", () => {
 
   describe("Fetching an erroring resource", () => {
     it("should not expose internal error details by default", () => {
-      return Agent.request("GET", '/with-error')
+      return Agent.request("GET", "/with-error")
         .accept("application/vnd.api+json")
         .then(() => {
           throw new Error("Shouldn't run")
@@ -20,7 +20,7 @@ describe("Error handling", () => {
     });
 
     it("should expose internal error details if an APIError's thrown", () => {
-      return Agent.request("GET", '/with-error?customError=true')
+      return Agent.request("GET", "/with-error?customError=true")
         .accept("application/vnd.api+json")
         .then(() => {
           throw new Error("Shouldn't run")

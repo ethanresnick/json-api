@@ -1,4 +1,4 @@
-import {expect} from "chai";
+import { expect } from "chai";
 import validateDocument from "../../../../src/steps/pre-query/validate-document";
 
 describe("Validate Request Is a JSON API Document", () => {

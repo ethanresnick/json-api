@@ -1,11 +1,11 @@
 import chai = require("chai");
 import validate from "../../../../../src/steps/http/content-negotiation/validate-content-type";
 
-const {expect} = chai;
+const { expect } = chai;
 
 describe("validateContentType", () => {
-  const invalidMock = {contentType: "application/json", ext: []};
-  const validMock   = {contentType: "application/vnd.api+json", ext: []};
+  const invalidMock = { contentType: "application/json", ext: [] };
+  const validMock = { contentType: "application/vnd.api+json", ext: [] };
 
   it("should return a promise", () => {
     expect(validate(validMock) instanceof Promise).to.be.true;

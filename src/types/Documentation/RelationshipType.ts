@@ -10,6 +10,10 @@ export default class RelationshipType extends FieldType {
   }
 
   toString() {
-    return (this.isArray ? "Array[" : "") + this.targetModel + "Id" + (this.isArray ? "]" : "");
+    return (
+      (this.isArray ? "Array[" : "") +
+      `${this.targetModel}Id` +
+      (this.isArray ? "]" : "")
+    );
   }
 }

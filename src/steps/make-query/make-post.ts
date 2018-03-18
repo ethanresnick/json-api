@@ -1,8 +1,8 @@
-import { hasId } from '../pre-query/validate-resource-ids';
+import { hasId } from "../pre-query/validate-resource-ids";
 import APIError from "../../types/APIError";
 import Resource, { ResourceWithTypePath } from "../../types/Resource";
 import CreateQuery from "../../types/Query/CreateQuery";
-import AddToRelationshipQuery from '../../types/Query/AddToRelationshipQuery';
+import AddToRelationshipQuery from "../../types/Query/AddToRelationshipQuery";
 import { FinalizedRequest, Result } from "../../types";
 import Data from "../../types/Generic/Data";
 import ResourceSet from "../../types/ResourceSet";
@@ -13,7 +13,7 @@ import templating = require("url-template");
 export default function(request: FinalizedRequest, registry: ResourceTypeRegistry, makeDoc) {
   // tslint:disable-next-line no-non-null-assertion
   const primary = (request.document!.primary as any)._data;
-  const type    = request.type;
+  const type = request.type;
 
   // We're going to do an adapter.create, below, EXCEPT if we're adding to
   // an existing toMany relationship, which uses a different adapter method.
@@ -37,7 +37,7 @@ export default function(request: FinalizedRequest, registry: ResourceTypeRegistr
       id: request.id,
       relationshipName: request.relationship,
       linkage: (<Data<ResourceIdentifier>>primary).values,
-      returning: () => ({status: 204})
+      returning: () => ({ status: 204 })
     });
   }
 
@@ -64,7 +64,7 @@ export default function(request: FinalizedRequest, registry: ResourceTypeRegistr
           if(selfTemplate) {
             res.headers = {
               Location: templating.parse(selfTemplate).expand({
-                "id": createdResource.id,
+                id: createdResource.id,
                 ...createdResource.attrs
               })
             };

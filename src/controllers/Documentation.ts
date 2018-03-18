@@ -9,8 +9,8 @@ import { HTTPResponse, ServerReq, ServerRes, Request } from "../types";
 import ResourceSet from "../types/ResourceSet";
 import Document from "../types/Document";
 import Resource from "../types/Resource";
-import { getModelName } from '../util/naming-conventions';
-import { IncomingMessage, ServerResponse } from 'http';
+import { getModelName } from "../util/naming-conventions";
+import { IncomingMessage, ServerResponse } from "http";
 export { IncomingMessage, ServerResponse };
 
 export default class DocumentationController {
@@ -52,7 +52,7 @@ export default class DocumentationController {
     const contentType = negotiator.mediaType(["text/html", "application/vnd.api+json"]);
 
     // set content type as negotiated & vary on accept.
-    response.headers['content-type'] = contentType;
+    response.headers["content-type"] = contentType;
     response.headers.vary = "Accept";
 
     // process templateData (just the type infos for now) for this particular request.
@@ -82,7 +82,7 @@ export default class DocumentationController {
     }
 
     return response;
-  }
+  };
 
   // Clients can extend this if, say, the adapter can't infer
   // as much info about the models' structure as they would like.
@@ -102,7 +102,7 @@ export default class DocumentationController {
       const pathInfo = (info && info.fields && info.fields[field.name]) || {};
 
       // Keys that have a meaning in the default template.
-      const overrideableKeys = ["friendlyName",  "kind", "description"];
+      const overrideableKeys = ["friendlyName", "kind", "description"];
 
       for(const key in pathInfo) {
         // allow the user to override auto-generated friendlyName and the
@@ -110,7 +110,7 @@ export default class DocumentationController {
         // allow them to set the description, which is always user-provided.
         // And, finally, copy in any other info properties that don't
         // conflict with ones defined by this library.
-        if (overrideableKeys.indexOf(key) > -1 || !(key in field)) {
+        if(overrideableKeys.indexOf(key) > -1 || !(key in field)) {
           field[key] = pathInfo[key];
         }
 
@@ -127,15 +127,15 @@ export default class DocumentationController {
     // Other info
     type TypeInfo = {
       name: {
-        model: string,
-        singular: string,
-        plural: string
-      },
-      defaultIncludes?: ResourceTypeDescription['defaultIncludes'],
-      example?: ResourceTypeInfo['example'],
-      description?: ResourceTypeInfo['description'],
-      parentType: string,
-      childTypes: string[]
+        model: string;
+        singular: string;
+        plural: string;
+      };
+      defaultIncludes?: ResourceTypeDescription["defaultIncludes"];
+      example?: ResourceTypeInfo["example"];
+      description?: ResourceTypeInfo["description"];
+      parentType: string;
+      childTypes: string[];
     };
 
     const result = <TypeInfo>{
@@ -190,9 +190,9 @@ function cloneCustomizer(value) {
     const state = _.cloneDeep(value);
     Object.setPrototypeOf(state, Object.getPrototypeOf(value));
     Object.defineProperty(state, "constructor", {
-      "writable": true,
-      "enumerable": false,
-      "value": value.constructor
+      writable: true,
+      enumerable: false,
+      value: value.constructor
     });
 
     // handle the possibiliy that a key in state was itself a non-plain object

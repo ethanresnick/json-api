@@ -1,26 +1,26 @@
 import WithCriteriaQuery, { WithCriteriaQueryOptions } from "./WithCriteriaQuery";
-import { Sort, AndPredicate } from '../index';
+import { Sort, AndPredicate } from "../index";
 
 export type FindQueryOptions = WithCriteriaQueryOptions & {
-  populates?: string[],
-  select?: { [typeName: string]: string[]; },
-  sort?: Sort[]
-}
+  populates?: string[];
+  select?: { [typeName: string]: string[] };
+  sort?: Sort[];
+};
 
 export default class FindQuery extends WithCriteriaQuery {
   protected query: {
-    type: FindQueryOptions['type'];
-    returning: FindQueryOptions['returning'];
-    catch: FindQueryOptions['catch'];
-    select?: FindQueryOptions['select'];
-    sort?: FindQueryOptions['sort'];
+    type: FindQueryOptions["type"];
+    returning: FindQueryOptions["returning"];
+    catch: FindQueryOptions["catch"];
+    select?: FindQueryOptions["select"];
+    sort?: FindQueryOptions["sort"];
     populates: string[]; // never undefined in the object (it gets a default), but it can be in the option.
     criteria: {
       where: AndPredicate;
       singular: boolean;
-      limit?: FindQueryOptions['limit'];
-      offset?: FindQueryOptions['offset'];
-    }
+      limit?: FindQueryOptions["limit"];
+      offset?: FindQueryOptions["offset"];
+    };
   };
 
   constructor({ populates, select, sort, ...baseOpts }: FindQueryOptions) {

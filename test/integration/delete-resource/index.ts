@@ -1,4 +1,4 @@
-import {expect} from "chai";
+import { expect } from "chai";
 import AgentPromise from "../../app/agent";
 import { VALID_SCHOOL_RESOURCE_NO_ID } from "../fixtures/creation";
 
@@ -33,7 +33,7 @@ describe("Deleting resources", () => {
           expect(err.status).to.equal(404);
         })
     });
-  })
+  });
 
   describe("Bulk delete", () => {
     let creationIds;
@@ -43,7 +43,7 @@ describe("Deleting resources", () => {
       });
     });
 
-    it('should support bulk delete', () => {
+    it("should support bulk delete", () => {
       return Agent.request("DEL", `/schools`)
         .type("application/vnd.api+json")
         .send({ data: creationIds.map(id => ({ type: "organizations", id })) })
@@ -64,7 +64,7 @@ describe("Deleting resources", () => {
 
     it("should delete all matching resources, even if some are not found", () => {
       // First id below doesn't exist; should not trigger a 404 in the bulk case.
-      const idsToDelete = ['56beb8500000000000000000', ...creationIds];
+      const idsToDelete = ["56beb8500000000000000000", ...creationIds];
 
       return Agent.request("DEL", `/schools`)
         .type("application/vnd.api+json")
@@ -80,12 +80,12 @@ describe("Deleting resources", () => {
           }));
         });
     });
-  })
+  });
 });
 
 function createSchool(Agent) {
   return Agent.request("POST", "/schools")
     .type("application/vnd.api+json")
-    .send({"data": VALID_SCHOOL_RESOURCE_NO_ID})
+    .send({ data: VALID_SCHOOL_RESOURCE_NO_ID })
     .then(response => response.body.data);
 }

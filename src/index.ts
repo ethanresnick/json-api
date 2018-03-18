@@ -12,30 +12,30 @@ import ExpressStrategy from "./http-strategies/Express";
 import KoaStrategy from "./http-strategies/Koa";
 
 // These imports are part of the compiled output and aren't lazy loaded.
-import Document from './types/Document'
-import Error, { displaySafe as displaySafeError } from './types/APIError'
-import Data from "./types/Generic/Data"
-import Resource from './types/Resource'
-import ResourceIdentifier from './types/ResourceIdentifier'
-import ResourceSet from './types/ResourceSet'
-import Relationship from './types/Relationship'
-import Field from './types/Documentation/Field'
-import FieldType from './types/Documentation/FieldType'
-import API from './controllers/API'
-import Documentation from './controllers/Documentation'
-import ResourceTypeRegistry from './ResourceTypeRegistry'
+import Document from "./types/Document";
+import Error, { displaySafe as displaySafeError } from "./types/APIError";
+import Data from "./types/Generic/Data";
+import Resource from "./types/Resource";
+import ResourceIdentifier from "./types/ResourceIdentifier";
+import ResourceSet from "./types/ResourceSet";
+import Relationship from "./types/Relationship";
+import Field from "./types/Documentation/Field";
+import FieldType from "./types/Documentation/FieldType";
+import API from "./controllers/API";
+import Documentation from "./controllers/Documentation";
+import ResourceTypeRegistry from "./ResourceTypeRegistry";
 
-import CreateQuery from './types/Query/CreateQuery';
-import FindQuery from './types/Query/FindQuery';
-import UpdateQuery from './types/Query/UpdateQuery';
-import DeleteQuery from './types/Query/DeleteQuery';
-import AddToRelationshipQuery from './types/Query/AddToRelationshipQuery';
-import RemoveFromRelationshipQuery from './types/Query/RemoveFromRelationshipQuery';
+import CreateQuery from "./types/Query/CreateQuery";
+import FindQuery from "./types/Query/FindQuery";
+import UpdateQuery from "./types/Query/UpdateQuery";
+import DeleteQuery from "./types/Query/DeleteQuery";
+import AddToRelationshipQuery from "./types/Query/AddToRelationshipQuery";
+import RemoveFromRelationshipQuery from "./types/Query/RemoveFromRelationshipQuery";
 
-import * as namingHelpers from './util/naming-conventions';
+import * as namingHelpers from "./util/naming-conventions";
 
 // Export types for typescript
-export { FinalizedRequest as Request, Result, HTTPResponse } from './types';
+export { FinalizedRequest as Request, Result, HTTPResponse } from "./types";
 export {
   Document, Error, Resource, ResourceIdentifier, ResourceSet, Relationship,
   API as APIController, Documentation as DocumentationController,
@@ -43,19 +43,18 @@ export {
   Field, FieldType, ResourceTypeRegistry, displaySafeError, Data
 };
 
-
 export const dbAdapters = {
   get Mongoose() {
-    return <typeof MongooseAdapter>require('./db-adapters/Mongoose/MongooseAdapter').default
+    return <typeof MongooseAdapter>require("./db-adapters/Mongoose/MongooseAdapter").default;
   }
 };
 
 export const httpStrategies = {
   get Express() {
-    return <typeof ExpressStrategy>require('./http-strategies/Express').default
+    return <typeof ExpressStrategy>require("./http-strategies/Express").default;
   },
   get Koa() {
-    return <typeof KoaStrategy>require('./http-strategies/Koa').default
+    return <typeof KoaStrategy>require("./http-strategies/Koa").default;
   }
 };
 

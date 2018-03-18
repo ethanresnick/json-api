@@ -7,9 +7,9 @@ import APIController from "../controllers/API";
 import DocsController from "../controllers/Documentation";
 
 export type HTTPStrategyOptions = {
-  handleContentNegotiation?: boolean,
-  tunnel?: boolean,
-  host?: string
+  handleContentNegotiation?: boolean;
+  tunnel?: boolean;
+  host?: string;
 };
 
 export type Controller =
@@ -148,12 +148,12 @@ export default class BaseStrategy {
     // is specified to always be utf-8, and letting the sender specify
     // the encoding we'll parse with (e.g., in req.headers['content-type'])
     // seeems like poor security hygiene.
-    const bodyParserOptions: (getRawBody.Options & { encoding: string }) = {
+    const bodyParserOptions: getRawBody.Options & { encoding: string } = {
       encoding: "utf-8",
       limit: "1mb",
       ...(hasValidContentLength(req)
-          ? { length: req.headers["content-length"] }
-          : {})
+        ? { length: req.headers["content-length"] }
+        : {})
     };
 
     const bodyString = await (() => {
@@ -187,14 +187,15 @@ export default class BaseStrategy {
     // req.body before giving up, and just pray that it's the fully-parsed
     // json we expect (knowing that it can't be a string or a buffer, or
     // we'd have used it as the bodyString).
-    if(typeof bodyString === 'undefined') {
-      if('body' in req) {
+    if(typeof bodyString === "undefined") {
+      if("body" in req) {
         return (req as any).body;
       }
 
       throw new APIError({
         status: 500,
-        title: "Request body could not be parsed. Ensure that no other " +
+        title:
+          "Request body could not be parsed. Ensure that no other " +
           "middleware has already read the request or, if that's not " +
           "possible, ensure that it sets req.rawBody with the unparsed body " +
           "string, or req.body with parsed JSON."
@@ -213,7 +214,7 @@ export default class BaseStrategy {
     try {
       return JSON.parse(bodyString);
     } catch (error) {
-      throw new APIError(400, undefined, "Request contains invalid JSON.")
+      throw new APIError(400, undefined, "Request contains invalid JSON.");
     }
   }
 }

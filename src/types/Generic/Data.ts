@@ -49,12 +49,12 @@ import { DataOf, Reducer, PredicateFn, Mapper, AsyncMapper } from "../index";
  * That would give us reduce/every/forEach etc for free...
  */
 export type INTERNAL_DONT_USE<T> = {
-  data: T[],
-  isSingular: boolean
+  data: T[];
+  isSingular: boolean;
 };
 
 export default class Data<T> {
-  protected constructor(private value: INTERNAL_DONT_USE<T>) { }
+  protected constructor(private value: INTERNAL_DONT_USE<T>) {}
 
   /**
    * Takes in the new Data<T>s and joins their list items (with concat)
@@ -200,8 +200,7 @@ export default class Data<T> {
    * is appended to in flatMap not reset.
    * @type {[type]}
    */
-  static empty: Data<any> =
-    new Data<any>({ data: [], isSingular: true });
+  static empty: Data<any> = new Data<any>({ data: [], isSingular: true });
 
   /**
    * Helper for initializing an instance that's not singular.

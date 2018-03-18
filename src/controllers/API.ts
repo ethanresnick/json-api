@@ -1,5 +1,5 @@
 import templating = require("url-template");
-import mapObject = require('lodash/mapValues'); //tslint:disable-line no-submodule-imports
+import mapObject = require("lodash/mapValues"); //tslint:disable-line no-submodule-imports
 import R = require("ramda");
 import {
    Request, FinalizedRequest, Result, HTTPResponse,
@@ -8,16 +8,16 @@ import {
    UrlTemplateFnsByType, makeDocument
 } from "../types";
 import Query from "../types/Query/Query";
-import ResourceTypeRegistry from '../ResourceTypeRegistry';
+import ResourceTypeRegistry from "../ResourceTypeRegistry";
 import Document, { DocumentData } from "../types/Document";
 import APIError from "../types/APIError";
 import Data from "../types/Generic/Data";
-import Resource from '../types/Resource';
+import Resource from "../types/Resource";
 import ResourceIdentifier from "../types/ResourceIdentifier";
-import ResourceSet from '../types/ResourceSet';
+import ResourceSet from "../types/ResourceSet";
 import ResourceIdentifierSet from "../types/ResourceIdentifierSet";
 import Relationship from "../types/Relationship";
-import logger from '../util/logger';
+import logger from "../util/logger";
 
 import * as requestValidators from "../steps/http/validate-request";
 import negotiateContentType from "../steps/http/content-negotiation/negotiate-content-type";
@@ -28,7 +28,7 @@ import setTypePaths from "../steps/set-type-paths";
 import validateRequestDocument from "../steps/pre-query/validate-document";
 import validateRequestResourceTypes from "../steps/pre-query/validate-resource-types";
 import validateRequestResourceIds from "../steps/pre-query/validate-resource-ids";
-import validateRequestResourceData from '../steps/pre-query/validate-resource-data';
+import validateRequestResourceData from "../steps/pre-query/validate-resource-data";
 import parseQueryParams from "../steps/pre-query/parse-query-params";
 import filterParamParser, { getFilterList } from "../steps/pre-query/filter-param-parser";
 import makeTransformFunction, { TransformMode, Extras } from "../steps/make-transform-fn";
@@ -55,29 +55,29 @@ export {
 export type ErrOrErrArr = Error | APIError | Error[] | APIError[];
 
 export type APIControllerOpts = {
-  filterParser?: filterParamParser
+  filterParser?: filterParamParser;
 };
 
 export type QueryFactory = (opts: QueryBuildingContext) => Query | Promise<Query>;
 
 export type QueryBuildingContext = {
-  request: FinalizedRequest,
-  serverReq: ServerReq,
-  serverRes: ServerRes,
-  transformDocument: (doc: Document, mode: TransformMode) => Promise<Document>,
+  request: FinalizedRequest;
+  serverReq: ServerReq;
+  serverRes: ServerRes;
+  transformDocument: (doc: Document, mode: TransformMode) => Promise<Document>;
   setTypePaths: (
-    it: (Resource| ResourceIdentifier)[],
+    it: (Resource | ResourceIdentifier)[],
     useInputData: boolean,
     requiredThroughType?: string
-  ) => Promise<void>,
-  registry: ResourceTypeRegistry,
-  makeDocument: makeDocument,
-  makeQuery: QueryFactory
+  ) => Promise<void>;
+  registry: ResourceTypeRegistry;
+  makeDocument: makeDocument;
+  makeQuery: QueryFactory;
 };
 
 export type RequestOpts = {
   queryFactory?: QueryFactory;
-}
+};
 
 export type filterParamParser = (
   legalUnaryOpts: string[],
@@ -97,10 +97,13 @@ export default class APIController {
     this.filterParamParser =
       opts.filterParser || (<any>this.constructor).defaultFilterParamParser;
 
-    this.urlTemplateFns = mapObject(registry.urlTemplates(), (templatesForType) => {
-      // tslint:disable-next-line:no-unbound-method
-      return mapObject(templatesForType, (it) => templating.parse(it).expand);
-    });
+    this.urlTemplateFns = mapObject(
+      registry.urlTemplates(),
+      templatesForType => {
+        // tslint:disable-next-line:no-unbound-method
+        return mapObject(templatesForType, it => templating.parse(it).expand);
+      }
+    );
   }
 
   protected makeDoc = (data: DocumentData) =>
@@ -130,10 +133,10 @@ export default class APIController {
           binaryFilterOperators,
           request.rawQueryString,
           request.queryParams
-        ),
+        )
       },
       document: undefined
-    }
+    };
 
     if(request.body !== undefined) {
       const linksJSONToTemplates = (linksJSON) =>
@@ -163,7 +166,7 @@ export default class APIController {
                 }))
           : ResourceSet.of({
               data: parsedPrimary as Data<Resource>,
-              links: linksJSONToTemplates(request.body.links),
+              links: linksJSONToTemplates(request.body.links)
             }),
         meta: request.body.meta
       });
@@ -228,7 +231,7 @@ export default class APIController {
         // (on create) or are present when they shouldn't be (on update).
         await opts.setTypePaths(
           request.document.getContents(),
-          request.method === 'post',
+          request.method === "post",
           request.type
         );
 
@@ -265,7 +268,7 @@ export default class APIController {
     }
 
     const baseQuery = await (async () => {
-      switch(<"get"|"post"|"patch"|"delete">request.method) {
+      switch(<"get" | "post" | "patch" | "delete">request.method) {
         case "get":
           return makeGET(requestAfterBeforeSave, opts.registry, opts.makeDocument)
         case "post":
@@ -282,7 +285,8 @@ export default class APIController {
 
     // Apply beforeRender and add default catch
     const origReturning = baseQuery.returning;
-    const origCatch = baseQuery.catch || makeResultFromErrors.bind(null, opts.makeDocument);
+    const origCatch =
+      baseQuery.catch || makeResultFromErrors.bind(null, opts.makeDocument);
 
     const transformResultDocument = async (result: Result) => {
       result.document = result.document &&
@@ -306,7 +310,7 @@ export default class APIController {
           Promise.resolve.bind(Promise) as typeof Promise.resolve
         ),
         transformResultDocument
-      ),
+      )
     );
   }
 
@@ -334,11 +338,11 @@ export default class APIController {
       // Attempt to negotiate the content type. Will be json-api, or standard
       // application/json if that's all the client supports, or will error.
       // Better to do this early so we exit fast if the client can't support anything.
-      logger.info('Negotiating response content-type');
+      logger.info("Negotiating response content-type");
       contentType =
         await negotiateContentType(request.accepts, ["application/vnd.api+json"])
 
-      logger.info('Parsing request body/query parameters');
+      logger.info("Parsing request body/query parameters");
       const finalizedRequest = await this.finalizeRequest(request);
 
       // Actually fulfill the request!
@@ -352,7 +356,7 @@ export default class APIController {
         serverRes
       };
 
-      logger.info('Creating request query');
+      logger.info("Creating request query");
       const query = await queryFactory({
         ...transformExtras,
         makeDocument: this.makeDoc, // tslint:disable-line no-unbound-method
@@ -367,7 +371,7 @@ export default class APIController {
         throw new APIError(404, undefined, `${request.type} is not a valid type.`);
       }
 
-      logger.info('Executing request query');
+      logger.info("Executing request query");
       const adapter = this.registry.dbAdapter(query.type);
       jsonAPIResult =
         await adapter.doQuery(query).then(query.returning, query.catch);
@@ -394,9 +398,9 @@ export default class APIController {
     // copying over a couple properties. In the future, though, one HTTP request
     // might generate multiple queries, and then multiple jsonAPIResponses,
     // which would be merged into a single HTTP Response.
-    logger.info('Creating HTTPResponse', jsonAPIResult);
+    logger.info("Creating HTTPResponse", jsonAPIResult);
     return resultToHTTPResponse(jsonAPIResult, contentType);
-  }
+  };
 
   /**
    * Builds a response from errors. Allows errors that occur outside of the
@@ -454,7 +458,7 @@ export default class APIController {
   static defaultFilterParamParser(legalUnary, legalBinary, rawQuery, params) {
     return getFilterList(rawQuery)
       .map(it => filterParamParser(legalUnary, legalBinary, it))
-      .getOrDefault(undefined)
+      .getOrDefault(undefined);
   }
 }
 
@@ -468,7 +472,7 @@ function makeResultFromErrors(makeDoc: makeDocument, errors: ErrOrErrArr): Resul
     rawErrorsArray.map(APIError.fromError.bind(APIError));
 
   logger.warn("Errors converted to json-api Result", ...rawErrorsArray);
-  const status = pickStatus(finalErrorsArray.map((v) => Number(v.status)));
+  const status = pickStatus(finalErrorsArray.map(v => Number(v.status)));
 
   return {
     document: makeDoc({ errors: finalErrorsArray }),

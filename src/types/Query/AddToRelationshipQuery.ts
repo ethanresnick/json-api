@@ -3,19 +3,19 @@ import { assertKeysTruthy } from "./utils";
 import ResourceIdentifier from "../ResourceIdentifier";
 
 export type AddToRelationshipQueryOptions = QueryOptions & {
-  id: string | number,
-  relationshipName: string,
-  linkage: ResourceIdentifier[]
-}
+  id: string | number;
+  relationshipName: string;
+  linkage: ResourceIdentifier[];
+};
 
 export default class AddToRelationshipQuery extends Query {
   protected query: {
-    type: QueryOptions['type'];
-    returning: QueryOptions['returning'];
-    catch: QueryOptions['catch'];
-    id: AddToRelationshipQueryOptions['id'];
-    relationshipName: AddToRelationshipQueryOptions['relationshipName'];
-    linkage: AddToRelationshipQueryOptions['linkage'];
+    type: QueryOptions["type"];
+    returning: QueryOptions["returning"];
+    catch: QueryOptions["catch"];
+    id: AddToRelationshipQueryOptions["id"];
+    relationshipName: AddToRelationshipQueryOptions["relationshipName"];
+    linkage: AddToRelationshipQueryOptions["linkage"];
   };
 
   constructor(opts: AddToRelationshipQueryOptions) {

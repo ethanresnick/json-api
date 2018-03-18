@@ -1,4 +1,4 @@
-import { Reduceable } from '../types';
+import { Reduceable } from "../types";
 
 export function isPlainObject(obj: object) {
   return typeof obj === "object" && !(Array.isArray(obj) || obj === null);
@@ -24,7 +24,7 @@ export function objectIsEmpty(obj: object) {
 export const reduceToObject = (makeKey) => (acc, it) => {
   acc[makeKey(it)] = it;
   return acc;
-}
+};
 
 /**
  * A reducer function encapsulating the common pattern of reducing
@@ -43,7 +43,10 @@ export function deleteNested(path: string, object: object) {
     const lastPartIndex = pathParts.length - 1;
     const lastPart = pathParts[lastPartIndex];
     const containingParts = pathParts.slice(0, lastPartIndex);
-    const container = containingParts.reduce(((obj, part) => (obj as any)[part]), object);
+    const container = containingParts.reduce(
+      (obj, part) => (obj as any)[part],
+      object
+    );
 
     if(container.hasOwnProperty(lastPart)) {
       delete container[lastPart];
@@ -129,13 +132,13 @@ export function partition<T>(
  */
 export function pseudoTopSort(
   nodes: string[],
-  edges: {[from: string]: {[to: string]: true}},
+  edges: { [from: string]: { [to: string]: true } },
   roots: string[]
 ) {
   // Do some defensive copying, in case the caller didn't.
   roots = roots.slice();
   nodes = nodes.slice();
-  edges = {...edges};
+  edges = { ...edges };
   Object.keys(edges).forEach(key => { edges[key] = { ...edges[key] }; });
 
   // "L = Empty list that will contain the sorted elements"

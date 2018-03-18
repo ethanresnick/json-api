@@ -5,9 +5,9 @@ import UpdateQuery from "../types/Query/UpdateQuery";
 import AddToRelationshipQuery from "../types/Query/AddToRelationshipQuery";
 import RemoveFromRelationshipQuery from "../types/Query/RemoveFromRelationshipQuery";
 
-export type TypeInfo = { typePath: string[], extra?: any };
+export type TypeInfo = { typePath: string[]; extra?: any };
 export type TypeIdMapOf<T> = {
-  [type: string]: { [id: string]: T | undefined } | undefined
+  [type: string]: { [id: string]: T | undefined } | undefined;
 };
 
 export interface AdapterInstance<T extends new (...args: any[]) => any> {
@@ -25,7 +25,7 @@ export interface AdapterInstance<T extends new (...args: any[]) => any> {
 };
 
 export interface AdapterClass {
-  new (...args: any[]): AdapterInstance<{new (...args: any[]): any}>;
+  new (...args: any[]): AdapterInstance<{ new (...args: any[]): any }>;
   getStandardizedSchema(model: any, pluralizer: any): any;
   unaryFilterOperators: string[]; // must include "and"
   binaryFilterOperators: string[]; // must include "eq"

@@ -3,13 +3,13 @@ import Relationship, { RelationshipJSON, RelationshipArgs } from "./Relationship
 import { UrlTemplateFns } from "./index";
 
 export type ResourceJSON = {
-  id: string,
-  type: string,
-  attributes?: object,
-  relationships?: { [name: string]: RelationshipJSON },
-  meta?: object,
-  links?: { self?: string }
-}
+  id: string;
+  type: string;
+  attributes?: object;
+  relationships?: { [name: string]: RelationshipJSON };
+  meta?: object;
+  links?: { self?: string };
+};
 
 // Used after an id has been assigned by the server.
 export type ResourceWithId = Resource & { id: string };
@@ -21,7 +21,7 @@ export default class Resource {
   private _id: string | undefined;
   private _type!: string;
   private _relationships!: { [name: string]: Relationship };
-  private _attrs!: {[name: string]: any};
+  private _attrs!: { [name: string]: any };
   private _meta!: object;
 
   /**
@@ -59,7 +59,7 @@ export default class Resource {
 
   set id(id) {
     // allow empty id for the case of a new resource POST.
-    this._id = (typeof id !== 'undefined') ? String(id) : undefined;
+    this._id = (typeof id !== "undefined") ? String(id) : undefined;
   }
 
   get type() {
@@ -116,7 +116,7 @@ export default class Resource {
   }
 
   set meta(meta) {
-    if(typeof meta !== 'object' || meta === null) {
+    if(typeof meta !== "object" || meta === null) {
       throw new Error("meta must be an object.");
     }
 
@@ -139,7 +139,7 @@ export default class Resource {
     }
   }
 
-  setRelationship(relationshipPath: string, data: RelationshipArgs['data']) {
+  setRelationship(relationshipPath: string, data: RelationshipArgs["data"]) {
     validateFieldGroup({ [relationshipPath]: true }, this._attrs);
     this._relationships[relationshipPath] = Relationship.of({
       data,
@@ -158,7 +158,7 @@ export default class Resource {
       id: this.id,
       type: this.type,
       attributes: this.attrs,
-      ...(showTypePath || hasMeta ? { meta } : {}),
+      ...(showTypePath || hasMeta ? { meta } : {})
     };
 
     // use type, id, meta and attrs for template data, even though building

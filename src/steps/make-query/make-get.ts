@@ -77,8 +77,9 @@ export default function(request: FinalizedRequest, registry: ResourceTypeRegistr
       // Note: we need the type assertion because, even though we checked that
       // relationship isn't null above, it could've hypothetically been set back
       // to null before the `returning` method is called.
-      const relationship = resource.relationships &&
-        resource.relationships[<string>(request.relationship)];
+      const relationship =
+        resource.relationships &&
+        resource.relationships[<string>request.relationship];
 
       if(!relationship) {
         const title = "Invalid relationship name.";
@@ -95,7 +96,7 @@ export default function(request: FinalizedRequest, registry: ResourceTypeRegistr
 
       return {
         document: makeDoc({ primary: relationship })
-      }
+      };
     }
   });
 }

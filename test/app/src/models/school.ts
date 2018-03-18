@@ -8,7 +8,7 @@ export default function(Organization, OrganizationSchema) {
     isCollege: {
       type: Boolean
     },
-    principal: { ref: "Person", type: ObjectId },
+    principal: { ref: "Person", type: ObjectId }
   });
 
   return Organization.discriminator("School", schema);

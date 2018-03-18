@@ -3,7 +3,9 @@ import WithCriteriaQuery from "../../../../src/types/Query/WithCriteriaQuery";
 
 describe("WithCriteriaQuery", () => {
   const returning = (it: any) => it;
-  const getIdFilters = (q: any) => q.getFilters().value.filter(it => it.field === 'id');
+  const getIdFilters = (q: any) =>
+    q.getFilters().value.filter(it => it.field === "id");
+
   const queries = [
     new WithCriteriaQuery({ type: "any", returning, singular: true }), // no id
     new WithCriteriaQuery({ type: "any", id: "23", returning }), // single id
@@ -16,12 +18,12 @@ describe("WithCriteriaQuery", () => {
 
       it("should add an id filter, not removing any that already exist", () => {
         const resultIdFilters = resultQueries.map(getIdFilters);
-        const addedFilter = { field: "id", operator: 'eq', value: "33" };
+        const addedFilter = { field: "id", operator: "eq", value: "33" };
 
         expect(resultIdFilters).to.deep.equal([
           [addedFilter],
-          [{ field: "id", operator: 'eq', value: "23" }, addedFilter],
-          [{ field: "id", operator: 'in', value: ["23", "43"] }, addedFilter]
+          [{ field: "id", operator: "eq", value: "23" }, addedFilter],
+          [{ field: "id", operator: "in", value: ["23", "43"] }, addedFilter]
         ]);
       });
 
@@ -34,12 +36,16 @@ describe("WithCriteriaQuery", () => {
       const resultQueries = queries.map(q => q.matchingIdOrIds(["33", "45"]));
       it("should add an id filter, not removing any that already exist", () => {
         const resultIdFilters = resultQueries.map(getIdFilters);
-        const addedFilter = { field: "id", operator: 'in', value: ["33", "45"] };
+        const addedFilter = {
+          field: "id",
+          operator: "in",
+          value: ["33", "45"]
+        };
 
         expect(resultIdFilters).to.deep.equal([
           [addedFilter],
-          [{ field: "id", operator: 'eq', value: "23" }, addedFilter],
-          [{ field: "id", operator: 'in', value: ["23", "43"] }, addedFilter]
+          [{ field: "id", operator: "eq", value: "23" }, addedFilter],
+          [{ field: "id", operator: "in", value: ["23", "43"] }, addedFilter]
         ]);
       });
 
@@ -52,6 +58,6 @@ describe("WithCriteriaQuery", () => {
       it('should be a noop', () => {
         expect(queries.map(it => it.matchingIdOrIds(undefined))).to.deep.equal(queries);
       });
-    })
+    });
   });
 });
