@@ -1,0 +1,74 @@
+version: 2
+jobs:
+  lint-cover-test-node8:
+    environment:
+      CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
+      CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
+    docker:
+      - image: circleci/node:carbon-stretch
+      - image: circleci/mongo:3.7.3
+    steps:
+      # Load source code into container
+      - checkout
+
+      # Prepare for artifact and test results collection
+      - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
+
+      # Restore the dependency cache from prior runs
+      - restore_cache:
+          keys:
+            # This branch if available
+            - v1-dep-{{ .Branch }}-
+            # Default branch if not
+            - v1-dep-v3-evolution-over-rewrite-
+
+      # Default NODE_ENV if it's not set;
+      # set PATH to include npm-installed executables.
+      - run: if [ -z "${NODE_ENV:-}" ]; then export NODE_ENV=test; fi
+      - run: export PATH="~/project/node_modules/.bin:$PATH"
+
+      # Install deps and cache results
+      - run: npm install
+      - save_cache:
+          key: v1-dep-{{ .Branch }}-{{ epoch }}
+          paths:
+          - ./node_modules
+
+      # Run our test commands!
+      # Generating coverage runs the tests too.
+      - run: npm run lint
+      - run: npm run cover
+
+      # Upload our code coverage reports. We first move them to the
+      # CIRCLE_ARTIFACTS directory, even though we're not actually gonna
+      # save that directory's contents in CircleCI, because CodeCov's
+      # upload script looks for coverage reports there by default.
+      - run: mv coverage $CIRCLE_ARTIFACTS
+      - run: bash <(curl -s https://codecov.io/bash)
+
+  test-node6:
+    docker:
+      - image: circleci/node:boron-stretch
+      - image: circleci/mongo:3.7.3
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dep-{{ .Branch }}-
+            - v1-dep-v3-evolution-over-rewrite-
+      - run: if [ -z "${NODE_ENV:-}" ]; then export NODE_ENV=test; fi
+      - run: export PATH="~/project/node_modules/.bin:$PATH"
+      - run: npm install
+      - save_cache:
+          key: v1-dep-{{ .Branch }}-{{ epoch }}
+          paths:
+          - ./node_modules
+      - run: npm run test
+
+workflows:
+   version: 2
+   test:
+     jobs:
+       - lint-cover-test-node8
+       - test-node6
+
