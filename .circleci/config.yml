@@ -6,7 +6,7 @@ jobs:
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
     docker:
       - image: circleci/node:carbon-stretch
-      - image: circleci/mongo:3.7.3
+      - image: circleci/mongo:3.6.3
     steps:
       # Load source code into container
       - checkout
@@ -49,7 +49,7 @@ jobs:
   test-node6:
     docker:
       - image: circleci/node:boron-stretch
-      - image: circleci/mongo:3.7.3
+      - image: circleci/mongo:3.6.3
     steps:
       - checkout
       - restore_cache:
