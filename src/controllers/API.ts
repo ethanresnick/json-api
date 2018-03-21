@@ -165,9 +165,6 @@ export default class APIController {
     };
 
     if(request.body !== undefined) {
-      const linksJSONToTemplates = (linksJSON) =>
-        mapObject(linksJSON || {}, v => () => v);
-
       const parsedPrimary = await (async () => {
         await validateContentType(request, (<any>this.constructor).supportedExt);
         await validateRequestDocument(request.body);
@@ -178,12 +175,10 @@ export default class APIController {
         primary: parseAsLinkage(request)
           ? (isBulkDelete(request)
               ? ResourceIdentifierSet.of({
-                  data: parsedPrimary as Data<ResourceIdentifier>,
-                  links: linksJSONToTemplates(request.body.links)
+                  data: parsedPrimary as Data<ResourceIdentifier>
                 })
               : Relationship.of({
                   data: parsedPrimary as Data<ResourceIdentifier>,
-                  links: linksJSONToTemplates(request.body.links),
                   owner: {
                     type: <string>request.type,
                     id: <string>request.id,
@@ -191,8 +186,7 @@ export default class APIController {
                   }
                 }))
           : ResourceSet.of({
-              data: parsedPrimary as Data<Resource>,
-              links: linksJSONToTemplates(request.body.links)
+              data: parsedPrimary as Data<Resource>
             }),
         meta: request.body.meta
       });
