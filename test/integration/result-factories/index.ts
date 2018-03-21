@@ -22,7 +22,7 @@ describe("Result factories", () => {
         resultFactory: ({ makeQuery, request }, customQueryFactory) => {
           try {
             expect(request.queryParams.test).to.deep.equal({ 'here': "test" });
-            expect(makeQuery).to.equal(API.prototype.makeQuery);
+            expect(makeQuery).to.equal(API.prototype.makeQuery); //tslint:disable-line
             expect(customQueryFactory).to.equal(queryFactory);
             return { status: 204 };
           } catch(e) {

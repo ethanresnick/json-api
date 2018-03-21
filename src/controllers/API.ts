@@ -366,7 +366,7 @@ export default class APIController {
 
       logger.info("Executing request query");
       const adapter = opts.registry.dbAdapter(query.type);
-      let result =
+      const result =
         await adapter.doQuery(query).then(query.returning, query.catch);
 
       // add top level self link pre send.
@@ -420,10 +420,11 @@ export default class APIController {
       const customQueryFactory = opts.queryFactory ||
         (opts.queryTransform && (() => {
           const queryTransform = opts.queryTransform;
-          return async (opts: QueryBuildingContext) => {
-            const query = await this.makeQuery(opts);
+          return async (queryFactoryOpts: QueryBuildingContext) => {
+            const query = await this.makeQuery(queryFactoryOpts);
+            const req = queryFactoryOpts.serverReq;
             return queryTransform.length > 1
-              ? (queryTransform as QueryTransformWithReq)(opts.serverReq, query)
+              ? (queryTransform as QueryTransformWithReq)(req, query)
               : (queryTransform as QueryTransformNoReq)(query);
           };
         })());
@@ -443,6 +444,7 @@ export default class APIController {
         setTypePaths: R.partialRight(setTypePaths, [transformExtras.registry])
       }
 
+      // tslint:disable-next-line no-unbound-method
       const resultFactory = opts.resultFactory || this.makeResult;
 
       jsonAPIResult = await resultFactory(
