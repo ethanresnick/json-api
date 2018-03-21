@@ -1,4 +1,5 @@
 import depd = require("depd");
+import { UrlTemplates } from './index';
 const deprecate = depd("json-api");
 
 export type APIErrorJSON = {
@@ -15,6 +16,7 @@ export type Opts = {
   title?: string;
   detail?: string;
   links?: object;
+  typeUri?: string;
   rawError?: Error;
 };
 
@@ -25,7 +27,8 @@ export default class APIError extends Error {
   public code?: string;
   public title?: string;
   public detail?: string;
-  public links?: any;
+  public typeUri?: string;
+  public links?: any; //deprecated.
 
   // Even though an APIError is ready for display, the user may
   // want to process it further (to add more tailed messages, e.g.),
@@ -86,12 +89,39 @@ export default class APIError extends Error {
       [res.status, res.code, res.title, res.detail, res.links] = args;
     }
 
+    if(res.links) {
+      deprecate(
+        "APIError.links; pass an `about` link template to the " +
+        "resource type registry as error config instead. " +
+        "See https://github.com/ethanresnick/json-api/blob/9396a4df4739f5671315b0e4e1a32c07feec4d4e/test/app/src/index.ts#L29"
+      )
+    }
+
+    if(res.code) {
+      deprecate(
+        "APIError.code; use APIError.typeUri instead. " +
+        "See https://github.com/ethanresnick/json-api/issues/151#issuecomment-375126009"
+      );
+    }
+
     return res;
   }
 
-  toJSON(): APIErrorJSON {
-    const { rawError, ...serializableProps } = this as any;
-    return { ...serializableProps };
+  toJSON(urlTemplates?: UrlTemplates): APIErrorJSON {
+    const { rawError, typeUri, code, ...serializableProps } = this as any;
+    const res = {
+      ...serializableProps,
+      ...(typeUri || code ? { code: typeUri || code } : {})
+    };
+
+    if(urlTemplates && urlTemplates.about && !(res.links && res.links.about)) {
+      return {
+        ...res,
+        links: { about: urlTemplates.about(this) }
+      };
+    }
+
+    return res;
   }
 
   /**

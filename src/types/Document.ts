@@ -48,6 +48,7 @@ export type DocumentData = {
   primary?: ResourceSet | Relationship | ResourceIdentifierSet;
   errors?: APIError[];
   urlTemplates?: UrlTemplatesByType;
+  errorUrlTemplates?: UrlTemplates;
 };
 
 export default class Document {
@@ -56,10 +57,11 @@ export default class Document {
   public primary: DocumentData["primary"];
   public errors: DocumentData["errors"];
   public urlTemplates: UrlTemplatesByType;
+  public errorUrlTemplates: UrlTemplates;
 
   constructor(data: DocumentData) {
     // Assign data members, giving some a default.
-    const { urlTemplates = {}, ...restData } = data;
+    const { urlTemplates = {}, errorUrlTemplates = {}, ...restData } = data;
 
     // Validate meta, as sometimes we pass it in straight from the JSON,
     // which isn't really the case for anything else. TODO: decide what
@@ -68,7 +70,7 @@ export default class Document {
       throw new Error("Document `meta` must be an object.");
     }
 
-    Object.assign(this, restData, { urlTemplates });
+    Object.assign(this, restData, { urlTemplates, errorUrlTemplates });
   }
 
   toJSON() {
@@ -110,7 +112,7 @@ export default class Document {
     }
 
     if(this.errors) {
-      res.errors = this.errors.map(it => it.toJSON());
+      res.errors = this.errors.map(it => it.toJSON(this.errorUrlTemplates));
     }
 
     else {

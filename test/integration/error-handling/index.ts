@@ -26,7 +26,18 @@ describe("Error handling", () => {
           throw new Error("Shouldn't run")
         }, (err) => {
           expect(err.response.body.errors[0].title).to.equal("Custom");
+          expect(err.response.body.errors[0].code).to.equal("http://example.com");
         });
     });
+
+    it("should serialize an about link from registry's error template", () => {
+      return Agent.request("GET", "/with-error")
+        .accept("application/vnd.api+json")
+        .then(() => {
+          throw new Error("Shouldn't run")
+        }, (err) => {
+          expect(err.response.body.errors[0].links.about).to.match(/google/);
+        });
+    })
   });
 });

@@ -89,7 +89,7 @@ export default database.then(function(dbModule) {
             errors: [
               // bogus status value, to verify that our
               // custom error's status is being respected.
-              new APIError(499, undefined, "custom error as string")
+              new APIError({ status: 499, title: "custom error as string" })
             ]
           })
         }))
@@ -159,7 +159,11 @@ export default database.then(function(dbModule) {
   app.get('/with-error', Front.customAPIRequest({
     queryFactory: ({ request }) => {
       if(request.queryParams.customError) {
-        throw new APIError(400, undefined, "Custom");
+        throw new APIError({
+          status: 400,
+          typeUri: "http://example.com",
+          title: "Custom"
+        });
       }
 
       throw new Error("test");

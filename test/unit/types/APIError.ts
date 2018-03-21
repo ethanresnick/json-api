@@ -3,19 +3,29 @@ import APIError from "../../../src/types/APIError";
 
 describe("Error Objects", () => {
   describe("validation", () => {
-    const er = new APIError(300, 1401);
+    const er = new APIError({ status: 300 });
 
     it("should coerce the status to a string", () => {
       expect(er.status === "300").to.be.true;
     });
-
-    it("should coerce the code to a string", () => {
-      expect(er.code === "1401").to.be.true;
-    });
   });
 
+  describe("type uri/code", () => {
+    it("should coerce code to string", () => {
+      const er = new APIError({ code: 1401 });
+      expect(er.code).to.equal("1401");
+      expect(er.toJSON().code).to.equal("1401");
+    });
+
+    it("should serialize typeUri in code (for now), overriding any manually set code", () => {
+      const er = new APIError({ typeUri: "http://example.com/", code: 300 });
+      expect(er.code).to.equal("300");
+      expect(er.toJSON().code).to.equal("http://example.com/");
+    });
+  })
+
   describe("structure", () => {
-    const er = new APIError(300, 1401);
+    const er = new APIError({ status: 300 });
 
     it("should be an instanceof APIError", () => {
       expect(er).to.be.instanceof(APIError);
@@ -31,6 +41,11 @@ describe("Error Objects", () => {
       const error = new APIError();
       expect(APIError.fromError(error)).to.equal(error);
     });
+
+    it('should set rawError on genereted instances', () => {
+      let x = new Error("test");
+      expect(APIError.fromError(x).rawError).to.equal(x);
+    })
 
     it("should use the error's statusCode val as status iff status not defined", () => {
       let er = APIError.fromError({

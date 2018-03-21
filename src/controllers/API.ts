@@ -121,8 +121,14 @@ export default class APIController {
       opts.filterParser || (<any>this.constructor).defaultFilterParamParser;
   }
 
-  protected makeDoc = (data: DocumentData) =>
-    new Document({ urlTemplates: this.registry.urlTemplates(), ...data });
+  protected makeDoc = (data: DocumentData) => {
+    const errorsConfig = this.registry.errorsConfig();
+    return new Document({
+      urlTemplates: this.registry.urlTemplates(),
+      errorUrlTemplates: errorsConfig && errorsConfig.urlTemplates,
+      ...data
+    });
+  };
 
   protected async finalizeRequest(request: Request): Promise<FinalizedRequest> {
     // Parse any query params to finalize the request object.
