@@ -70,23 +70,23 @@ describe("ResourceTypeRegistry", function() {
         "b": {
           parentType: "a",
           info: { "description": "b" },
-          behaviors: {}
+          defaultIncludes: []
         },
         "a": {
           info: { "description": "A", "example": "example from a" },
-          behaviors: <object><any>null
+          defaultIncludes: <string[]><any>null
         }
       });
 
       const resTypeInfo = <ResourceTypeInfo>(<any>registry.type("b")).info;
-      const resTypeBehaviors = <ResourceTypeInfo>(<any>registry.type("b")).behaviors;
+      const resTypeIncludes = <ResourceTypeInfo>(<any>registry.type("b")).defaultIncludes;
 
       expect(resTypeInfo).to.deep.equal({
         example: "example from a",
         description: "b"
       });
 
-      expect(resTypeBehaviors).to.deep.equal({});
+      expect(resTypeIncludes).to.deep.equal([]);
     });
 
     it("should give the description precedence over the provided default", () => {
@@ -105,29 +105,17 @@ describe("ResourceTypeRegistry", function() {
 
     it("should give description and resource defaults precedence over global defaults", () => {
       const registry = new ResourceTypeRegistry(<any>{
-        "testType": {
-          "behaviors": {
-            "dasherizeOutput": {
-              "enabled": true
-            }
-          }
-        },
-        "testType2": {}
+        "testType": { transformLinkage: false },
+        "testType2": { }
       }, {
-        "behaviors": {
-          "dasherizeOutput": {"enabled": false, "exceptions": []}
-        }
+        transformLinkage: true
       });
 
       const testTypeOutput =  <ResourceTypeDescription>registry.type("testType");
       const testType2Output = <ResourceTypeDescription>registry.type("testType2");
 
-      const testTypeBehaviors = <any>testTypeOutput.behaviors;
-      const testType2Behaviors = <any>testType2Output.behaviors;
-
-      expect(testTypeBehaviors.dasherizeOutput.enabled).to.be.true;
-      expect(testType2Behaviors.dasherizeOutput.enabled).to.be.false;
-      expect(testType2Behaviors.dasherizeOutput.exceptions).to.deep.equal([]);
+      expect(testTypeOutput.transformLinkage).to.be.false;
+      expect(testType2Output.transformLinkage).to.be.true;
     });
 
     it("should only look for descriptions at own, enumerable props of descs arg", () => {
@@ -148,15 +136,13 @@ describe("ResourceTypeRegistry", function() {
   it("Should allow null/undefined to overwrite all defaults", () => {
     const registry = new ResourceTypeRegistry({
       "testType": <any>{
-        "behaviors": null
+        "info": null
       }
     }, {
-      "behaviors": {
-        "dasherizeOutput": {"enabled": false, "exceptions": []}
-      }
+      "info": { test: true }
     });
 
-    expect(registry.behaviors("testType")).to.equal(null);
+    expect(registry.info("testType")).to.equal(null);
   });
 
   describe("urlTemplates()", () => {
@@ -177,12 +163,6 @@ describe("ResourceTypeRegistry", function() {
   describe("urlTemplates(type)", () => {
     it("should be a getter for a type's urlTemplates",
       makeGetterTest({"path": "test template"}, "mytypes", "urlTemplates")
-    );
-  });
-
-  describe("behaviors", () => {
-    it("should be a getter for a type's behaviors",
-      makeGetterTest({"someSetting": true}, "mytypes", "behaviors")
     );
   });
 

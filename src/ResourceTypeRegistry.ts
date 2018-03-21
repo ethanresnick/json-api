@@ -45,7 +45,6 @@ export type ResourceTypeDescription = {
   urlTemplates?: URLTemplatesForType;
   beforeSave?: ResourceTransformFn | FullTransformFn;
   beforeRender?: BeforeRenderResourceTransformFn | BeforeRenderFullTransformFn;
-  behaviors?: object;
   transformLinkage?: boolean;
 };
 
@@ -193,10 +192,6 @@ export default class ResourceTypeRegistry {
 
   beforeRender(typeName: string) {
     return this.doGet("beforeRender", typeName);
-  }
-
-  behaviors(typeName: string) {
-    return this.doGet("behaviors", typeName);
   }
 
   defaultIncludes(typeName: string) {
