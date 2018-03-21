@@ -11,19 +11,16 @@ import { FieldConstraint, Predicate } from "../../types/index";
  */
 export function errorHandler(err): never {
   const errors: APIError[] = [];
-  //Convert validation errors collection to something reasonable
+  // Convert validation errors collection to something reasonable
   if(err.errors) {
     Object.keys(err.errors).forEach(errKey => {
       const thisError = err.errors[errKey];
       errors.push(
-        new APIError(
-          (err.name === "ValidationError") ? 400 : (thisError.status || 500),
-          undefined,
-          thisError.message,
-          undefined,
-          undefined,
-          thisError.path ? [thisError.path] : undefined
-        )
+        new APIError({
+          status: (err.name === "ValidationError") ? 400 : (thisError.status || 500),
+          title: thisError.message,
+          rawError: thisError
+        })
       );
     });
   }

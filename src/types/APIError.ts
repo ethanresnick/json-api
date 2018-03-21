@@ -7,7 +7,6 @@ export type APIErrorJSON = {
   title?: string;
   detail?: string;
   links?: any;
-  paths?: any;
 };
 
 export type Opts = {
@@ -16,7 +15,7 @@ export type Opts = {
   title?: string;
   detail?: string;
   links?: object;
-  paths?: string[];
+  rawError?: Error;
 };
 
 export const displaySafe = Symbol("isJSONAPIDisplayReady");
@@ -27,7 +26,12 @@ export default class APIError extends Error {
   public title?: string;
   public detail?: string;
   public links?: any;
-  public paths?: any;
+
+  // Even though an APIError is ready for display, the user may
+  // want to process it further (to add more tailed messages, e.g.),
+  // so we retain the raw error the APIError was created from (if any)
+  // for use in such processing, but we don't serialize it
+  public rawError?: Error;
 
   constructor(opts: Opts);
   constructor(
@@ -35,8 +39,7 @@ export default class APIError extends Error {
     code?: Opts["code"],
     title?: Opts["title"],
     detail?: Opts["detail"],
-    links?: Opts["links"],
-    paths?: Opts["paths"]
+    links?: Opts["links"]
   );
   constructor(...args: any[]) {
     const newFormat = typeof args[0] === 'object';
@@ -80,14 +83,15 @@ export default class APIError extends Error {
 
     // Construct from list of arguments
     else {
-      [res.status, res.code, res.title, res.detail, res.links, res.paths] = args;
+      [res.status, res.code, res.title, res.detail, res.links] = args;
     }
 
     return res;
   }
 
   toJSON(): APIErrorJSON {
-    return { ...(this as object) };
+    const { rawError, ...serializableProps } = this as any;
+    return { ...serializableProps };
   }
 
   /**
@@ -114,19 +118,23 @@ export default class APIError extends Error {
         );
       }
 
-      return new ErrorConstructor(
-        err.status || err.statusCode || 500,
-        err.code,
-        err.title || fallbackTitle,
-        err.detail || err.details || (err.message ? err.message : undefined),
-        err.links,
-        err.paths
-      );
+      return new ErrorConstructor({
+        status: err.status || err.statusCode || 500,
+        code: err.code,
+        title: err.title || fallbackTitle,
+        detail: err.detail || err.details || (err.message || undefined),
+        links: err.links,
+        rawError: err
+      });
     }
 
     // Otherwise, we just show a generic error message.
     else {
-      return new ErrorConstructor({ status: 500, title: fallbackTitle });
+      return new ErrorConstructor({
+        status: 500,
+        title: fallbackTitle,
+        rawError: err
+      });
     }
   }
 }
