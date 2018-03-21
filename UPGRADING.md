@@ -1,3 +1,7 @@
+# 3.0.0-beta.19
+- "Result factories" have been added as a new feature. See https://github.com/ethanresnick/json-api/commit/c02b9a96f6c7baeac936e426f5714239c19fc723
+- The long-deprecated `ExpressStrategy.transformedAPIRequest` method has been removed. However, query transform functionality is still available through the `customAPIRequest` method, and there's a very mechanical way to update: simply replace all calls to `strategy.tranformedAPIRequest(queryTransform)` with `strategy.customAPIRequest({ queryTransform: queryTransform })`.
+
 # 3.0.0-beta.18
 - `beforeSave`/`beforeRender` now receive an additional argument providing some metadata about the resource/identifier being transformed. At the moment, this metadata is simply what section of the document ("included" or "primary") the the resource/identifier is from.
 - Some protected methods of the `MaybeDataWithLinks` class has been renamed. If you were subclassing this class (which you probably shouldn't, as it's really an internal detail), you may have to update your code.
