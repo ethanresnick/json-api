@@ -2,8 +2,8 @@ import APIError, { APIErrorJSON } from "./APIError";
 import { isPlainObject, objectIsEmpty } from "../util/misc";
 import {
   PrimaryDataJSON,
-  UrlTemplateFnsByType,
-  UrlTemplateFns,
+  UrlTemplatesByType,
+  UrlTemplates,
   Links
 } from "./index";
 import Data from "./Generic/Data";
@@ -47,7 +47,7 @@ export type DocumentData = {
   included?: Resource[];
   primary?: ResourceSet | Relationship | ResourceIdentifierSet;
   errors?: APIError[];
-  urlTemplates?: UrlTemplateFnsByType;
+  urlTemplates?: UrlTemplatesByType;
 };
 
 export default class Document {
@@ -55,7 +55,7 @@ export default class Document {
   public included: DocumentData["included"];
   public primary: DocumentData["primary"];
   public errors: DocumentData["errors"];
-  public urlTemplates: UrlTemplateFnsByType;
+  public urlTemplates: UrlTemplatesByType;
 
   constructor(data: DocumentData) {
     // Assign data members, giving some a default.
@@ -78,7 +78,7 @@ export default class Document {
 
     // This function renames the "relationship" template on the resource type
     // description to "self" for the purposes of passing templates to Relationship.
-    const templatesForRelationship = (templatesForOwnerType: UrlTemplateFns) => {
+    const templatesForRelationship = (templatesForOwnerType: UrlTemplates) => {
       const { related, relationship } = templatesForOwnerType;
       return { related, self: relationship };
     };

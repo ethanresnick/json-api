@@ -1,6 +1,6 @@
 import { deleteNested, isPlainObject, objectIsEmpty } from "../util/misc";
 import Relationship, { RelationshipJSON, RelationshipArgs } from "./Relationship";
-import { UrlTemplateFns } from "./index";
+import { UrlTemplates } from "./index";
 
 export type ResourceJSON = {
   id: string;
@@ -147,7 +147,7 @@ export default class Resource {
     });
   }
 
-  toJSON(urlTemplates: UrlTemplateFns): ResourceJSON {
+  toJSON(urlTemplates: UrlTemplates): ResourceJSON {
     const hasMeta = !objectIsEmpty(this.meta);
     const showTypePath = this.typePath && this.typePath.length > 1;
     const meta = showTypePath

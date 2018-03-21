@@ -2,6 +2,7 @@ import Resource, { ResourceJSON } from "./Resource";
 import ResourceIdentifier, { ResourceIdentifierJSON } from "./ResourceIdentifier";
 import Document, { DocumentData } from "./Document";
 import Data from "./Generic/Data";
+import { UrlTemplate } from "./UrlTemplate";
 import { ParsedQueryParams } from "../steps/pre-query/parse-query-params";
 import { IncomingMessage, ServerResponse } from "http";
 
@@ -13,7 +14,7 @@ export type DataOf<T> = null | T | T[];
 export type PrimaryData = DataOf<Resource> | DataOf<ResourceIdentifier>;
 export type DataWithLinksArgs<T> = {
   data: T | T[] | null | Data<T>;
-  links?: UrlTemplateFns;
+  links?: UrlTemplates;
 };
 
 // Types for JSON values
@@ -62,12 +63,12 @@ export type FieldConstraint = ({
   field: string;
 };
 
-export type UrlTemplateFnsByType = {
-  [typeName: string]: UrlTemplateFns;
+export type UrlTemplatesByType = {
+  [typeName: string]: UrlTemplates;
 };
 
-export type UrlTemplateFns = {
-  [linkName: string]: ((data: any) => string) | undefined;
+export type UrlTemplates = {
+  [linkName: string]: UrlTemplate | undefined;
 };
 
 // I'm gonna start introducing more intermediate representations

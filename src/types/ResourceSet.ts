@@ -1,6 +1,6 @@
 import Resource from "./Resource";
 import Data from "./Generic/Data";
-import { UrlTemplateFnsByType, DataWithLinksArgs } from "./index";
+import { UrlTemplatesByType, DataWithLinksArgs } from "./index";
 import MaybeDataWithLinks from "./MaybeDataWithLinks";
 
 export default class ResourceSet extends MaybeDataWithLinks<Resource> {
@@ -26,7 +26,7 @@ export default class ResourceSet extends MaybeDataWithLinks<Resource> {
     return super.isSingular as boolean;
   }
 
-  toJSON(urlTemplates: UrlTemplateFnsByType) {
+  toJSON(urlTemplates: UrlTemplatesByType) {
     return this.unwrapWith((it) => it.toJSON(urlTemplates[it.type] || {}), {});
   }
 

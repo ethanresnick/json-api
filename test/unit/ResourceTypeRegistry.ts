@@ -4,6 +4,7 @@ import ResourceTypeRegistry, {
   ResourceTypeDescription,
   ResourceTypeInfo
 } from "../../src/ResourceTypeRegistry";
+import { RFC6570String } from "../../src/types/UrlTemplate";
 
 chai.use(chaiSubset);
 const expect = chai.expect;
@@ -139,14 +140,14 @@ describe("ResourceTypeRegistry", function() {
         "info": null
       }
     }, {
-      "info": { test: true }
+      "info": { example: "s" }
     });
 
     expect(registry.info("testType")).to.equal(null);
   });
 
   describe("urlTemplates()", () => {
-    it("should return a copy of the templates for all types", () => {
+    it("should return a parsed copy of the templates for all types", () => {
       const aTemps = {"self": ""};
       const bTemps = {"related": ""};
       const typeDescs = {
@@ -154,16 +155,27 @@ describe("ResourceTypeRegistry", function() {
         "b": {"urlTemplates": bTemps}
       };
       const registry = new ResourceTypeRegistry(typeDescs);
+      const templatesOut = registry.urlTemplates();
 
-      expect(registry.urlTemplates()).to.not.equal(typeDescs);
-      expect(registry.urlTemplates()).to.containSubset({"a": aTemps, "b": bTemps});
+      expect(templatesOut.a).to.not.equal(aTemps);
+      expect(templatesOut.b).to.not.equal(bTemps);
+      expect(templatesOut.a.self).to.be.a("function");
+      expect(templatesOut.b.related).to.be.a("function");
     });
   });
 
   describe("urlTemplates(type)", () => {
-    it("should be a getter for a type's urlTemplates",
-      makeGetterTest({"path": "test template"}, "mytypes", "urlTemplates")
-    );
+    it("should be a getter for a type's parsed urlTemplates", () => {
+      const registry = new ResourceTypeRegistry({
+        "mytypes": { urlTemplates: {"path": "test template"} }
+      });
+
+      const templateOut = registry.urlTemplates("mytypes")!["path"]!;
+
+      expect(registry.urlTemplates("mytypes")).to.be.an("object");
+      expect(templateOut({})).to.equal("test%20template");
+      expect(templateOut[RFC6570String]).to.equal("test template");
+    });
   });
 
   describe("adapter", () => {

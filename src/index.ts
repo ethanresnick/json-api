@@ -19,6 +19,7 @@ import Resource from "./types/Resource";
 import ResourceIdentifier from "./types/ResourceIdentifier";
 import ResourceSet from "./types/ResourceSet";
 import Relationship from "./types/Relationship";
+import { RFC6570String } from './types/UrlTemplate';
 import Field from "./types/Documentation/Field";
 import FieldType from "./types/Documentation/FieldType";
 import API from "./controllers/API";
@@ -40,7 +41,7 @@ export {
   Document, Error, Resource, ResourceIdentifier, ResourceSet, Relationship,
   API as APIController, Documentation as DocumentationController,
   CreateQuery, FindQuery, UpdateQuery, DeleteQuery, AddToRelationshipQuery, RemoveFromRelationshipQuery,
-  Field, FieldType, ResourceTypeRegistry, displaySafeError, Data
+  Field, FieldType, ResourceTypeRegistry, displaySafeError, RFC6570String, Data
 };
 
 export const dbAdapters = {
@@ -93,6 +94,7 @@ const defaultExp = {
   dbAdapters,
   helpers,
   displaySafeError,
+  RFC6570String,
   ResourceTypeRegistry
 };
 

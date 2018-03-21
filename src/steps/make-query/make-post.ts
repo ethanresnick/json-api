@@ -8,7 +8,6 @@ import Data from "../../types/Generic/Data";
 import ResourceSet from "../../types/ResourceSet";
 import ResourceIdentifier from "../../types/ResourceIdentifier";
 import ResourceTypeRegistry from "../../ResourceTypeRegistry";
-import templating = require("url-template");
 
 export default function(request: FinalizedRequest, registry: ResourceTypeRegistry, makeDoc) {
   // tslint:disable-next-line no-non-null-assertion
@@ -63,7 +62,7 @@ export default function(request: FinalizedRequest, registry: ResourceTypeRegistr
 
           if(selfTemplate) {
             res.headers = {
-              Location: templating.parse(selfTemplate).expand({
+              Location: selfTemplate({
                 id: createdResource.id,
                 ...createdResource.attrs
               })

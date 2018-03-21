@@ -1,5 +1,6 @@
 import Immutable = require("immutable");
 import depd = require("depd");
+import mapObject = require("lodash/mapValues"); //tslint:disable-line no-submodule-imports
 import { pseudoTopSort } from "./util/misc";
 import Maybe from "./types/Generic/Maybe";
 import {
@@ -10,8 +11,10 @@ import {
   BeforeRenderResourceTransformFn
 } from "./steps/make-transform-fn";
 import { AdapterInstance } from "./db-adapters/AdapterInterface";
+import { UrlTemplate, fromRFC6570 } from "./types/UrlTemplate";
 import Resource from "./types/Resource";
 import ResourceIdentifier from "./types/ResourceIdentifier";
+import { UrlTemplates, UrlTemplatesByType } from "./types";
 import { IncomingMessage, ServerResponse } from "http";
 export { Resource, ResourceIdentifier, TransformFn, IncomingMessage, ServerResponse };
 const deprecate = depd("json-api");
@@ -23,13 +26,12 @@ const deprecate = depd("json-api");
  */
 const globalResourceDefaults = Immutable.fromJS({
   transformLinkage: false
-});
+}) as Immutable.Map<string, any>;
 
-export type URLTemplates = {
-  [type: string]: URLTemplatesForType;
-};
-
-export type URLTemplatesForType = { [linkName: string]: string };
+// We allow strings when a template is provided,
+// but always output a parsed template function.
+export type InputURLTemplates =
+  { [linkName: string]: UrlTemplate | string };
 
 export type ResourceTypeInfo = {
   fields?: { [fieldName: string]: any };
@@ -42,7 +44,7 @@ export type ResourceTypeDescription = {
   info?: ResourceTypeInfo;
   defaultIncludes?: string[];
   parentType?: string;
-  urlTemplates?: URLTemplatesForType;
+  urlTemplates?: InputURLTemplates;
   beforeSave?: ResourceTransformFn | FullTransformFn;
   beforeRender?: BeforeRenderResourceTransformFn | BeforeRenderFullTransformFn;
   transformLinkage?: boolean;
@@ -51,6 +53,9 @@ export type ResourceTypeDescription = {
 export type ResourceTypeDescriptions = {
   [typeName: string]: ResourceTypeDescription;
 };
+
+export type OutputResourceTypeDescription =
+  ResourceTypeDescription & { urlTemplates: UrlTemplates };
 
 /**
  * To fulfill a JSON API request, you often need to know about all the resources
@@ -79,13 +84,8 @@ export default class ResourceTypeRegistry {
 
   constructor(
     typeDescs: ResourceTypeDescriptions = Object.create(null),
-    descDefaults: object | Immutable.Map<string, any> = {}
+    descDefaults: Partial<ResourceTypeDescription> = {}
   ) {
-    this._types = {};
-
-    const finalDefaults =
-      <Immutable.Map<string, any>>globalResourceDefaults.mergeDeep(descDefaults);
-
     // Sort the types so we can register them in an order that respects their
     // parentType. First, we pre-process the typeDescriptions to create edges
     // pointing to each node's children (rather than the links we have by
@@ -108,36 +108,41 @@ export default class ResourceTypeRegistry {
       }
     });
 
-    // Store the sorted type metadata for later use.
-    this._typesMetadata = { nodes, edges, roots };
-
     const typeRegistrationOrder = pseudoTopSort(nodes, edges, roots);
+
+    // Store the sorted type metadata for later use,
+    // and setup basic state to register the types.
+    this._types = {};
+    this._typesMetadata = { nodes, edges, roots };
+    const instanceDefaults = globalResourceDefaults.mergeDeep(
+      this.processTypeDesc(descDefaults)
+    );
 
     // register the types, in order
     typeRegistrationOrder.forEach((typeName) => {
-      const parentType = typeDescs[typeName].parentType;
+      // Process the type desc.
+      // TODO: defaultIncludes need to be made into an object if they came as
+      // an array. Remove support for array format before v3. It's inconsistent.
+      const thisDescProcessed = this.processTypeDesc(typeDescs[typeName]);
+      const thisDescImmutable = Immutable.fromJS(thisDescProcessed);
 
-      // defaultIncludes need to be made into an object if they came as an array.
-      // TODO: Remove support for array format before v3. It's inconsistent.
-      const thisDescriptionRaw = Immutable.fromJS(typeDescs[typeName]);
-      const thisDescriptionMerged = finalDefaults.mergeDeep(thisDescriptionRaw);
+      // If we don't have a parent type, we merge the description with the
+      // general defaults. If we do have a parent type, we merge the description
+      // with that (which will have itself been merged with the general defaults
+      // at some point). If we had properties we didn't want to merge, we could
+      // reset them post-merge with .set("prop", thisDescriptionRaw.get("prop")).
+      const { parentType } = typeDescs[typeName];
+      const thisDescBase = parentType
+        ? this._types[parentType]!
+        : instanceDefaults;
 
-      this._types[typeName] = (parentType)
-        // If we have a parentType, we merge in all the parent's fields
-        ? (<Immutable.Map<string, any>>this._types[parentType])
-            .mergeDeep(thisDescriptionRaw)
-            // if we had properties we didn't want to merge, we could reset
-            // them here, like: .set("prop", thisDescriptionRaw.get("prop"))
-
-        // If we don't have a parentType, just register
-        // the description merged with the universal defaults
-        : thisDescriptionMerged;
+      this._types[typeName] = thisDescBase.mergeDeep(thisDescImmutable);
     });
   }
 
   type(typeName: string) {
     return Maybe(this._types[typeName])
-      .map(it => <ResourceTypeDescription>it.toJS())
+      .map(it => <OutputResourceTypeDescription>it.toJS())
       .getOrDefault(undefined);
   }
 
@@ -145,17 +150,17 @@ export default class ResourceTypeRegistry {
     return typeName in this._types;
   }
 
-  urlTemplates(): URLTemplates;
-  urlTemplates(type: string): URLTemplatesForType;
+  urlTemplates(): UrlTemplatesByType;
+  urlTemplates(type: string): UrlTemplates;
   urlTemplates(type?: string) {
     if(type) {
       return Maybe(this._types[type])
         .map(it => it.get("urlTemplates"))
-        .map(it => <URLTemplatesForType>it.toJS())
+        .map(it => <UrlTemplates>it.toJS())
         .getOrDefault(undefined);
     }
 
-    return Object.keys(this._types).reduce<URLTemplates>((prev, typeName) => {
+    return Object.keys(this._types).reduce<UrlTemplatesByType>((prev, typeName) => {
       prev[typeName] = this.urlTemplates(typeName);
       return prev;
     }, {});
@@ -312,5 +317,18 @@ export default class ResourceTypeRegistry {
         : it
       )
       .getOrDefault(undefined);
+  }
+
+  private processTypeDesc(it: Partial<ResourceTypeDescription>) {
+    if(it.urlTemplates) {
+      return {
+        ...it,
+        urlTemplates: mapObject(it.urlTemplates, template => {
+          return typeof template === 'string' ? fromRFC6570(template) : template;
+        })
+      };
+    }
+
+    return it;
   }
 }

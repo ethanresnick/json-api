@@ -1,11 +1,9 @@
-import templating = require("url-template");
-import mapObject = require("lodash/mapValues"); //tslint:disable-line no-submodule-imports
 import R = require("ramda");
 import {
    Request, FinalizedRequest, Result, HTTPResponse,
    ServerReq, ServerRes,
    Predicate, FieldConstraint,
-   UrlTemplateFnsByType, makeDocument
+   makeDocument
 } from "../types";
 import Query from "../types/Query/Query";
 import ResourceTypeRegistry from "../ResourceTypeRegistry";
@@ -116,24 +114,15 @@ export type filterParamParser = (
 export default class APIController {
   private registry: ResourceTypeRegistry;
   private filterParamParser: filterParamParser;
-  private urlTemplateFns: UrlTemplateFnsByType;
 
   constructor(registry: ResourceTypeRegistry, opts: APIControllerOpts = {}) {
     this.registry = registry;
     this.filterParamParser =
       opts.filterParser || (<any>this.constructor).defaultFilterParamParser;
-
-    this.urlTemplateFns = mapObject(
-      registry.urlTemplates(),
-      templatesForType => {
-        // tslint:disable-next-line:no-unbound-method
-        return mapObject(templatesForType, it => templating.parse(it).expand);
-      }
-    );
   }
 
   protected makeDoc = (data: DocumentData) =>
-    new Document({ urlTemplates: this.urlTemplateFns, ...data });
+    new Document({ urlTemplates: this.registry.urlTemplates(), ...data });
 
   protected async finalizeRequest(request: Request): Promise<FinalizedRequest> {
     // Parse any query params to finalize the request object.

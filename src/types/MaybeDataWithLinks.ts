@@ -3,7 +3,7 @@ import Data from "./Generic/Data";
 import Resource from "./Resource";
 import ResourceIdentifier from "./ResourceIdentifier";
 import {
-  Reducer, PredicateFn, UrlTemplateFns, Mapper, AsyncMapper, Links
+  Reducer, PredicateFn, UrlTemplates, Mapper, AsyncMapper, Links
 } from "./index";
 
 /**
@@ -15,7 +15,7 @@ import {
  */
 export type MaybeDataWithLinksArgs<T> = {
   data: T | T[] | null | undefined | Data<T>;
-  links?: UrlTemplateFns;
+  links?: UrlTemplates;
 };
 
 export type DataSyncMethods = "flatMap" | "map" | "filter";
@@ -23,7 +23,7 @@ export type DataAsyncMethods = "flatMapAsync" | "mapAsync";
 
 export default class MaybeDataWithLinks<T extends (Resource | ResourceIdentifier)> {
   protected _data: Data<T> | undefined;
-  public links: UrlTemplateFns;
+  public links: UrlTemplates;
 
   protected constructor({ data, links = {} }: MaybeDataWithLinksArgs<T>) {
     this.links = links;

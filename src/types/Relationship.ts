@@ -1,4 +1,4 @@
-import { LinkageJSON, UrlTemplateFns } from "./index";
+import { LinkageJSON, UrlTemplates } from "./index";
 import MaybeDataWithLinks, { MaybeDataWithLinksArgs } from "./MaybeDataWithLinks";
 import ResourceIdentifier from "./ResourceIdentifier";
 import { objectIsEmpty } from "../util/misc";
@@ -40,7 +40,7 @@ export default class Relationship extends MaybeDataWithLinks<ResourceIdentifier>
     });
   }
 
-  toJSON(fallbackTemplates: UrlTemplateFns): RelationshipJSON {
+  toJSON(fallbackTemplates: UrlTemplates): RelationshipJSON {
     const templateData = {
       ownerType: this.owner.type,
       ownerId: this.owner.id,
