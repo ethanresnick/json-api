@@ -66,49 +66,53 @@ export default database.then(function(dbModule) {
   // Apply a query transform to a request so we can test query transforms.
   // we'll use them here as a faster alternative to old-style label mappers.
   app.get('/:type(people)/non-binary',
-    Front.transformedAPIRequest((req, query) =>
-      (query as FindQuery).andWhere({
-        field: "gender",
-        operator: "nin",
-        value: ["male", "female"]
-      })
-    )
+    Front.customAPIRequest({
+      queryTransform: (req, query) =>
+        (query as FindQuery).andWhere({
+          field: "gender",
+          operator: "nin",
+          value: ["male", "female"]
+        })
+    })
   );
 
   // Apply a query transform that returns a custom error
   app.get('/request-that-errors/:type(people)/:id(42)',
-    Front.transformedAPIRequest((query: Query) =>
-      query.resultsIn(undefined, (error) => ({
-        document: new Document({
-          errors: [
-            // bogus status value, to verify that our
-            // custom error's status is being respected.
-            new APIError(499, undefined, "custom error as string")
-          ]
-        })
-      }))
-    )
+    Front.customAPIRequest({
+      queryTransform: (query: Query) =>
+        query.resultsIn(undefined, (error) => ({
+          document: new Document({
+            errors: [
+              // bogus status value, to verify that our
+              // custom error's status is being respected.
+              new APIError(499, undefined, "custom error as string")
+            ]
+          })
+        }))
+    })
   );
 
   app.get('/:type(people)/custom-filter-test/', FrontWithCustomFilterSupport.apiRequest);
 
   // Apply a query transform that puts all the names in meta
   app.get('/:type(people)/with-names',
-    Front.transformedAPIRequest((query: Query) => {
-      const origReturning = query.returning;
+    Front.customAPIRequest({
+      queryTransform: (query: Query) => {
+        const origReturning = query.returning;
 
-      return query.resultsIn(
-        async (...args) => {
-          const origResult = await (origReturning as any)(...args);
-          const origDocument = origResult.document as Document;
-          const names = (<ResourceSet>origDocument.primary).map(it => it.attrs.name).values;
-          origDocument.meta = { ...origDocument.meta, names };
-          return origResult;
-        },
-        error => ({
-          document: new Document({})
-        })
-      );
+        return query.resultsIn(
+          async (...args) => {
+            const origResult = await (origReturning as any)(...args);
+            const origDocument = origResult.document as Document;
+            const names = (<ResourceSet>origDocument.primary).map(it => it.attrs.name).values;
+            origDocument.meta = { ...origDocument.meta, names };
+            return origResult;
+          },
+          error => ({
+            document: new Document({})
+          })
+        );
+      }
     })
   );
 

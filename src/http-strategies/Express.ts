@@ -3,36 +3,14 @@ import depd = require("depd");
 import url = require("url");
 import R = require("ramda");
 import logger from "../util/logger";
-import API, { RequestOpts, QueryBuildingContext } from "../controllers/API";
+import API, { RequestOpts } from "../controllers/API";
 import Base, { HTTPStrategyOptions, Controller } from "./Base";
-import Query from "../types/Query/Query";
 import { HTTPResponse, Request as JSONAPIRequest, Result } from "../types";
 import {
   Request, Response, NextFunction,
   RequestHandler, ErrorRequestHandler
 } from "express";
 const deprecate = depd("json-api");
-
-// Note: having one object type with both possible callback signatures
-// in it doesn't work, but splitting these function signatures into separate
-// types, and then unioning those types, does. Seems like they should be the
-// same, but whatever works. Possibly, the difference comes from the limitation
-// identified in https://github.com/Microsoft/TypeScript/issues/7294. Still,
-// this behavior is probably subject to change (e.g., might be effected by
-// https://github.com/Microsoft/TypeScript/pull/17819). However, it's the
-// approach that the express typings seem to use, so I imagine it's safe enough.
-export type DeprecatedQueryTransformNoReq = {
-  // tslint:disable-next-line callable-types
-  (first: Query): Query;
-};
-
-export type DeprecatedQueryTransformWithReq = {
-  // tslint:disable-next-line callable-types
-  (first: Request, second: Query): Query;
-};
-
-export type DeprecatedQueryTransform =
-  DeprecatedQueryTransformNoReq | DeprecatedQueryTransformWithReq;
 
 /**
  * This controller receives requests directly from express and sends responses
@@ -176,20 +154,6 @@ export default class ExpressStrategy extends Base {
     R.partial(this.doRequest, [
       (request, req, res) => this.api.handle(request, req, res, opts)
     ]);
-
-  transformedAPIRequest = (queryTransform: DeprecatedQueryTransform) => {
-    deprecate("transformedAPIRequest: use customAPIRequest instead.");
-
-    return this.customAPIRequest({
-      queryFactory: async (opts: QueryBuildingContext) => {
-        const req = opts.serverReq as Request;
-        const query = await this.api.makeQuery(opts);
-        return queryTransform.length > 1
-          ? (queryTransform as DeprecatedQueryTransformWithReq)(req, query)
-          : (queryTransform as DeprecatedQueryTransformNoReq)(query);
-      }
-    });
-  };
 
   /**
    * A user of this library may wish to send an error response for an exception

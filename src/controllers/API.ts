@@ -81,7 +81,26 @@ export type QueryBuildingContext = {
 
 export type ResultBuildingContext = QueryBuildingContext;
 
+// Note: having one object type with both possible callback signatures
+// in it doesn't work, but splitting these function signatures into separate
+// types, and then unioning those types, does. Seems like they should be the
+// same, but whatever works. Possibly, the difference comes from the limitation
+// identified in https://github.com/Microsoft/TypeScript/issues/7294. Still,
+// this behavior is probably subject to change (e.g., might be effected by
+// https://github.com/Microsoft/TypeScript/pull/17819). However, it's the
+// approach that the express typings seem to use, so I imagine it's safe enough.
+export type QueryTransformNoReq = {
+  // tslint:disable-next-line callable-types
+  (first: Query): Query;
+};
+
+export type QueryTransformWithReq = {
+  // tslint:disable-next-line callable-types
+  (first: ServerReq, second: Query): Query;
+};
+
 export type RequestOpts = {
+  queryTransform?: QueryTransformNoReq | QueryTransformWithReq
   queryFactory?: QueryFactory;
   resultFactory?: ResultFactory;
 };
@@ -394,7 +413,20 @@ export default class APIController {
 
       logger.info("Parsing request body/query parameters");
       const finalizedRequest = await this.finalizeRequest(request);
-      const customQueryFactory = opts.queryFactory;
+
+      // As the custom query factory, use the user-provided one if present,
+      // or make a factory by applying the user-provided query transform to
+      // the library's generated query.
+      const customQueryFactory = opts.queryFactory ||
+        (opts.queryTransform && (() => {
+          const queryTransform = opts.queryTransform;
+          return async (opts: QueryBuildingContext) => {
+            const query = await this.makeQuery(opts);
+            return queryTransform.length > 1
+              ? (queryTransform as QueryTransformWithReq)(opts.serverReq, query)
+              : (queryTransform as QueryTransformNoReq)(query);
+          };
+        })());
 
       const transformExtras = {
         request: finalizedRequest,
