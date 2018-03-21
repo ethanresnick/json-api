@@ -21,10 +21,6 @@ export type Opts = {
 
 export const displaySafe = Symbol("isJSONAPIDisplayReady");
 
-// TODO: refactor args list to be:
-// constructor(title, status, [code, detail, links, paths])
-// This matches the standard Error constructor and makes sense intuitively.
-// TODO: turn on noImplicitAny, fix errors
 export default class APIError extends Error {
   public status?: string;
   public code?: string;
@@ -43,7 +39,18 @@ export default class APIError extends Error {
     paths?: Opts["paths"]
   );
   constructor(...args: any[]) {
-    super();
+    const newFormat = typeof args[0] === 'object';
+
+    if(!newFormat) {
+      deprecate(
+        "APIError with multiple arguments; " +
+        "construct with a single object arg instead."
+      );
+    }
+
+    // Extract title specially for super call.
+    const title = newFormat ? args[0].title : args[2];
+    super(title && String(title));
 
     if(Error.captureStackTrace) {
       Error.captureStackTrace(this, this.constructor || APIError);
