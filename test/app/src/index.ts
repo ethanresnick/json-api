@@ -24,6 +24,10 @@ export default database.then(function(dbModule) {
     "schools": require("./resource-descriptions/schools")
   }, {
     dbAdapter: adapter
+  }, {
+    urlTemplates: {
+      about: "https://google.com/?x={code}"
+    }
   });
 
   // Initialize the automatic documentation.

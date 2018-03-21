@@ -39,6 +39,14 @@ export type ResourceTypeInfo = {
   description?: string;
 };
 
+export type InputErrorsConfig = {
+  urlTemplates: { about: InputURLTemplates['about'] }
+};
+
+export type ErrorsConfig = {
+  urlTemplates: UrlTemplates
+};
+
 export type ResourceTypeDescription = {
   dbAdapter?: AdapterInstance<any>;
   info?: ResourceTypeInfo;
@@ -66,6 +74,9 @@ export type OutputResourceTypeDescription =
  * url templates; etc. So we handle this by introducing a ResourceTypeRegistry
  * that the Controller can have access to. Each resource type is registered by
  * its JSON API type and has a number of properties defining it.
+ *
+ * We also register other global configuration (e.g., for errors) with this
+ * instance, making the name imperfect/a bit of a misnomer.
  */
 export default class ResourceTypeRegistry {
   private _types: {
@@ -82,10 +93,19 @@ export default class ResourceTypeRegistry {
     edges: { [srcNodeName: string]: { [targetNodeName: string]: true } };
   };
 
+  private _errorsConfig?: ErrorsConfig;
+
   constructor(
     typeDescs: ResourceTypeDescriptions = Object.create(null),
-    descDefaults: Partial<ResourceTypeDescription> = {}
+    descDefaults: Partial<ResourceTypeDescription> = {},
+    errorsConfig?: InputErrorsConfig
   ) {
+
+    this._errorsConfig = errorsConfig && {
+      ...errorsConfig,
+      urlTemplates: this.processUrlTemplates(errorsConfig.urlTemplates)
+    };
+
     // Sort the types so we can register them in an order that respects their
     // parentType. First, we pre-process the typeDescriptions to create edges
     // pointing to each node's children (rather than the links we have by
@@ -138,6 +158,10 @@ export default class ResourceTypeRegistry {
 
       this._types[typeName] = thisDescBase.mergeDeep(thisDescImmutable);
     });
+  }
+
+  errorsConfig() {
+    return this._errorsConfig;
   }
 
   type(typeName: string) {
@@ -323,12 +347,16 @@ export default class ResourceTypeRegistry {
     if(it.urlTemplates) {
       return {
         ...it,
-        urlTemplates: mapObject(it.urlTemplates, template => {
-          return typeof template === 'string' ? fromRFC6570(template) : template;
-        })
+        urlTemplates: this.processUrlTemplates(it.urlTemplates)
       };
     }
 
     return it;
+  }
+
+  private processUrlTemplates(it: InputURLTemplates) {
+    return mapObject(it, template => {
+      return typeof template === 'string' ? fromRFC6570(template) : template;
+    });
   }
 }

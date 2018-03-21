@@ -178,6 +178,17 @@ describe("ResourceTypeRegistry", function() {
     });
   });
 
+  describe("errorsConfig", () => {
+    it("should be a getter, while returning parsed templates", () => {
+      const registry = new ResourceTypeRegistry(
+        {},
+        {},
+        { urlTemplates: { about: "http://google.com/" } }
+      );
+      expect(registry.errorsConfig()!.urlTemplates.about!({})).to.equal("http://google.com/");
+    });
+  })
+
   describe("adapter", () => {
     it("should be a getter for a type's db adapter",
       makeGetterTest(function() { return; }, "mytypes", "dbAdapter")
