@@ -9,11 +9,12 @@ import FindQuery from "../../../src/types/Query/FindQuery";
 import ResourceSet from "../../../src/types/ResourceSet";
 import database from "../database/index";
 import { QueryBuildingContext } from "../../../src/controllers/API";
+import ExpressStrategy from "../../../src/http-strategies/Express";
 import { Express } from "express";
-export { Express, QueryBuildingContext };
+export { Express, QueryBuildingContext, ExpressStrategy };
 
 /**
- * Export a promise for the app.
+ * Export a promise for the app and the constructed front controller.
  */
 export default database.then(function(dbModule) {
   const adapter = new API.dbAdapters.Mongoose(dbModule.models());
@@ -162,6 +163,10 @@ export default database.then(function(dbModule) {
   app.post("/parsed/raw/:type(organizations)", bodyParser.raw({ type: '*/*' }), Front.apiRequest)
   app.post("/parsed/text/:type(organizations)", bodyParser.text({ type: '*/*' }), Front.apiRequest)
 
+  // Add a subapp which can hold dynamic routes we add in our tests.
+  const subApp: Express = express();
+  app.use('/dynamic', subApp);
+
   // Now, add the routes.
   // Note: below, express incorrectly passes requests using PUT and other
   // unknown methods into the API Controller at some routes. We're doing this
@@ -182,7 +187,7 @@ export default database.then(function(dbModule) {
     Front.sendError({ message: "Not Found", status: 404 }, req, res, next);
   });
 
-  return app;
+  return { app, Front, subApp };
 });
 
 function makeSignInQuery(opts: QueryBuildingContext) {

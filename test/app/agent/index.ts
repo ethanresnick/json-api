@@ -12,7 +12,7 @@ superagent.parse[JSONAPIContentType] = superagent.parse["application/json"];
 /**
  * Export a Promise for a module that can make requests to the app.
  */
-export default appPromise.then(function(app: Application) {
+export default appPromise.then(function({ app }: { app: Application}) {
   const port = process.env.PORT || "3000";
   const host = process.env.HOST || "127.0.0.1";
   const baseUrl = "http://" + host + ":" + port;

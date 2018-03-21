@@ -59,6 +59,10 @@ export type APIControllerOpts = {
 };
 
 export type QueryFactory = (opts: QueryBuildingContext) => Query | Promise<Query>;
+export type ResultFactory = (
+  opts: ResultBuildingContext,
+  customQueryFactory?: QueryFactory
+) => Result | Promise<Result>;
 
 export type QueryBuildingContext = {
   request: FinalizedRequest;
@@ -75,8 +79,11 @@ export type QueryBuildingContext = {
   makeQuery: QueryFactory;
 };
 
+export type ResultBuildingContext = QueryBuildingContext;
+
 export type RequestOpts = {
   queryFactory?: QueryFactory;
+  resultFactory?: ResultFactory;
 };
 
 export type filterParamParser = (
@@ -176,15 +183,8 @@ export default class APIController {
   }
 
   /**
-   * Makes the default query the library will run, given a finalized request
-   * and some options.
-   *
-   * Note: this function should be pure, including in the sense of not needing
-   * access to anything on `this.`, as everything needed to construct the query
-   * should be in the same option set that we give user-provided query factory
-   * functions.
-   *
-   * TODO: in light of the above, consider making this a static function.
+   * Makes the default query the library will run, given some options
+   * (including, naturally, the finalized request).
    *
    * @param {QueryBuildingContext} opts [description]
    */
@@ -196,7 +196,7 @@ export default class APIController {
     // and that, if the body is supposed to be present, it is (or vice-versa).
     // We await these in order to be deterministic about the error message.
     // TODO: It might be slightly preferable to do the body existence check
-    // in each of the makeQuery functions, we're we're actually trying to use
+    // in each of the makeQuery functions, when we're actually trying to use
     // the parsed body.
     await requestValidators.checkMethod(request);
     await requestValidators.checkBodyExistence(request);
@@ -315,6 +315,56 @@ export default class APIController {
   }
 
   /**
+   * Makes the result the library will ultimately return.
+   *
+   * Note: this function is static to make sure that everything we use to
+   * construct the query is provided through the same options object that we
+   * give to user-provided result factory functions.
+   *
+   * @param {QueryBuildingContext} opts [description]
+   */
+  public async makeResult(
+    opts: ResultBuildingContext,
+    customQueryFactory?: QueryFactory
+  ) {
+    try {
+      // Actually fulfill the request!
+      // Use the custom query factory or the library's built-in one.
+      // tslint:disable-next-line no-unbound-method
+      const queryFactory = customQueryFactory || opts.makeQuery;
+
+      logger.info("Creating request query");
+      const query = await queryFactory(opts);
+
+      // If the type in the request hasn't been registered,
+      // we can't look up it's adapter to run the query, so we 404.
+      if(!opts.registry.hasType(query.type)) {
+        throw new APIError({
+          status: 404,
+          title: `${opts.request.type} is not a valid type.`
+        });
+      }
+
+      logger.info("Executing request query");
+      const adapter = opts.registry.dbAdapter(query.type);
+      let result =
+        await adapter.doQuery(query).then(query.returning, query.catch);
+
+      // add top level self link pre send.
+      if(result.document && result.document.primary) {
+        result.document.primary.links = {
+          "self": () => opts.request.uri,
+          ...result.document.primary.links
+        };
+      }
+
+      return result;
+    } catch(err) {
+      return makeResultFromErrors(opts.makeDocument, err);
+    }
+  }
+
+  /**
    * @param {Request} request The Request this controller will use to generate
    *    the HTTPResponse.
    * @param {ServerReq} serverReq This should be the request object generated
@@ -344,10 +394,7 @@ export default class APIController {
 
       logger.info("Parsing request body/query parameters");
       const finalizedRequest = await this.finalizeRequest(request);
-
-      // Actually fulfill the request!
-      // tslint:disable-next-line no-unbound-method
-      const queryFactory = opts.queryFactory || this.makeQuery;
+      const customQueryFactory = opts.queryFactory;
 
       const transformExtras = {
         request: finalizedRequest,
@@ -356,47 +403,31 @@ export default class APIController {
         serverRes
       };
 
-      logger.info("Creating request query");
-      const query = await queryFactory({
+      const resultBuildingOpts = {
         ...transformExtras,
         makeDocument: this.makeDoc, // tslint:disable-line no-unbound-method
         transformDocument: R.partialRight(transformDoc, [transformExtras as Extras]),
         makeQuery: this.makeQuery, // tslint:disable-line no-unbound-method
         setTypePaths: R.partialRight(setTypePaths, [transformExtras.registry])
-      });
-
-      // If the type in the request hasn't been registered,
-      // we can't look up it's adapter to run the query, so we 404.
-      if(!this.registry.hasType(query.type)) {
-        throw new APIError(404, undefined, `${request.type} is not a valid type.`);
       }
 
-      logger.info("Executing request query");
-      const adapter = this.registry.dbAdapter(query.type);
-      jsonAPIResult =
-        await adapter.doQuery(query).then(query.returning, query.catch);
+      const resultFactory = opts.resultFactory || this.makeResult;
 
-      // add top level self link pre send.
-      if(jsonAPIResult.document && jsonAPIResult.document.primary) {
-        jsonAPIResult.document.primary.links = {
-          "self": () => request.uri,
-          ...jsonAPIResult.document.primary.links
-        };
-      }
+      jsonAPIResult = await resultFactory(
+        resultBuildingOpts,
+        customQueryFactory
+      );
     }
 
-    // If any errors occurred, convert them to a Response. Might be needed if,
-    // e.g., the error was unexpected (and so uncaught and not transformed) in
-    // one of prior steps or the user couldn't throw an APIError for
-    // compatibility with other code.
+    // If an error occurred, (e.g., parsing the request) convert it to a Result.
     catch (err) {
       logger.warn("API Controller caught error", err, err.stack);
       jsonAPIResult = makeResultFromErrors(this.makeDoc, err);
     }
 
-    // Convert jsonApiResponse to httpResponse. Atm, this is simply about
+    // Convert the Result to an HttpResponse. Atm, this is simply about
     // copying over a couple properties. In the future, though, one HTTP request
-    // might generate multiple queries, and then multiple jsonAPIResponses,
+    // might generate multiple queries, and then possibly multiple Results,
     // which would be merged into a single HTTP Response.
     logger.info("Creating HTTPResponse", jsonAPIResult);
     return resultToHTTPResponse(jsonAPIResult, contentType);
