@@ -31,10 +31,12 @@ export function errorHandler(err): never {
   // Mongo unique constraint error.
   else if(err.name === 'MongoError' && err.code === 11000) {
     errors.push(
-      Errors.uniqueViolation({
+      Errors.uniqueViolation(<any>{
         rawError: err,
         // add the below as an attempt at backwards compatibility for users
         // switching on code in query.catch(). Code is not serialized.
+        // This is the only place in the codebase we use code, which is
+        // normally not allowed, hence the `any` assertion above.
         code: 11000
       })
     );
