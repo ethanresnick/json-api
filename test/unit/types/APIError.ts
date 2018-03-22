@@ -43,7 +43,7 @@ describe("Error Objects", () => {
     });
 
     it('should set rawError on genereted instances', () => {
-      let x = new Error("test");
+      const x = new Error("test");
       expect(APIError.fromError(x).rawError).to.equal(x);
     })
 

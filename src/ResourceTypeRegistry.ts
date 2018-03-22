@@ -153,7 +153,7 @@ export default class ResourceTypeRegistry {
       // reset them post-merge with .set("prop", thisDescriptionRaw.get("prop")).
       const { parentType } = typeDescs[typeName];
       const thisDescBase = parentType
-        ? this._types[parentType]!
+        ? this._types[parentType]! // tslint:disable-line no-non-null-assertion
         : instanceDefaults;
 
       this._types[typeName] = thisDescBase.mergeDeep(thisDescImmutable);

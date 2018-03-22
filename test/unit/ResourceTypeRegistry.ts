@@ -170,7 +170,8 @@ describe("ResourceTypeRegistry", function() {
         "mytypes": { urlTemplates: {"path": "test template"} }
       });
 
-      const templateOut = registry.urlTemplates("mytypes")!["path"]!;
+      // tslint:disable-next-line no-non-null-assertion
+      const templateOut = registry.urlTemplates("mytypes")!.path!;
 
       expect(registry.urlTemplates("mytypes")).to.be.an("object");
       expect(templateOut({})).to.equal("test%20template");
@@ -185,6 +186,8 @@ describe("ResourceTypeRegistry", function() {
         {},
         { urlTemplates: { about: "http://google.com/" } }
       );
+
+      // tslint:disable-next-line no-non-null-assertion
       expect(registry.errorsConfig()!.urlTemplates.about!({})).to.equal("http://google.com/");
     });
   })
