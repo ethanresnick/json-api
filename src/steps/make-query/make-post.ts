@@ -1,5 +1,5 @@
 import { hasId } from "../pre-query/validate-resource-ids";
-import APIError from "../../types/APIError";
+import * as Errors from "../../util/errors";
 import Resource, { ResourceWithTypePath } from "../../types/Resource";
 import CreateQuery from "../../types/Query/CreateQuery";
 import AddToRelationshipQuery from "../../types/Query/AddToRelationshipQuery";
@@ -18,17 +18,17 @@ export default function(request: FinalizedRequest, registry: ResourceTypeRegistr
   // an existing toMany relationship, which uses a different adapter method.
   if(request.aboutRelationship) {
     if((primary as Data<ResourceIdentifier>).isSingular) {
-      throw new APIError({
-        status: 400,
-        title: "To add to a to-many relationship, you must POST an array of linkage objects."
+      throw Errors.expectedDataArray({
+        detail: "To add to a to-many relationship, you must POST an array of linkage objects."
       });
     }
 
     if(!request.id || !request.relationship) {
-      throw new APIError({
-        status: 400,
-        title: "To add linkage to a relationship, you must POST to a relationship endpoint."
-      });
+      throw new Error(
+        "Somehow, this request was 'about a relationship' and yet didn't " +
+        "include a resource id and a relationship name. This shouldn't happen." +
+        "Check that your routes are passing params into the library correctly."
+      );
     }
 
     return new AddToRelationshipQuery({
@@ -42,7 +42,7 @@ export default function(request: FinalizedRequest, registry: ResourceTypeRegistr
 
   else {
     if((<Data<Resource>>primary).some(hasId)) {
-      throw new APIError(403, undefined, "Client-generated ids are not supported.");
+      throw Errors.unsupportedClientId();
     }
 
     return new CreateQuery({

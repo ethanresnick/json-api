@@ -17,10 +17,10 @@ import { getTypePath } from "./utils/subtyping";
 import docToResource from "./utils/doc-to-resource";
 import { getTypeName } from "../../util/naming-conventions";
 import * as util from "./lib";
+import * as Errors from '../../util/errors';
 import Data from "../../types/Generic/Data";
 import Resource, { ResourceWithTypePath } from "../../types/Resource";
 import ResourceIdentifier from "../../types/ResourceIdentifier";
-import APIError from "../../types/APIError";
 import FieldDocumentation from "../../types/Documentation/Field";
 import FieldTypeDocumentation from "../../types/Documentation/FieldType";
 import RelationshipTypeDocumentation from "../../types/Documentation/RelationshipType";
@@ -167,13 +167,15 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       includePaths.map((it) => it.split(".")).forEach((pathParts) => {
         // first, check that the include path is valid.
         if(!refPaths.includes(pathParts[0])) {
-          const title = "Invalid include path.";
-          const detail = `Resources of type "${type}" don't have a(n) "${pathParts[0]}" relationship.`;
-          throw new APIError(400, undefined, title, detail);
+          throw Errors.invalidIncludePath({
+            detail: `Resources of type "${type}" don't have a(n) "${pathParts[0]}" relationship.`
+          });
         }
 
         if(pathParts.length > 1) {
-          throw new APIError(501, undefined, "Multi-level include paths aren't yet supported.");
+          throw Errors.unsupportedIncludePath({
+            detail: `Multi-level include paths like ${pathParts.join('.')} aren't yet supported.`
+          });
         }
 
         // Finally, do the population
@@ -250,10 +252,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
         const forbiddenKeys = getMetaKeys(finalModel);
 
         if(forbiddenKeys.some(k => k in resource.attrs || k in resource.relationships)) {
-          throw new APIError({
-            status: 400,
-            title: "Illegal attribute/relationship provided."
-          });
+          throw Errors.illegalFieldName();
         }
 
         return util.resourceToDocObject(resource, (typePath: string[]) => {
@@ -337,19 +336,14 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
 
       // Doc couldn't be found when we searched for it above.
       if(!existingDoc) {
-        throw new APIError({
-          status: 404,
-          title: "One or more of the resources to update could not be found.",
+        throw Errors.genericNotFound({
           detail: `First missing resource was (${resourceUpdate.type}, ${resourceUpdate.id}).`
         });
       }
 
       const forbiddenKeys = getMetaKeys(Model);
       if(forbiddenKeys.some(k => k in changeSet)) {
-        throw new APIError({
-          status: 400,
-          title: "Illegal attribute/relationship provided."
-        });
+        throw Errors.illegalFieldName();
       }
 
       // Construct an in-memory document for this resource and
@@ -397,11 +391,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       const doc = await (docUpdateQuery.exec().catch(util.errorHandler) as Promise<mongoose.Document>);
 
       if(!doc) {
-        throw new APIError({
-          status: 409,
-          title: "One or more of the resources you are trying to update either " +
-            "changed or was deleted while you were trying to update it. Try again.",
-        });
+        throw Errors.occFail();
       }
 
       return this.docsToResourceData(doc, false);
@@ -454,10 +444,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     }
 
     if(!docsToDelete.every(R.partial(hasTypePathThrough, [type]))) {
-      throw new APIError({
-        status: 400,
-        title: "One of the resources you're attempting to delete is not of an allowed type."
-      });
+      throw Errors.invalidResourceType();
     }
 
     // Ok, having verified that all the resources are of the right (sub) type,
@@ -467,10 +454,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     // making the client retry is inconvenient, and the result of removing the
     // missing ids and repeating the request would be the same].)
     if(singular && docsToDelete.size === 0) {
-      throw new APIError({
-        status: 404,
-        title: "The resource you're trying to delete could not be found."
-      });
+      throw Errors.genericNotFound();
     }
 
     // Finally, we can delete all the docs,
@@ -621,7 +605,8 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
   /**
    * Return the paths that, for the provided type, must always must be filled
    * with relationship info, if they're present. Occassionally, a path might be
-   * optionally fillable w/ relationship info; this shouldn't return those paths.
+   * optionally fillable w/ relationship info [TODO: when? what does this mean?];
+   * this shouldn't return those paths.
    */
   getRelationshipNames(typeName) {
     const model = this.getModel(typeName);
@@ -665,9 +650,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     })();
 
     if(!linkage.every(it => it.type === rootTypeNameForRefModel)) {
-      throw new APIError({
-        status: 400,
-        title: "Invalid linkage provided.",
+      throw Errors.invalidLinkageType({
         detail: `All linkage must have type: ${rootTypeNameForRefModel}.`
       });
     }
@@ -701,7 +684,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     // if docs is an empty array and we're making a collection, that's ok.
     // but, if we're looking for a single doc, we must 404 if we didn't find any.
     if(!docs || (!isPlural && Array.isArray(docs) && docs.length === 0)) {
-      throw new APIError(404, undefined, "No matching resource found.");
+      throw Errors.genericNotFound();
     }
 
     docs = !Array.isArray(docs) ? [docs] : docs;
@@ -860,8 +843,8 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
 
     if(!idsArray.every(this.idIsValid)) {
       throw isSingular
-        ? new APIError(404, undefined, "No matching resource found.", "Invalid ID.")
-        : new APIError(400, undefined, "Invalid ID.");
+        ? Errors.genericNotFound({ detail: "Invalid ID." })
+        : Errors.invalidId();
     }
   }
 

@@ -1,5 +1,5 @@
 import { partition } from "../../util/misc";
-import APIError from "../../types/APIError";
+import * as Errors from "../../util/errors";
 import { ResourceWithTypePath } from "../../types/Resource";
 import ResourceSet from "../../types/ResourceSet";
 import ResourceTypeRegistry from "../../ResourceTypeRegistry";
@@ -29,9 +29,8 @@ export default function(data: ResourceSet, registry: ResourceTypeRegistry) {
     /*eslint-enable no-loop-func */
 
     if(invalid) {
-      throw new APIError({
-        status: 400,
-        title: "Relationship fields must be specified under the `relationships` key."
+      throw Errors.invalidAttributeName({
+        detail: "Relationship fields must be specified under the `relationships` key."
       });
     }
   }

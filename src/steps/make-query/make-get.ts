@@ -1,4 +1,4 @@
-import APIError from "../../types/APIError";
+import * as Errors from "../../util/errors";
 import { FinalizedRequest, makeDocument } from "../../types";
 import Resource from "../../types/Resource";
 import ResourceSet from "../../types/ResourceSet";
@@ -12,7 +12,9 @@ export default function(request: FinalizedRequest, registry: ResourceTypeRegistr
   if(!request.aboutRelationship) {
     // Attempting to paginate a single resource request
     if(request.queryParams.page && typeof request.id === 'string') {
-      throw new APIError(400, undefined, "Pagination is not supported on requests for a single resource.");
+      throw Errors.illegalQueryParam({
+        detail: "Pagination is not supported on requests for a single resource."
+      });
     }
 
     const {
@@ -52,10 +54,9 @@ export default function(request: FinalizedRequest, registry: ResourceTypeRegistr
   //   have a links key.
   // - sorts don't apply beacuse that's only for resource collections.
   if(request.queryParams.page) {
-    throw new APIError(
-      400, undefined,
-      "Pagination is not supported on requests for resource linkage."
-    );
+    throw Errors.illegalQueryParam({
+      detail: "Pagination is not supported on requests for resource linkage."
+    });
   }
 
   if(!request.id || !request.relationship) {
@@ -82,14 +83,16 @@ export default function(request: FinalizedRequest, registry: ResourceTypeRegistr
         resource.relationships[<string>request.relationship];
 
       if(!relationship) {
-        const title = "Invalid relationship name.";
-        const detail = `${request.relationship} is not a valid ` +
-                     `relationship name on resources of type '${type}'`;
-
         return {
           status: 404,
           document: makeDoc({
-            errors: [new APIError(404, undefined, title, detail)]
+            errors: [
+              Errors.unknownRelationshipName({
+                detail:
+                  `${request.relationship} is not a valid ` +
+                  `relationship name on resources of type '${type}'`
+              })
+            ]
           })
         };
       }

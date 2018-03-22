@@ -1,4 +1,4 @@
-import APIError from "../../types/APIError";
+import * as Errors from '../../util/errors';
 import Resource, { ResourceWithId } from "../../types/Resource";
 import Relationship from "../../types/Relationship";
 import UpdateQuery from "../../types/Query/UpdateQuery";
@@ -19,23 +19,26 @@ export default async function(request: FinalizedRequest, registry: ResourceTypeR
   if(!request.aboutRelationship) {
     if(request.id) {
       if(!primary.isSingular) {
-        const title = "You can't replace a single resource with a collection.";
-        throw new APIError(400, undefined, title);
+        throw Errors.expectedDataObject({
+          detail: "You can't replace a single resource with a collection."
+        });
       }
 
       // B/c of the isSingular check above, we know this'll be a single Resource.
       const providedResource = (<Data<Resource>>primary).unwrap() as Resource | null;
 
       if(request.id !== (providedResource && providedResource.id)) {
-        const title = "The id of the resource you provided doesn't match that in the URL.";
-        throw new APIError(400, undefined, title);
+        throw Errors.invalidId({
+          detail: "The id of the resource you provided must match that in the URL."
+        });
       }
     }
 
     // No request.id
     else if(primary.isSingular) {
-      const title = "You must provide an array of resources to do a bulk update.";
-      throw new APIError(400, undefined, title);
+      throw Errors.expectedDataArray({
+        detail: "You must provide an array of resources to do a bulk update."
+      });
     }
 
     changedResourceData = primary;
@@ -43,8 +46,11 @@ export default async function(request: FinalizedRequest, registry: ResourceTypeR
 
   else {
     if(!request.relationship || !request.id) {
-      const title = "You must PATCH a relationship endpoint to update relationship's linkage.";
-      throw new APIError(400, undefined, title);
+      throw new Error(
+        "Somehow, this request was 'about a relationship' and yet didn't " +
+        "include a resource id and a relationship name. This shouldn't happen." +
+        "Check that your routes are passing params into the library correctly."
+      );
     }
 
     const resourceType = registry.rootTypeNameOf(request.type);

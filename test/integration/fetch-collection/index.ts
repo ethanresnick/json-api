@@ -210,6 +210,32 @@ describe("Fetching Collection", () => {
           expect(res.body.data[0].id).to.equal("54419d550a5069a2129ef254");
         });
     });
+
+    it("should give a nice error on invalid filter syntax", () => {
+      const invalidFilterStringsToErrorRegexs = {
+        "filter=(id,n,54419d550a5069a2129ef254)": /\"n\".+valid operator/i,
+        "filter=(id,neq,54419d550a5069a2129ef254,x)": /two or three/i,
+        "filter=(4,4)": /field symbol/i,
+        "filter=true": /must be a list/i,
+        "filter=(()": /Invalid filter syntax\./
+      };
+
+      return Promise.all(
+        Object.keys(invalidFilterStringsToErrorRegexs).map(filterString =>
+          Agent.request("GET", "/organizations")
+            .query(filterString)
+            .accept("application/vnd.api+json")
+            .then((res) => {
+              throw new Error("shouldn't run");
+            }, (e) => {
+              const jsonErr = e.response.body.errors[0];
+              expect(e.response.status).to.equal(400);
+              expect(jsonErr.code).to.equal("https://jsonapi.js.org/errors/invalid-query-param-value");
+              expect(jsonErr.detail).to.match(invalidFilterStringsToErrorRegexs[filterString]);
+            })
+        )
+      );
+    });
   });
 
   describe("Fetching with includes", () => {

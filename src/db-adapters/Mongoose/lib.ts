@@ -3,6 +3,7 @@
 // code, as their APIs are subject to change.
 import APIError from "../../types/APIError";
 import Resource from "../../types/Resource";
+import * as Errors from "../../util/errors";
 import { FieldConstraint, Predicate } from "../../types/index";
 
 /**
@@ -10,19 +11,33 @@ import { FieldConstraint, Predicate } from "../../types/index";
  * errors that can be sent back to the caller as the Promise's rejection value.
  */
 export function errorHandler(err): never {
-  const errors: APIError[] = [];
+  const errors: (APIError | Error)[] = [];
+
   // Convert validation errors collection to something reasonable
   if(err.errors) {
     Object.keys(err.errors).forEach(errKey => {
       const thisError = err.errors[errKey];
-      errors.push(
-        new APIError({
-          status: (err.name === "ValidationError") ? 400 : (thisError.status || 500),
-          title: thisError.message,
-          rawError: thisError
-        })
-      );
+      const errorFormatted = err.name === "ValidationError"
+        ? Errors.invalidFieldValue({
+            detail: thisError.message,
+            rawError: thisError
+          })
+        : APIError.fromError(thisError);
+
+      errors.push(errorFormatted);
     });
+  }
+
+  // Mongo unique constraint error.
+  else if(err.name === 'MongoError' && err.code === 11000) {
+    errors.push(
+      Errors.uniqueViolation({
+        rawError: err,
+        // add the below as an attempt at backwards compatibility for users
+        // switching on code in query.catch(). Code is not serialized.
+        code: 11000
+      })
+    );
   }
 
   // Send the raw error.

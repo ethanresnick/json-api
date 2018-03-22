@@ -170,7 +170,7 @@ describe("Subtypes", () => {
               throw new Error("Should not run")
             }, (e) => {
               expect(e.status).to.equal(400);
-              expect(e.response.body.errors[0].title).to.match(/\`type\`.+resources.+invalid/);
+              expect(e.response.body.errors[0].code).to.equal("https://jsonapi.js.org/errors/invalid-resource-type");
             })
         })
       ));
@@ -203,7 +203,7 @@ describe("Subtypes", () => {
           throw new Error("Shouldn't run");
         }, (e) => {
           expect(e.status).to.equal(400);
-          expect(e.response.body.errors[0].title).to.match(/invalid types list/i)
+          expect(e.response.body.errors[0].code).to.equal("https://jsonapi.js.org/errors/invalid-types-list")
         });
     });
 
@@ -230,7 +230,7 @@ describe("Subtypes", () => {
           throw new Error("Shouldn't run");
         }, (e) => {
           expect(e.status).to.equal(400);
-          expect(e.response.body.errors[0].title).to.match(/type.+resources.+invalid/i)
+          expect(e.response.body.errors[0].code).to.equal("https://jsonapi.js.org/errors/invalid-resource-type")
         });
     });
   });
@@ -254,7 +254,7 @@ describe("Subtypes", () => {
           throw new Error("Shouldn't run");
         }, (e) => {
           expect(e.status).to.equal(400);
-          expect(e.response.body.errors[0].title).to.match(/cannot provide.+types/i)
+          expect(e.response.body.errors[0].code).to.equal("https://jsonapi.js.org/errors/illegal-types-list")
         });
     });
 
@@ -274,7 +274,7 @@ describe("Subtypes", () => {
               throw new Error("Should not run")
             }, (e) => {
               expect(e.status).to.equal(400);
-              expect(e.response.body.errors[0].title).to.match(/\`type\`.+resources.+invalid/);
+              expect(e.response.body.errors[0].code).to.equal("https://jsonapi.js.org/errors/invalid-resource-type");
             })
         })
       ));
@@ -307,7 +307,7 @@ describe("Subtypes", () => {
           throw new Error("Shouldn't run");
         }, (e) => {
           expect(e.status).to.equal(400);
-          expect(e.response.body.errors[0].title).to.match(/invalid type/i)
+          expect(e.response.body.errors[0].code).to.equal("https://jsonapi.js.org/errors/invalid-types-list")
         });
     });
 
@@ -320,7 +320,7 @@ describe("Subtypes", () => {
           throw new Error("Shouldn't run");
         }, (e) => {
           expect(e.status).to.equal(400);
-          expect(e.response.body.errors[0].title).to.match(/invalid type/i)
+          expect(e.response.body.errors[0].code).to.equal("https://jsonapi.js.org/errors/invalid-resource-type")
         });
     });
 

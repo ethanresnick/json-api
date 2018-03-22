@@ -1,4 +1,4 @@
-import APIError from "../types/APIError";
+import * as Errors from "../util/errors";
 import Resource, { ResourceWithId } from "../types/Resource";
 import ResourceIdentifier from "../types/ResourceIdentifier";
 import ResourceTypeRegistry from "../ResourceTypeRegistry";
@@ -56,10 +56,8 @@ export default async function(
     // resource's types (the semantics of that are undefined), any typesList
     // present on requests where we have existing resources is an error.
     if(resourcesAndIds.some(it => it.typesList !== undefined)) {
-      throw new APIError({
-        status: 400,
-        title: "You cannot provide a list of (sub)-types on this request. "
-          + "Trying to mutate the types of an existing resource is not allowed."
+      throw Errors.illegalTypeList({
+        detail: "Trying to mutate the types of an existing resource is not allowed."
       });
     }
 
@@ -81,17 +79,13 @@ export default async function(
         const adapterResult = adapterResultsForType && adapterResultsForType[id];
 
         if(!adapterResult) {
-          throw new APIError({
-            status: 404,
-            title: "One or more of the resources provided could not be found.",
+          throw Errors.genericNotFound({
             detail: `First missing resource was (${resourceOrId.type}, ${resourceOrId.id}).`
           });
         }
 
         if(requiredThroughType && !adapterResult.typePath.includes(requiredThroughType)) {
-          throw new APIError({
-            status: 400,
-            title: "Resource of invalid type provided.",
+          throw Errors.invalidResourceType({
             detail: `The resource (${resourceOrId.type}, ${resourceOrId.id}) is of an invalid type.`
           });
         }
@@ -126,18 +120,14 @@ function getTypePathFromUserInput(
 
   // typesList was set straight from the user's json, so might not be an array.
   if(!Array.isArray(provisionalTypePath)) {
-    throw new APIError({
-      status: 400,
-      title: "Invalid types list.",
+    throw Errors.invalidTypeList({
       detail: `Needed an array, but got ${JSON.stringify(provisionalTypePath)}.`
     });
   }
 
   const typePath = asTypePath(provisionalTypePath, requiredThroughType);
   if(!typePath) {
-    throw new APIError({
-      status: 400,
-      title: "Invalid types list.",
+    throw Errors.invalidTypeList({
       detail: `Got ${JSON.stringify(provisionalTypePath)}.`
     });
   }

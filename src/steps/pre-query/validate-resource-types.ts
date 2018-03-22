@@ -1,4 +1,4 @@
-import APIError from "../../types/APIError";
+import * as Errors from "../../util/errors";
 import ResourceSet from "../../types/ResourceSet";
 import ResourceIdentifierSet from "../../types/ResourceIdentifierSet";
 import ResourceTypeRegistry from "../../ResourceTypeRegistry";
@@ -15,9 +15,7 @@ export default async function(
   // in type, and expect them to be created that way).
   const rootType = registry.rootTypeNameOf(endpointParentType);
   if(!(data as ResourceSet).every(it => it.type === rootType)) {
-    throw new APIError({
-      status: 400,
-      title: "The `type` of some of the resources provided is invalid at this endpoint.",
+    throw Errors.invalidResourceType({
       detail: `Resources at this endpoint must all have a \`type\` of "${rootType}".`
     });
   }

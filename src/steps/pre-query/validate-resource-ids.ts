@@ -1,4 +1,4 @@
-import APIError from "../../types/APIError";
+import * as Errors from "../../util/errors";
 import Resource from "../../types/Resource";
 import ResourceSet from "../../types/ResourceSet";
 import ResourceIdentifier from "../../types/ResourceIdentifier";
@@ -9,9 +9,12 @@ export const hasId = (it: Resource | ResourceIdentifier) =>
 
 export default async function(data: ResourceSet | ResourceIdentifierSet) {
   if(!(data as ResourceSet).every(hasId)) {
-    throw new APIError({
-      status: 400,
-      title: "Missing an `id` on one or more of the resources/identifiers provided."
-    });
+    if(data instanceof ResourceIdentifierSet) {
+      throw Errors.invalidLinkageStructure({
+        detail: "Missing an `id` key on one or more of the identifier objects provided."
+      })
+    }
+
+    throw Errors.resourceMissingIdKey();
   }
 }

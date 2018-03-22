@@ -68,7 +68,7 @@ export default class Resource {
 
   set type(type) {
     if(!type) {
-      throw new Error("type is required");
+      throw errorWithCode("type is required", 1);
     }
 
     this._type = String(type);
@@ -117,7 +117,7 @@ export default class Resource {
 
   set meta(meta) {
     if(typeof meta !== "object" || meta === null) {
-      throw new Error("meta must be an object.");
+      throw errorWithCode("meta must be an object.", 2);
     }
 
     this._meta = meta;
@@ -207,11 +207,11 @@ export default class Resource {
  */
 function validateFieldGroup(group: object, otherFields: object, isAttributes = false) {
   if(!isPlainObject(group)) {
-    throw new Error("Attributes and relationships must be provided as an object.");
+    throw errorWithCode("Attributes and relationships must be provided as an object.", 3);
   }
 
   if("id" in group || "type" in group) {
-    throw new Error("`type` and `id` cannot be used as attribute or relationship names.");
+    throw errorWithCode("`type` and `id` cannot be used as field names.", 4);
   }
 
   Object.keys(group).forEach(field => {
@@ -220,15 +220,23 @@ function validateFieldGroup(group: object, otherFields: object, isAttributes = f
     }
 
     if(otherFields !== undefined && typeof (otherFields as any)[field] !== "undefined") {
-      throw new Error("A resource can't have an attribute and a relationship with the same name.");
+      throw errorWithCode(
+        "A resource can't have an attribute and a relationship with the same name.",
+        5,
+        { field }
+      );
     }
   });
 }
 
 function validateComplexAttribute(attrOrAttrPart: any) {
   if(isPlainObject(attrOrAttrPart)) {
-    if(typeof attrOrAttrPart.relationships !== "undefined" || typeof attrOrAttrPart.links !== "undefined") {
-      throw new Error('Complex attributes may not have "relationships" or "links" keys.');
+    const { relationships, links } = attrOrAttrPart;
+    if(typeof relationships !== "undefined" || typeof links !== "undefined") {
+      throw errorWithCode(
+        'Complex attributes may not have "relationships" or "links" keys.',
+        6
+      );
     }
 
     Object.keys(attrOrAttrPart).forEach(key => {
@@ -238,4 +246,20 @@ function validateComplexAttribute(attrOrAttrPart: any) {
   else if(Array.isArray(attrOrAttrPart)) {
     attrOrAttrPart.forEach(validateComplexAttribute);
   }
+}
+
+/**
+ * We throw errors with a code number so that we can identify the error type
+ * and convert the error to an APIError, but only if the error was caused by
+ * client-provided data. If, say, an Adapter created an invalid resource object
+ * from data it looked up, that's just an internal error and shouldn't be
+ * converted to an APIError at all or at least not to the same one.
+ *
+ * Note: the codes are only meant to be unique within this file!
+ */
+function errorWithCode(message: string, code: number, extra?: object) {
+  const x: any = new Error(message);
+  x.code = code;
+  Object.assign(x, extra);
+  return x;
 }

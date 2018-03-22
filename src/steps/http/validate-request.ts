@@ -1,4 +1,4 @@
-import APIError from "../../types/APIError";
+import * as Errors from '../../util/errors';
 import { Request } from "../../types";
 
 export async function checkBodyExistence(request: Request) {
@@ -13,11 +13,11 @@ export async function checkBodyExistence(request: Request) {
     return;
   }
 
-  const errorMsg = needsBody
-    ? "This request needs a body, but didn't have one."
-    : "This request should not have a body, but does.";
-
-  throw new APIError(400, undefined, errorMsg);
+  throw Errors.genericValidation({
+    detail: needsBody
+      ? "This request needs a body, but didn't have one."
+      : "This request should not have a body, but does."
+  });
 }
 
 export async function checkMethod({ method }: Request) {
@@ -26,6 +26,6 @@ export async function checkMethod({ method }: Request) {
       `The method "${method}" is not supported.` +
       (method === "put" ? " See http://jsonapi.org/faq/#wheres-put" : "");
 
-    throw new APIError(405, undefined, "Method not supported.", detail);
+    throw Errors.generic405({ detail });
   }
 }

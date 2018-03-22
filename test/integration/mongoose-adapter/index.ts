@@ -86,7 +86,10 @@ describe("MongooseAdapter", () => {
             throw new Error("Should not run!");
           }, (e) => {
             expect(e.status).to.equal(400);
-            expect(e.response.body.errors[0].title).to.match(/(illegal attribute)|(invalid linkage)/i);
+            expect([
+              "https://jsonapi.js.org/errors/illegal-field-name",
+              "https://jsonapi.js.org/errors/invalid-linkage-json"
+            ]).to.include(e.response.body.errors[0].code);
           });
       }
 
@@ -152,7 +155,10 @@ describe("MongooseAdapter", () => {
             throw new Error("Should not run!");
           }, (e) => {
             expect(e.status).to.equal(400);
-            expect(e.response.body.errors[0].title).to.match(/(illegal attribute)|(invalid linkage)/i);
+            expect([
+              "https://jsonapi.js.org/errors/illegal-field-name",
+              "https://jsonapi.js.org/errors/invalid-linkage-json"
+            ]).to.include(e.response.body.errors[0].code);
           });
       }
 

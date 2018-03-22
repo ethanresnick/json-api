@@ -27,8 +27,10 @@ export default class APIError extends Error {
   public code?: string;
   public title?: string;
   public detail?: string;
-  public typeUri?: string;
   public links?: any; //deprecated.
+
+  // shape may change. To read for now, call toJSON() and examine `code`.
+  protected typeUri?: string;
 
   // Even though an APIError is ready for display, the user may
   // want to process it further (to add more tailed messages, e.g.),

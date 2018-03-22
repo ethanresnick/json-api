@@ -1,5 +1,5 @@
 import Negotiator = require("negotiator");
-import APIError from "../../../types/APIError";
+import * as Errors from "../../../util/errors";
 import { objectIsEmpty } from "../../../util/misc";
 
 /**
@@ -41,8 +41,7 @@ export default function(acceptHeader, availableBaseTypes) {
       it.type.toLowerCase() === jsonApiBaseType
     );
 
-    const notAcceptableError =
-      new APIError({ status: 406, title: "Not Acceptable" });
+    const notAcceptableError = Errors.generic406();
 
     // If we do have JSON API in the Accept header and all instances
     // are parameterized, this is explicitly a 406.

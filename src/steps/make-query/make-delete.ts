@@ -1,4 +1,4 @@
-import APIError from "../../types/APIError";
+import * as Errors from "../../util/errors";
 import { FinalizedRequest, makeDocument } from "../../types";
 import ResourceTypeRegistry from "../../ResourceTypeRegistry";
 import Data from "../../types/Generic/Data";
@@ -13,10 +13,10 @@ export default function(request: FinalizedRequest, registry: ResourceTypeRegistr
 
   if(request.aboutRelationship) {
     if(!request.id || !request.relationship) {
-      throw new APIError(
-        400,
-        undefined,
-        "To remove linkage from a relationship, you must send your request to a relationship endpoint."
+      throw new Error(
+        "Somehow, this request was 'about a relationship' and yet didn't " +
+        "include a resource id and a relationship name. This shouldn't happen." +
+        "Check that your routes are passing params into the library correctly."
       );
     }
 
@@ -33,12 +33,16 @@ export default function(request: FinalizedRequest, registry: ResourceTypeRegistr
   const bulkDelete = !request.id;
   if(bulkDelete) {
     if(!primary) {
+      // This is an Error, not an APIError, because an earlier check
+      // should make it impossible and throw an APIError if it happens.
       throw new Error("Bulk delete without a body is not possible.")
     }
 
     if(primary.isSingular) {
-      const title = "You must provide an array of resource identifier objects to do a bulk delete.";
-      throw new APIError(400, undefined, title);
+      throw Errors.expectedDataArray({
+        detail: "You must provide an array of resource identifier objects " +
+          "to do a bulk delete."
+      });
     }
   }
 

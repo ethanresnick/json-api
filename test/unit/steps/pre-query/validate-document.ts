@@ -10,7 +10,7 @@ describe("Validate Request Is a JSON API Document", () => {
     validateDocument([]).then(
       () => { done(new Error("Should reject array bodies.")); },
       (err1) => {
-        expect(err1.title).to.match(/not a valid JSON API document/);
+        expect(err1.toJSON().code).to.equal("https://jsonapi.js.org/errors/missing-data-key");
         done();
       }
     ).catch(done);
@@ -20,7 +20,7 @@ describe("Validate Request Is a JSON API Document", () => {
     validateDocument("string").then(
       () => { done(new Error("Should reject string bodies.")); },
       (err2) => {
-        expect(err2.title).to.match(/not a valid JSON API document/);
+        expect(err2.toJSON().code).to.equal("https://jsonapi.js.org/errors/missing-data-key");
         done();
       }
     ).catch(done);

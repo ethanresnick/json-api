@@ -1,5 +1,6 @@
 import { Predicate, FieldConstraint } from "../../types/index";
 import Maybe, { Just, Nothing } from "../../types/Generic/Maybe";
+import * as Errors from "../../util/errors";
 export { Just, Nothing };
 
 /**
@@ -40,18 +41,30 @@ export default function parse(
   validBinaryOperators: string[],
   filterList: string
 ): (Predicate | FieldConstraint)[] {
-  const exprs: any[] = [];
-  let currExpr = { rest: tokenize(filterList), expr: undefined };
+  try {
+    const exprs: any[] = [];
+    let currExpr = { rest: tokenize(filterList), expr: undefined };
 
-  while(currExpr.rest.length) {
-    currExpr = parseExpression(currExpr.rest)
-    exprs.push(currExpr.expr);
+    while(currExpr.rest.length) {
+      currExpr = parseExpression(currExpr.rest)
+      exprs.push(currExpr.expr);
+    }
+
+    // Process each filter expression.
+    return exprs.map<Predicate | FieldConstraint>(
+      processFilterCriteria.bind(null, validUnaryOperators, validBinaryOperators)
+    );
   }
 
-  // Process each filter expression.
-  return exprs.map<Predicate | FieldConstraint>(
-    processFilterCriteria.bind(null, validUnaryOperators, validBinaryOperators)
-  );
+  catch(e) {
+    // Don't show the details of parse errors (i.e., SyntaxErrors);
+    // just show the higher-level errors thrown by processFilterCriteria.
+    throw Errors.invalidQueryParamValue({
+      detail: e instanceof SyntaxError
+        ? 'Invalid filter syntax. See jsonapi.js.org for details.'
+        : `Invalid filter syntax: ${e.message} See jsonapi.js.org for details.`
+    });
+  }
 }
 
 /**
@@ -78,8 +91,8 @@ function processFilterCriteria(
 
   const invalidOperatorError = (operator) =>
     new Error(operator && operator.value
-      ? `${operator.value} is not a valid operator.`
-      : `Could not parse operator`)
+      ? `"${operator.value}" is not a valid operator.`
+      : `Could not parse operator.`)
 
   const getField = (node: any) => {
     // we expect fields to be representend as symbols
@@ -108,7 +121,9 @@ function processFilterCriteria(
     }
 
     const rawValue = isSymbol(node) ? node.value : node;
-    return typeof rawValue === 'string' ? decodeURIComponent(rawValue) : rawValue;
+    return typeof rawValue === 'string'
+      ? decodeURIComponent(rawValue)
+      : rawValue;
   }
 
   // If we don't have a list...
@@ -144,7 +159,7 @@ function processFilterCriteria(
       };
 
     default:
-      throw new SyntaxError("Filter criteria lists must be two or three items long.");
+      throw new Error("Filter criteria lists must be two or three items long.");
   }
 }
 

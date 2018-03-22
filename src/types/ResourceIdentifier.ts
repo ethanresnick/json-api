@@ -1,4 +1,4 @@
-import APIError from "./APIError";
+import * as Errors from '../util/errors';
 
 export type ResourceIdentifierJSON = { type: string; id: string };
 
@@ -34,7 +34,7 @@ export default class ResourceIdentifier {
 
   static fromJSON(it: ResourceIdentifierJSON) {
     if(!isValidLinkageObject(it)) {
-      throw new APIError(400, undefined, "Invalid linkage value.");
+      throw Errors.invalidLinkageStructure();
     }
 
     const Constructor = this || ResourceIdentifier; // in case `this` isn't bound.

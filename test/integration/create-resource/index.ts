@@ -146,8 +146,8 @@ describe("Creating Resources", () => {
 
     describe("The error", () => {
       it("should have the correct information", () => {
-        expect(err.response.body.errors[0].title).to.be.equal("Missing relationship linkage.");
-        expect(err.response.body.errors[0].detail).to.be.equal("No data was found for the liaisons relationship.");
+        expect(err.response.body.errors[0].code).to.be.equal("https://jsonapi.js.org/errors/relationship-missing-linkage");
+        expect(err.response.body.errors[0].detail).to.be.match(/liaisons/);
       });
     });
   });

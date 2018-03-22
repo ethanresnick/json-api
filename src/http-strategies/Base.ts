@@ -1,10 +1,10 @@
 import qs = require("qs");
 import getRawBody = require("raw-body");
 import logger from "../util/logger";
-import APIError from "../types/APIError";
 import { Request, ServerReq, ServerRes, HTTPResponse } from "../types/";
 import APIController from "../controllers/API";
 import DocsController from "../controllers/Documentation";
+import * as Errors from '../util/errors';
 
 export type HTTPStrategyOptions = {
   handleContentNegotiation?: boolean;
@@ -123,9 +123,8 @@ export default class BaseStrategy {
         }
 
         else if(requestedMethod) {
-          throw new APIError({
-            status: 400,
-            title: `Cannot tunnel to method "${requestedMethod.toUpperCase()}".`
+          throw Errors.genericValidation({
+            detail: `Cannot tunnel to method "${requestedMethod.toUpperCase()}".`
           });
         }
 
@@ -192,14 +191,12 @@ export default class BaseStrategy {
         return (req as any).body;
       }
 
-      throw new APIError({
-        status: 500,
-        title:
-          "Request body could not be parsed. Ensure that no other " +
-          "middleware has already read the request or, if that's not " +
-          "possible, ensure that it sets req.rawBody with the unparsed body " +
-          "string, or req.body with parsed JSON."
-      });
+      throw new Error(
+        "Request body could not be parsed. Ensure that no other middleware " +
+        "has already read the request or, if that's not possible, ensure " +
+        "that it sets req.rawBody with the unparsed body string, or req.body " +
+        "with parsed JSON."
+      );
     }
 
     // Even though we passed the hasBody check, the body could still be
@@ -214,7 +211,7 @@ export default class BaseStrategy {
     try {
       return JSON.parse(bodyString);
     } catch (error) {
-      throw new APIError(400, undefined, "Request contains invalid JSON.");
+      throw Errors.jsonParse();
     }
   }
 }

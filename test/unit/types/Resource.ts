@@ -56,11 +56,11 @@ describe("Resource type", () => {
     it("should reject reserved keys as attrs", () => {
       expect(() =>
         new Resource("type", "id", {"id": "bleh"})
-      ).to.throw(/cannot be used as attribute/);
+      ).to.throw(/cannot be used as field names/);
 
       expect(() =>
         new Resource("type", "id", {"type": "bleh"})
-      ).to.throw(/cannot be used as attribute/);
+      ).to.throw(/cannot be used as field names/);
     });
 
     it("should reject use of same name for an attribute and a relationship", () => {

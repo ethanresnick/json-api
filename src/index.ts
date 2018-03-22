@@ -34,6 +34,7 @@ import AddToRelationshipQuery from "./types/Query/AddToRelationshipQuery";
 import RemoveFromRelationshipQuery from "./types/Query/RemoveFromRelationshipQuery";
 
 import * as namingHelpers from "./util/naming-conventions";
+import * as Errors from "./util/errors";
 
 // Export types for typescript
 export { FinalizedRequest as Request, Result, HTTPResponse } from "./types";
@@ -41,7 +42,7 @@ export {
   Document, Error, Resource, ResourceIdentifier, ResourceSet, Relationship,
   API as APIController, Documentation as DocumentationController,
   CreateQuery, FindQuery, UpdateQuery, DeleteQuery, AddToRelationshipQuery, RemoveFromRelationshipQuery,
-  Field, FieldType, ResourceTypeRegistry, displaySafeError, RFC6570String, Data
+  Field, FieldType, ResourceTypeRegistry, displaySafeError, RFC6570String, Data, Errors
 };
 
 export const dbAdapters = {
@@ -95,6 +96,7 @@ const defaultExp = {
   helpers,
   displaySafeError,
   RFC6570String,
+  Errors,
   ResourceTypeRegistry
 };
 

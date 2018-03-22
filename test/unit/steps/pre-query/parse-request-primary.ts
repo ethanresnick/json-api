@@ -31,10 +31,14 @@ describe("Resource Parser", () => {
       return Promise.all([
         parsePrimary(true, true).then(() => {
           throw new Error("Should have rejected.");
-        }, (e) => { return; }),
+        }, (e) => {
+          expect(e.toJSON().code).to.equal("https://jsonapi.js.org/errors/invalid-linkage-json")
+        }),
         parsePrimary([{id: "3"}], true).then(() => {
           throw new Error("Should have rejected.");
-        }, (e) => { return; })
+        }, (e) => {
+          expect(e.toJSON().code).to.equal("https://jsonapi.js.org/errors/invalid-linkage-json")
+        })
       ]);
     });
   });
@@ -78,7 +82,7 @@ describe("Resource Parser", () => {
       return parsePrimary({"id": "1"}).then(() => {
         throw new Error("Should have rejected.")
       }, (err) => {
-        expect(err.detail).to.match(/type.*required/);
+        expect(err.toJSON().code).to.equal("https://jsonapi.js.org/errors/resource-missing-type");
       });
     });
 

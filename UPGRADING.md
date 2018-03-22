@@ -1,3 +1,25 @@
+# 3.0.0-beta.20
+## New features
+- Url templates can be passed as functions to the ResourceTypeRegistry.
+- Global configuration related to error handling can now be passed to the registry, including a template function for generating `about` links. Accordingly, `APIError.links` has been deprecated. 
+- APIError's have an optional `typeUri` field which can hold a URI identifying the type of the error. If present, this is serialized as the `code` field. On construction, `typeUri` should be provided instead of `code` field, which has been deprecated.
+- APIError's can be constructed with a `rawError` option that holds an error object with more details. This raw error won't be serialized, but can be used downstream to further refine the APIError's message/other data.
+
+## Breaking changes
+- Many error titles have been rewritten, and Mongo unique constraint violation errors now reach `query.catch` as APIError's, not Mongo errors as before. If you or your clients were detecting specific errors, these changes may break your detection strategies. Use the new `apiError.toJSON().code` to distinguish error types. The `code` for Mongo unique constraint violation errors is: https://jsonapi.js.org/errors/unique-error
+
+- `APIError.paths` has been removed (this was non-standard).
+
+- `ResourceTypeRegistry.urlTemplates` now returns each template as a function, rather than in its unparsed string form. The string form is available (for templates created from strings) at the function's `RFC6570String` symbol, which is exported by the library's index file.
+
+- Some types related to URL templates have been renamed.
+
+All of the changes below are very unlikely to effect you:
+
+- `ResourceTypeRegistry` cross-type defaults can no longer be provided as an Immutable.js Map. Use a plain js object instead.
+- The `ResourceTypeRegistry.behaviors()` method has been removed. It wasn't being used for anything by the library.
+- Links are no longer parsed from request documents. If you were reading links sent by the client, please open an issue describing your use case (I'm very curious!).
+
 # 3.0.0-beta.19
 - "Result factories" have been added as a new feature. See https://github.com/ethanresnick/json-api/commit/c02b9a96f6c7baeac936e426f5714239c19fc723
 - The long-deprecated `ExpressStrategy.transformedAPIRequest` method has been removed. However, query transform functionality is still available through the `customAPIRequest` method, and there's a very mechanical way to update: simply replace all calls to `strategy.tranformedAPIRequest(queryTransform)` with `strategy.customAPIRequest({ queryTransform: queryTransform })`.

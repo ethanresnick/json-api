@@ -15,6 +15,7 @@ import ResourceIdentifier from "../types/ResourceIdentifier";
 import ResourceSet from "../types/ResourceSet";
 import ResourceIdentifierSet from "../types/ResourceIdentifierSet";
 import Relationship from "../types/Relationship";
+import * as Errors from '../util/errors';
 import logger from "../util/logger";
 
 import * as requestValidators from "../steps/http/validate-request";
@@ -347,9 +348,8 @@ export default class APIController {
       // If the type in the request hasn't been registered,
       // we can't look up it's adapter to run the query, so we 404.
       if(!opts.registry.hasType(query.type)) {
-        throw new APIError({
-          status: 404,
-          title: `${opts.request.type} is not a valid type.`
+        throw Errors.unknownResourceType({
+          detail: `${opts.request.type} is not a known type in this API.`
         });
       }
 

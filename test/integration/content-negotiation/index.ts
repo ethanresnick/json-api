@@ -20,7 +20,7 @@ AgentPromise.then((Agent) => {
         }, (err) => {
           expect(err.status).to.equal(415);
           expect(err.response.body.errors).to.be.an("array");
-          expect(err.response.body.errors[0].title).to.equal("Invalid Media Type Parameter(s)");
+          expect(err.response.body.errors[0].code).to.equal("https://jsonapi.js.org/errors/invalid-media-type-parameter");
           done();
         }).catch(done);
     });
