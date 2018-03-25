@@ -233,6 +233,7 @@ export const unsupportedClientId = (data?: ErrorOpts) =>
 
 export const invalidFieldValue = (data?: ErrorOpts) =>
   new APIError({
+    ...data,
     status: 400,
     typeUri: "https://jsonapi.js.org/errors/invalid-field-value",
     title: "Invalid field value."
