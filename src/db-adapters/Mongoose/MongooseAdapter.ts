@@ -113,7 +113,8 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       mode !== "findOne" &&
       (typeof offset !== "undefined" || typeof limit !== "undefined");
 
-    let primaryDocumentsPromise, includedResourcesPromise;
+    let primaryDocumentsPromise: Promise<Document | Document[]>,
+      includedResourcesPromise: Promise<Resource[] | undefined>;
 
     const queryBuilder =
       mode === "findOne" // ternary is a hack for TS compiler
