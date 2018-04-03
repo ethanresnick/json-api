@@ -5,7 +5,12 @@ import R = require("ramda");
 import logger from "../util/logger";
 import API, { RequestOpts } from "../controllers/API";
 import Base, { HTTPStrategyOptions, Controller } from "./Base";
-import { HTTPResponse, Request as JSONAPIRequest, Result } from "../types";
+import {
+  Request as JSONAPIRequest,
+  ErrorOrErrorArray,
+  Result,
+  HTTPResponse
+} from "../types";
 import {
   Request, Response, NextFunction,
   RequestHandler, ErrorRequestHandler
@@ -165,7 +170,7 @@ export default class ExpressStrategy extends Base {
    * @param {Object} req Express's request object
    * @param {Object} res Express's response object
    */
-  sendError: ErrorRequestHandler = async (errors, req, res, next) => {
+  sendError: ErrorRequestHandler = async (errors: ErrorOrErrorArray, req, res, next) => {
     if(!next) {
       deprecate("sendError with 3 arguments: must now provide next function.");
       next = (err: any) => {}; // tslint:disable-line no-empty

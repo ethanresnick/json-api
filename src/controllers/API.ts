@@ -3,7 +3,8 @@ import {
    Request, FinalizedRequest, Result, HTTPResponse,
    ServerReq, ServerRes,
    Predicate, FieldConstraint,
-   makeDocument
+   makeDocument,
+   ErrorOrErrorArray
 } from "../types";
 import Query from "../types/Query/Query";
 import ResourceTypeRegistry from "../ResourceTypeRegistry";
@@ -50,8 +51,6 @@ export {
   AddToRelationshipQuery, RemoveFromRelationshipQuery,
   IncomingMessage, ServerResponse
 };
-
-export type ErrOrErrArr = Error | APIError | Error[] | APIError[];
 
 export type APIControllerOpts = {
   filterParser?: filterParamParser;
@@ -463,7 +462,7 @@ export default class APIController {
    * @param {ErrOrErrArr} errors Error or array of errors
    * @param {string} requestAccepts Request's Accepts header
    */
-  static async responseFromError(errors: ErrOrErrArr, requestAccepts) {
+  static async responseFromError(errors: ErrorOrErrorArray, requestAccepts) {
     return this.responseFromResult(
       makeResultFromErrors((data: DocumentData) => new Document(data), errors),
       requestAccepts,
@@ -520,7 +519,7 @@ export default class APIController {
 /**
  * Creates a JSON:API Result from an error or array of errors.
  */
-function makeResultFromErrors(makeDoc: makeDocument, errors: ErrOrErrArr): Result {
+function makeResultFromErrors(makeDoc: makeDocument, errors: ErrorOrErrorArray): Result {
   const rawErrorsArray = (Array.isArray(errors) ? errors : [errors]);
   const finalErrorsArray: APIError[] =
     rawErrorsArray.map(APIError.fromError.bind(APIError));

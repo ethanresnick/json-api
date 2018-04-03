@@ -1,4 +1,5 @@
 import Resource, { ResourceJSON } from "./Resource";
+import APIError from './APIError';
 import ResourceIdentifier, { ResourceIdentifierJSON } from "./ResourceIdentifier";
 import Document, { DocumentData } from "./Document";
 import Data from "./Generic/Data";
@@ -12,6 +13,7 @@ export type DataOf<T> = null | T | T[];
 
 // Types used in the code as function arguments for JSON:API structures.
 export type PrimaryData = DataOf<Resource> | DataOf<ResourceIdentifier>;
+export type ErrorOrErrorArray = Error | APIError | (APIError | Error)[];
 export type DataWithLinksArgs<T> = {
   data: T | T[] | null | Data<T>;
   links?: UrlTemplates;
