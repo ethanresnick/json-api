@@ -44,7 +44,7 @@ const deprecate = depd("json-api");
  *    can set this option to false to have this code just pass on to Express.
  */
 export default class ExpressStrategy extends Base {
-  constructor(apiController, docsController, options?: HTTPStrategyOptions) {
+  constructor(apiController, docsController?, options?: HTTPStrategyOptions) {
     super(apiController, docsController, options);
   }
 
@@ -130,7 +130,14 @@ export default class ExpressStrategy extends Base {
    * See: https://expressjs.com/en/guide/migrating-5.html#req.host
    * The workaround is to use the host configuration option.
    */
-  docsRequest: RequestHandler = R.partial(this.doRequest, [this.docs.handle]);
+  get docsRequest(): RequestHandler {
+    if (this.docs == null) {
+      throw new Error('Cannot get docs request handler. '
+        + 'No docs controller was provided to the HTTP strategy.');
+    }
+
+    return R.partial(this.doRequest, [this.docs.handle]);
+  };
 
   /**
    * A middleware to handle supported API requests.

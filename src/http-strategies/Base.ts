@@ -41,12 +41,12 @@ export type Controller =
  */
 export default class BaseStrategy {
   protected api: APIController;
-  protected docs: DocsController;
+  protected docs?: DocsController;
   protected config: HTTPStrategyOptions;
 
   constructor(
     apiController: APIController,
-    docsController: DocsController,
+    docsController?: DocsController,
     options?: HTTPStrategyOptions
   ) {
     this.api = apiController;
