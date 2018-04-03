@@ -1,3 +1,12 @@
+# 3.0.0-beta.23
+Note: betas 21 and 22 contained only small bugfixes; no breaking changes.
+
+## New Features
+- Support APIError.source, use it for query parameter errors
+
+## Breaking changes
+- Replace the `ErrOrErrArr` (type) export from the API controller file with an `ErrorOrErrorArray` export in the `src/types/index.ts` file. This only effects Typescript users.
+
 # 3.0.0-beta.20
 ## New features
 - Url templates can be passed as functions to the ResourceTypeRegistry.
