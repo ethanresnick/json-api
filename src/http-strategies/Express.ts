@@ -136,8 +136,10 @@ export default class ExpressStrategy extends Base {
         + 'No docs controller was provided to the HTTP strategy.');
     }
 
-    return R.partial(this.doRequest, [this.docs.handle]);
+    return this._docsRequest;
   };
+
+  _docsRequest: RequestHandler = R.partial(this.doRequest, [this.docs && this.docs.handle]);
 
   /**
    * A middleware to handle supported API requests.

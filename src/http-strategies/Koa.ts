@@ -57,23 +57,25 @@ export default class KoaStrategy extends Base {
         + 'No docs controller was provided to the HTTP strategy.');
     }
 
+    return this._docsRequest;
+  }
+
+  _docsRequest = () => {
     const strategy = this; // tslint:disable-line no-this-assignment
 
-    return function() {
-      return function *(this: any, next: any){
-        const ctx = this; // tslint:disable-line no-this-assignment
-        try {
-          const reqObj = yield strategy.buildRequestObject(ctx.req, ctx.protocol, ctx.host, ctx.params);
-          const resObj = yield strategy.docs.handle(reqObj, ctx.request, ctx.response);
-          const delegate406Handling = strategy.sendResources(resObj, ctx);
-          if(delegate406Handling){
-            yield next;
-          }
+    return function*(this: any, next: any) {
+      const ctx = this; // tslint:disable-line no-this-assignment
+      try {
+        const reqObj = yield strategy.buildRequestObject(ctx.req, ctx.protocol, ctx.host, ctx.params);
+        const resObj = yield strategy.docs && strategy.docs.handle(reqObj, ctx.request, ctx.response);
+        const delegate406Handling = strategy.sendResources(resObj, ctx);
+        if (delegate406Handling) {
+          yield next;
         }
-        catch (err) {
-          strategy.sendError(err, this);
-        }
-      };
+      }
+      catch (err) {
+        strategy.sendError(err, this);
+      }
     };
   }
 
