@@ -23,11 +23,24 @@ export type ParsedQueryParams = {
 
 export default function(params: RawParams): ParsedQueryParams {
   const paramsToParserFns = {
-    include: parseCommaSeparatedParamString,
-    sort: R.pipe(parseCommaSeparatedParamString, R.map(parseSortField)),
+    include: R.partial(parseCommaSeparatedParamString, ["include"]),
+    sort: R.pipe(
+      R.partial(parseCommaSeparatedParamString, ["sort"]),
+      R.map(parseSortField)
+    ),
     page: R.pipe(
-      parseScopedParam,
-      R.map<ScopedParam, ScopedParam>((it: any) => parseInt(String(it), 10))
+      R.partial(parseScopedParam, ["page"]),
+      R.mapObjIndexed((it: string, scopeName: string) => {
+        const asNumber = parseInt(String(it), 10);
+        if(String(asNumber) !== String(it)) {
+          throw Errors.invalidQueryParamValue({
+            detail: "Expected a numeric integer value",
+            source: { parameter: `page[${scopeName}]` }
+          });
+        }
+
+        return asNumber;
+      })
     ),
     fields: parseFieldsParam
   };
@@ -47,28 +60,33 @@ const isValidFieldName = R.allPass([
 
 function parseFieldsParam(fieldsParam: ScopedParam) {
   if(!isScopedParam(fieldsParam))
-    throw Errors.invalidQueryParamValue();
+    throw Errors.invalidQueryParamValue({
+      source: { parameter: "fields" }
+    });
 
-  return R.map<ScopedParam, ScopedStringListParam>(
+  return R.mapObjIndexed(
     R.pipe(
-      parseCommaSeparatedParamString,
+      ((v: string, k: string) => parseCommaSeparatedParamString(`fields[${k}]`, v)),
       <(it: string[]) => string[]>R.filter(isValidFieldName)
     ),
     fieldsParam
   );
 }
 
-function parseScopedParam(scopedParam: ScopedParam) {
+function parseScopedParam(paramName: string, scopedParam: ScopedParam) {
   if(!isScopedParam(scopedParam))
-    throw Errors.invalidQueryParamValue();
+    throw Errors.invalidQueryParamValue({
+      source: { parameter: paramName }
+    });
 
   return scopedParam;
 }
 
-function parseCommaSeparatedParamString(encodedString: string) {
+function parseCommaSeparatedParamString(paramName: string, encodedString: string) {
   if(typeof encodedString !== 'string')
     throw Errors.invalidQueryParamValue({
-      detail: "Expected a comma-separated list of strings."
+      detail: "Expected a comma-separated list of strings.",
+      source: { parameter: paramName }
     });
 
   return encodedString.split(",").map(decodeURIComponent);
@@ -79,7 +97,8 @@ function parseSortField(sortField: string): Sort {
 
   if(!isValidMemberName(fieldName)) {
     throw Errors.invalidQueryParamValue({
-      detail: `Tried to sort on illegal field name ${fieldName}.`
+      detail: `Tried to sort on illegal field name ${fieldName}.`,
+      source: { parameter: "sort" }
     });
   }
 

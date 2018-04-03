@@ -62,7 +62,8 @@ export default function parse(
     throw Errors.invalidQueryParamValue({
       detail: e instanceof SyntaxError
         ? 'Invalid filter syntax. See jsonapi.js.org for details.'
-        : `Invalid filter syntax: ${e.message} See jsonapi.js.org for details.`
+        : `Invalid filter syntax: ${e.message} See jsonapi.js.org for details.`,
+      source: { parameter: "filter" }
     });
   }
 }

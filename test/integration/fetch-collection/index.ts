@@ -231,6 +231,7 @@ describe("Fetching Collection", () => {
               const jsonErr = e.response.body.errors[0];
               expect(e.response.status).to.equal(400);
               expect(jsonErr.code).to.equal("https://jsonapi.js.org/errors/invalid-query-param-value");
+              expect(jsonErr.source).to.deep.equal({ parameter: "filter" });
               expect(jsonErr.detail).to.match(invalidFilterStringsToErrorRegexs[filterString]);
             })
         )
