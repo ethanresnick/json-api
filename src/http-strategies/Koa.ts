@@ -23,7 +23,7 @@ import Base from "./Base";
  *    can set this option to false to have this code just pass on to Koa.
  */
 export default class KoaStrategy extends Base {
-  constructor(apiController, docsController, options) {
+  constructor(apiController, docsController?, options?) {
     super(apiController, docsController, options);
   }
 
@@ -51,15 +51,25 @@ export default class KoaStrategy extends Base {
   }
 
   // For requests for the documentation.
-  docsRequest() {
+  get docsRequest() {
+    if (this.docs == null) {
+      throw new Error('Cannot get docs request handler. '
+        + 'No docs controller was provided to the HTTP strategy.');
+    }
+
+    return this._docsRequest;
+  }
+
+  _docsRequest = () => {
     const strategy = this; // tslint:disable-line no-this-assignment
-    return function *(this: any, next: any){
+
+    return function*(this: any, next: any) {
       const ctx = this; // tslint:disable-line no-this-assignment
       try {
         const reqObj = yield strategy.buildRequestObject(ctx.req, ctx.protocol, ctx.host, ctx.params);
-        const resObj = yield strategy.docs.handle(reqObj, ctx.request, ctx.response);
+        const resObj = yield strategy.docs && strategy.docs.handle(reqObj, ctx.request, ctx.response);
         const delegate406Handling = strategy.sendResources(resObj, ctx);
-        if(delegate406Handling){
+        if (delegate406Handling) {
           yield next;
         }
       }
