@@ -1,9 +1,9 @@
 import { expect } from "chai";
 import AgentPromise from "../../app/agent";
 import { VALID_ORG_RESOURCE_NO_ID } from "../fixtures/creation";
-import { APIController, httpStrategies, ResourceTypeRegistry } from "../../../src/index"
-
-const { Express } = httpStrategies;
+import ResourceTypeRegistry from "../../../src/ResourceTypeRegistry"
+import APIController from "../../../src/controllers/API";
+import ExpressStrategy from "../../../src/http-strategies/Express";
 
 describe("Express Strategy", () => {
   let Agent;
@@ -14,13 +14,13 @@ describe("Express Strategy", () => {
   describe("configuration", () => {
     const registry = new ResourceTypeRegistry({});
     const api = new APIController(registry);
-    
+
     it("does not require a documentation controller", () => {
-      expect(() => new Express(api)).to.not.throw();
+      expect(() => new ExpressStrategy(api)).to.not.throw();
     });
 
     it("throws if you attempt to get a docs request handler if no docs controller was provided", () => {
-      const express = new Express(api);
+      const express = new ExpressStrategy(api);
       expect(() => express.docsRequest).to.throw(/^Cannot get docs request handler/);
     });
   });
