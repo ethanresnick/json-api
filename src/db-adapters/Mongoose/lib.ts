@@ -6,6 +6,9 @@ import Resource from "../../types/Resource";
 import * as Errors from "../../util/errors";
 import { FieldConstraint, Predicate } from "../../types/index";
 
+// tslint:disable-next-line no-var-requires no-submodule-imports
+const MongooseError = require("mongoose/lib/error");
+
 /**
  * Takes any error that resulted from the above operations throws an array of
  * errors that can be sent back to the caller as the Promise's rejection value.
@@ -17,12 +20,44 @@ export function errorHandler(err): never {
   if(err.errors) {
     Object.keys(err.errors).forEach(errKey => {
       const thisError = err.errors[errKey];
-      const errorFormatted = err.name === "ValidationError"
-        ? Errors.invalidFieldValue({
+
+      const errorFormatted = (() => {
+        if(err.name === 'ValidationError') {
+          // Handle required violations separately, with a different error type.
+          if(thisError.kind === 'required') {
+            return Errors.missingField({
+              detail: thisError.message,
+              rawError: thisError
+            });
+          }
+
+          // If the ValidationError was caused by an error explicitly marked as
+          // display safe (e.g., as thrown by the user in a setter), use that.
+          // See https://github.com/Automattic/mongoose/issues/3320 (but note
+          // that reason can be on more than just CastError's)
+          if(APIError.isDisplaySafe(thisError.reason)) {
+            return APIError.fromError(thisError.reason);
+          }
+
+          // If the validation error was caused by an error thrown by a user
+          // in a custom setter or validation function (which we try to identify
+          // by checking if the error is not a MongooseError), but that isn't
+          // displaySafe, use a generic message but at least set rawError properly.
+          else if(thisError.reason && !(thisError.reason instanceof MongooseError)) {
+            return Errors.invalidFieldValue({
+              detail: `Invalid value for path "${thisError.path}"`,
+              rawError: thisError.reason
+            })
+          }
+
+          return Errors.invalidFieldValue({
             detail: thisError.message,
             rawError: thisError
-          })
-        : APIError.fromError(thisError);
+          });
+        }
+
+        return APIError.fromError(thisError);
+      })();
 
       errors.push(errorFormatted);
     });

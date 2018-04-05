@@ -145,7 +145,7 @@ export default class APIError extends Error {
     // If the error is marked as ready for JSON API display, it's secure
     // to read values off it and show them to the user. (Note: most of
     // the args below will probably be null/undefined, but that's fine.)
-    else if(err[displaySafe] || err.isJSONAPIDisplayReady) {
+    else if(this.isDisplaySafe(err)) {
       if(err.isJSONAPIDisplayReady) {
         deprecate(
           "isJSONAPIDisplayReady magic property: " +
@@ -171,5 +171,9 @@ export default class APIError extends Error {
         rawError: err
       });
     }
+  }
+
+  static isDisplaySafe(it: any) {
+    return it && (it instanceof APIError || it[displaySafe] || it.isJSONAPIDisplayReady);
   }
 }

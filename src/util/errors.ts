@@ -231,6 +231,14 @@ export const unsupportedClientId = (data?: ErrorOpts) =>
     title: "Client-generated ids are not supported."
   })
 
+export const missingField = (data?: ErrorOpts) =>
+  new APIError({
+    ...data,
+    status: 400,
+    typeUri: "https://jsonapi.js.org/errors/missing-required-field",
+    title: "Missing required field."
+  })
+
 export const invalidFieldValue = (data?: ErrorOpts) =>
   new APIError({
     ...data,

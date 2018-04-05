@@ -1,3 +1,12 @@
+# 3.0.0-beta.24
+## Breaking Changes
+- Error messages thrown/reported to the user for mongoose ValidationError's have been improved, but this means that you may now need to update how you test for specific errors. In particular: 
+    - if a required field is missing, the `typeUri` on the generated APIError is now "https://jsonapi.js.org/errors/missing-required-field" instead of "https://jsonapi.js.org/errors/invalid-field-value". The `title` is also different (to note that the value is missing, not invalid). Other properties are the same.
+
+    - if the error arises from you throwing an `APIError` (e.g., in a custom validator), that error is used. Similarly, if you throw an Error marked as displaySafe, it's converted to an APIError, and that result is used. Before, a more generic error was used.
+
+    - if the error arises from an error thrown in a custom validator/setter, and that error is not an instance of `MongooseError`, a generic message is used for the `detail`, rather than leaking the error's raw message to user. The `rawError` property on the generated APIError in this case now points directly to the thrown error (not the error mongoose generated when catching it).
+
 # 3.0.0-beta.23
 Note: betas 21 and 22 contained only small bugfixes; no breaking changes.
 
