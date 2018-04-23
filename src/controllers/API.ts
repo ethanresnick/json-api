@@ -2,10 +2,12 @@ import R = require("ramda");
 import {
    Request, FinalizedRequest, Result, HTTPResponse,
    ServerReq, ServerRes,
-   Predicate, FieldConstraint,
+   FieldExpression,
    makeDocument,
-   ErrorOrErrorArray
+   ErrorOrErrorArray,
+   FinalizedSupportedOperators
 } from "../types";
+import { AdapterInstance } from '../db-adapters/AdapterInterface';
 import Query from "../types/Query/Query";
 import ResourceTypeRegistry from "../ResourceTypeRegistry";
 import Document, { DocumentData } from "../types/Document";
@@ -23,14 +25,14 @@ import * as requestValidators from "../steps/http/validate-request";
 import negotiateContentType from "../steps/http/content-negotiation/negotiate-content-type";
 import validateContentType from "../steps/http/content-negotiation/validate-content-type";
 
+import { getQueryParamValue } from '../util/query-parsing';
+import parseQueryParams, { parseFilter, finalizeFilterFieldExprArgs } from '../steps/pre-query/parse-query-params';
 import parseRequestPrimary from "../steps/pre-query/parse-request-primary";
 import setTypePaths from "../steps/set-type-paths";
 import validateRequestDocument from "../steps/pre-query/validate-document";
 import validateRequestResourceTypes from "../steps/pre-query/validate-resource-types";
 import validateRequestResourceIds from "../steps/pre-query/validate-resource-ids";
 import validateRequestResourceData from "../steps/pre-query/validate-resource-data";
-import parseQueryParams from "../steps/pre-query/parse-query-params";
-import filterParamParser, { getFilterList } from "../steps/pre-query/filter-param-parser";
 import makeTransformFunction, { TransformMode, Extras } from "../steps/make-transform-fn";
 
 import makeGET from "../steps/make-query/make-get";
@@ -104,21 +106,28 @@ export type RequestOpts = {
 };
 
 export type filterParamParser = (
-  legalUnaryOpts: string[],
-  legalBinaryOpts: string[],
+  supportedFilterOperators: FinalizedSupportedOperators,
   rawQuery: string | undefined,
   parsedParams: object
-) =>
-  (Predicate|FieldConstraint)[] | undefined;
+) => (FieldExpression)[] | undefined;
 
 export default class APIController {
   private registry: ResourceTypeRegistry;
   private filterParamParser: filterParamParser;
+  private supportedOperatorsByAdapter: Map<AdapterInstance<any>,{
+    filter: FinalizedSupportedOperators,
+    sort: FinalizedSupportedOperators
+  }>;
 
   constructor(registry: ResourceTypeRegistry, opts: APIControllerOpts = {}) {
     this.registry = registry;
     this.filterParamParser =
       opts.filterParser || (<any>this.constructor).defaultFilterParamParser;
+
+    // A cache for our computed operator configuration.
+    // We don't simply compute all the operator configs for all adapters
+    // here so that more types can be added to the registry later
+    this.supportedOperatorsByAdapter = new Map();
   }
 
   protected makeDoc = (data: DocumentData) => {
@@ -135,26 +144,36 @@ export default class APIController {
     // We might not actually use the parse result to construct our query,
     // so we could (e.g.) put this in a lazily-evaluated getter, but we
     // always have to make it appear like the final params are available
-    // in case someone tries to access them in beforeSave or a query transform.
+    // in case someone tries to access them in beforeSave or a query factory.
     // If we can't find the adapter for this request, we can't know the valid
     // filter param operators, so we act conservatively to say there are no
     // valid operators. That may lead to some parse errors, but it's probably
     // better than erroring unconditionally (even if no filters are in use).
-    const { unaryFilterOperators, binaryFilterOperators } =
-      this.registry.hasType(request.type)
-        ? this.registry.dbAdapter(request.type).constructor
-        : { unaryFilterOperators: [], binaryFilterOperators: [] };
+    const finalizedSupportedOperators = this.registry.hasType(request.type)
+      ? this.getFinalizedSupportedOperators(this.registry.dbAdapter(request.type))
+      : { filter: {}, sort: {} };
+
+    const filterParams = (() => {
+      try {
+        return this.filterParamParser(
+          finalizedSupportedOperators.filter,
+          request.rawQueryString,
+          request.queryParams
+        );
+      }
+      catch(e) {
+        throw Errors.invalidQueryParamValue({
+          detail: `Invalid filter syntax: ${e.message} See jsonapi.js.org for details.`,
+          source: { parameter: "filter" }
+        });
+      }
+    })()
 
     const finalizedRequest: FinalizedRequest = {
       ...request,
       queryParams: {
         ...parseQueryParams(request.queryParams),
-        filter: this.filterParamParser(
-          unaryFilterOperators,
-          binaryFilterOperators,
-          request.rawQueryString,
-          request.queryParams
-        )
+        filter: filterParams
       },
       document: undefined
     };
@@ -188,6 +207,53 @@ export default class APIController {
     }
 
     return finalizedRequest;
+  }
+
+  /**
+   * This returns (by computing and caching) the configured, supported
+   * operators for filtering and sorting, given an adapter. Each adapter brings
+   * its own supported operators and operator processing functions, and we need
+   * to merge those with some defaults.
+   *
+   * @param {AdapterInstance<any>} adapter [description]
+   */
+  private getFinalizedSupportedOperators(adapter: AdapterInstance<any>) {
+    if(this.supportedOperatorsByAdapter.has(adapter)) {
+      // tslint:disable-next-line no-non-null-assertion
+      return this.supportedOperatorsByAdapter.get(adapter)!;
+    }
+
+    const supportedOperators = adapter.constructor.supportedOperators || {};
+    const ASSUMED_BINARY_OPERATORS =
+      ["eq", "neq", 'ne', "in", "nin", 'lt', 'gt', 'lte', 'gte'];
+
+    const res = Object.keys(supportedOperators).reduce((acc, operatorName) => {
+      const legalIn = supportedOperators[operatorName].legalIn || ["filter"];
+
+      // Set isBinary on every operator, if not provided, using our
+      // built-in list of operators that are inferred as binary by default.
+      const operatorConfig = { ...supportedOperators[operatorName] };
+      if(!('isBinary' in supportedOperators[operatorName])) {
+        operatorConfig.isBinary =
+          ASSUMED_BINARY_OPERATORS.includes(operatorName);
+      }
+
+      if(!supportedOperators[operatorName].finalizeArgs) {
+        operatorConfig.finalizeArgs = finalizeFilterFieldExprArgs;
+      }
+
+      legalIn.forEach(key => {
+        acc[key][operatorName] = operatorConfig;
+      });
+
+      return acc;
+    }, {
+      filter: {} as FinalizedSupportedOperators,
+      sort: {} as FinalizedSupportedOperators
+    });
+
+    this.supportedOperatorsByAdapter.set(adapter, res);
+    return res;
   }
 
   /**
@@ -508,9 +574,13 @@ export default class APIController {
 
   public static supportedExt: ReadonlyArray<string> = Object.freeze([]);
 
-  static defaultFilterParamParser(legalUnary, legalBinary, rawQuery, params) {
-    return getFilterList(rawQuery)
-      .map(it => filterParamParser(legalUnary, legalBinary, it))
+  static defaultFilterParamParser(
+    filterOperators: FinalizedSupportedOperators,
+    rawQuery,
+    params
+  ) {
+    return getQueryParamValue("filter", rawQuery)
+      .map(it => parseFilter(it, filterOperators))
       .getOrDefault(undefined);
   }
 }

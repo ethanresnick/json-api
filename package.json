@@ -37,6 +37,7 @@
     "instrument": true
   },
   "dependencies": {
+    "@json-api/query-parser": "^1.0.0",
     "@types/debug": "0.0.29",
     "@types/depd": "^1.1.32",
     "@types/express": "^4.11.0",
@@ -88,7 +89,7 @@
     "rimraf": "^2.6.2",
     "sinon": "^4.4.5",
     "source-map-support": "^0.5.3",
-    "superagent": "^3.8.2",
+    "superagent": "visionmedia/superagent",
     "ts-node": "^3.3.0",
     "tslint": "^5.9.1",
     "typescript": "^2.8.1"

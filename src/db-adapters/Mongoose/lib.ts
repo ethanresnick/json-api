@@ -4,7 +4,7 @@
 import APIError from "../../types/APIError";
 import Resource from "../../types/Resource";
 import * as Errors from "../../util/errors";
-import { FieldConstraint, Predicate } from "../../types/index";
+import { FieldExpression, Identifier } from "../../types/index";
 
 // tslint:disable-next-line no-var-requires no-submodule-imports
 const MongooseError = require("mongoose/lib/error");
@@ -87,44 +87,44 @@ export function errorHandler(err): never {
   throw errors;
 }
 
-export function toMongoCriteria(constraintOrPredicate: FieldConstraint | Predicate) {
-  const mongoOperator = "$" +
-    (constraintOrPredicate.operator === 'neq' // mongo calls neq $ne instead
-      ? 'ne'
-      : constraintOrPredicate.operator);
+export function toMongoCriteria(constraint: FieldExpression) {
+  const mongoOperator =
+    "$" + (constraint.operator === 'neq' ? 'ne' : constraint.operator);
 
-  // Type cast is because we only read this below when
-  // we're gauranteed to have a field.
-  const mongoField = <string>
-    (constraintOrPredicate.field === 'id'
-      ? '_id'
-      : constraintOrPredicate.field);
-
-  switch(constraintOrPredicate.operator) {
-    case "and":
-    case "or":
-      // Below, we do a length check because mongo doesn't support and/or/nor
-      // predicates with no constraints to check (makes sense). For $and,
-      // if we wanted to use comma separated values for implicit AND we could:
-      // Object.assign({}, ...constraintOrPredicate.value.map(handle))
-      // Instead, though, we use the same rules as $or, because the implicit
-      // AND doesn't work in all cases; see https://docs.mongodb.com/manual/reference/operator/query/and/
-      return !constraintOrPredicate.value.length
-        ? {}
-        : {
-            [mongoOperator]: constraintOrPredicate.value.map(toMongoCriteria)
-          };
-
-    case "eq":
-      return { [mongoField]: constraintOrPredicate.value };
-
-    default:
-      return {
-        [mongoField]: {
-          [mongoOperator]: constraintOrPredicate.value
-        }
-      };
+  if(constraint.operator === "and" || constraint.operator === "or") {
+    // Below, we do a length check because mongo doesn't support and/or/nor
+    // predicates with no constraints to check (makes sense). For $and,
+    // if we wanted to use comma separated values for implicit AND we could:
+    // Object.assign({}, ...constraintOrPredicate.args.map(handle))
+    // Instead, though, we use the same rules as $or, because the implicit
+    // AND doesn't work in all cases;
+    // see https://docs.mongodb.com/manual/reference/operator/query/and/
+    return !constraint.args.length
+      ? {}
+      : {
+          [mongoOperator]:
+            (constraint.args as FieldExpression[]).map(toMongoCriteria)
+        };
   }
+
+  // Note: all the operators we support (as declared in the adapter) are either
+  // binary ones with a field reference on the left-hand side, or they're `and`
+  // or `or`, with a list of constraints as args. That these constraints hold
+  // has already been validated once the FieldExpressions reach the adapter.
+  // So, below, we know that args[0] must hold a field identifier.
+  const fieldName = (constraint.args[0] as Identifier).value;
+  const mongoField = <string>(fieldName === 'id' ? '_id' : fieldName);
+  const value = constraint.args[1];
+
+  if(constraint.operator === 'eq') {
+    return { [mongoField]: value }
+  }
+
+  return {
+    [mongoField]: {
+      [mongoOperator]: value
+    }
+  };
 }
 
 /**

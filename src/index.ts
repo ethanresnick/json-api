@@ -35,14 +35,19 @@ import RemoveFromRelationshipQuery from "./types/Query/RemoveFromRelationshipQue
 
 import * as namingHelpers from "./util/naming-conventions";
 import * as Errors from "./util/errors";
+import {
+  Identifier, isId as isIdentifier,
+  FieldExpression, isFieldExpression
+} from './steps/pre-query/parse-query-params';
 
 // Export types for typescript
-export { FinalizedRequest as Request, Result, HTTPResponse } from "./types";
+export { FinalizedRequest as Request, Result, HTTPResponse, AndExpression } from "./types";
 export {
   Document, Error, Resource, ResourceIdentifier, ResourceSet, Relationship,
   API as APIController, Documentation as DocumentationController,
   CreateQuery, FindQuery, UpdateQuery, DeleteQuery, AddToRelationshipQuery, RemoveFromRelationshipQuery,
-  Field, FieldType, ResourceTypeRegistry, displaySafeError, RFC6570String, Data, Errors
+  Field, FieldType, ResourceTypeRegistry, displaySafeError, RFC6570String, Data, Errors,
+  Identifier, isIdentifier, FieldExpression, isFieldExpression
 };
 
 export const dbAdapters = {
@@ -60,7 +65,13 @@ export const httpStrategies = {
   }
 };
 
-export const helpers = { ...namingHelpers };
+export const helpers = {
+  ...namingHelpers,
+  Identifier,
+  isIdentifier,
+  FieldExpression,
+  isFieldExpression
+};
 
 export const types = {
   Document,

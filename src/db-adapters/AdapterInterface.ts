@@ -1,3 +1,4 @@
+import { SupportedOperators } from "../types";
 import CreateQuery from "../types/Query/CreateQuery";
 import FindQuery from "../types/Query/FindQuery";
 import DeleteQuery from "../types/Query/DeleteQuery";
@@ -27,8 +28,8 @@ export interface AdapterInstance<T extends new (...args: any[]) => any> {
 export interface AdapterClass {
   new (...args: any[]): AdapterInstance<{ new (...args: any[]): any }>;
   getStandardizedSchema(model: any, pluralizer: any): any;
-  unaryFilterOperators: string[]; // must include "and"
-  binaryFilterOperators: string[]; // must include "eq"
+  // Must include the "and" and "eq" operators
+  supportedOperators: SupportedOperators
 }
 
 export interface Adapter<T extends AdapterClass> extends AdapterInstance<T> {

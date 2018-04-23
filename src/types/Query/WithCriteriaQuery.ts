@@ -4,15 +4,20 @@
 // So, we give up on that and just use a superclass instead.
 // Also, we give up on using Immutable because its typing suck so we have to
 // give up basically all type safety in order to use it.
-import Query, { QueryOptions } from "./Query";
-import { FieldConstraint, Predicate, AndPredicate } from "../index";
 import R = require("ramda");
+import {
+  isId,
+  FieldExpression as FieldExp,
+  Identifier
+} from '../../steps/pre-query/parse-query-params';
+import Query, { QueryOptions } from "./Query";
+import { FieldExpression, AndExpression } from "../index";
 
 export type WithCriteriaQueryOptions = QueryOptions & {
   limit?: number;
   offset?: number;
   singular?: boolean;
-  filters?: (FieldConstraint | Predicate)[];
+  filters?: FieldExpression[];
   ids?: string[];
   id?: string;
 };
@@ -20,7 +25,7 @@ export type WithCriteriaQueryOptions = QueryOptions & {
 export default class WithCriteriaQuery extends Query {
   protected query: QueryOptions & {
     criteria: {
-      where: AndPredicate;
+      where: AndExpression;
       singular: boolean;
       offset?: number;
       limit?: number;
@@ -40,11 +45,10 @@ export default class WithCriteriaQuery extends Query {
       ...this.query,
       criteria: {
         ...this.query.criteria,
-        where: {
-          operator: "and",
-          value: [...(opts.filters || [])],
-          field: undefined
-        },
+        where: FieldExp(
+          <"and">"and",
+          opts.filters || []
+        ),
         singular: opts.singular || opts.id !== undefined,
         limit: opts.limit,
         offset: opts.offset
@@ -58,9 +62,9 @@ export default class WithCriteriaQuery extends Query {
 
   /**
    * Adds a constraint to the top-level And predicate.
-   * @param {FieldConstraint} constraint Constraint to add.
+   * @param {FieldExpression} constraint Constraint to add.
    */
-  andWhere(constraint: FieldConstraint | Predicate) {
+  andWhere(constraint: FieldExpression) {
     // Criteria must always be an and predicate at the root level;
     // @see matchingIdOrIds
     if(this.query.criteria.where.operator !== 'and') {
@@ -74,8 +78,8 @@ export default class WithCriteriaQuery extends Query {
         ...res.query.criteria,
         where: {
           ...res.query.criteria.where,
-          value: [
-            ...res.query.criteria.where.value,
+          args: [
+            ...res.query.criteria.where.args,
             constraint
           ]
         }
@@ -99,23 +103,25 @@ export default class WithCriteriaQuery extends Query {
    *
    * @param {string | string[] | undefined} idOrIds [description]
    */
-  matchingIdOrIds(idOrIds: string | string[] | undefined) {
+  matchingIdOrIds(idOrIds: string | string[] | undefined): this {
     let res;
 
     if(Array.isArray(idOrIds)) {
-      res = this.andWhere({
-        field: "id",
-        operator: "in",
-        value: idOrIds.map(String)
-      });
+      res = this.andWhere(
+        FieldExp(
+          "in",
+          [Identifier("id"), idOrIds.map(String)]
+        )
+      );
     }
 
     else if(typeof idOrIds === "string" && idOrIds) {
-      res = this.andWhere({
-        field: "id",
-        operator: "eq",
-        value: String(idOrIds)
-      });
+      res = this.andWhere(
+        FieldExp(
+          "eq",
+          [Identifier("id"), String(idOrIds)]
+        )
+      );
 
       res.query = {
         ...res.query,
@@ -133,8 +139,25 @@ export default class WithCriteriaQuery extends Query {
     return res;
   }
 
-  getFilters(): AndPredicate {
+  getFilters(): AndExpression {
     return R.clone(this.query.criteria.where);
+  }
+
+  /**
+   * Returns a new query that has no constraints in its top-level And predicate.
+   * @return {WithCriteriaQuery}
+   */
+  withoutFilters() {
+    const res = this.clone();
+    res.query = {
+      ...res.query,
+      criteria: {
+        ...res.query.criteria,
+        where: FieldExp("and", [])
+      }
+    };
+
+    return res;
   }
 
   /**
@@ -142,19 +165,19 @@ export default class WithCriteriaQuery extends Query {
    *   with no other filters.
    */
   isSimpleIdQuery(): boolean {
-    const filters = this.query.criteria.where.value;
+    const filters = this.query.criteria.where.args;
     return (
       filters.length === 1 &&
-      filters[0].field === "id" &&
+      isId(filters[0].args[0]) && filters[0].args[0].value === "id" &&
       (filters[0].operator === "eq" || filters[0].operator === "in")
     );
   }
 
   // Still experimental
-  protected removeFilter(filter: FieldConstraint | Predicate) {
+  protected removeFilter(filter: FieldExpression) {
     const res = this.clone();
-    res.query.criteria.where.value =
-      res.query.criteria.where.value.filter(it => !R.equals(it, filter));
+    res.query.criteria.where.args =
+      res.query.criteria.where.args.filter(it => !R.equals(it, filter));
 
     return res;
   }

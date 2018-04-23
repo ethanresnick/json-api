@@ -1,5 +1,5 @@
 import WithCriteriaQuery, { WithCriteriaQueryOptions } from "./WithCriteriaQuery";
-import { Sort, AndPredicate } from "../index";
+import { Sort, AndExpression } from "../index";
 
 export type FindQueryOptions = WithCriteriaQueryOptions & {
   populates?: string[];
@@ -16,7 +16,7 @@ export default class FindQuery extends WithCriteriaQuery {
     sort?: FindQueryOptions["sort"];
     populates: string[]; // never undefined in the object (it gets a default), but it can be in the option.
     criteria: {
-      where: AndPredicate;
+      where: AndExpression;
       singular: boolean;
       limit?: FindQueryOptions["limit"];
       offset?: FindQueryOptions["offset"];

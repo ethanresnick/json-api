@@ -1,10 +1,11 @@
 import { expect } from "chai";
+import { Identifier } from "../../../../src/steps/pre-query/parse-query-params";
 import WithCriteriaQuery from "../../../../src/types/Query/WithCriteriaQuery";
 
 describe("WithCriteriaQuery", () => {
   const returning = (it: any) => it;
   const getIdFilters = (q: any) =>
-    q.getFilters().value.filter(it => it.field === "id");
+    q.getFilters().args.filter(it => it.args[0].value === "id");
 
   const queries = [
     new WithCriteriaQuery({ type: "any", returning, singular: true }), // no id
@@ -18,12 +19,12 @@ describe("WithCriteriaQuery", () => {
 
       it("should add an id filter, not removing any that already exist", () => {
         const resultIdFilters = resultQueries.map(getIdFilters);
-        const addedFilter = { field: "id", operator: "eq", value: "33" };
+        const addedFilter = { type: "FieldExpression", args: [Identifier("id"), "33"], operator: "eq" };
 
         expect(resultIdFilters).to.deep.equal([
           [addedFilter],
-          [{ field: "id", operator: "eq", value: "23" }, addedFilter],
-          [{ field: "id", operator: "in", value: ["23", "43"] }, addedFilter]
+          [{ type: "FieldExpression", args: [Identifier("id"), "23"], operator: "eq" }, addedFilter],
+          [{ type: "FieldExpression", args: [Identifier("id"), ["23", "43"]], operator: "in" }, addedFilter]
         ]);
       });
 
@@ -37,15 +38,15 @@ describe("WithCriteriaQuery", () => {
       it("should add an id filter, not removing any that already exist", () => {
         const resultIdFilters = resultQueries.map(getIdFilters);
         const addedFilter = {
-          field: "id",
-          operator: "in",
-          value: ["33", "45"]
+          type: "FieldExpression",
+          args: [Identifier("id"), ["33", "45"]],
+          operator: "in"
         };
 
         expect(resultIdFilters).to.deep.equal([
           [addedFilter],
-          [{ field: "id", operator: "eq", value: "23" }, addedFilter],
-          [{ field: "id", operator: "in", value: ["23", "43"] }, addedFilter]
+          [{ type: "FieldExpression", args: [Identifier("id"), "23"], operator: "eq" }, addedFilter],
+          [{ type: "FieldExpression", args: [Identifier("id"), ["23", "43"]], operator: "in" }, addedFilter]
         ]);
       });
 

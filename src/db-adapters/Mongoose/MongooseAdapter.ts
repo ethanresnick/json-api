@@ -4,9 +4,11 @@ import R = require("ramda");
 import mongodb = require("mongodb");
 import mongoose = require("mongoose");
 import pluralize = require("pluralize");
+
 import { Model, Document } from "mongoose";
 
-import { AndPredicate } from "../../types/";
+import { AndExpression, SupportedOperators } from "../../types/";
+import { isId as isIdentifier } from '../../steps/pre-query/parse-query-params';
 import { partition, setDifference, reduceToObject } from "../../util/misc";
 import { values as objectValues } from "../../util/objectValueEntries";
 import {
@@ -104,7 +106,6 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     const mode = singular ? "findOne" : "find";
     const filters = query.getFilters();
     const mongofiedFilters = util.toMongoCriteria(filters);
-
     const model = this.getModel(type);
 
     this.constructor.assertIdsValid(filters, singular);
@@ -827,18 +828,23 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
   }
 
   /**
-   * Verifies that filter constraints on the id field check against valid
-   * mongo ids, and throws an error if not. TODO: Does this check make sense,
-   * given that we don't also check relationship fields that hold ids?
+   * This function checks that filter constraints on the id field are testing
+   * against the valid mongo id format, and throws a 400/404 error if not.
+   * The origin for it is that, by default, Mongoose would throw a CastError
+   * upon encountering an id string that it couldn't convert to an ObjectId,
+   * and we wanted to issue 404 errors in those cases (e.g., GET /people/1)
+   * rather than 500s, which is what the CastError got converted to.
    *
-   * @param {AndPredicate} filters A set of filter constraints to check.
+   * @param {AndExpression} filters A set of filter constraints to check.
    * @param {boolean} isSingular Whether the query that the filters came from
    *   is singular. Influences error message.
    */
-  static assertIdsValid(filters: AndPredicate, isSingular: boolean): void {
-    const idsArray = filters.value.reduce((acc, filter) => {
-      return filter.field === 'id'
-        ? acc.concat(filter.value as any as (string | string[]))
+  static assertIdsValid(filters: AndExpression, isSingular: boolean): void {
+    const idsArray = filters.args.reduce((acc, filter) => {
+      // We're only validating the RHS of binary operators where the left
+      // hand side is a reference to a field named id.
+      return isIdentifier(filter.args[0]) && filter.args[0].value === 'id'
+        ? acc.concat(filter.args[1] as any as (string | string[]))
         : acc;
     }, [] as string[]);
 
@@ -853,6 +859,19 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     return typeof id === "string" && /^[0-9a-fA-F]{24}$/.test(id);
   }
 
-  static unaryFilterOperators: string[] = ["and", "or"];
-  static binaryFilterOperators: string[] = ['eq', 'neq', 'ne', 'in', 'nin', 'lt', 'gt', 'lte', 'gte'];
+  static supportedOperators: SupportedOperators = {
+    // These operators are treated with the library's built-in rules for
+    // whether they're binary and how to validate their arguments.
+    "and": { },
+    "or":  { },
+    'eq':  { },
+    'neq': { },
+    'ne':  { },
+    'in':  { },
+    'nin': { },
+    'lt':  { },
+    'gt':  { },
+    'lte': { },
+    'gte': { }
+  };
 }
