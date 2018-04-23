@@ -1,5 +1,8 @@
 # 3.0.0-beta.25
 ## Breaking Changes
+### `singular` => `isSingular` Rename
+- `FindQuery.singular` and `DeleteQuery.singular` have been renamed to `FindQuery.isSingular` and `DeleteQuery.isSingular`. Likewise, the argument passed in during query construction has been renamed `isSingular` instead of `singular`.
+ 
 ### Filtering
 #### For API Clients
 - Filtering now uses a slightly different syntax. See https://github.com/ethanresnick/json-api/issues/160 for details.
