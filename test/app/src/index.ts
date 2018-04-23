@@ -218,7 +218,7 @@ function makeSignInQuery(opts: QueryBuildingContext) {
 
   return new FindQuery({
     type: "people",
-    singular: true,
+    isSingular: true,
     filters: [FieldExpression("eq", [Identifier("name"), user])],
     returning: ([userData]) => {
       if(pass !== 'password') {

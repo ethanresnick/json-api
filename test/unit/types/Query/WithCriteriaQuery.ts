@@ -8,7 +8,7 @@ describe("WithCriteriaQuery", () => {
     q.getFilters().args.filter(it => it.args[0].value === "id");
 
   const queries = [
-    new WithCriteriaQuery({ type: "any", returning, singular: true }), // no id
+    new WithCriteriaQuery({ type: "any", returning, isSingular: true }), // no id
     new WithCriteriaQuery({ type: "any", id: "23", returning }), // single id
     new WithCriteriaQuery({ type: "any", ids: ["23", "43"], returning })
   ];
@@ -29,7 +29,7 @@ describe("WithCriteriaQuery", () => {
       });
 
       it("should set the query singular", () => {
-        expect(resultQueries.every(it => it.singular === true)).to.be.true;
+        expect(resultQueries.every(it => it.isSingular === true)).to.be.true;
       });
     });
 
@@ -51,7 +51,7 @@ describe("WithCriteriaQuery", () => {
       });
 
       it("should leave the singularity as is", () => {
-        expect(resultQueries.map(it => it.singular)).to.deep.equal([true, true, false]);
+        expect(resultQueries.map(it => it.isSingular)).to.deep.equal([true, true, false]);
       });
     });
 

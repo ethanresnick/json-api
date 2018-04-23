@@ -17,7 +17,7 @@ export default class FindQuery extends WithCriteriaQuery {
     populates: string[]; // never undefined in the object (it gets a default), but it can be in the option.
     criteria: {
       where: AndExpression;
-      singular: boolean;
+      isSingular: boolean;
       limit?: FindQueryOptions["limit"];
       offset?: FindQueryOptions["offset"];
     };

@@ -8,7 +8,7 @@ export default class DeleteQuery extends WithCriteriaQuery {
     catch: WithCriteriaQueryOptions["catch"];
     criteria: {
       where: AndExpression;
-      singular: boolean;
+      isSingular: boolean;
       limit?: WithCriteriaQueryOptions["limit"];
       offset?: WithCriteriaQueryOptions["offset"];
     };

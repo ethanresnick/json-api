@@ -16,7 +16,7 @@ import { FieldExpression, AndExpression } from "../index";
 export type WithCriteriaQueryOptions = QueryOptions & {
   limit?: number;
   offset?: number;
-  singular?: boolean;
+  isSingular?: boolean;
   filters?: FieldExpression[];
   ids?: string[];
   id?: string;
@@ -26,7 +26,7 @@ export default class WithCriteriaQuery extends Query {
   protected query: QueryOptions & {
     criteria: {
       where: AndExpression;
-      singular: boolean;
+      isSingular: boolean;
       offset?: number;
       limit?: number;
     };
@@ -49,7 +49,7 @@ export default class WithCriteriaQuery extends Query {
           <"and">"and",
           opts.filters || []
         ),
-        singular: opts.singular || opts.id !== undefined,
+        isSingular: opts.isSingular || opts.id !== undefined,
         limit: opts.limit,
         offset: opts.offset
       }
@@ -127,7 +127,7 @@ export default class WithCriteriaQuery extends Query {
         ...res.query,
         criteria: {
           ...res.query.criteria,
-          singular: true
+          isSingular: true
         }
       };
     }
@@ -190,7 +190,7 @@ export default class WithCriteriaQuery extends Query {
     return this.query.criteria.limit;
   }
 
-  get singular() {
-    return this.query.criteria.singular;
+  get isSingular() {
+    return this.query.criteria.isSingular;
   }
 }

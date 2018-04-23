@@ -100,7 +100,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       sort: sorts,
       offset,
       limit,
-      singular
+      isSingular: singular
     } = query;
 
     const mode = singular ? "findOne" : "find";
@@ -414,7 +414,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     // strictly necessary, unlike in the update case where it's needed to run
     // the proper beforeSave). So, we have to do that ourselves first. If any
     // types are invalid, we do no deletions and return 400.
-    const { type, singular } = query;
+    const { type, isSingular: singular } = query;
     const mode = singular ? 'findOne' : 'find';
     const filters = query.getFilters();
     const mongofiedFilters = util.toMongoCriteria(filters);
