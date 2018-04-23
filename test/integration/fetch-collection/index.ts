@@ -210,7 +210,7 @@ describe("Fetching Collection", () => {
         });
     });
 
-    it("should give a nice error on invalid filter syntax", () => {
+    it("should give a nice error on invalid filter syntax/values", () => {
       const invalidFilterStringsToErrorRegexs = {
         "filter=(id,n,`54419d550a5069a2129ef254`)": /valid operator symbol/i,
         "filter=(id,neq,`54419d550a5069a2129ef254`,x)": /exactly three items/i,
@@ -218,7 +218,8 @@ describe("Fetching Collection", () => {
         "filter=true": /Expected field expression/i,
         "filter=(and,(true))": /valid operator symbol/i,
         "filter=(and,((true:false)))": /Expected field expression but \"\(\" found/,
-        "filter=(()": /Expected field expression but \"\(\" found/
+        "filter=(()": /Expected field expression but \"\(\" found/,
+        "filter=(and,(eq))": /must be infixed/ // should be deep validating exps.
       };
 
       return Promise.all(
