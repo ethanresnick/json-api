@@ -213,7 +213,7 @@ function makeSignInQuery(opts: QueryBuildingContext) {
     throw new APIError({ status: 400, title: "Missing user info." });
   }
 
-  authHeader = Array.isArray(authHeader) ? authHeader[0] : authHeader;
+  authHeader = Array.isArray(authHeader) ? <string>authHeader[0] : authHeader;
   const [user, pass] = Buffer.from(authHeader.substr(6), 'base64').toString().split(':');
 
   return new FindQuery({
