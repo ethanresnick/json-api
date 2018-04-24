@@ -96,48 +96,50 @@ One simple thing you can do with query factories is to create urls (or, in REST 
 Query factory functions are also a good place to do permissions checks that rely on access to the parsed request body. If the user doesn't have permission, you can throw an error, and the library will pass it along gracefully in the response. See [error handling](#error-handling).
 
 ## Filtering
-This library supports filtering out of the box, using a syntax that's designed to be easier to read, and much easier to write, than the  square brackets syntax used by libraries like [qs](https://github.com/ljharb/qs).
+This library supports filtering out of the box, using a syntax that's designed to be easier to read, easier to write, and more expressive than the square bracket syntax used by libraries like [qs](https://github.com/ljharb/qs).
 
 For example, to include only items where the zip code is either 90210 or 10012, you'd write: 
 
-`?filter=(zip,in,(90210,10012))`. 
+`?filter=(zip,in,[90210,10012])`. 
 
-By contrast, with the square-bracket syntax you'd have to write something like: 
+By contrast, with the square-bracket syntax, you'd have to write something like: 
 
 `?filter[zip][in][]=90210&filter[zip][in][]=10012`.
+
+Also, the square-bracket syntax can't represent empty arrays or distinguish between non-string literals (e.g. `true`) and strings, while this library's format can. See details below.
 
 ### Formatting filtering constraints
 In this library's default format, the value of the `filter` parameter is one or more "filter constraints" listed next to each other. These constraints narrow the results to only include those that match. The format of a filter constraint is: `(fieldName,operator,value)`. For example:
 
-- `(name,eq,Bob)`: only include items where the name equals Bob
+- ``(name,eq,`Bob`)``: only include items where the name equals "Bob"
 - `(salary,gte,150000)`: only include items where the salary is greater than or equal to 150,000.
 
-If the value given is an integer, a float, `null`, `true`, or `false`, it is treated as a literal; every other value is treated as a string. If you want to express a string like "true", you can explicitly put it in single quotes, e.g.: `(street,eq,'true')`. To define a list of values, surround the values in parentheses and separate them with commas (e.g. `(90210,10012)` is a list of values used with the `in` operator above).
+The value can be a number, `null`, `true`, or `false`, or a backtick-delimited string (like `` `Bob` ``). To define a list of values, surround the values in square brackets and separate them with commas (e.g. `[90210,10012]` is a list of values used with the `in` operator above).
 
 The valid operators (for the buit-in Mongoose adapter) are: `eq`, `neq`, `in`, `nin`, `lt`, `gt`, `lte`, and `gte`.
 
-If you have multiple constraints, you can choose whether to combine them with an `AND` or an `OR`. To do that, instead of providing three items in your field constraint (i.e., the field name, operator, and value), provide only two: 1) `and` or `or`, and 2) a list of constraints. E.g.:
+If you have multiple constraints, you can choose whether to combine them with an `AND` or an `OR`. To do that, instead of providing three items in your field constraint (i.e., the field name, operator, and value), provide `and` or `or`, followed by the applicable constraints. E.g.:
 
-`GET /people?filter=(or,((name,eq,Bob),(zip,eq,90210)))`
+``GET /people?filter=(or,(name,eq,`Bob`),(zip,eq,90210))``
 
 Will find all the people who are named Bob or who live in the 90210 zip code.
 
-Filter constraints listed next to each other at the top-level are combined with an "AND". E.g., `GET /people?filter=(name,Bob)(zip,90210)` will give only the people named Bob who live in the 90210 zip code.
+Filter constraints listed next to each other at the top-level are combined with an "AND". E.g., ``GET /people?filter=(name,`Bob`)(zip,90210)`` will give only the people named Bob who live in the 90210 zip code.
 
-Finally, as a shorthand, when the field name is not `and` or `or`, and the operator you want is `eq` (for equals), you can omit the operator entirely. E.g. `(name,Bob)` expresses the same constraint as `(name,eq,Bob)`. 
+In the `` (name,`Bob`) `` constraint above, the `eq` operator has been omitted. This is a shorthand. As long as the field name is not `and` or `or`, you can omit the operator, and the `eq` operator will be inferred. E.g. ``(name,`Bob`)`` expresses the same constraint as ``(name,eq,`Bob`)``. 
 
 Putting it all together, you could do:
 
-`GET /people?filter=(or,((email,test@example.com)(name,Test)))(dob,gte,1963)`
+`GET /people?filter=(or,(email,`test@example.com`),(name,`Test`))(dob,gte,1963)`
 
 This will find everyone born after 1963 who also has either the name "Test" or the email "test@example.com".
 
-Note: this filter query paramer format is entirely cusomizable, and other operators can be used if your adapter supports them. See MongooseAdapter's static properties and the ResourceTypeRegistry's constructor for details.
+Note: your API can use a totally different filter query parameter format if you so desire, by providing a custom parser (see the API Controller's constructor for details). Also, each adapter support for a custom set of operators.
 
 ### On URL Encoding
-When the value that you want to use in a filter constraint contains parentheses, commas, or single quotation marks, you must URL encode those characters so that the server doesn't interpret them as delimiters. Conversely, when those characters do appear as delimiters (e.g., the parentheses that surround each filter constraint, or the comma that separates the field name from the operator), they must NOT be url encoded.
+When sending filter constraints, make sure you don't URL encode characters that the syntax above uses as delimiters (namely, commas, parentheses, backticks, square brackets, and the exclamation point), unless you mean for these characters to be interpreted as part of your data (e.g., part of a field name or value) rather than as a separator.
 
-Some clients automatically encode parentheses, commas, and single quotation marks in url query strings by default. This is incorrect behavior [per RFC 3986](https://tools.ietf.org/html/rfc3986#section-2.2), and it will cause the server to error, because it won't see the appropriate (unescaped) delimiter characters. Check your client for a setting to turn this behavior off.
+Be aware that some clients, by default, automatically percent-encode certain characters in url query strings -- especially the backtick and square brackets. This will cause the server to error, because it won't see the appropriate (unescaped) delimiter characters. Whether the client is correct to do this automatic encoding is a nuanced question, as there are competing and conflicting standards governing URLs today (namely, [RFC 3986](https://tools.ietf.org/html/rfc3986) and [WHATWG Url](https://url.spec.whatwg.org/)). If you encounter this problem, check your client for a way to make requests without any automatic encoding. If your client absolutely insists on URL encoding backticks (the trickiest character), you can delimit your strings with exclamation points (`!`) instead, and then encode exclamation points within the string. 
 
 ## Pagination
 Pagination limit and offset parameters are accepted in the following form:

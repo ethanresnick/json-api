@@ -7,15 +7,21 @@ describe("Deleting resources", () => {
   before(() => AgentPromise.then(A => { Agent = A; }));
 
   describe("Single resource deletion", () => {
-    let creationId;
-    before(() => createSchool(Agent).then(school => creationId = school.id));
+    let creationId1, creationId2, creationId3;
+    before(() => {
+      return Promise.all([
+        createSchool(Agent).then(school => creationId1 = school.id),
+        createSchool(Agent).then(school => creationId2 = school.id),
+        createSchool(Agent).then(school => creationId3 = school.id)
+      ]);
+    });
 
     it("should delete a resource by id", () => {
-      return Agent.request("DEL", `/schools/${creationId}`)
+      return Agent.request("DEL", `/schools/${creationId1}`)
         .type("application/vnd.api+json")
         .send()
         .then(() => {
-          return Agent.request("GET", `/schools/${creationId}`)
+          return Agent.request("GET", `/schools/${creationId1}`)
             .accept("application/vnd.api+json")
             .then(() => {
               throw new Error("shouldn't run");
@@ -25,7 +31,37 @@ describe("Deleting resources", () => {
         });
     });
 
-     it('should return 404 if deleting a resoucrce that doesn\'t exist', () => {
+    it("should not be stymied by `Content-Length: 0`, regardless of Content-Type; see #67", () => {
+      return Promise.all([
+        Agent.request("DEL", `/schools/${creationId2}`)
+          .set("Content-Length", 0)
+          .send()
+          .then(() => {
+            return Agent.request("GET", `/schools/${creationId2}`)
+              .accept("application/vnd.api+json")
+              .then(() => {
+                throw new Error("shouldn't run");
+              }, err => {
+                expect(err.response.statusCode).to.equal(404);
+              });
+          }),
+        Agent.request("DEL", `/schools/${creationId3}`)
+          .set("Content-Length", 0)
+          .type("application/vnd.api+json")
+          .send()
+          .then(() => {
+            return Agent.request("GET", `/schools/${creationId3}`)
+              .accept("application/vnd.api+json")
+              .then(() => {
+                throw new Error("shouldn't run");
+              }, err => {
+                expect(err.response.statusCode).to.equal(404);
+              });
+          })
+      ]);
+    });
+
+    it('should return 404 if deleting a resoucrce that doesn\'t exist', () => {
       return Agent.request("DELETE", "/people/5a5934cfc810949cebeecc33")
         .then(() => {
           throw new Error("shoudln't run");

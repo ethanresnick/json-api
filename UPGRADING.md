@@ -1,3 +1,22 @@
+# 3.0.0-beta.25
+## Breaking Changes
+### `singular` => `isSingular` Rename
+- `FindQuery.singular` and `DeleteQuery.singular` have been renamed to `FindQuery.isSingular` and `DeleteQuery.isSingular`. Likewise, the argument passed in during query construction has been renamed `isSingular` instead of `singular`.
+ 
+### Filtering
+#### For API Clients
+- Filtering now uses a slightly different syntax. See https://github.com/ethanresnick/json-api/issues/160 for details.
+
+#### For Query Creation/Transforms
+- If you were manually creating a Query object with filters applied, or inspecting/transforming the filters on an existing Query (including using the built-in methods like `andWhere`), you should know that the format for filter constraint objects has now changed slightly. In particular, before the format was `{ field: string | undefined, operator: string, value: any }`; now, it's simply `{ operator: string, args: any[] }`. And, within `args`, references to fields are represented with an `Identifier` type, to differentiate them from strings, so you have to read the `identifier.value` to get the field name. This format is more flexible going forward (e.g, it allows more than one operand to be a field reference). The effect of these changes are that:
+
+    1. When reading filter constraints, **when the operator is not `and` or `or`, you should be able to pretty mechanically replace `filterConstraint.field` with `filterConstraint.args[0].value`, and `filterConstraint.value` with `filterConstraint.args[1]`. Likewise, when the operator is `and` or `or`, you should be able able to replace `constraint.value` with `constraint.args`.** These replacements work because, for all the built-in binary operators, you can rely on `args[0]` being an `Identifier`, and `args[1]` being a plain value; this is because the arguments are validated immediately after the parsing process, and the built-in validation function enforces these invariants. (Custom adapters can override that if they wish.) Similarly, you can rely on the args for "and"/"or" expressions being an array of filter constraints.
+    
+    2. For creating filter constraint objects and adding them to/removing them from queries, you'll likely want to import the `Identifier` and `FieldExpression` constructor functions from the `json-api` package and replace `{ field: "a", value: x, operator: y }` with `FieldExpression(y, [Identifier("a"), x])`.
+
+#### For Typescript Users
+- The FieldConstraint and FieldPredicate types have been unified into a new FieldExpression type, per the note above about a new filter constraint format.
+
 # 3.0.0-beta.24
 ## Breaking Changes
 - Error messages thrown/reported to the user for mongoose ValidationError's have been improved, but this means that you may now need to update how you test for specific errors. In particular: 

@@ -8,6 +8,10 @@ import Query from "../../../src/types/Query/Query";
 import FindQuery from "../../../src/types/Query/FindQuery";
 import ResourceSet from "../../../src/types/ResourceSet";
 import database from "../database/index";
+import {
+  Identifier,
+  FieldExpression
+} from '../../../src/steps/pre-query/parse-query-params';
 import { QueryBuildingContext } from "../../../src/controllers/API";
 import ExpressStrategy from "../../../src/http-strategies/Express";
 import { Express } from "express";
@@ -36,13 +40,14 @@ export default database.then(function(dbModule) {
   const Controller = new API.controllers.API(registry);
 
   const ControllerWithCustomFilterParsing = new API.controllers.API(registry, {
-    filterParser: (legalUnary, legalBinary, rawQuery, params) => {
+    filterParser: (supportedOperators, rawQuery, params) => {
       return ('customNameFilter' in params)
-        ? [{
-            field: "name",
-            operator: "eq",
-            value: String((<any>params).customNameFilter)
-          }]
+        ? [
+            FieldExpression("eq", [
+              Identifier("name"),
+              String((<any>params).customNameFilter)
+            ])
+          ]
         : undefined;
     }
   });
@@ -72,11 +77,9 @@ export default database.then(function(dbModule) {
   app.get('/:type(people)/non-binary',
     Front.customAPIRequest({
       queryTransform: (req, query) =>
-        (query as FindQuery).andWhere({
-          field: "gender",
-          operator: "nin",
-          value: ["male", "female"]
-        })
+        (query as FindQuery).andWhere(
+          FieldExpression("nin", [Identifier("gender"), ["male", "female"]])
+        )
     })
   );
 
@@ -210,13 +213,13 @@ function makeSignInQuery(opts: QueryBuildingContext) {
     throw new APIError({ status: 400, title: "Missing user info." });
   }
 
-  authHeader = Array.isArray(authHeader) ? authHeader[0] : authHeader;
+  authHeader = Array.isArray(authHeader) ? <string>authHeader[0] : authHeader;
   const [user, pass] = Buffer.from(authHeader.substr(6), 'base64').toString().split(':');
 
   return new FindQuery({
     type: "people",
-    singular: true,
-    filters: [{ field: "name", operator: "eq", value: user }],
+    isSingular: true,
+    filters: [FieldExpression("eq", [Identifier("name"), user])],
     returning: ([userData]) => {
       if(pass !== 'password') {
         throw new APIError(401);

@@ -178,15 +178,14 @@ describe("Fetching Collection", () => {
   });
 
   describe("Filtering", () => {
-    it("should support simple equality filters", (done) => {
-      Agent.request("GET", "/people")
-        .query("filter=(name,eq,Doug Wilson)")
+    it("should support simple equality filters", () => {
+      return Agent.request("GET", "/people")
+        .query("filter=(name,eq,`Doug Wilson`)")
         .accept("application/vnd.api+json")
         .then((res) => {
           expect(res.body.data).to.have.length(1);
           expect(res.body.data[0].attributes.name).to.equal("Doug Wilson");
-          done();
-        }, done).catch(done);
+        });
     });
 
     it("should support user's custom filters", (done) => {
@@ -202,7 +201,7 @@ describe("Fetching Collection", () => {
 
     it("should still return resource array even with a single id filter", () => {
       return Agent.request("GET", "/organizations")
-        .query("filter=(id,54419d550a5069a2129ef254)")
+        .query("filter=(id,`54419d550a5069a2129ef254`)")
         .accept("application/vnd.api+json")
         .then((res) => {
           expect(res.body.data).to.be.an("array");
@@ -211,13 +210,16 @@ describe("Fetching Collection", () => {
         });
     });
 
-    it("should give a nice error on invalid filter syntax", () => {
+    it("should give a nice error on invalid filter syntax/values", () => {
       const invalidFilterStringsToErrorRegexs = {
-        "filter=(id,n,54419d550a5069a2129ef254)": /\"n\".+valid operator/i,
-        "filter=(id,neq,54419d550a5069a2129ef254,x)": /two or three/i,
-        "filter=(4,4)": /field symbol/i,
-        "filter=true": /must be a list/i,
-        "filter=(()": /Invalid filter syntax\./
+        "filter=(id,n,`54419d550a5069a2129ef254`)": /valid operator symbol/i,
+        "filter=(id,neq,`54419d550a5069a2129ef254`,x)": /exactly three items/i,
+        "filter=(4,4)": /field reference/i,
+        "filter=true": /Expected field expression/i,
+        "filter=(and,(true))": /valid operator symbol/i,
+        "filter=(and,((true:false)))": /Expected field expression but \"\(\" found/,
+        "filter=(()": /Expected field expression but \"\(\" found/,
+        "filter=(and,(eq))": /must be infixed/ // should be deep validating exps.
       };
 
       return Promise.all(

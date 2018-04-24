@@ -1,5 +1,5 @@
 import WithCriteriaQuery, { WithCriteriaQueryOptions } from "./WithCriteriaQuery";
-import { AndPredicate } from "../index";
+import { AndExpression } from "../index";
 
 export default class DeleteQuery extends WithCriteriaQuery {
   protected query: {
@@ -7,8 +7,8 @@ export default class DeleteQuery extends WithCriteriaQuery {
     returning: WithCriteriaQueryOptions["returning"];
     catch: WithCriteriaQueryOptions["catch"];
     criteria: {
-      where: AndPredicate;
-      singular: boolean;
+      where: AndExpression;
+      isSingular: boolean;
       limit?: WithCriteriaQueryOptions["limit"];
       offset?: WithCriteriaQueryOptions["offset"];
     };

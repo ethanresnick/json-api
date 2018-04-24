@@ -1,7 +1,10 @@
 import { expect } from "chai";
 import mongoose = require("mongoose");
 import APIError from "../../../../src/types/APIError";
-import { AndPredicate } from "../../../../src/types";
+import {
+  Identifier, FieldExpression
+} from '../../../../src/steps/pre-query/parse-query-params';
+import { AndExpression } from "../../../../src/types";
 import MongooseAdapter from "../../../../src/db-adapters/Mongoose/MongooseAdapter";
 
 describe("Mongoose Adapter", () => {
@@ -35,35 +38,37 @@ describe("Mongoose Adapter", () => {
 
     describe("assertIdsValid", () => {
       it("should return void on empty input, a valid id, or valid ids", () => {
-        const basicPredicate = {
-          operator: <"and">"and",
-          value: [{ field: "a", value: <any>"b", operator: "eq" }],
-          field: undefined
-        };
+        const basicPredicate = FieldExpression(
+          <"and">"and",
+          [FieldExpression("eq", [Identifier("a"), <any>"b"])]
+        );
 
         const validInputs = [
           basicPredicate,
           {
             ...basicPredicate,
-            values: basicPredicate.value.concat({
-              field: "id",
-              value: "552c5e1c604d41e5836bb174",
-              operator: "eq"
+            args: basicPredicate.args.concat({
+              type: "FieldExpression",
+              operator: "eq",
+              args: [Identifier("id"), "552c5e1c604d41e5836bb174"]
             })
           },
           {
             ...basicPredicate,
-            values: basicPredicate.value.concat({
-              field: "id",
-              value: ["552c5e1c604d41e5836bb174", "552c5e1c604d41e5836bb175"],
-              operator: "in"
+            args: basicPredicate.args.concat({
+              type: "FieldExpression",
+              operator: "in",
+              args: [
+                Identifier("id"),
+                ["552c5e1c604d41e5836bb174", "552c5e1c604d41e5836bb175"]
+              ]
             })
           }
         ];
 
         const results = validInputs.map(it =>
           // tslint:disable-next-line: no-void-expression
-          MongooseAdapter.assertIdsValid((it as any) as AndPredicate, true)
+          MongooseAdapter.assertIdsValid((it as any) as AndExpression, true)
         );
 
         expect(results.every(it => it === undefined)).to.be.true;
@@ -71,27 +76,37 @@ describe("Mongoose Adapter", () => {
 
       it("should throw on an invalid id, or if any id in an array is invalid", () => {
         const fn = () => {
-          MongooseAdapter.assertIdsValid({
-            operator: <"and">"and",
-            value: [
-              { field: "a", value: <any>"b", operator: "eq"},
-              { field: "id", value: "1", operator: "eq"}
-            ],
-            field: undefined
-          }, true);
+          MongooseAdapter.assertIdsValid(
+            FieldExpression(
+              <"and">"and",
+              [
+                FieldExpression("eq", [Identifier("a"), <any>"b"]),
+                FieldExpression("eq", [Identifier("id"), "1"])
+              ]
+            ),
+            true
+          );
         }
 
         expect(fn).to.throw(APIError);
 
         const fn2 = () => {
-          MongooseAdapter.assertIdsValid({
-            operator: <"and">"and",
-            value: [
-              { field: "a", value: "b", operator: "eq"},
-              { field: "id", value: ["1", "552c5e1c604d41e5836bb174"], operator: "in"}
-            ],
-            field: undefined
-          }, false);
+          MongooseAdapter.assertIdsValid(
+            FieldExpression(
+              <"and">"and",
+              [{
+                type: "FieldExpression",
+                args: [Identifier("a"), "b"],
+                operator: "eq"
+              },
+              {
+                type: "FieldExpression",
+                args: [Identifier("id"), ["1", "552c5e1c604d41e5836bb174"]],
+                operator: "in"
+              }]
+            ),
+            false
+          );
         };
 
         expect(fn2).to.throw(APIError);

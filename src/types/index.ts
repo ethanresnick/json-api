@@ -39,31 +39,69 @@ export type ServerRes = ServerResponse;
 export type StrictDictMap<T> = { [it: string]: T | undefined };
 
 // Types related to queries
-export type Sort = { field: string; direction: "ASC" | "DESC" };
+export type SortDirection = "ASC" | "DESC";
+export type Sort =
+  | { field: string; direction: SortDirection }
+  //| { expression: FieldExpression, direction: SortDirection }
 
-export type Predicate = {
-  operator: "and" | "or";
-  value: (FieldConstraint | Predicate)[];
-  field: undefined;
+/**
+ * A function that receives the parse result for a set of args for a
+ * FieldExpression and transforms the args from parse result form to a form
+ * usable by consumers, or throws if the args are invalid.
+ */
+export type FinalizeArgs = (
+  operatorsConfig: FinalizedSupportedOperators,
+  operator: string,
+  args: any[]
+) => any;
+
+// Map from operatorName to { isBinary, finalizeArgs, legalIn } object.
+export type OperatorDescriptor = {
+  legalIn?: ("sort" | "filter")[];
+  isBinary?: boolean;
+  finalizeArgs?: FinalizeArgs;
 };
 
-export type AndPredicate = Predicate & { operator: "and" };
+// The type each adapter must provide.
+export type SupportedOperators = StrictDictMap<OperatorDescriptor>;
 
-export type FieldConstraint = ({
+// The adapter-provided info about supported operators,
+// after we've filled in the defaults (to set isBinary + finalizeArgs)
+// and separated the operators by legalIn. This is what parsers see.
+export type FinalizedSupportedOperators = StrictDictMap<
+  Required<Pick<OperatorDescriptor, "isBinary" | "finalizeArgs">>
+>;
+
+export type AndExpression =
+  FieldExpression & { operator: "and", args: FieldExpression[] };
+
+export type Identifier = { type: "Identifier", value: string };
+
+export type FieldExpression = ({
+  operator: "or",
+  args: FieldExpression[]
+} | {
+  operator: "and",
+  args: FieldExpression[]
+} | {
   operator: "eq" | 'neq' | 'ne'; // ne and neq are synonyms
-  value: number | string | boolean
+  args: [Identifier, any]
 } | {
   operator: "in" | "nin";
-  value: string[] | number[]
+  args: [Identifier, string[] | number[]]
 } | {
   operator: 'lt' | 'gt' | 'lte' | 'gte';
-  value: string | number;
+  args: [Identifier, string | number];
+} | {
+  operator: string;
+  args: any[];
 }/* | {
   operator: '$like'; // not supported in our mongo transform yet
-  value: string;
+  args: string;
 }*/) & {
-  field: string;
+  type: "FieldExpression"
 };
+
 
 export type UrlTemplatesByType = {
   [typeName: string]: UrlTemplates;
