@@ -49,7 +49,7 @@ export function deleteNested(path: string, object: object) {
     );
 
     if(container.hasOwnProperty(lastPart)) {
-      delete container[lastPart];
+      delete container[lastPart]; //tslint:disable-line no-dynamic-delete
       return true;
     }
     else {
@@ -136,10 +136,12 @@ export function pseudoTopSort(
   roots: string[]
 ) {
   // Do some defensive copying, in case the caller didn't.
+  /* tslint:disable no-parameter-reassignment */
   roots = roots.slice();
   nodes = nodes.slice();
   edges = { ...edges };
   Object.keys(edges).forEach(key => { edges[key] = { ...edges[key] }; });
+  /* tslint:enable no-parameter-reassignment */
 
   // "L = Empty list that will contain the sorted elements"
   const sortResult: string[] = [];
@@ -158,6 +160,7 @@ export function pseudoTopSort(
     // "for each node m with an edge e from n to m do"
     Object.keys(thisRootChildren).forEach(child => {
       // "remove edge e from the graph"
+      // tslint:disable-next-line no-dynamic-delete
       delete thisRootChildren[child];
 
       // SKIP: "if m has no other incoming edges..."

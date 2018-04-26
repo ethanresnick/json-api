@@ -182,7 +182,7 @@ export default class ExpressStrategy extends Base {
   sendError: ErrorRequestHandler = async (errors: ErrorOrErrorArray, req, res, next) => {
     if(!next) {
       deprecate("sendError with 3 arguments: must now provide next function.");
-      next = (err: any) => {}; // tslint:disable-line no-empty
+      next = (err: any) => {}; // tslint:disable-line no-empty no-parameter-reassignment
     }
 
     try {

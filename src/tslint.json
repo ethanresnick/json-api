@@ -10,6 +10,7 @@
     "member-ordering": false,
     "max-file-line-count": false,
     "typeof-compare": false,
-    "no-object-literal-type-assertion": false
+    "no-object-literal-type-assertion": false,
+    "member-access": false
   }
 }

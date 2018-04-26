@@ -55,6 +55,7 @@ export default function docToResource(
   delete attrs._id;
 
   if(discriminatorKey) {
+    // tslint:disable-next-line no-dynamic-delete
     delete attrs[discriminatorKey];
   }
 
