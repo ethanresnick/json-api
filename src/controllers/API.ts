@@ -2,7 +2,8 @@ import R = require("ramda");
 import {
    Request, FinalizedRequest, Result, HTTPResponse,
    ServerReq, ServerRes,
-   FieldExpression,
+   ParsedFilterParam,
+   ParsedSortParam,
    makeDocument,
    ErrorOrErrorArray,
    FinalizedSupportedOperators
@@ -26,7 +27,11 @@ import negotiateContentType from "../steps/http/content-negotiation/negotiate-co
 import validateContentType from "../steps/http/content-negotiation/validate-content-type";
 
 import { getQueryParamValue } from '../util/query-parsing';
-import parseQueryParams, { parseFilter, finalizeFilterFieldExprArgs } from '../steps/pre-query/parse-query-params';
+import parseQueryParams, {
+  finalizeFilterFieldExprArgs,
+  parseFilter,
+  parseSort
+} from '../steps/pre-query/parse-query-params';
 import parseRequestPrimary from "../steps/pre-query/parse-request-primary";
 import setTypePaths from "../steps/set-type-paths";
 import validateRequestDocument from "../steps/pre-query/validate-document";
@@ -55,8 +60,15 @@ export {
 };
 
 export type APIControllerOpts = {
-  filterParser?: filterParamParser;
+  filterParser?: customParamParser<ParsedFilterParam>;
+  sortParser?: customParamParser<ParsedSortParam>;
 };
+
+export type customParamParser<T> = (
+  supportedOperators: FinalizedSupportedOperators,
+  rawQuery: string | undefined,
+  parsedParams: object
+) => T | undefined;
 
 export type QueryFactory = (opts: QueryBuildingContext) => Query | Promise<Query>;
 export type ResultFactory = (
@@ -105,24 +117,21 @@ export type RequestOpts = {
   resultFactory?: ResultFactory;
 };
 
-export type filterParamParser = (
-  supportedFilterOperators: FinalizedSupportedOperators,
-  rawQuery: string | undefined,
-  parsedParams: object
-) => (FieldExpression)[] | undefined;
+export type FinalizedOperatorsByType = {
+  filter: FinalizedSupportedOperators,
+  sort: FinalizedSupportedOperators
+};
 
 export default class APIController {
   private registry: ResourceTypeRegistry;
-  private filterParamParser: filterParamParser;
-  private supportedOperatorsByAdapter: Map<AdapterInstance<any>,{
-    filter: FinalizedSupportedOperators,
-    sort: FinalizedSupportedOperators
-  }>;
+  private filterParamParser: Exclude<APIControllerOpts["filterParser"], undefined>;
+  private sortParamParser: Exclude<APIControllerOpts["sortParser"], undefined>;
+  private supportedOperatorsByAdapter: Map<AdapterInstance<any>, FinalizedOperatorsByType>;
 
   constructor(registry: ResourceTypeRegistry, opts: APIControllerOpts = {}) {
     this.registry = registry;
-    this.filterParamParser =
-      opts.filterParser || (<any>this.constructor).defaultFilterParamParser;
+    this.filterParamParser = opts.filterParser || defaultFilterParamParser;
+    this.sortParamParser = opts.sortParser || defaultSortParamParser;
 
     // A cache for our computed operator configuration.
     // We don't simply compute all the operator configs for all adapters
@@ -153,27 +162,29 @@ export default class APIController {
       ? this.getFinalizedSupportedOperators(this.registry.dbAdapter(request.type))
       : { filter: {}, sort: {} };
 
-    const filterParams = (() => {
+    // Handle query parsing errors in the same manner, whether they're thrown
+    // by our built-in parsers or the user's custom parser.
+    const guardedQueryParamParse = (parser, paramName) => {
       try {
-        return this.filterParamParser(
-          finalizedSupportedOperators.filter,
+        return parser(
+          finalizedSupportedOperators[paramName],
           request.rawQueryString,
           request.queryParams
         );
-      }
-      catch(e) {
+      } catch (e) {
         throw Errors.invalidQueryParamValue({
-          detail: `Invalid filter syntax: ${e.message} See jsonapi.js.org for details.`,
-          source: { parameter: "filter" }
+          detail: `Invalid ${paramName} syntax: ${e.message} See jsonapi.js.org for details.`,
+          source: { parameter: paramName }
         });
       }
-    })()
+    }
 
     const finalizedRequest: FinalizedRequest = {
       ...request,
       queryParams: {
         ...parseQueryParams(request.queryParams),
-        filter: filterParams
+        filter: guardedQueryParamParse(this.filterParamParser, "filter"),
+        sort: guardedQueryParamParse(this.sortParamParser, "sort")
       },
       document: undefined
     };
@@ -573,18 +584,25 @@ export default class APIController {
   }
 
   public static supportedExt: ReadonlyArray<string> = Object.freeze([]);
-
-  static defaultFilterParamParser(
-    filterOperators: FinalizedSupportedOperators,
-    rawQuery,
-    params
-  ) {
-    return getQueryParamValue("filter", rawQuery)
-      .map(it => parseFilter(it, filterOperators))
-      .getOrDefault(undefined);
-  }
 }
 
+export function defaultFilterParamParser(
+  filterOps: FinalizedSupportedOperators,
+  rawQuery: string | undefined
+) {
+  return getQueryParamValue("filter", rawQuery)
+    .map(it => parseFilter(it, filterOps))
+    .getOrDefault(undefined);
+}
+
+export function defaultSortParamParser(
+  sortOps: FinalizedSupportedOperators,
+  rawQuery: string | undefined
+) {
+  return getQueryParamValue("sort", rawQuery)
+    .map(it => parseSort(it, sortOps))
+    .getOrDefault(undefined);
+}
 
 /**
  * Creates a JSON:API Result from an error or array of errors.

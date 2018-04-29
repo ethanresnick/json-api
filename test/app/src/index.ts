@@ -40,7 +40,7 @@ export default database.then(function(dbModule) {
   const Controller = new API.controllers.API(registry);
 
   const ControllerWithCustomFilterParsing = new API.controllers.API(registry, {
-    filterParser: (supportedOperators, rawQuery, params) => {
+    filterParser(supportedOperators, rawQuery, params) {
       return ('customNameFilter' in params)
         ? [
             FieldExpression("eq", [

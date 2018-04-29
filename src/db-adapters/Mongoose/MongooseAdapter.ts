@@ -131,7 +131,13 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     // do sorting
     if(Array.isArray(sorts)) {
       queryBuilder.sort(
-        sorts.map(it => (it.direction === 'DESC' ? '-' : '') + it.field).join(" ")
+        sorts.map(it => {
+          if(!("field" in it)) {
+            throw new Error("Got unsupported expression sort field; shouldn't happen.");
+          }
+
+          return (it.direction === 'DESC' ? '-' : '') + it.field;
+        }).join(" ")
       );
     }
 

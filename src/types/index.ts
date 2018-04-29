@@ -4,7 +4,7 @@ import ResourceIdentifier, { ResourceIdentifierJSON } from "./ResourceIdentifier
 import Document, { DocumentData } from "./Document";
 import Data from "./Generic/Data";
 import { UrlTemplate } from "./UrlTemplate";
-import { ParsedQueryParams } from "../steps/pre-query/parse-query-params";
+import { ParsedStandardQueryParams } from "../steps/pre-query/parse-query-params";
 import { IncomingMessage, ServerResponse } from "http";
 
 // A helper type to capture the ability of
@@ -40,9 +40,17 @@ export type StrictDictMap<T> = { [it: string]: T | undefined };
 
 // Types related to queries
 export type SortDirection = "ASC" | "DESC";
-export type Sort =
-  | { field: string; direction: SortDirection }
-  //| { expression: FieldExpression, direction: SortDirection }
+export type FieldSort = { field: string; direction: SortDirection };
+export type ExpressionSort = { expression: FieldExpression, direction: SortDirection };
+export type Sort = FieldSort | ExpressionSort;
+
+// Parameter values
+export type ParsedFilterParam = FieldExpression[];
+export type ParsedSortParam = Sort[];
+export type ParsedQueryParams = ParsedStandardQueryParams & {
+  sort?: ParsedSortParam,
+  filter?: ParsedFilterParam
+};
 
 /**
  * A function that receives the parse result for a set of args for a

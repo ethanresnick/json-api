@@ -1,8 +1,10 @@
 import R = require("ramda");
-import { parseFilter as underlyingFilterParser } from '@json-api/query-parser';
+import {
+  parseFilter as underlyingFilterParser,
+  parseSort as underlyingSortParser
+} from '@json-api/query-parser';
 import * as Errors from '../../util/errors';
 import { isValidMemberName } from "../../util/json-api";
-import { stripLeadingBMPChar } from "../../util/misc";
 import {
   Sort,
   Identifier as IdentifierType,
@@ -32,21 +34,16 @@ export type RawParams = {
   [paramName: string]: any;
 };
 
-export type ParsedQueryParams = {
+export type ParsedStandardQueryParams = {
   include?: StringListParam;
-  sort?: Sort[];
   page?: ScopedParam;
   fields?: ScopedStringListParam;
   [paramName: string]: any;
 };
 
-export default function(params: RawParams): ParsedQueryParams {
+export default function(params: RawParams): ParsedStandardQueryParams {
   const paramsToParserFns = {
     include: R.partial(parseCommaSeparatedParamString, ["include"]),
-    sort: R.pipe(
-      R.partial(parseCommaSeparatedParamString, ["sort"]),
-      R.map(parseSortField)
-    ),
     page: R.pipe(
       R.partial(parseScopedParam, ["page"]),
       R.mapObjIndexed((it: string, scopeName: string) => {
@@ -111,34 +108,25 @@ function parseCommaSeparatedParamString(paramName: string, encodedString: string
   return encodedString.split(",").map(decodeURIComponent);
 }
 
-function parseSortField(sortField: string): Sort {
-  const fieldName = stripLeadingBMPChar("-")(sortField);
-
-  if(!isValidMemberName(fieldName)) {
-    throw Errors.invalidQueryParamValue({
-      detail: `Tried to sort on illegal field name ${fieldName}.`,
-      source: { parameter: "sort" }
-    });
-  }
-
-  return {
-    field: fieldName,
-    direction: sortField.startsWith("-") ? "DESC" : "ASC"
-  };
+export function parseSort(
+  rawSortString: string,
+  sortOperators: FinalizedSupportedOperators
+): Sort[] {
+  return underlyingSortParser(sortOperators, rawSortString);
 }
 
 export function parseFilter(
   rawFilterString: string,
-  supportedOperators: FinalizedSupportedOperators
+  filterOperators: FinalizedSupportedOperators
 ) {
   // Our default parser falls back to eq operator
   // for two item field expressions, so it must be supported
   // (but only if we have a filter query string).
-  if(!supportedOperators.eq) {
+  if(!filterOperators.eq) {
     throw new Error("Must support eq operator on filters");
   }
 
-  return underlyingFilterParser(supportedOperators, rawFilterString)
+  return underlyingFilterParser(filterOperators, rawFilterString)
 }
 
 /**
