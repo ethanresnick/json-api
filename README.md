@@ -130,7 +130,7 @@ In the `` (name,`Bob`) `` constraint above, the `eq` operator has been omitted. 
 
 Putting it all together, you could do:
 
-`GET /people?filter=(or,(email,`test@example.com`),(name,`Test`))(dob,gte,1963)`
+``GET /people?filter=(or,(email,`test@example.com`),(name,`Test`))(dob,gte,1963)``
 
 This will find everyone born after 1963 who also has either the name "Test" or the email "test@example.com".
 
