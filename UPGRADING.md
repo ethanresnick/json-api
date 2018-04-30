@@ -1,3 +1,14 @@
+# 3.0.0-beta.26
+## New Features
+- Users can now provide a custom sort parameter parser, much like the custom filter parameter parsers already supported. Additionally, these parsers are allowed to parse "sort fields", as JSON:API calls them, that represent computed values, instead of simple field references. The format for these new sort fields is `{ expression: FieldExpression, direction: "ASC" | "DESC" }`, compared to the other (and still valid) `{ field: string, direction: "ASC" | "DESC" }` format.
+- The `MongooseAdapter` now supports a `geoDistance` operator that can be used in `?sort`. E.g., `GET /organizations?sort=(location,geoDistance,[lng,lat])` will sort all organizations by their distance from the user-provided `[lng,lat]` coordinate. See tests for some caveats here.
+
+## Breaking Changes
+- Because the `MongooseAdapter` allows the `geoDistance` operator in the `?sort` parameter, it's now possible that users of that adapter will see an `{ expression, direction }` sort field in `Query` objects, or in the parsed value at `request.queryParams.sort`. If you were reading/transforming that value or query objects and assuming that sort fields would always have a `field` key, then support for these new `{ expression, direction }` sort objects is a breaking change.
+- Similarly, Typescript users will find that the type for parsed sort values has been expanded to encompass the new `{ expression, direction }` possibility. You may need to adjust your code accordingly. Some other types have also been tweaked.
+	- Note: an adapter must explicitly declare, in `Adapter::supportedAdapters`, which operators, if any, it supports in `?sort`. If an adapter doesn't declare any operators as supported there, then it doesn't have to worry about encountering `{ expression, direction }` sort field objects in the queries it receives, as the sort parser will mark attempts to use an operator as invalid.
+- The API controller no longer has a static `defaultFilterParamParser` method. Instead, this function is just a named export from the same file. 
+
 # 3.0.0-beta.25
 ## Breaking Changes
 ### `singular` => `isSingular` Rename
