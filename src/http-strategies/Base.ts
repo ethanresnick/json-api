@@ -1,16 +1,19 @@
 import qs = require("qs");
-import contentType = require("content-type");
 import getRawBody = require("raw-body");
-import APIError from "../types/APIError";
-import Request, { Request as UnsealedRequest } from "../types/HTTP/Request";
+import logger from "../util/logger";
+import { Request, ServerReq, ServerRes, HTTPResponse } from "../types/";
 import APIController from "../controllers/API";
 import DocsController from "../controllers/Documentation";
-export { UnsealedRequest };
+import * as Errors from '../util/errors';
 
 export type HTTPStrategyOptions = {
-  handleContentNegotiation?: boolean,
-  tunnel?: boolean
+  handleContentNegotiation?: boolean;
+  tunnel?: boolean;
+  host?: string;
 };
+
+export type Controller =
+  (request: Request, req: ServerReq, res: ServerRes) => Promise<HTTPResponse>;
 
 /**
  * This controller is the base for http strategy classes. It's built around
@@ -24,6 +27,12 @@ export type HTTPStrategyOptions = {
  * @param {boolean} options.tunnel Whether to turn on PATCH tunneling. See:
  *    http://jsonapi.org/recommendations/#patchless-clients
  *
+ * @param {string} options.host The host that the API is served from, as you'd
+ *    find in the HTTP Host header. This value should be provided for security,
+ *    as the value in the Host header can be set to something arbitrary by the
+ *    client. If you trust the Host header value, though, and don't provide this
+ *    option, the value in the Header will be used.
+ *
  * @param {boolean} options.handleContentNegotiation If the JSON API library
  *    can't produce a representation for the response that the client can
  *    `Accept`, should it return 406 or should it hand the request back to
@@ -32,10 +41,14 @@ export type HTTPStrategyOptions = {
  */
 export default class BaseStrategy {
   protected api: APIController;
-  protected docs: DocsController;
+  protected docs?: DocsController;
   protected config: HTTPStrategyOptions;
 
-  constructor(apiController: APIController, docsController: DocsController, options?: HTTPStrategyOptions) {
+  constructor(
+    apiController: APIController,
+    docsController?: DocsController,
+    options?: HTTPStrategyOptions
+  ) {
     this.api = apiController;
     this.docs = docsController;
 
@@ -44,6 +57,13 @@ export default class BaseStrategy {
       handleContentNegotiation: true,
       ...options
     };
+
+    if(typeof options === 'object' && options != null && !options.host) {
+      logger.warn(
+        "Unsafe: missing `host` option in http strategy. This is unsafe " +
+        "unless you have reason to trust the (X-Forwarded-)Host header."
+      );
+    }
   }
 
   /**
@@ -55,116 +75,159 @@ export default class BaseStrategy {
    *
    * @param {http.IncomingMessage} req original request object from core node module http
    * @param {string} protocol
-   * @param {string} host
+   * @param {string} fallbackHost Host to use if strategy.options.host is not set
    * @param {Object} params object containing url parameters
-   * @param {Object} [query] object containing query parameters
+   * @param {Object} [parsedQuery] object containing pre-parsed query parameters
    */
-  protected buildRequestObject(req, protocol, host, params, query?){
-    const config = this.config;
+  protected async buildRequestObject(
+    req: ServerReq,
+    protocol: string,
+    fallbackHost: string,
+    params: any,
+    parsedQuery?: object
+  ): Promise<Request> {
+    const reqUrl = req.url as string;
+    const queryStartIndex = reqUrl.indexOf("?");
+    const hasQuery = queryStartIndex !== -1;
+    const rawQueryString = hasQuery && reqUrl.substr(queryStartIndex + 1);
 
-    return new Promise<UnsealedRequest>(function(resolve, reject) {
-      const it = new Request();
+    // TODO: investigate use of req.connection.encrypted. Is there a better way?
+    const protocolGuess = protocol || ((req.connection as any).encrypted ? "https" : "http");
+    const host = this.config.host || fallbackHost;
+    const body = await this.getParsedBodyJSON(req); // could throw, rejecting promise.
 
+    return {
       // Handle route & query params
-      if(query) {
-        it.queryParams = query;
-      }
-      else if(req.url.indexOf("?") !== -1) {
-        // TODO: what if there's more than one ?, like an unescaped one in the query string?
-        // I think that's technically invalid, but we should handle it.
-        it.queryParams = qs.parse(req.url.split("?")[1]);
-      }
+      queryParams: parsedQuery || (hasQuery && qs.parse(rawQueryString as string)) || {},
+      rawQueryString: rawQueryString || undefined,
 
-      it.allowLabel        = !!(params.idOrLabel && !params.id);
-      it.idOrIds           = params.id || params.idOrLabel;
-      it.type              = params.type;
-      it.aboutRelationship = !!params.relationship;
-      it.relationship      = params.related || params.relationship;
+      id: params.id,
+      type: params.type,
+      relationship: params.related || params.relationship,
+      aboutRelationship: !!params.relationship,
 
       // Handle HTTP/Conneg.
-      protocol  = protocol || (req.connection.encrypted ? "https" : "http");
-      host      = host || req.headers.host;
+      uri: protocolGuess + "://" + host + req.url,
+      method: (() => {
+        // Support Verb tunneling, but only for PATCH and only if user turns it on.
+        // Turning on any tunneling automatically could be a security issue.
+        // String() cast below is for the rare case that x-http-method-override
+        // header is provided twice (so node parses an array), which we don't support.
+        const usedMethod = (req.method as string).toLowerCase();
+        const requestedMethod =
+          req.headers["x-http-method-override"] &&
+            String(req.headers["x-http-method-override"]).toLowerCase();
 
-      it.uri     = protocol + "://" + host + req.url;
-      it.method  = req.method.toLowerCase();
-      it.accepts = req.headers.accept;
-
-      // Support Verb tunneling, but only for PATCH and only if user turns it on.
-      // Turning on any tunneling automatically could be a security issue.
-      const requestedMethod = (req.headers["x-http-method-override"] || "").toLowerCase();
-      if(config.tunnel && it.method === "post" && requestedMethod === "patch") {
-        it.method = "patch";
-      }
-      else if(requestedMethod) {
-        reject(
-          new APIError(400, undefined, `Cannot tunnel to the method "${requestedMethod.toUpperCase()}".`)
-        );
-      }
-
-      if(hasBody(req)) {
-        if(!isReadableStream(req)) {
-          return reject(
-            new APIError(500, undefined, "Request body could not be parsed. Make sure other no other middleware has already parsed the request body.")
-          );
+        if(this.config.tunnel && usedMethod === "post" && requestedMethod === "patch") {
+          return "patch";
         }
 
-        it.contentType  = req.headers["content-type"];
-        const typeParsed = contentType.parse(req);
-
-        const bodyParserOptions: (getRawBody.Options & { encoding: string}) = {
-          encoding: typeParsed.parameters.charset || "utf8",
-          limit: "1mb"
-        };
-
-        if(req.headers["content-length"] && !isNaN(req.headers["content-length"])) {
-          bodyParserOptions.length = req.headers["content-length"];
+        else if(requestedMethod) {
+          throw Errors.genericValidation({
+            detail: `Cannot tunnel to method "${requestedMethod.toUpperCase()}".`
+          });
         }
 
-        // The req has not yet been read, so let's read it
-        getRawBody(req, bodyParserOptions, function(err, string) {
-          if(err) {
-            reject(err);
-          }
+        return usedMethod;
+      })(),
+      accepts: req.headers.accept,
+      contentType: req.headers["content-type"],
 
-          // Even though we passed the hasBody check, the body could still be
-          // empty, so we check the length. (We can't check this before doing
-          // getRawBody because, while Content-Length: 0 signals an empty body,
-          // there's no similar in-advance clue for detecting empty bodies when
-          // Transfer-Encoding: chunked is being used.)
-          else if(string.length === 0) {
-            it.hasBody = false;
-            it.body = "";
-            resolve(it);
-          }
+      // handle body
+      body
+    };
+  }
 
-          else {
-            try {
-              it.hasBody = true;
-              it.body = JSON.parse(string);
-              resolve(it);
-            }
-            catch (error) {
-              reject(
-                new APIError(400, undefined, "Request contains invalid JSON.")
-              );
-            }
-          }
-        });
+  protected async getParsedBodyJSON(req: ServerReq): Promise<string | undefined> {
+    if(!hasBody(req)) {
+      return undefined;
+    }
+
+    // Note: we always treat the encoding as utf-8 because JSON
+    // is specified to always be utf-8, and letting the sender specify
+    // the encoding we'll parse with (e.g., in req.headers['content-type'])
+    // seeems like poor security hygiene.
+    const bodyParserOptions: getRawBody.Options & { encoding: string } = {
+      encoding: "utf-8",
+      limit: "1mb",
+      ...(hasValidContentLength(req)
+        ? { length: req.headers["content-length"] }
+        : {})
+    };
+
+    const bodyString = await (() => {
+      const reqBody = (req as any).body;
+      const reqRawBody = (req as any).rawBody;
+
+      if(isReadableStream(req)) {
+        return getRawBody(req, bodyParserOptions);
       }
 
-      else {
-        it.hasBody = false;
-        it.body = undefined;
-        resolve(it);
+      else if(Buffer.isBuffer(reqBody)) {
+        return reqBody.toString('utf8');
       }
-    });
+
+      else if(typeof reqBody === 'string') {
+        return reqBody;
+      }
+
+      else if(Buffer.isBuffer(reqRawBody)) {
+        return reqRawBody.toString('utf8');
+      }
+
+      else if(typeof reqRawBody === 'string') {
+        return reqRawBody;
+      }
+
+      return undefined;
+    })();
+
+    // If we couldn't find/make a raw body string, check for something in
+    // req.body before giving up, and just pray that it's the fully-parsed
+    // json we expect (knowing that it can't be a string or a buffer, or
+    // we'd have used it as the bodyString).
+    if(typeof bodyString === "undefined") {
+      if("body" in req) {
+        return (req as any).body;
+      }
+
+      throw new Error(
+        "Request body could not be parsed. Ensure that no other middleware " +
+        "has already read the request or, if that's not possible, ensure " +
+        "that it sets req.rawBody with the unparsed body string, or req.body " +
+        "with parsed JSON."
+      );
+    }
+
+    // Even though we passed the hasBody check, the body could still be
+    // empty, so we check the length. (We can't check this before doing
+    // getRawBody because, while Content-Length: 0 signals an empty body,
+    // there's no similar in-advance clue for detecting empty bodies when
+    // Transfer-Encoding: chunked is being used.)
+    if(bodyString.length === 0) {
+      return undefined;
+    }
+
+    try {
+      return JSON.parse(bodyString);
+    } catch (error) {
+      throw Errors.jsonParse();
+    }
   }
 }
 
-function hasBody(req) {
-  return req.headers["transfer-encoding"] !== undefined || !isNaN(req.headers["content-length"]);
+function hasBody(req: ServerReq) {
+  return req.headers["transfer-encoding"] !== undefined || hasValidContentLength(req);
 }
 
-function isReadableStream(req) {
-  return typeof req._readableState === "object" && req._readableState.endEmitted === false;
+function hasValidContentLength(req: ServerReq) {
+  // intentionally not using Number.isNaN below to cover undefined case
+  // Note that the Node http parser explicitly checks that content-length
+  // is set at most once, so this'll never be an array.
+  return !isNaN(req.headers["content-length"] as any);
+}
+
+function isReadableStream(req: ServerReq) {
+  return typeof (req as any)._readableState === "object"
+    && (req as any)._readableState.endEmitted === false;
 }

@@ -1,40 +1,31 @@
-import APIError from "../../types/APIError";
+import * as Errors from '../../util/errors';
+import { Request } from "../../types";
 
-export function checkBodyExistence(requestContext) {
-  return new Promise(function(resolve, reject) {
-    const needsBody =
-      ["post", "patch"].indexOf(requestContext.method) !== -1 ||
-      (requestContext.method === "delete" && requestContext.aboutRelationship) ||
-      (requestContext.method === "delete" && !requestContext.idOrIds && requestContext.ext.indexOf("bulk") !== -1);
+export async function checkBodyExistence(request: Request) {
+  const hasBody = typeof request.body !== "undefined";
 
-    if(requestContext.hasBody === needsBody) {
-      resolve();
-    }
-    else if(needsBody) {
-      reject(
-        new APIError(400, undefined, "This request needs a body, but didn't have one.")
-      );
-    }
-    else {
-      reject(
-        new APIError(400, undefined, "This request should not have a body, but does.")
-      );
-    }
+  const needsBody =
+    ["post", "patch"].indexOf(<string>request.method) !== -1 ||
+    (request.method === "delete" && request.aboutRelationship) ||
+    (request.method === "delete" && !request.id);
+
+  if(hasBody === needsBody) {
+    return;
+  }
+
+  throw Errors.genericValidation({
+    detail: needsBody
+      ? "This request needs a body, but didn't have one."
+      : "This request should not have a body, but does."
   });
 }
 
-export function checkMethod({method}) {
+export async function checkMethod({ method }: Request) {
   if(["patch", "post", "delete", "get"].indexOf(method) === -1) {
-    const detail = `The method "${method}" is not supported.` + (method === "put" ? " See http://jsonapi.org/faq/#wheres-put" : "");
+    const detail =
+      `The method "${method}" is not supported.` +
+      (method === "put" ? " See http://jsonapi.org/faq/#wheres-put" : "");
 
-    return Promise.reject(new APIError(
-      405,
-      undefined,
-      "Method not supported.",
-      detail
-    ));
-  }
-  else {
-    return Promise.resolve();
+    throw Errors.generic405({ detail });
   }
 }

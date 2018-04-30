@@ -1,18 +1,55 @@
+import { Reduceable } from "../types";
+
+export function isPlainObject(obj: object) {
+  return typeof obj === "object" && !(Array.isArray(obj) || obj === null);
+}
+
+/**
+ * Returns whether it's argument has no enumerable, own properties.
+ */
+export function objectIsEmpty(obj: object) {
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Returns a reducer function that'll add the input value
+ * to the accumunlated object at the key determined by makeKey.
+ */
+export const reduceToObject = (makeKey) => (acc, it) => {
+  acc[makeKey(it)] = it;
+  return acc;
+};
+
+/**
+ * A reducer function encapsulating the common pattern of reducing
+ * into an object where the values are keyed by the input's id.
+ */
+export const reduceById = reduceToObject(it => it.id);
+
 /**
  * Takes an arbitrary path string e.g. "user.contact.phone" and locates the
  * corresponding property on an object `obj` and deletes it (ie. does
  * `delete obj.user.contact.phone`). It doesn't use eval, which makes it safer.
  */
-export function deleteNested(path, object) {
+export function deleteNested(path: string, object: object) {
   try {
     const pathParts = path.split(".");
     const lastPartIndex = pathParts.length - 1;
     const lastPart = pathParts[lastPartIndex];
     const containingParts = pathParts.slice(0, lastPartIndex);
-    const container = containingParts.reduce(((obj, part) => obj[part]), object);
+    const container = containingParts.reduce(
+      (obj, part) => (obj as any)[part],
+      object
+    );
 
     if(container.hasOwnProperty(lastPart)) {
-      delete container[lastPart];
+      delete container[lastPart]; //tslint:disable-line no-dynamic-delete
       return true;
     }
     else {
@@ -29,14 +66,52 @@ export function deleteNested(path, object) {
  * Returns whether one array's items are a subset of those in the other.
  * Both array's elements are assumed to be unique.
  */
-export function isSubsetOf(setArr, potentialSubsetArr) {
+export function isSubsetOf(setArr: any[], potentialSubsetArr: any[]) {
   const set = new Set(setArr);
 
   return potentialSubsetArr.every((it) => set.has(it) === true);
 }
 
-export function isPlainObject(obj) {
-  return typeof obj === "object" && !(Array.isArray(obj) || obj === null);
+export function setDifference(minuendArr: any[], subtrahendArr: any[]) {
+  const res = new Set(minuendArr);
+  subtrahendArr.forEach(it => res.delete(it));
+  return res;
+}
+
+/**
+ * Note that this is only safe with chars in the BMP.
+ * See: https://mathiasbynens.be/notes/javascript-unicode
+ */
+export const stripLeadingBMPChar = (char: string) => (it: string) => {
+  // The below works because, though string[0] could be a surrogate,
+  // it will only === char if it's not: "the ranges for the
+  // high surrogates, low surrogates, and valid BMP characters
+  // are disjoint, [so] it is not possible for a surrogate to
+  // match a BMP character".
+  return it[0] === char ? it.slice(1) : it;
+};
+
+
+/**
+ * Takes a reducable set of items and partitions those items based on the
+ * return value of a function run over each item or, for convenience, a string
+ * property name. Returns an object where the keys are (the stringified version
+ * of) the value that each object in the partition matched on. The value at
+ * each key is an array of items.
+ */
+export function partition<T>(
+  fnOrKey: ((it: T) => string) | string,
+  items: Reduceable<T, { [partitionName: string]: T[] }>
+) {
+  const partitionFn = typeof fnOrKey === 'function'
+    ? fnOrKey
+    : (it: T) => it[fnOrKey] as string;
+
+  return items.reduce((acc, item) => {
+    const partitionName = partitionFn(item);
+    acc[partitionName] = [...(acc[partitionName] || []), item];
+    return acc;
+  }, Object.create(null));
 }
 
 /**
@@ -55,12 +130,18 @@ export function isPlainObject(obj) {
  *
  * @return {string[]} The nodes, sorted.
  */
-export function pseudoTopSort(nodes, edges: {[from: string]: {[to: string]: true}}, roots) {
+export function pseudoTopSort(
+  nodes: string[],
+  edges: { [from: string]: { [to: string]: true } },
+  roots: string[]
+) {
   // Do some defensive copying, in case the caller didn't.
+  /* tslint:disable no-parameter-reassignment */
   roots = roots.slice();
   nodes = nodes.slice();
-  edges = {...edges};
-  for(const key in edges) { edges[key] = {...edges[key]}; }
+  edges = { ...edges };
+  Object.keys(edges).forEach(key => { edges[key] = { ...edges[key] }; });
+  /* tslint:enable no-parameter-reassignment */
 
   // "L = Empty list that will contain the sorted elements"
   const sortResult: string[] = [];
@@ -77,15 +158,16 @@ export function pseudoTopSort(nodes, edges: {[from: string]: {[to: string]: true
     sortResult.push(thisRoot);
 
     // "for each node m with an edge e from n to m do"
-    for(const child in thisRootChildren) {
+    Object.keys(thisRootChildren).forEach(child => {
       // "remove edge e from the graph"
+      // tslint:disable-next-line no-dynamic-delete
       delete thisRootChildren[child];
 
       // SKIP: "if m has no other incoming edges..."
       // we don't need this check because we assumed max 1 incoming edge.
       // But: "then insert m into S".
       roots.push(child);
-    }
+    });
   }
 
   return sortResult;

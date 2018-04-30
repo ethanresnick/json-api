@@ -3,14 +3,14 @@ import { entries as objectEntries } from "./objectValueEntries";
 
 // create an logger for each log level
 const loggers = {
-  info: debug("twilio-ivr:info"),
-  warn: debug("twilio-ivr:warn"),
-  error: debug("twilio-ivr:error")
-}
+  info: debug("json-api:info"),
+  warn: debug("json-api:warn"),
+  error: debug("json-api:error")
+};
 
 // Bind each logger to the corresponding console method.
 objectEntries(loggers).forEach(([name, logger]) => {
-  logger.log = (<any>console)[name].bind(console);
-})
+  logger.log = console[<keyof typeof loggers>name].bind(console);
+});
 
 export default loggers;

@@ -1,184 +1,257 @@
-import {expect} from "chai";
+import { expect } from "chai";
 import AgentPromise from "../../app/agent";
 
 describe("Fetching Collection", () => {
-  let res, Agent;
+  let Agent;
+  before(() => {
+    return AgentPromise.then(A => { Agent = A; });
+  });
 
-  before(done => {
-    AgentPromise.then(A => {
-      Agent = A;
+  describe("Fetching all organizations", () => {
+    let res;
+    before(() => {
       return Agent.request("GET", "/organizations")
         .accept("application/vnd.api+json")
-        .promise();
-    }, done).then(response => {
-      res = response;
-      done();
-    }).catch(done);
-  });
-
-  describe("Status Code", () => {
-    it("should be 200", () => {
-      expect(res.status).to.equal(200);
-    });
-  });
-
-  describe("Document Structure", () => {
-    // "A JSON object MUST be at the root of every
-    // JSON API request and response containing data."
-    it("should have an object/document at the top level", () => {
-      expect(res.body).to.be.an('object');
+        .then(response => {
+          res = response;
+        });
     });
 
-    describe("Top-Level Links", () => {
-      it("should contain a self link to the collection", () => {
-        expect(res.body.links).to.be.an('object');
-        expect(res.body.links.self).to.match(/\:\d{1,5}\/organizations/);
+    describe("Status Code", () => {
+      it("should be 200", () => {
+        expect(res.status).to.equal(200);
       });
     });
 
-    describe("Resource Objects/Primary Data", () => {
-      // "A logical collection of resources MUST be represented as
-      //  an array, even if it only contains one item or is empty."
-      it("should be an array under data", () => {
-        expect(res.body.data).to.be.an("array");
+    describe("Document Structure", () => {
+      // "A JSON object MUST be at the root of every
+      // JSON API request and response containing data."
+      it("should have an object/document at the top level", () => {
+        expect(res.body).to.be.an("object");
       });
 
-      // "Unless otherwise noted, objects defined by this
-      //  specification MUST NOT contain any additional members."
-      it("should not contain extra members", () => {
-        const isAllowedKey = (key) =>
-          ["type", "id", "attributes", "relationships", "links", "meta"].indexOf(key) !== -1;
-
-        if(!Object.keys(res.body.data[0]).every(isAllowedKey)) {
-          throw new Error("Invalid Key!");
-        }
-      });
-
-      it("should contain links under each relationship", () => {
-        // check each liaison relationship for a links object with links in it.
-        res.body.data.map(it => it.relationships.liaisons).forEach((it) => {
-          expect(it.links).to.be.an("object");
-          expect(it.self).to.be.undefined;
-          expect(it.related).to.be.undefined;
-
-          expect(it.links.self).to.be.a("string");
-          expect(it.data).to.not.be.undefined; //can be null, though
+      describe("Top-Level Links", () => {
+        it("should contain a self link to the collection", () => {
+          expect(res.body.links).to.be.an('object');
+          expect(res.body.links.self).to.equal(`${Agent.baseUrl}/organizations`);
         });
       });
 
-      // This test is good on its own, and the next couple tests also assume it passes.
-      it("should contain both organizations and schools", () => {
-        expect(res.body.data.some(it => it.type === "schools")).to.be.true;
-        expect(res.body.data.some(it => it.type === "organizations")).to.be.true;
-      });
+      describe("Resource Objects/Primary Data", () => {
+        // "A logical collection of resources MUST be represented as
+        //  an array, even if it only contains one item or is empty."
+        it("should be an array under data", () => {
+          expect(res.body.data).to.be.an("array");
+        });
 
-      it("should have transformed all resources, including sub types", () => {
-        expect(res.body.data.every(resource => {
-          return resource.attributes.addedBeforeRender;
-        })).to.be.true;
+        // "Unless otherwise noted, objects defined by this
+        //  specification MUST NOT contain any additional members."
+        it("should not contain extra members", () => {
+          const isAllowedKey = (key) =>
+            ["type", "id", "attributes", "relationships", "links", "meta"].indexOf(key) !== -1;
+
+          if(!Object.keys(res.body.data[0]).every(isAllowedKey)) {
+            throw new Error("Invalid Key!");
+          }
+        });
+
+        it("should contain links under each relationship", () => {
+          // check each liaison relationship for a links object with links in it.
+          res.body.data.map(it => it.relationships.liaisons).forEach((it) => {
+            expect(it.links).to.be.an("object");
+            expect(it.self).to.be.undefined;
+            expect(it.related).to.be.undefined;
+
+            expect(it.links.self).to.be.a("string");
+            expect(it.data).to.not.be.undefined; //can be null, though
+          });
+        });
+
+        // This test is good on its own, and the next couple tests also assume it passes.
+        it("should contain both organizations and schools", () => {
+          expect(res.body.data.some(it =>
+            it.meta && it.meta.types && it.meta.types.includes("schools")
+          )).to.be.true;
+          expect(res.body.data.every(it => it.type === "organizations")).to.be.true;
+        });
+
+        it("should have transformed all resources, including sub types", () => {
+          expect(res.body.data.every(resource => {
+            return resource.attributes.addedBeforeRender;
+          })).to.be.true;
+        });
+
+        it("should not contain resources removed in beforeRender", () => {
+          expect(res.body.data.every(resource => {
+            return resource.id !== "59af14d3bbd18cd55ea08ea2"
+          })).to.be.true;
+        });
       });
     });
+  });
 
-    describe("Fetching Ascending Gendered Collection", () => {
-      before(done => {
-        Agent.request("GET", "/people?sort=gender")
-          .accept("application/vnd.api+json")
-          .promise()
-          .then(response => {
-            res = response;
-            done();
-          }).catch(done);
-      });
+  describe("Fetching Ascending Gendered Collection", () => {
+    let res;
+    before(() => {
+      return Agent.request("GET", "/people?sort=gender")
+        .accept("application/vnd.api+json")
+        .then(response => {
+          res = response;
+        });
+    });
 
-      it("should have Jane above John", () => {
-        const johnJaneList = res.body.data.map((it) => it.attributes.name).filter((it) => {
+    it("should have Jane above John", () => {
+      const johnJaneList = res.body.data
+        .map(it => it.attributes.name)
+        .filter(it => {
           return ["John Smith", "Jane Doe"].indexOf(it) > -1;
         });
-        expect(johnJaneList[0]).to.equal("Jane Doe");
-        expect(johnJaneList[1]).to.equal("John Smith");
-      });
+      expect(johnJaneList[0]).to.equal("Jane Doe");
+      expect(johnJaneList[1]).to.equal("John Smith");
+    });
+  });
+
+  describe("Fetching Descended Sorted Name Collection", () => {
+    let res;
+    before(() => {
+      return Agent.request("GET", "/people?sort=-name")
+        .accept("application/vnd.api+json")
+        .then(response => {
+          res = response;
+        });
     });
 
-    describe("Fetching Descended Sorted Name Collection", () => {
-      before(done => {
-        Agent.request("GET", "/people?sort=-name")
-          .accept("application/vnd.api+json")
-          .promise()
-          .then(response => {
-            res = response;
-            done();
-          }).catch(done);
-      });
-
-      it("Should have John above Jane", () => {
-        const johnJaneList = res.body.data.map((it) => it.attributes.name).filter((it) => {
+    it("Should have John above Jane", () => {
+      const johnJaneList = res.body.data
+        .map(it => it.attributes.name)
+        .filter(it => {
           return ["John", "Jane"].indexOf(it.substring(0, 4)) > -1;
         });
-        expect(johnJaneList[0]).to.equal("John Smith");
-        expect(johnJaneList[1]).to.equal("Jane Doe");
-      });
+      expect(johnJaneList).to.deep.equal(["John Smith", "Jane Doe"]);
     });
   });
 
   describe("Fetching Multi-Sorted Collection", () => {
-    before(done => {
-      Agent.request("GET", "/people?sort=-gender,name")
+    let res;
+    before(() => {
+      return Agent.request("GET", "/people?sort=-gender,name")
         .accept("application/vnd.api+json")
-        .promise()
         .then(response => {
           res = response;
-          done();
-        }).catch(done);
+        });
     });
 
-    it("Should have John above Jane", () => {
-      expect(res.body.data.map((it) => it.attributes.name)).to.deep.equal([
+    it("Should have Doug before John; both before Jane", () => {
+      const johnJaneDougList = res.body.data.map((it) => it.attributes.name).filter((it) => {
+        return ["John", "Jane", "Doug"].indexOf(it.substring(0, 4)) > -1;
+      });
+
+      expect(johnJaneDougList).to.deep.equal([
         "Doug Wilson", "John Smith", "Jane Doe"
       ]);
     });
   });
 
-  describe("Fetching with Offset and Limit", () => {
-    before(done => {
-      Agent.request("GET", "/people?page[offset]=1&page[limit]=1")
+  describe("Fetching with Offset and Limit (reverse name sorted for determinism)", () => {
+    let res;
+    before(() => {
+      return Agent.request("GET", "/people?sort=-name&page[offset]=1&page[limit]=3")
         .accept("application/vnd.api+json")
-        .promise()
         .then(response => {
           res = response;
-          done();
-        }).catch(done);
+        });
     });
 
-    it("Should only have the 2nd person", () => {
-      expect(res.body.data.map((it) => it.attributes.name)).to.deep.equal([
-        "Jane Doe"
+    it("should only return exactly the 3 people we expect", () => {
+      expect(res.body.data.map(it => it.attributes.name)).to.deep.equal([
+        "John Smith",
+        "Jane Doe",
+        "Doug Wilson"
       ]);
     });
 
     it("Should include the total record count", () => {
       expect(res.body.meta).to.deep.equal({
-        total: 3
+        total: 5
       });
     });
   });
 
-  describe("Fetching Descended Sorted by Name with Offset and Limit", () => {
-    before(done => {
-      Agent.request("GET", "/people?sort=-name&page[offset]=1&page[limit]=3")
+  describe("Filtering", () => {
+    it("should support simple equality filters", () => {
+      return Agent.request("GET", "/people")
+        .query("filter=(name,eq,`Doug Wilson`)")
         .accept("application/vnd.api+json")
-        .promise()
-        .then(response => {
-          res = response;
-          done();
-        }).catch(done);
+        .then((res) => {
+          expect(res.body.data).to.have.length(1);
+          expect(res.body.data[0].attributes.name).to.equal("Doug Wilson");
+        });
     });
 
-    it("Should have Jane above Doug", () => {
-      const johnJaneList = res.body.data.map((it) => it.attributes.name).filter((it) => {
-        return ["Doug", "Jane"].indexOf(it.substring(0, 4)) > -1;
-      });
-      expect(johnJaneList[0]).to.equal("Jane Doe");
-      expect(johnJaneList[1]).to.equal("Doug Wilson");
+    it("should support user's custom filters", (done) => {
+      Agent.request("GET", '/people/custom-filter-test?customNameFilter=Doug Wilson')
+        .accept("application/vnd.api+json")
+        .then((res) => {
+          expect(res.body.data).to.have.length(1);
+          expect(res.body.data[0].attributes.name).to.equal("Doug Wilson");
+          done();
+        }, done).catch(done);
+    });
+
+
+    it("should still return resource array even with a single id filter", () => {
+      return Agent.request("GET", "/organizations")
+        .query("filter=(id,`54419d550a5069a2129ef254`)")
+        .accept("application/vnd.api+json")
+        .then((res) => {
+          expect(res.body.data).to.be.an("array");
+          expect(res.body.data).to.have.length(1);
+          expect(res.body.data[0].id).to.equal("54419d550a5069a2129ef254");
+        });
+    });
+
+    it("should give a nice error on invalid filter syntax/values", () => {
+      const invalidFilterStringsToErrorRegexs = {
+        "filter=(id,n,`54419d550a5069a2129ef254`)": /valid operator symbol/i,
+        "filter=(id,neq,`54419d550a5069a2129ef254`,x)": /exactly three items/i,
+        "filter=(4,4)": /field reference/i,
+        "filter=true": /Expected field expression/i,
+        "filter=(and,(true))": /valid operator symbol/i,
+        "filter=(and,((true:false)))": /Expected field expression but \"\(\" found/,
+        "filter=(()": /Expected field expression but \"\(\" found/,
+        "filter=(and,(eq))": /must be infixed/ // should be deep validating exps.
+      };
+
+      return Promise.all(
+        Object.keys(invalidFilterStringsToErrorRegexs).map(filterString =>
+          Agent.request("GET", "/organizations")
+            .query(filterString)
+            .accept("application/vnd.api+json")
+            .then((res) => {
+              throw new Error("shouldn't run");
+            }, (e) => {
+              const jsonErr = e.response.body.errors[0];
+              expect(e.response.status).to.equal(400);
+              expect(jsonErr.code).to.equal("https://jsonapi.js.org/errors/invalid-query-param-value");
+              expect(jsonErr.source).to.deep.equal({ parameter: "filter" });
+              expect(jsonErr.detail).to.match(invalidFilterStringsToErrorRegexs[filterString]);
+            })
+        )
+      );
+    });
+  });
+
+  describe("Fetching with includes", () => {
+    it("should not contain duplicate resources", () => {
+      return Agent.request("GET", "/organizations")
+        .query("include=liaisons")
+        .accept("application/vnd.api+json")
+        .then(res => {
+          const janeDoes =
+            res.body.included.filter(it => it.attributes.name === 'Jane Doe');
+
+          expect(janeDoes).to.have.length(1);
+        });
     });
   });
 });

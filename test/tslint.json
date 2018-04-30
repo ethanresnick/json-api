@@ -1,0 +1,24 @@
+{
+  "extends": "@ethanresnick/tslint-config",
+  "rules": {
+    // disable because of chai's assertion format,
+    // and lack of easy support for dirty-chai with ts.
+    "no-unused-expression": false,
+
+    // allow references to dev dependencies only from tests.
+    "no-implicit-dependencies": [true, "dev"],
+
+    // (temporarily, at least) turn off a bunch of semi-naggy rules,
+    // so we can actually get the build to pass with linting enabled
+    // while focusing our attention on current linting errors that
+    // *do* point to real bugs. Then, we can gradually reenable these.
+    "completed-docs": false,
+    "curly": false,
+    "member-ordering": false,
+    "max-file-line-count": false,
+    "no-console": false,
+    "typeof-compare": false,
+    "no-object-literal-type-assertion": false,
+    "no-inferred-empty-object-type": false
+  }
+}

@@ -1,9 +1,9 @@
 import chai = require("chai");
 import AgentPromise from "../../app/agent";
-import {VALID_ORG_RESOURCE_NO_ID} from "../fixtures/creation";
-import {VALID_ORG_STATE_GOVT_PATCH} from "../fixtures/updates";
+import { VALID_ORG_RESOURCE_NO_ID } from "../fixtures/creation";
+import { VALID_ORG_STATE_GOVT_PATCH } from "../fixtures/updates";
 
-const {expect} = chai;
+const { expect } = chai;
 
 AgentPromise.then((Agent) => {
   describe("Content Negotiation", () => {
@@ -13,14 +13,14 @@ AgentPromise.then((Agent) => {
     it("must reject parameterized content-type", (done) => {
       Agent.request("POST", "/organizations")
         .type("application/vnd.api+json;ext=blah")
-        .send({"data": VALID_ORG_RESOURCE_NO_ID})
+        .send({ data: VALID_ORG_RESOURCE_NO_ID })
         .promise()
         .then(() => {
           done(new Error("Should not run!"));
         }, (err) => {
           expect(err.status).to.equal(415);
           expect(err.response.body.errors).to.be.an("array");
-          expect(err.response.body.errors[0].title).to.equal("Invalid Media Type Parameter(s)");
+          expect(err.response.body.errors[0].code).to.equal("https://jsonapi.js.org/errors/invalid-media-type-parameter");
           done();
         }).catch(done);
     });
@@ -30,7 +30,7 @@ AgentPromise.then((Agent) => {
     it("must accept charset parameter", (done) => {
       Agent.request("POST", "/organizations")
         .type("application/vnd.api+json;charset=utf-8")
-        .send({"data": VALID_ORG_RESOURCE_NO_ID})
+        .send({ data: VALID_ORG_RESOURCE_NO_ID })
         .promise()
         .then((res) => {
           expect(res.status).to.equal(201);
@@ -44,7 +44,7 @@ AgentPromise.then((Agent) => {
     it("must prefer sending JSON API media type, if its acceptable", (done) => {
       Agent.request("POST", "/organizations")
         .accept("application/vnd.api+json, application/json")
-        .send({"data": VALID_ORG_RESOURCE_NO_ID})
+        .send({ data: VALID_ORG_RESOURCE_NO_ID })
         .type("application/vnd.api+json")
         .promise()
         .then((res) => {
@@ -54,7 +54,7 @@ AgentPromise.then((Agent) => {
         }, done).catch(done);
     });
 
-    it.skip("should use the json-api media type for errors if no json accepted, even if not acceptable", (done) => {
+    it("should use the json-api media type for errors if no json accepted, even if not acceptable", (done) => {
       Agent.request("GET", "/organizations/unknown-id")
         .accept("text/html")
         .promise()
@@ -80,7 +80,7 @@ AgentPromise.then((Agent) => {
 
     it("should by default 406 if the client can't accept json", (done) => {
       Agent.request("GET", "/organizations")
-        .accept('text/html')
+        .accept("text/html")
         .promise()
         .then(res => {
           done(new Error("Should not run, since this request should be a 404"));
@@ -92,12 +92,28 @@ AgentPromise.then((Agent) => {
 
     it("should delegate 406s to express if strategy so configured", (done) => {
       Agent.request("GET", "/organizations/no-id/406-delegation-test")
-        .accept('text/html')
+        .accept("text/html")
         .promise()
         .then(res => {
           expect(res.text).to.equal("Hello from express");
           done();
         }, done).catch(done);
+    });
+
+    it("should not set a content-type header on 204 responses", (done) => {
+      return Agent.request("POST", "/organizations")
+        .type("application/vnd.api+json")
+        .send({"data": VALID_ORG_RESOURCE_NO_ID })
+        .then((response) => {
+          const orgId = response.body.data.id;
+          return Agent.request("DELETE", `/organizations/${orgId}`).promise();
+        })
+        .then((res) => {
+          expect(res.status).to.equal(204);
+          expect(res.headers["content-type"]).to.be.undefined;
+          done();
+        })
+        .catch(done);
     });
   });
 });

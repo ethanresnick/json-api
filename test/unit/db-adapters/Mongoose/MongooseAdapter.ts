@@ -1,6 +1,10 @@
-import {expect} from "chai";
+import { expect } from "chai";
 import mongoose = require("mongoose");
 import APIError from "../../../../src/types/APIError";
+import {
+  Identifier, FieldExpression
+} from '../../../../src/steps/pre-query/parse-query-params';
+import { AndExpression } from "../../../../src/types";
 import MongooseAdapter from "../../../../src/db-adapters/Mongoose/MongooseAdapter";
 
 describe("Mongoose Adapter", () => {
@@ -8,48 +12,12 @@ describe("Mongoose Adapter", () => {
     describe("getModel", () => {
       it("should throw an exception for unknown models", () => {
         const adapter = new MongooseAdapter({});
-        expect(() => { adapter.getModel("x"); }).to.throw(/model .+ has not been registered/);
+        expect(() => { adapter.getModel("x"); }).to.throw(/no model .+ registered/i);
       });
     });
   });
 
   describe("its static methods", () => {
-    const typesToModelNames = {
-      "teams": "Team",
-      "jobs": "Job",
-      "events": "Event",
-      "venues": "Venue",
-      "related-clubs": "RelatedClub",
-      "team-memberships": "TeamMembership"
-    };
-
-    describe("getType", () => {
-      it("should lowercase & pluralize the model name; use dashes in camelCased names", () => {
-        for(const type in typesToModelNames) {
-          expect(MongooseAdapter.getType(typesToModelNames[type])).to.equal(type);
-        }
-      });
-
-      it("should use a custom pluralize if provided", () => {
-        const pluralize = () => "customplural";
-        expect(MongooseAdapter.getType("TestModel", pluralize)).to.equal("customplural");
-      });
-    });
-
-    describe("getModelName", () => {
-      it("should reverse getType", () => {
-        for(const type in typesToModelNames) {
-          const modelName = typesToModelNames[type];
-          expect(MongooseAdapter.getModelName(type)).to.equal(modelName);
-        }
-      });
-
-      it("should use a custom singularizer if provided", () => {
-        const singularize = () => "customsingular";
-        expect(MongooseAdapter.getModelName("test-models", singularize)).to.equal("TestCustomsingular");
-      });
-    });
-
     describe("getFriendlyName", () => {
       it("should detect camel-cased words, and separate and capitalize each one", () => {
         expect(MongooseAdapter.toFriendlyName("twitterId")).to.equal("Twitter Id");
@@ -68,74 +36,115 @@ describe("Mongoose Adapter", () => {
       });
     });
 
-    describe("getIdQueryType", () => {
-      it("should handle empty input", () => {
-        const res = MongooseAdapter.getIdQueryType();
-        expect(res[0]).to.equal("find");
-        expect(res[1]).to.deep.equal({});
+    describe("assertIdsValid", () => {
+      it("should return void on empty input, a valid id, or valid ids", () => {
+        const basicPredicate = FieldExpression(
+          <"and">"and",
+          [FieldExpression("eq", [Identifier("a"), <any>"b"])]
+        );
+
+        const validInputs = [
+          basicPredicate,
+          {
+            ...basicPredicate,
+            args: basicPredicate.args.concat({
+              type: "FieldExpression",
+              operator: "eq",
+              args: [Identifier("id"), "552c5e1c604d41e5836bb174"]
+            })
+          },
+          {
+            ...basicPredicate,
+            args: basicPredicate.args.concat({
+              type: "FieldExpression",
+              operator: "in",
+              args: [
+                Identifier("id"),
+                ["552c5e1c604d41e5836bb174", "552c5e1c604d41e5836bb175"]
+              ]
+            })
+          }
+        ];
+
+        const results = validInputs.map(it =>
+          // tslint:disable-next-line: no-void-expression
+          MongooseAdapter.assertIdsValid((it as any) as AndExpression, true)
+        );
+
+        expect(results.every(it => it === undefined)).to.be.true;
       });
 
-      describe("string", () => {
-        it("should throw on invalid input", () => {
-          const fn = function() { MongooseAdapter.getIdQueryType("1"); };
-          expect(fn).to.throw(APIError);
-        });
+      it("should throw on an invalid id, or if any id in an array is invalid", () => {
+        const fn = () => {
+          MongooseAdapter.assertIdsValid(
+            FieldExpression(
+              <"and">"and",
+              [
+                FieldExpression("eq", [Identifier("a"), <any>"b"]),
+                FieldExpression("eq", [Identifier("id"), "1"])
+              ]
+            ),
+            true
+          );
+        }
 
-        it("should produce query on valid input", () => {
-          const res = MongooseAdapter.getIdQueryType("552c5e1c604d41e5836bb174");
-          expect(res[0]).to.equal("findOne");
-          expect((<any>res[1])._id).to.equal("552c5e1c604d41e5836bb174");
-        });
-      });
+        expect(fn).to.throw(APIError);
 
-      describe("array", () => {
-        it("should throw if any ids are invalid", () => {
-          const fn = function() { MongooseAdapter.getIdQueryType(["1", "552c5e1c604d41e5836bb174"]); };
-          expect(fn).to.throw(APIError);
-        });
+        const fn2 = () => {
+          MongooseAdapter.assertIdsValid(
+            FieldExpression(
+              <"and">"and",
+              [{
+                type: "FieldExpression",
+                args: [Identifier("a"), "b"],
+                operator: "eq"
+              },
+              {
+                type: "FieldExpression",
+                args: [Identifier("id"), ["1", "552c5e1c604d41e5836bb174"]],
+                operator: "in"
+              }]
+            ),
+            false
+          );
+        };
 
-        it("should produce query on valid input", () => {
-          const res = MongooseAdapter.getIdQueryType(["552c5e1c604d41e5836bb174", "552c5e1c604d41e5836bb175"]);
-          expect(res[0]).to.equal("find");
-          expect((<any>res[1])._id.$in).to.be.an('array');
-          expect((<any>res[1])._id.$in[0]).to.equal("552c5e1c604d41e5836bb174");
-          expect((<any>res[1])._id.$in[1]).to.equal("552c5e1c604d41e5836bb175");
-        });
+        expect(fn2).to.throw(APIError);
       });
     });
 
     describe("idIsValid", () => {
       it("should reject all == null input", () => {
-        expect((<any>MongooseAdapter).idIsValid()).to.not.be.ok;
-        expect(MongooseAdapter.idIsValid(null)).to.not.be.ok;
-        expect(MongooseAdapter.idIsValid(undefined)).to.not.be.ok;
+        expect((<any>MongooseAdapter).idIsValid()).to.be.false;
+        expect(MongooseAdapter.idIsValid(null)).to.be.false;
+        expect(MongooseAdapter.idIsValid(undefined)).to.be.false;
       });
 
       it("should reject bad input type", () => {
-        expect(MongooseAdapter.idIsValid(true)).to.not.be.ok;
+        expect(MongooseAdapter.idIsValid(true)).to.be.false;
       });
 
       it("should reject empty string", () => {
-        expect(MongooseAdapter.idIsValid("")).to.not.be.ok;
+        expect(MongooseAdapter.idIsValid("")).to.be.false;
       });
 
       // the string coming into the MongooseAdapter needs to be the 24-character,
       // hex encoded version of the ObjectId, not an arbitrary 12 byte string.
       it("should reject 12-character strings", () => {
-        expect(MongooseAdapter.idIsValid("aaabbbccc111")).to.not.be.ok;
+        expect(MongooseAdapter.idIsValid("aaabbbccc111")).to.be.false;
       });
 
       it("should reject numbers", () => {
-        expect(MongooseAdapter.idIsValid(1)).to.not.be.ok;
+        expect(MongooseAdapter.idIsValid(1)).to.be.false;
       });
 
       it("should accpet valid hex string", () => {
-        expect(MongooseAdapter.idIsValid("552c5e1c604d41e5836bb175")).to.be.ok;
+        expect(MongooseAdapter.idIsValid("552c5e1c604d41e5836bb175")).to.be.true;
       });
     });
 
     describe("getStandardizedSchema", () => {
-      let schemaRaw;
+      let schemaRaw: any;
       let standardizedSchema;
 
       before(() => {
@@ -197,7 +206,8 @@ describe("Mongoose Adapter", () => {
 
       it("should work with all the ways of declaring enums", () => {
         const fields = standardizedSchema.reduce((prev, field) => {
-          prev[field.name] = field; return prev;
+          prev[field.name] = field;
+          return prev;
         }, {});
 
         // Mongoose only supports the enum validator on string fields, but it

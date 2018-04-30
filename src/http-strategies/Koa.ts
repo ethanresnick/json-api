@@ -1,4 +1,4 @@
-import vary from "vary";
+import varyLib from "vary";
 import API from "../controllers/API";
 import Base from "./Base";
 
@@ -23,7 +23,7 @@ import Base from "./Base";
  *    can set this option to false to have this code just pass on to Koa.
  */
 export default class KoaStrategy extends Base {
-  constructor(apiController, docsController, options) {
+  constructor(apiController, docsController?, options?) {
     super(apiController, docsController, options);
   }
 
@@ -33,9 +33,9 @@ export default class KoaStrategy extends Base {
   // PATCH /:type/:id/links/:relationship, POST /:type/:id/links/:relationship,
   // and DELETE /:type/:id/links/:relationship.
   apiRequest() {
-    const strategy = this;
-    return function *(next){
-      const ctx = this;
+    const strategy = this; // tslint:disable-line no-this-assignment
+    return function *(this: any, next: any){
+      const ctx = this; // tslint:disable-line no-this-assignment
       try {
         const reqObj = yield strategy.buildRequestObject(ctx.req, ctx.protocol, ctx.host, ctx.params);
         const resObj = yield strategy.api.handle(reqObj, ctx.request, ctx.response);
@@ -51,15 +51,25 @@ export default class KoaStrategy extends Base {
   }
 
   // For requests for the documentation.
-  docsRequest() {
-    const strategy = this;
-    return function *(next){
-      const ctx = this;
+  get docsRequest() {
+    if (this.docs == null) {
+      throw new Error('Cannot get docs request handler. '
+        + 'No docs controller was provided to the HTTP strategy.');
+    }
+
+    return this._docsRequest;
+  }
+
+  _docsRequest = () => {
+    const strategy = this; // tslint:disable-line no-this-assignment
+
+    return function*(this: any, next: any) {
+      const ctx = this; // tslint:disable-line no-this-assignment
       try {
         const reqObj = yield strategy.buildRequestObject(ctx.req, ctx.protocol, ctx.host, ctx.params);
-        const resObj = yield strategy.docs.handle(reqObj, ctx.request, ctx.response);
+        const resObj = yield strategy.docs && strategy.docs.handle(reqObj, ctx.request, ctx.response);
         const delegate406Handling = strategy.sendResources(resObj, ctx);
-        if(delegate406Handling){
+        if (delegate406Handling) {
           yield next;
         }
       }
@@ -69,23 +79,24 @@ export default class KoaStrategy extends Base {
     };
   }
 
-  sendResources(responseObject, ctx): void | true {
-    if(responseObject.headers.vary) {
-      vary(ctx.res, responseObject.headers.vary);
+  protected sendResources(responseObject, ctx): void | true {
+    const { vary, ...otherHeaders } = responseObject.headers;
+
+    if(vary) {
+      varyLib(ctx.res, vary);
     }
 
     if(responseObject.status === 406 && !this.config.handleContentNegotiation) {
       return true;
     }
 
-    ctx.set("Content-Type", responseObject.contentType);
-    ctx.status = responseObject.status || 200;
+    ctx.status(responseObject.status || 200);
 
-    if(responseObject.headers.location) {
-      ctx.set("Location", responseObject.headers.location);
-    }
+    Object.keys(otherHeaders).forEach(k => {
+      ctx.res.set(k, otherHeaders[k]);
+    });
 
-    if(responseObject.body !== null) {
+    if(responseObject.body !== undefined) {
       ctx.body = new Buffer(responseObject.body);
     }
   }
@@ -99,12 +110,12 @@ export default class KoaStrategy extends Base {
    * @param {Error|APIError|Error[]|APIError[]} errors Error or array of errors
    * @param {Object} ctx Koa's context object
    */
-  sendError(errors, ctx) {
-    API.responseFromExternalError(errors, ctx.headers.accept).then(
-      (responseObject) => this.sendResources(responseObject, ctx)
-    ).catch((err) => {
-      // if we hit an error generating our error...
-      ctx.throw(err.message, err.status);
-    });
+  sendError(this: any, errors, ctx) {
+    API.responseFromError(errors, ctx.headers.accept)
+      .then(responseObject => this.sendResources(responseObject, ctx))
+      .catch(err => {
+        // if we hit an error generating our error...
+        ctx.throw(err.message, err.status);
+      });
   }
 }

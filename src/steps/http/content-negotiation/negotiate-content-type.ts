@@ -1,7 +1,6 @@
-import Q = require("q");
 import Negotiator = require("negotiator");
-import APIError from "../../../types/APIError";
-import {objectIsEmpty} from "../../../util/type-handling";
+import * as Errors from "../../../util/errors";
+import { objectIsEmpty } from "../../../util/misc";
 
 /**
  * Negotiate the Content-Type to use for the response.
@@ -17,7 +16,7 @@ import {objectIsEmpty} from "../../../util/type-handling";
  *    or false if no acceptable one exists.
  */
 export default function(acceptHeader, availableBaseTypes) {
-  return Q.Promise<string>(function(resolve, reject) {
+  return new Promise<string>(function(resolve, reject) {
     const negotiator = new Negotiator({headers: {accept: acceptHeader}});
     const hasParams = (it) => !objectIsEmpty(it.parameters);
     const jsonApiBaseType = "application/vnd.api+json";
@@ -34,7 +33,7 @@ export default function(acceptHeader, availableBaseTypes) {
     // Take a first stab at finding the preferred type with negotiator,
     // but then we'll only use that type below if it's *not* json api,
     // because we can't rely on negotiator to reason propery about parameters.
-    const acceptables = negotiator.mediaTypes(undefined, {"detailed": true});
+    const acceptables = negotiator.mediaTypes(undefined, { detailed: true });
     const preferredType = negotiator.mediaType(syntheticAvailableBaseTypes);
 
     // Find all the Accept clauses that specifically reference json api.
@@ -42,10 +41,12 @@ export default function(acceptHeader, availableBaseTypes) {
       it.type.toLowerCase() === jsonApiBaseType
     );
 
+    const notAcceptableError = Errors.generic406();
+
     // If we do have JSON API in the Accept header and all instances
     // are parameterized, this is explicitly a 406.
     if(jsonApiRanges.length && jsonApiRanges.every(hasParams)) {
-      reject(new APIError(406, null, "Not Acceptable"));
+      reject(notAcceptableError);
     }
 
     // For everything but the JSON API media type, trust
@@ -60,7 +61,7 @@ export default function(acceptHeader, availableBaseTypes) {
       resolve("application/vnd.api+json");
     }
     else {
-      reject(new APIError(406, null, "Not Acceptable"));
+      reject(notAcceptableError);
     }
   });
 }

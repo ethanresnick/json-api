@@ -2,28 +2,79 @@
 // aren't part of the class's public interface. Don't use them in your own
 // code, as their APIs are subject to change.
 import APIError from "../../types/APIError";
+import Resource from "../../types/Resource";
+import * as Errors from "../../util/errors";
+import { FieldExpression, Identifier } from "../../types/index";
+
+// tslint:disable-next-line no-var-requires no-submodule-imports
+const MongooseError = require("mongoose/lib/error");
 
 /**
  * Takes any error that resulted from the above operations throws an array of
  * errors that can be sent back to the caller as the Promise's rejection value.
  */
-export function errorHandler(err) {
-  const errors: APIError[] = [];
-  //Convert validation errors collection to something reasonable
+export function errorHandler(err): never {
+  const errors: (APIError | Error)[] = [];
+
+  // Convert validation errors collection to something reasonable
   if(err.errors) {
-    for(const errKey in err.errors) {
+    Object.keys(err.errors).forEach(errKey => {
       const thisError = err.errors[errKey];
-      errors.push(
-        new APIError(
-          (err.name === "ValidationError") ? 400 : (thisError.status || 500),
-          undefined,
-          thisError.message,
-          undefined,
-          undefined,
-          (thisError.path) ? [thisError.path] : undefined
-        )
-      );
-    }
+
+      const errorFormatted = (() => {
+        if(err.name === 'ValidationError') {
+          // Handle required violations separately, with a different error type.
+          if(thisError.kind === 'required') {
+            return Errors.missingField({
+              detail: thisError.message,
+              rawError: thisError
+            });
+          }
+
+          // If the ValidationError was caused by an error explicitly marked as
+          // display safe (e.g., as thrown by the user in a setter), use that.
+          // See https://github.com/Automattic/mongoose/issues/3320 (but note
+          // that reason can be on more than just CastError's)
+          if(APIError.isDisplaySafe(thisError.reason)) {
+            return APIError.fromError(thisError.reason);
+          }
+
+          // If the validation error was caused by an error thrown by a user
+          // in a custom setter or validation function (which we try to identify
+          // by checking if the error is not a MongooseError), but that isn't
+          // displaySafe, use a generic message but at least set rawError properly.
+          else if(thisError.reason && !(thisError.reason instanceof MongooseError)) {
+            return Errors.invalidFieldValue({
+              detail: `Invalid value for path "${thisError.path}"`,
+              rawError: thisError.reason
+            })
+          }
+
+          return Errors.invalidFieldValue({
+            detail: thisError.message,
+            rawError: thisError
+          });
+        }
+
+        return APIError.fromError(thisError);
+      })();
+
+      errors.push(errorFormatted);
+    });
+  }
+
+  // Mongo unique constraint error.
+  else if(err.name === 'MongoError' && err.code === 11000) {
+    errors.push(
+      Errors.uniqueViolation(<any>{
+        rawError: err,
+        // add the below as an attempt at backwards compatibility for users
+        // switching on code in query.catch(). Code is not serialized.
+        // This is the only place in the codebase we use code, which is
+        // normally not allowed, hence the `any` assertion above.
+        code: 11000
+      })
+    );
   }
 
   // Send the raw error.
@@ -36,23 +87,44 @@ export function errorHandler(err) {
   throw errors;
 }
 
-export function getReferencePaths(model) {
-  const paths: string[] = [];
-  model.schema.eachPath((name, type) => {
-    if(isReferencePath(type)) paths.push(name);
-  });
-  return paths;
-}
+export function toMongoCriteria(constraint: FieldExpression) {
+  const mongoOperator =
+    "$" + (constraint.operator === 'neq' ? 'ne' : constraint.operator);
 
-export function isReferencePath(schemaType) {
-  const options = (schemaType.caster || schemaType).options;
-  return options && options.ref !== undefined;
-}
+  if(constraint.operator === "and" || constraint.operator === "or") {
+    // Below, we do a length check because mongo doesn't support and/or/nor
+    // predicates with no constraints to check (makes sense). For $and,
+    // if we wanted to use comma separated values for implicit AND we could:
+    // Object.assign({}, ...constraintOrPredicate.args.map(handle))
+    // Instead, though, we use the same rules as $or, because the implicit
+    // AND doesn't work in all cases;
+    // see https://docs.mongodb.com/manual/reference/operator/query/and/
+    return !constraint.args.length
+      ? {}
+      : {
+          [mongoOperator]:
+            (constraint.args as FieldExpression[]).map(toMongoCriteria)
+        };
+  }
 
-export function getReferencedModelName(model, path) {
-  const schemaType = model.schema.path(path);
-  const schemaOptions = (schemaType.caster || schemaType).options;
-  return schemaOptions && schemaOptions.ref;
+  // Note: all the operators we support (as declared in the adapter) are either
+  // binary ones with a field reference on the left-hand side, or they're `and`
+  // or `or`, with a list of constraints as args. That these constraints hold
+  // has already been validated once the FieldExpressions reach the adapter.
+  // So, below, we know that args[0] must hold a field identifier.
+  const fieldName = (constraint.args[0] as Identifier).value;
+  const mongoField = <string>(fieldName === 'id' ? '_id' : fieldName);
+  const value = constraint.args[1];
+
+  if(constraint.operator === 'eq') {
+    return { [mongoField]: value }
+  }
+
+  return {
+    [mongoField]: {
+      [mongoOperator]: value
+    }
+  };
 }
 
 /**
@@ -63,20 +135,15 @@ export function getReferencedModelName(model, path) {
  * outside of the document) or the meta (as storing that like a field may not
  * be what we want to do).
  */
-export function resourceToDocObject(resource): object {
-  const res = {...resource.attrs};
-  const getId = (it) => it.id;
-  for(const key in resource.relationships) {
-    const linkage = resource.relationships[key].linkage.value;
+export function resourceToDocObject(resource: Resource, typePathFn?): object {
+  const res = {
+    ...resource.attrs,
+    ...(typePathFn ? typePathFn(resource.typePath) : {})
+  };
 
-    // handle linkage when set explicitly for empty relationships
-    if(linkage === null || (Array.isArray(linkage) && linkage.length === 0)) {
-      res[key] = linkage;
-    }
+  Object.keys(resource.relationships).forEach(key => {
+    res[key] = resource.relationships[key].unwrapDataWith(it => it.id);
+  });
 
-    else {
-      res[key] = Array.isArray(linkage) ? linkage.map(getId) : linkage.id;
-    }
-  }
   return res;
 }

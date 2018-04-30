@@ -1,6 +1,21 @@
-import vary = require("vary");
-import API from "../controllers/API";
-import Base, { HTTPStrategyOptions } from "./Base";
+import varyLib = require("vary");
+import depd = require("depd");
+import url = require("url");
+import R = require("ramda");
+import logger from "../util/logger";
+import API, { RequestOpts } from "../controllers/API";
+import Base, { HTTPStrategyOptions, Controller } from "./Base";
+import {
+  Request as JSONAPIRequest,
+  ErrorOrErrorArray,
+  Result,
+  HTTPResponse
+} from "../types";
+import {
+  Request, Response, NextFunction,
+  RequestHandler, ErrorRequestHandler
+} from "express";
+const deprecate = depd("json-api");
 
 /**
  * This controller receives requests directly from express and sends responses
@@ -15,6 +30,12 @@ import Base, { HTTPStrategyOptions } from "./Base";
  * @param {boolean} options.tunnel Whether to turn on PATCH tunneling. See:
  *    http://jsonapi.org/recommendations/#patchless-clients
  *
+ * @param {string} options.host The host that the API is served from, as you'd
+ *    find in the HTTP Host header. This value should be provided for security,
+ *    as the value in the Host header can be set to something arbitrary by the
+ *    client. If you trust the Host header value, though, and don't provide this
+ *    option, the value in the Header will be used.
+ *
  * @param {boolean} options.handleContentNegotiation If the JSON API library
  *    can't produce a representation for the response that the client can
  *    `Accept`, should it return 406 or should it hand the request back to
@@ -23,59 +44,130 @@ import Base, { HTTPStrategyOptions } from "./Base";
  *    can set this option to false to have this code just pass on to Express.
  */
 export default class ExpressStrategy extends Base {
-  constructor(apiController, docsController, options?: HTTPStrategyOptions) {
+  constructor(apiController, docsController?, options?: HTTPStrategyOptions) {
     super(apiController, docsController, options);
   }
 
-  // For requests like GET /:type, GET /:type/:id/:relationship,
-  // POST /:type PATCH /:type/:id, PATCH /:type, DELETE /:type/:idOrLabel,
-  // DELETE /:type, GET /:type/:id/links/:relationship,
-  // PATCH /:type/:id/links/:relationship, POST /:type/:id/links/:relationship,
-  // and DELETE /:type/:id/links/:relationship.
-  apiRequest(req, res, next) {
-    this.buildRequestObject(req, req.protocol, req.get("Host"), req.params, req.query).then((requestObject) => {
-      return this.api.handle(requestObject, req, res).then((responseObject) => {
-        this.sendResources(responseObject, res, next);
+  protected async buildRequestObject(req: Request): Promise<JSONAPIRequest> {
+    // req.host is broken in express 4; doesn't include the port
+    const genericReqPromise =
+      // tslint:disable-next-line deprecation
+      super.buildRequestObject(req, req.protocol, req.host, req.params, req.query);
+
+    // If express rewrote req.url on us, update the result to use req.originalUrl.
+    if(req.url !== req.originalUrl) {
+      const genericReq = await genericReqPromise;
+
+      // find the real pathname and search from req.originalUrl
+      const { pathname, search } =
+        url.parse('http://example.com' + req.originalUrl, false, false);
+
+      // apply them.
+      const newUri = url.format({
+        ...url.parse(genericReq.uri, false, false),
+        pathname,
+        search
       });
-    }).catch((err) => {
-      this.sendError(err, req, res);
-    });
+
+      return { ...genericReq, uri: newUri };
+    }
+
+    return genericReqPromise;
   }
 
-  // For requests for the documentation.
-  docsRequest(req, res, next) {
-    this.buildRequestObject(req, req.protocol, req.get("Host"), req.params, req.query).then((requestObject) => {
-      return this.docs.handle(requestObject, req, res).then((responseObject) => {
-        this.sendResources(responseObject, res, next);
-      });
-    }).catch((err) => {
-      this.sendError(err, req, res);
+  protected sendResponse(
+    response: HTTPResponse,
+    res: Response,
+    next: NextFunction
+  ) {
+    const { vary, ...otherHeaders } = response.headers;
+
+    if(vary) {
+      varyLib(res, vary);
+    }
+
+    if(response.status === 406 && !this.config.handleContentNegotiation) {
+      next();
+      return;
+    }
+
+    res.status(response.status || 200);
+
+    Object.keys(otherHeaders).forEach(k => {
+      res.set(k, otherHeaders[k]);
     });
-  }
 
-  sendResources(responseObject, res, next) {
-    if(responseObject.headers.vary) {
-      vary(res, responseObject.headers.vary);
+    if(response.body !== undefined) {
+      res.send(new Buffer(response.body)).end();
     }
 
-    if(responseObject.status === 406 && !this.config.handleContentNegotiation) {
-      return next();
-    }
-
-    res.set("Content-Type", responseObject.contentType);
-    res.status(responseObject.status || 200);
-
-    if(responseObject.headers.location) {
-      res.set("Location", responseObject.headers.location);
-    }
-
-    if(responseObject.body !== null) {
-      res.send(new Buffer(responseObject.body)).end();
-    }
     else {
       res.end();
     }
   }
+
+  protected doRequest = async (
+    controller: Controller,
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const requestObj = await this.buildRequestObject(req);
+      const responseObj = await controller(requestObj, req, res);
+      this.sendResponse(responseObj, res, next);
+    }
+    catch (err) {
+      // This case should only occur if building a request object fails, as the
+      // controller should catch any internal errors and always returns a response.
+      this.sendError(err, req, res, next);
+    }
+  };
+
+  /**
+   * A middleware to handle requests for the documentation.
+   * Note: this will ignore any port number if you're using Express 4.
+   * See: https://expressjs.com/en/guide/migrating-5.html#req.host
+   * The workaround is to use the host configuration option.
+   */
+  get docsRequest(): RequestHandler {
+    if (this.docs == null) {
+      throw new Error('Cannot get docs request handler. '
+        + 'No docs controller was provided to the HTTP strategy.');
+    }
+
+    return this._docsRequest;
+  };
+
+  _docsRequest: RequestHandler = R.partial(this.doRequest, [this.docs && this.docs.handle]);
+
+  /**
+   * A middleware to handle supported API requests.
+   *
+   * Supported requests included: GET /:type, GET /:type/:id/:relationship,
+   * POST /:type, PATCH /:type/:id, PATCH /:type, DELETE /:type/:id,
+   * DELETE /:type, GET /:type/:id/relationships/:relationship,
+   * PATCH /:type/:id/relationships/:relationship,
+   * POST /:type/:id/relationships/:relationship, and
+   * DELETE /:type/:id/relationships/:relationship.
+   *
+   * Note: this will ignore any port number if you're using Express 4.
+   * See: https://expressjs.com/en/guide/migrating-5.html#req.host
+   * The workaround is to use the host configuration option.
+   */
+  apiRequest: RequestHandler = R.partial(this.doRequest, [this.api.handle]);
+
+  /**
+   * Takes arguments for how to build the query, and returns a middleware
+   * function that will respond to incoming requests with those query settings.
+   *
+   * @param {RequestCustomizationOpts} opts
+   * @returns {RequestHandler} A middleware for fulfilling API requests.
+   */
+  customAPIRequest = (opts: RequestOpts) =>
+    R.partial(this.doRequest, [
+      (request, req, res) => this.api.handle(request, req, res, opts)
+    ]);
 
   /**
    * A user of this library may wish to send an error response for an exception
@@ -87,19 +179,47 @@ export default class ExpressStrategy extends Base {
    * @param {Object} req Express's request object
    * @param {Object} res Express's response object
    */
-  sendError(errors, req, res) {
-    API.responseFromExternalError(errors, req.headers.accept).then(
-      (responseObject) => this.sendResources(responseObject, res, () => {})
-    ).catch((err) => {
-      // if we hit an error generating our error...
-      res.status(err.status).send(err.message);
-    });
-  }
+  sendError: ErrorRequestHandler = async (errors: ErrorOrErrorArray, req, res, next) => {
+    if(!next) {
+      deprecate("sendError with 3 arguments: must now provide next function.");
+      next = (err: any) => {}; // tslint:disable-line no-empty no-parameter-reassignment
+    }
 
-  /**
-   * @TODO Uses this ExpressStrategy to create an express app with
-   * preconfigured routes that can be mounted as a subapp.
-  toApp(typesToExcludedMethods) {
-  }
-  */
+    try {
+      const responseObj = await API.responseFromError(errors, req.headers.accept);
+      this.sendResponse(responseObj, res, next)
+    }
+
+    catch(err) {
+      logger.error(
+        "Hit an unexpected error creating or sending response." +
+        "This shouldn't happen."
+      );
+      next(err);
+    }
+  };
+
+  sendResult = async (
+    result: Result,
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const responseObj = await API.responseFromResult(result, req.headers.accept, true);
+      this.sendResponse(responseObj, res, next)
+    }
+
+    catch(err) {
+      logger.error(
+        "Hit an unexpected error creating or sending response." +
+        "This shouldn't happen."
+      );
+      next(err);
+    }
+  };
+
+  // @TODO Uses this ExpressStrategy to create an express app with
+  // preconfigured routes that can be mounted as a subapp.
+  // toApp(typesToExcludedMethods) { }
 }

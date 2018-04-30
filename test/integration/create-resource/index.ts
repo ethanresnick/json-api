@@ -1,30 +1,31 @@
-import {expect} from "chai";
+import { expect } from "chai";
 import AgentPromise from "../../app/agent";
 import {
   ORG_RESOURCE_CLIENT_ID,
+  ORG_RESOURCE_FALSEY_CLIENT_ID,
+  ORG_RESOURCE_FALSEY_CLIENT_ID_2,
   VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER,
-  VALID_SCHOOL_RESOURCE_NO_ID,
   INVALID_ORG_RESOURCE_NO_DATA_IN_RELATIONSHIP
 } from "../fixtures/creation";
 
 describe("Creating Resources", () => {
   let Agent;
+  before(() => {
+    return AgentPromise.then((A) => { Agent = A; })
+  });
 
   describe("Creating a Valid Resource (With an Extra Member)", () => {
     let createdResource, res;
-    before(done => {
-      AgentPromise.then((A) => {
-        Agent = A;
-        return Agent.request("POST", "/organizations")
-          .type("application/vnd.api+json")
-          .send({"data": VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER, "extra": false})
-          .promise()
-          .then((response) => {
-            res = response;
-            createdResource = res.body.data;
-            done();
-          });
-      }).catch(done);
+    before(() => {
+      return Agent.request("POST", "/organizations")
+        .type("application/vnd.api+json")
+        .send({ "data": VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER, "extra": false })
+        .then((response) => {
+          res = response;
+          createdResource = res.body.data;
+        }, (e) => {
+          console.log(e, e.response.body);
+        });
     });
 
     describe("HTTP", () => {
@@ -52,7 +53,9 @@ describe("Creating Resources", () => {
     });
 
     describe("Links", () => {
-
+      it("should have a top-level self link", () => {
+        expect(res.body.links.self).to.match(/\/organizations$/);
+      });
     });
 
     describe("Transforms", () => {
@@ -60,18 +63,6 @@ describe("Creating Resources", () => {
         it("should execute beforeSave hook", () => {
           expect(createdResource.attributes.description).to.equal("Added a description in beforeSave");
           expect(createdResource.attributes.modified).to.equal("2015-01-01T00:00:00.000Z");
-        });
-
-        it("should allow beforeSave to return a Promise and support super()", (done) => {
-          Agent.request("POST", "/schools")
-            .type("application/vnd.api+json")
-            .send({"data": VALID_SCHOOL_RESOURCE_NO_ID})
-            .promise()
-            .then((response) => {
-              expect(response.body.data.attributes.description).to.equal("Added a description in beforeSave");
-              expect(response.body.data.attributes.modified).to.equal("2015-10-27T05:16:57.257Z");
-              done();
-            }, done).catch(done);
         });
       });
     });
@@ -93,48 +84,52 @@ describe("Creating Resources", () => {
   });
 
   describe("Creating a Resource With A Client-Id", () => {
-    let err;
-    before(done => {
-      Agent.request("POST", "/organizations")
-        .type("application/vnd.api+json")
-        .send({"data": ORG_RESOURCE_CLIENT_ID})
-        .promise()
-        .then(
-          () => { done("Should not run!"); },
-          (error) => {
-            err = error;
-            done();
-          }
-        );
+    const errs: any[] = [];
+    const clientIdObjects = [
+      ORG_RESOURCE_CLIENT_ID,
+      ORG_RESOURCE_FALSEY_CLIENT_ID,
+      ORG_RESOURCE_FALSEY_CLIENT_ID_2
+    ];
+
+    before(() => {
+      return Promise.all(
+        clientIdObjects.map(data => {
+          return Agent.request("POST", "/organizations")
+            .type("application/vnd.api+json")
+            .send({ data })
+            .then(
+              (resp) => { throw new Error("Should not run"); },
+              (error) => { errs.push(error); }
+            );
+        })
+      );
     });
 
     describe("HTTP", () => {
       it("should return 403", () => {
-        expect(err.response.status).to.equal(403);
+        expect(errs.every(it => it.response.status === 403)).to.be.true;
       });
     });
 
     describe("Document Structure", () => {
       it("should contain an error", () => {
-        expect(err.response.body.errors).to.be.an("array");
+        expect(errs.every(it => Array.isArray(it.response.body.errors))).to.be.true;
       });
     });
   });
 
   describe("Creating a Resource With a Missing Relationship Data Key", () => {
     let err;
-    before((done) => {
-      Agent.request("POST", "/organizations")
+    before(() => {
+      return Agent.request("POST", "/organizations")
         .type("application/vnd.api+json")
-        .send({"data": INVALID_ORG_RESOURCE_NO_DATA_IN_RELATIONSHIP})
+        .send({ data: INVALID_ORG_RESOURCE_NO_DATA_IN_RELATIONSHIP })
         .promise()
-        .then(
-          () => { done("Should not run!"); },
-          (error) => {
-            err = error;
-            done();
-          }
-        );
+        .then(() => {
+          throw new Error("Should not run!");
+        }, (error) => {
+          err = error;
+        });
     });
 
     describe("HTTP", () => {
@@ -150,12 +145,9 @@ describe("Creating Resources", () => {
     });
 
     describe("The error", () => {
-      it("should have the correct title", () => {
-        expect(err.response.body.errors[0].title).to.be.equal("Missing relationship linkage.");
-      });
-
-      it("should have the correct details", () => {
-        expect(err.response.body.errors[0].details).to.be.equal("No data was found for the liaisons relationship.");
+      it("should have the correct information", () => {
+        expect(err.response.body.errors[0].code).to.be.equal("https://jsonapi.js.org/errors/relationship-missing-linkage");
+        expect(err.response.body.errors[0].detail).to.be.match(/liaisons/);
       });
     });
   });

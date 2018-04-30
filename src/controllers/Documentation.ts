@@ -1,28 +1,31 @@
 import _ = require("lodash");
 import path = require("path");
-import jade = require("jade");
+import pug = require("pug");
 import Negotiator = require("negotiator");
 import dasherize = require("dasherize");
-import mapValues = require("lodash/object/mapValues");
 
 import ResourceTypeRegistry, { ResourceTypeDescription, ResourceTypeInfo } from "../ResourceTypeRegistry";
-import Response, { Response as UnsealedResponse } from "../types/HTTP/Response";
+import { HTTPResponse, ServerReq, ServerRes, Request } from "../types";
+import ResourceSet from "../types/ResourceSet";
 import Document from "../types/Document";
-import Collection from "../types/Collection";
 import Resource from "../types/Resource";
-
-export { UnsealedResponse };
+import { getModelName } from "../util/naming-conventions";
+import { IncomingMessage, ServerResponse } from "http";
+export { IncomingMessage, ServerResponse };
 
 export default class DocumentationController {
-  private registry: ResourceTypeRegistry;
   private template: string;
   private dasherizeJSONKeys: boolean;
   private templateData: object;
 
-  constructor(registry, apiInfo, templatePath = undefined, dasherizeJSONKeys = true) {
-    this.registry = registry;
-
-    const defaultTempPath = "../../templates/documentation.jade";
+  constructor(
+    private registry: ResourceTypeRegistry,
+    apiInfo: object,
+    templatePath?: string,
+    dasherizeJSONKeys = true,
+    private toModelName: (typeName: string) => string = getModelName
+  ) {
+    const defaultTempPath = "../../templates/documentation.pug";
     this.template = templatePath || path.resolve(__dirname, defaultTempPath);
 
     this.dasherizeJSONKeys = dasherizeJSONKeys;
@@ -43,48 +46,50 @@ export default class DocumentationController {
     this.templateData = data;
   }
 
-  handle(request, frameworkReq, frameworkRes) {
-    const response = new Response();
+  handle = async (request: Request, serverReq: ServerReq, serverRes: ServerRes) => {
+    const response: HTTPResponse = { headers: {}, body: undefined, status: 200 };
     const negotiator = new Negotiator({headers: {accept: request.accepts}});
     const contentType = negotiator.mediaType(["text/html", "application/vnd.api+json"]);
 
     // set content type as negotiated & vary on accept.
-    response.contentType = contentType;
+    response.headers["content-type"] = contentType;
     response.headers.vary = "Accept";
 
     // process templateData (just the type infos for now) for this particular request.
-    const templateData = _.cloneDeep(this.templateData, cloneCustomizer);
-    templateData.resourcesMap = mapValues(templateData.resourcesMap, (typeInfo, typeName) => {
-      return this.transformTypeInfo(typeName, typeInfo, request, response, frameworkReq, frameworkRes);
+    const templateData = _.cloneDeepWith(this.templateData, cloneCustomizer);
+    templateData.resourcesMap = _.mapValues(templateData.resourcesMap, (typeInfo, typeName) => {
+      return this.transformTypeInfo(typeName, typeInfo, request, response, serverReq, serverRes);
     });
 
-    if(contentType.toLowerCase() === "text/html") {
-      response.body = jade.renderFile(this.template, templateData);
+    if(contentType && contentType.toLowerCase() === "text/html") {
+      response.body = pug.renderFile(this.template, templateData);
     }
 
     else {
       // Create a collection of "jsonapi-descriptions" from the templateData
-      const descriptionResources = new Collection();
+      const descriptionResources: Resource[] = [];
 
       // Add a description resource for each resource type to the collection.
-      for(const type in templateData.resourcesMap) {
-        descriptionResources.add(
+      Object.keys(templateData.resourcesMap).forEach(type => {
+        descriptionResources.push(
           new Resource("jsonapi-descriptions", type, templateData.resourcesMap[type])
         );
-      }
+      });
 
-      response.body = (new Document(descriptionResources)).get(true);
+      response.body = new Document({
+        primary: ResourceSet.of({ data: descriptionResources })
+      }).toString();
     }
 
-    return Promise.resolve(response);
-  }
+    return response;
+  };
 
   // Clients can extend this if, say, the adapter can't infer
   // as much info about the models' structure as they would like.
   getTypeInfo(type) {
     const adapter   = this.registry.dbAdapter(type);
-    const modelName = adapter.constructor.getModelName(type);
-    const model     = adapter.getModel(modelName);
+    const model     = adapter.getModel(type);
+    const modelName = this.toModelName(type);
 
     // Combine the docs in the Resource description with the standardized schema
     // from the adapter in order to build the final schema for the template.
@@ -97,7 +102,7 @@ export default class DocumentationController {
       const pathInfo = (info && info.fields && info.fields[field.name]) || {};
 
       // Keys that have a meaning in the default template.
-      const overrideableKeys = ["friendlyName",  "kind", "description"];
+      const overrideableKeys = ["friendlyName", "kind", "description"];
 
       for(const key in pathInfo) {
         // allow the user to override auto-generated friendlyName and the
@@ -105,7 +110,7 @@ export default class DocumentationController {
         // allow them to set the description, which is always user-provided.
         // And, finally, copy in any other info properties that don't
         // conflict with ones defined by this library.
-        if (overrideableKeys.indexOf(key) > -1 || !(key in field)) {
+        if(overrideableKeys.indexOf(key) > -1 || !(key in field)) {
           field[key] = pathInfo[key];
         }
 
@@ -122,15 +127,15 @@ export default class DocumentationController {
     // Other info
     type TypeInfo = {
       name: {
-        model: string,
-        singular: string,
-        plural: string
-      },
-      defaultIncludes?: ResourceTypeDescription['defaultIncludes'],
-      example?: ResourceTypeInfo['example'],
-      description?: ResourceTypeInfo['description'],
-      parentType: string,
-      childTypes: string[]
+        model: string;
+        singular: string;
+        plural: string;
+      };
+      defaultIncludes?: ResourceTypeDescription["defaultIncludes"];
+      example?: ResourceTypeInfo["example"];
+      description?: ResourceTypeInfo["description"];
+      parentType: string;
+      childTypes: string[];
     };
 
     const result = <TypeInfo>{
@@ -140,8 +145,8 @@ export default class DocumentationController {
         "plural": type.split("-").map(ucFirst).join(" ")
       },
       fields: schema,
-      parentType: this.registry.parentType(type),
-      childTypes: adapter.constructor.getChildTypes(model)
+      parentType: this.registry.parentTypeName(type),
+      childTypes: this.registry.childTypeNames(type)
     };
 
     const defaultIncludes = this.registry.defaultIncludes(type);
@@ -161,7 +166,7 @@ export default class DocumentationController {
    * the groundwork for true HATEOS intro pages in the future.
    */
   transformTypeInfo(typeName, info, request, response, frameworkReq, frameworkRes) {
-    if(this.dasherizeJSONKeys && response.contentType === "application/vnd.api+json") {
+    if(this.dasherizeJSONKeys && response.headers['content-type'] === "application/vnd.api+json") {
       return dasherize(info);
     }
     return info;
@@ -185,15 +190,15 @@ function cloneCustomizer(value) {
     const state = _.cloneDeep(value);
     Object.setPrototypeOf(state, Object.getPrototypeOf(value));
     Object.defineProperty(state, "constructor", {
-      "writable": true,
-      "enumerable": false,
-      "value": value.constructor
+      writable: true,
+      enumerable: false,
+      value: value.constructor
     });
 
     // handle the possibiliy that a key in state was itself a non-plain object
     for(const key in state) {
       if(isCustomObject(value[key])) {
-        state[key] = _.cloneDeep(value[key], cloneCustomizer);
+        state[key] = _.cloneDeepWith(value[key], cloneCustomizer);
       }
     }
 

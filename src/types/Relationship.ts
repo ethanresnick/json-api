@@ -1,46 +1,70 @@
-import { default as Linkage, LinkageJSON } from "./Linkage";
+import { LinkageJSON, UrlTemplates } from "./index";
+import MaybeDataWithLinks, { MaybeDataWithLinksArgs } from "./MaybeDataWithLinks";
+import ResourceIdentifier from "./ResourceIdentifier";
+import { objectIsEmpty } from "../util/misc";
 
 export type RelationshipJSON = {
-  data: LinkageJSON
-  links?: RelationshipLinksJSON
-} | {
-  data: undefined,
-  links: RelationshipLinksJSON
-}
-
-export type RelationshipLinksJSON = {
-  self?: string,
-  related?: string
+  data?: LinkageJSON;
+  links?: RelationshipLinksJSON;
 };
 
-// TODO: do relationships even need overridable link templates?
-// Could the override be a resolved string, not a template?
-// (So that a relationship could define its own toJSON() method without
-// needing to take a template resolver as an argument). If we got
-// rid of the relationship-level overrides altogether, would relationship
-// even be a type separate from linkage? Should relationship store its
-// source (i.e., what resource it's a relationship from), since it already
-// stores the "to" in the form of the linkage. Should it store its own name?
-// That might be useful if JSON:API goes further down RFC 5988, which I hope
-// happens. But, holding aside what representation makes sense semantically,
-// what would be more perfomant?
-export default class Relationship {
-  public linkage: Linkage | undefined;
-  public relatedURITemplate: string | undefined;
-  public selfURITemplate: string | undefined;
+export type RelationshipLinksJSON = {
+  self?: string;
+  related?: string;
+};
 
-  constructor(linkage, relatedURITemplate: string | undefined = undefined, selfURITemplate: string | undefined = undefined) {
-    Object.assign(this, {linkage, relatedURITemplate, selfURITemplate});
+export type RelationshipOwner = {
+  type: string;
+  // id will be undefined in the Relationships on Resources that have
+  // yet to be assigned an id. Luckily, links are never rendered for those,
+  // so templates don't worry about that case.
+  id: string | undefined;
+  path: string;
+};
+export type RelationshipArgs =
+  MaybeDataWithLinksArgs<ResourceIdentifier> & { owner: RelationshipOwner };
+
+export default class Relationship extends MaybeDataWithLinks<ResourceIdentifier> {
+  public owner: RelationshipOwner;
+
+  protected constructor(it: RelationshipArgs) {
+    super(it);
+    this.owner = it.owner;
   }
 
-  empty() {
-    // TODO: figure out if we even want to allow relationships constructed
-    // without linkage [i think we do], and what empty() should mean for them
-    // [should the method exist at all?].
-    if(!this.linkage) {
-      throw new Error("Relationship has no linkage");
-    }
+  protected clone(): this {
+    return (this.constructor as any).of({
+      data: this._data,
+      links: this.links,
+      owner: this.owner
+    });
+  }
 
-    this.linkage.empty();
+  toJSON(fallbackTemplates: UrlTemplates): RelationshipJSON {
+    const templateData = {
+      ownerType: this.owner.type,
+      ownerId: this.owner.id,
+      path: this.owner.path
+    };
+
+    const { data, links } = this.unwrapWith(it => it.toJSON(), templateData);
+
+    // Add any links that didn't have templates set on this instance.
+    const fallbackSelfTemplate = !links.self && fallbackTemplates.self;
+    const fallbackRelatedTemplate = !links.related && fallbackTemplates.related;
+    const finalLinks = {
+      ...links,
+      ...(fallbackSelfTemplate ? { self: fallbackSelfTemplate(templateData) } : {}),
+      ...(fallbackRelatedTemplate ? { related: fallbackRelatedTemplate(templateData) } : {})
+    };
+
+    return {
+      ...(typeof data !== "undefined" ? { data } : {}),
+      ...(objectIsEmpty(finalLinks) ? {} : { links: finalLinks })
+    };
+  }
+
+  static of(it: RelationshipArgs) {
+    return new this(it);
   }
 }

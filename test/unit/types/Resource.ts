@@ -24,7 +24,6 @@ describe("Resource type", () => {
 
     it("should allow construction with no or valid id", () => {
       // valid/no ids should construct w/o error
-      // TODO: change this? why is this alllowed????
       new Resource("type", undefined, {}); // no id case
       new Resource("aoin", "39.20nA_-xgGr", {}); // invalid id case
     });
@@ -34,9 +33,16 @@ describe("Resource type", () => {
       expect(r.id === "19339").to.be.true;
     });
 
+    // Note: this behavior may change.
+    // See https://github.com/json-api/json-api/issues/1261
+    it("should allow empty id as a string", () => {
+      expect(new Resource("type", undefined, {}).id).to.be.undefined;
+      expect(new Resource("type", "", {}).id).to.equal("");
+    });
+
     it("should reject non-object attrs", () => {
       // allow construction with no/empty attributes
-      const valid  = new Resource("type", "id");
+      const valid = new Resource("type", "id");
       new Resource("pyt", "id", {});
 
       // just don't allow setting attributes to a non-object.
@@ -50,11 +56,11 @@ describe("Resource type", () => {
     it("should reject reserved keys as attrs", () => {
       expect(() =>
         new Resource("type", "id", {"id": "bleh"})
-      ).to.throw(/cannot be used as attribute/);
+      ).to.throw(/cannot be used as field names/);
 
       expect(() =>
         new Resource("type", "id", {"type": "bleh"})
-      ).to.throw(/cannot be used as attribute/);
+      ).to.throw(/cannot be used as field names/);
     });
 
     it("should reject use of same name for an attribute and a relationship", () => {

@@ -1,4 +1,4 @@
-import FieldType from './FieldType';
+import FieldType from "./FieldType";
 
 export default class Field {
   public kind: FieldType | undefined;
@@ -7,7 +7,13 @@ export default class Field {
   public friendlyName: string | undefined;
   public default: any;
 
-  constructor(name: string, type?: FieldType, validation = {}, friendlyName?: string, defaultVal?) {
+  constructor(
+    name: string,
+    type?: FieldType,
+    validation = {},
+    friendlyName?: string,
+    defaultVal?
+  ) {
     // call the property kind to
     // distinguish it from json api type
     this.kind = type;

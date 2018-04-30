@@ -1,9 +1,20 @@
-import {expect} from "chai";
+import { expect } from "chai";
 import * as utils from "../../../src/util/misc";
 
 describe("Utility methods", () => {
+  describe("objectIsEmpty", () => {
+    it("should return false on an object with direct properties", () => {
+      expect(utils.objectIsEmpty({ test: true })).to.be.false;
+    });
+
+    it("should return true if the object only has prototype properties", () => {
+      expect(utils.objectIsEmpty({})).to.be.true;
+      expect(utils.objectIsEmpty(Object.create({ test: true }))).to.be.true;
+    });
+  });
+
   describe("deleteNested", () => {
-    const obj = {"contact": {"phone": "310"}, "top-level": true};
+    const obj = { contact: { phone: "310" }, "top-level": true };
     const deletion = utils.deleteNested("contact.phone", obj);
 
     it("should delete a nested property when present", () => {
@@ -50,18 +61,24 @@ describe("Utility methods", () => {
     });
   });
 
-  describe("pseudoTopSort", function () {
-    it("should sort the items correctly", function () {
+  describe("pseudoTopSort", function() {
+    it("should sort the items correctly", function() {
       const nodes = ["c", "b", "f", "a", "d", "e"];
       const roots = ["a", "d", "f"];
-      const edges = { "a": { "b": <true>true }, "b": { "c": <true>true }, "d": { "e": <true>true } };
+      const edges = {
+        a: { b: <true>true },
+        b: { c: <true>true },
+        d: { e: <true>true }
+      };
       const sorted = utils.pseudoTopSort(nodes, edges, roots);
 
       // check that all the nodes were returned exactly once.
       expect(sorted.length).to.equal(6);
-      expect(nodes.every(function (node) {
-        return sorted.indexOf(node) > -1;
-      })).to.be.true;
+      expect(
+        nodes.every(function(node) {
+          return sorted.indexOf(node) > -1;
+        })
+      ).to.be.true;
 
       expect(sorted.indexOf("b")).to.be.gt(sorted.indexOf("a"));
       expect(sorted.indexOf("c")).to.be.gt(sorted.indexOf("b"));

@@ -1,21 +1,35 @@
+import { SupportedOperators } from "../types";
+import CreateQuery from "../types/Query/CreateQuery";
+import FindQuery from "../types/Query/FindQuery";
+import DeleteQuery from "../types/Query/DeleteQuery";
+import UpdateQuery from "../types/Query/UpdateQuery";
+import AddToRelationshipQuery from "../types/Query/AddToRelationshipQuery";
+import RemoveFromRelationshipQuery from "../types/Query/RemoveFromRelationshipQuery";
+
+export type TypeInfo = { typePath: string[]; extra?: any };
+export type TypeIdMapOf<T> = {
+  [type: string]: { [id: string]: T | undefined } | undefined;
+};
+
 export interface AdapterInstance<T extends new (...args: any[]) => any> {
   constructor: T;
-  find(type: any, idOrIds: any, fields: any, sorts: any, filters: any, includePaths: any, offset: any, limit: any): any;
-  create(parentType: any, resourceOrCollection: any): any;
-  update(parentType: any, resourceOrCollection: any): any;
-  delete(parentType: any, idOrIds: any): any;
-  addToRelationship(type: any, id: any, relationshipPath: any, newLinkage: any): any;
-  removeFromRelationship(type: any, id: any, relationshipPath: any, linkageToRemove: any): any;
-  getModel(modelName)
-  getTypesAllowedInCollection(parentType: any): any;
-  getRelationshipNames(type: any): any;
-
+  find(query: FindQuery): Promise<any>;
+  create(query: CreateQuery): Promise<any>;
+  update(update: UpdateQuery): Promise<any>;
+  delete(query: DeleteQuery): Promise<any>;
+  addToRelationship(query: AddToRelationshipQuery): Promise<any>;
+  removeFromRelationship(query: RemoveFromRelationshipQuery): Promise<any>;
+  getModel(typeName: string): any;
+  getRelationshipNames(typeName: string): string[];
+  doQuery(query: any): Promise<any>;
+  getTypePaths(items: {type: string, id: string}[]): Promise<TypeIdMapOf<TypeInfo>>
 };
 
 export interface AdapterClass {
-  new (...args: any[]): AdapterInstance<{new (...args: any[]): any}>;
+  new (...args: any[]): AdapterInstance<{ new (...args: any[]): any }>;
   getStandardizedSchema(model: any, pluralizer: any): any;
-  getChildTypes(type: string): string[];
+  // Must include the "and" and "eq" operators
+  supportedOperators: SupportedOperators
 }
 
 export interface Adapter<T extends AdapterClass> extends AdapterInstance<T> {

@@ -1,0 +1,16 @@
+{
+  "extends": "@ethanresnick/tslint-config",
+  "rules": {
+    // (temporarily, at least) turn off a bunch of semi-naggy rules,
+    // so we can actually get the build to pass with linting enabled
+    // while focusing our attention on current linting errors that
+    // *do* point to real bugs. Then, we can gradually reenable these.
+    "completed-docs": false,
+    "curly": false,
+    "member-ordering": false,
+    "max-file-line-count": false,
+    "typeof-compare": false,
+    "no-object-literal-type-assertion": false,
+    "member-access": false
+  }
+}
