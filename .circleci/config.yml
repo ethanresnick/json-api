@@ -20,7 +20,7 @@ jobs:
             # This branch if available
             - v1-dep-{{ .Branch }}-
             # Default branch if not
-            - v1-dep-v3-evolution-over-rewrite-
+            - v1-dep-master-
 
       # Default NODE_ENV if it's not set;
       # set PATH to include npm-installed executables.
@@ -55,7 +55,7 @@ jobs:
       - restore_cache:
           keys:
             - v1-dep-{{ .Branch }}-
-            - v1-dep-v3-evolution-over-rewrite-
+            - v1-dep-master-
       - run: if [ -z "${NODE_ENV:-}" ]; then export NODE_ENV=test; fi
       - run: export PATH="~/project/node_modules/.bin:$PATH"
       - run: npm install
