@@ -25,10 +25,20 @@ fixtures.save("all", {
     { name: "Jordi Jones", _id: genderPersonId, gender: "other" },
     { name: "An Inivisible Sorcerer", gender: "other", _id: invisibleResourceId },
   ],
-  Organization: [
-    { name: "State Government", description: "Representing the good people.", liaisons: [doeId, smithId], _id: govtId },
-    { name: "Org whose echo prop I'll change", reversed: "Test", _id: echoOrgId, liaisons: [doeId], modified: new Date("2015-01-01") },
-  ],
+  Organization: [{
+    _id: govtId,
+    name: "State Government",
+    description: "Representing the good people.",
+    liaisons: [doeId, smithId],
+    location:  { type: "Point",  coordinates: [ -73.9667, 40.78 ] }
+  }, {
+    _id: echoOrgId,
+    name: "Org whose echo prop I'll change",
+    reversed: "Test",
+    liaisons: [doeId],
+    modified: new Date("2015-01-01"),
+    location:  { type: "Point",  coordinates: [ 10, 10 ] }
+  }],
   School: [
     {name: "City College", description: "Just your average local college.", liaisons: [smithId]},
     {name: "State College", description: "Just your average state college."},

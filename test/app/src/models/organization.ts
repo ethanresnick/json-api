@@ -1,4 +1,5 @@
 import mongoose = require("mongoose");
+require('mongoose-geojson-schema'); //tslint:disable-line no-var-requires
 
 const ObjectId = mongoose.Schema.Types.ObjectId;
 type OrgDoc = { name: string; reversed: string };
@@ -11,6 +12,10 @@ export class OrganizationSchema extends mongoose.Schema {
         type: String,
         required: true,
         set: (it) => it.toUpperCase()
+      },
+      location: {
+        type: mongoose.Schema.Types.Point,
+        index: "2dsphere"
       },
       description: {
         type: String

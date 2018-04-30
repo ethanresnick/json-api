@@ -7,7 +7,7 @@ import pluralize = require("pluralize");
 
 import { Model, Document } from "mongoose";
 
-import { AndExpression, SupportedOperators } from "../../types/";
+import { AndExpression, SupportedOperators, ExpressionSort } from "../../types/";
 import { isId as isIdentifier } from '../../steps/pre-query/parse-query-params';
 import { partition, setDifference, reduceToObject } from "../../util/misc";
 import { values as objectValues } from "../../util/objectValueEntries";
@@ -130,15 +130,39 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
 
     // do sorting
     if(Array.isArray(sorts)) {
-      queryBuilder.sort(
-        sorts.map(it => {
-          if(!("field" in it)) {
-            throw new Error("Got unsupported expression sort field; shouldn't happen.");
-          }
+      const geoDistanceSort = sorts.find((it): it is ExpressionSort => {
+        const exp = (it as ExpressionSort).expression;
+        return exp && exp.operator === 'geoDistance';
+      });
 
-          return (it.direction === 'DESC' ? '-' : '') + it.field;
-        }).join(" ")
-      );
+      if(geoDistanceSort) {
+        if(sorts.length !== 1) {
+          throw Errors.invalidQueryParamValue({
+            detail: `Cannot combine geoDistance sorts with other sorts.`,
+            source: { parameter: "sort" }
+          });
+        }
+
+        queryBuilder.near(geoDistanceSort.expression.args[0].value, {
+          center: {
+            type: "Point", coordinates: geoDistanceSort.expression.args[1]
+          },
+          maxDistance: 4503599627370496,
+          spherical: true
+        })
+      }
+
+      else {
+        queryBuilder.sort(
+          sorts.map(it => {
+            if(!("field" in it)) {
+              throw new Error("Got unsupported expression sort field; shouldn't happen.");
+            }
+
+            return (it.direction === 'DESC' ? '-' : '') + it.field;
+          }).join(" ")
+        );
+      }
     }
 
     if(offset) {
@@ -878,6 +902,36 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     'lt':  { },
     'gt':  { },
     'lte': { },
-    'gte': { }
+    'gte': { },
+
+    // Operators that other adapters really might not support, for which
+    // the library doesn't have built-in arg validation logic.
+    'geoDistance': {
+      isBinary: true,
+      // geoDistance produces a number not a bool,
+      // so it's used for sorting and not filtering
+      legalIn: ["sort"],
+      finalizeArgs(operators, operator, args) {
+        if(!isIdentifier(args[0])) {
+          throw new SyntaxError(
+            `"geoDistance" operator expects field reference as first argument.`
+          );
+        }
+
+        const isPoint = R.allPass([
+          Array.isArray, // tslint:disable-line no-unbound-method
+          R.pipe(R.length, R.equals(2)), // tslint:disable-line no-unbound-method
+          R.all(it => Number(it) === it)
+        ]);
+
+        if(!isPoint(args[1])) {
+          throw new SyntaxError(
+            `"geoDistance" operator expects [lng,lat] as second argument.`
+          );
+        }
+
+        return args;
+      }
+    }
   };
 }

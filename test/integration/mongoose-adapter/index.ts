@@ -22,6 +22,61 @@ describe("MongooseAdapter", () => {
           )).to.be.true;
         })
     });
+
+    it("should support sorting by valid geoDistance, iff no other sorts are provided", () => {
+      return Promise.all([
+        Agent.request("GET", "/organizations?sort=(location,geoDistance,[-70,40])")
+          .then(resp => {
+            const resources = resp.body.data;
+            const stateGovIndex = resources.findIndex(it => it.id === "54419d550a5069a2129ef254");
+            const echoOrgIndex = resources.findIndex(it => it.id === "59ac9c0ecc4c356fcda65202");
+
+            expect(stateGovIndex < echoOrgIndex).to.be.true;
+          }),
+        Agent.request("GET", "/organizations?sort=(location,geoDistance,[0,0])")
+          .then(resp => {
+            const resources = resp.body.data;
+            const stateGovIndex = resources.findIndex(it => it.id === "54419d550a5069a2129ef254");
+            const echoOrgIndex = resources.findIndex(it => it.id === "59ac9c0ecc4c356fcda65202");
+
+            expect(echoOrgIndex < stateGovIndex).to.be.true;
+          }),
+        Agent.request("GET", "/organizations?sort=name,(location,geoDistance,[0,0])")
+          .catch(e => {
+            expect(e.response.status).to.equal(400);
+            expect(e.response.body.errors[0].detail).to.equal("Cannot combine geoDistance sorts with other sorts.")
+          })
+      ]);
+    });
+
+    // This test is to indicate that, unlike other sorts, adding a "sort" by
+    // geoDistance can actually change the results returned -- and, in that sense,
+    // it isn't really a pure sort at all. This may change in a major version bump.
+    it("should exclude documents with no geo field when \"sorting\" by distance", () => {
+      return Agent.request("GET", "/organizations?sort=(location,geoDistance,[-70,40])")
+        .then(resp => {
+          expect(
+            resp.body.data.filter(it => it.id === "59af14d3bbd18cd55ea08ea3")
+          ).to.have.length(0);
+        });
+    });
+
+    it("should support pagination with sorting by geoDistance", () => {
+      return Promise.all([
+        Agent.request("GET", "/organizations?sort=(location,geoDistance,[-70,40])&page[limit]=1")
+          .then(resp => {
+            const resources = resp.body.data;
+            expect(resources.length).to.equal(1);
+            expect(resources[0].id).to.equal("54419d550a5069a2129ef254");
+          }),
+        Agent.request("GET", "/organizations?sort=(location,geoDistance,[-70,40])&page[limit]=1&page[offset]=1")
+          .then(resp => {
+            const resources = resp.body.data;
+            expect(resources.length).to.equal(1);
+            expect(resources[0].id).to.equal("59ac9c0ecc4c356fcda65202");
+          })
+      ]);
+    });
   });
 
   describe.skip("Deletion", () => { /* TODO */ });
