@@ -1,4 +1,4 @@
-json-api [![CircleCI Badge](https://circleci.com/gh/ethanresnick/json-api.png?0d6d9ba9db7f15eb6363c6fd93408526bef06035&style=shield)](https://circleci.com/gh/ethanresnick/json-api) [![Coverage Status](https://coveralls.io/repos/ethanresnick/json-api/badge.svg?branch=master&service=github)](https://coveralls.io/github/ethanresnick/json-api?branch=master)
+json-api [![CircleCI Badge](https://circleci.com/gh/ethanresnick/json-api.png?0d6d9ba9db7f15eb6363c6fd93408526bef06035&style=shield)](https://circleci.com/gh/ethanresnick/json-api) [![Coverage Status](https://codecov.io/gh/ethanresnick/json-api/branch/master/graph/badge.svg)](https://codecov.io/gh/ethanresnick/json-api)
 ========
 
 This library creates a [JSON API](http://jsonapi.org/)-compliant REST API from your Node app and automatically generates API documentation.
@@ -130,7 +130,7 @@ In the `` (name,`Bob`) `` constraint above, the `eq` operator has been omitted. 
 
 Putting it all together, you could do:
 
-`GET /people?filter=(or,(email,`test@example.com`),(name,`Test`))(dob,gte,1963)`
+``GET /people?filter=(or,(email,`test@example.com`),(name,`Test`))(dob,gte,1963)``
 
 This will find everyone born after 1963 who also has either the name "Test" or the email "test@example.com".
 
