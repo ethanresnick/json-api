@@ -7,7 +7,7 @@ It currently integrates with [Express](http://expressjs.com/) or Koa apps that u
 
 This library implements all the required portions of the 1.0 spec, which is more than enough for basic CRUD. It does not yet implement some of the smaller, optional pieces, like related resource URIs.
 
-# V3 Beta Installation
+# V3 Installation
 ```$ npm install json-api@next```
 
 # Example API

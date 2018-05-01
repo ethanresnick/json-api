@@ -1,3 +1,13 @@
+# 3.0.0-rc.1
+With this release, all major API changes for v3 are done. Between now and the final release of v3, the plan is to:
+- remove deprecated APIs;
+- fix known bugs;
+- update underlying dependencies dependencies (e.g., Mongoose)
+- that's about it, though it's possible some other small API tweaks might happen.
+
+## Breaking Changes
+The big change in this release is that Adapter methods now return results in a different format, and the `Query.returning` method receives the results in the new format. If you were reading/destructuring the arguments to `Query.returning`, you'll need to update your code accordingly. The new format is documented in `src/db-adapters/AdapterInterface.ts`. 
+
 # 3.0.0-beta.26
 ## New Features
 - Users can now provide a custom sort parameter parser, much like the custom filter parameter parsers already supported. Additionally, these parsers are allowed to parse "sort fields", as JSON:API calls them, that represent computed values, instead of simple field references. The format for these new sort fields is `{ expression: FieldExpression, direction: "ASC" | "DESC" }`, compared to the other (and still valid) `{ field: string, direction: "ASC" | "DESC" }` format.
