@@ -297,11 +297,13 @@ describe("MongooseAdapter", () => {
             expect(result.primary.isSingular).to.equal(false);
             expect(countReturned > 4 && countReturned <= 10).to.be.true;
             expect(result.included).to.be.undefined;
+            //tslint:disable-next-line no-non-null-assertion
             expect(result.collectionSize! >= expectedMinCollSize).to.be.true;
           }),
           adapter.find(populatedQuery).then(result => {
             expect(result.primary.isSingular).to.equal(false);
             expect(result.primary.values.length > 1).to.be.true;
+            //tslint:disable-next-line no-non-null-assertion
             expect(result.included!.every(it=> it.type === 'organizations')).to.be.true;
           })
         ]);
