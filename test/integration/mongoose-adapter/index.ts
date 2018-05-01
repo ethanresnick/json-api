@@ -69,13 +69,28 @@ describe("MongooseAdapter", () => {
             expect(resources.length).to.equal(1);
             expect(resources[0].id).to.equal("54419d550a5069a2129ef254");
           }),
-        Agent.request("GET", "/organizations?sort=(location,geoDistance,[-70,40])&page[limit]=1&page[offset]=1")
+        Agent.request("GET", "/organizations")
+          .query("sort=(location,geoDistance,[-70,40])")
+          .query("page[limit]=1&page[offset]=1")
           .then(resp => {
             const resources = resp.body.data;
             expect(resources.length).to.equal(1);
             expect(resources[0].id).to.equal("59ac9c0ecc4c356fcda65202");
           })
       ]);
+    });
+
+    it('should support mixing other filters with geoDistance sort', () => {
+      return Agent.request("GET", "/organizations")
+        .query("filter=(or,(name,`ELEMENTARY%20SCHOOL`),(name,`STATE%20GOVERNMENT`))")
+        .query("sort=(location,geoDistance,[0,0])")
+        .then(resp => {
+          // Should be one because the filter limits to two items, and then,
+          // of those two items, ELEMENTARY SCHOOL is excluded for not having
+          // a location field.
+          expect(resp.body.data.length).to.equal(1);
+          expect(resp.body.data[0].id).to.equal("54419d550a5069a2129ef254")
+        });
     });
   });
 
