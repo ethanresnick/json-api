@@ -8,6 +8,7 @@ import Data from "../../types/Generic/Data";
 import ResourceSet from "../../types/ResourceSet";
 import ResourceIdentifier from "../../types/ResourceIdentifier";
 import ResourceTypeRegistry from "../../ResourceTypeRegistry";
+import { CreationReturning } from '../../db-adapters/AdapterInterface';
 
 export default function(request: FinalizedRequest, registry: ResourceTypeRegistry, makeDoc) {
   // tslint:disable-next-line no-non-null-assertion
@@ -48,7 +49,7 @@ export default function(request: FinalizedRequest, registry: ResourceTypeRegistr
     return new CreateQuery({
       type,
       records: <Data<ResourceWithTypePath>>primary,
-      returning: (created: Data<ResourceWithTypePath>) => {
+      returning: ({ created }: CreationReturning) => {
         const res: Result = {
           status: 201,
           document: makeDoc({ primary: ResourceSet.of({ data: created }) })

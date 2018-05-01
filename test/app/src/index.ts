@@ -14,8 +14,9 @@ import {
 } from '../../../src/steps/pre-query/parse-query-params';
 import { QueryBuildingContext } from "../../../src/controllers/API";
 import ExpressStrategy from "../../../src/http-strategies/Express";
+import MongooseAdapter from '../../../src/db-adapters/Mongoose/MongooseAdapter';
 import { Express } from "express";
-export { Express, QueryBuildingContext, ExpressStrategy };
+export { Express, QueryBuildingContext, ExpressStrategy, MongooseAdapter };
 
 /**
  * Export a promise for the app and the constructed front controller.
@@ -202,7 +203,7 @@ export default database.then(function(dbModule) {
     Front.sendError({ message: "Not Found", status: 404 }, req, res, next);
   });
 
-  return { app, Front, subApp };
+  return { app, Front, subApp, adapter };
 });
 
 function makeSignInQuery(opts: QueryBuildingContext) {
@@ -220,7 +221,7 @@ function makeSignInQuery(opts: QueryBuildingContext) {
     type: "people",
     isSingular: true,
     filters: [FieldExpression("eq", [Identifier("name"), user])],
-    returning: ([userData]) => {
+    returning({ primary: userData }) {
       if(pass !== 'password') {
         throw new APIError(401);
       }

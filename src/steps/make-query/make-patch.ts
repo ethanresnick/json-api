@@ -7,6 +7,7 @@ import Data from "../../types/Generic/Data";
 import ResourceSet from "../../types/ResourceSet";
 import ResourceIdentifier from "../../types/ResourceIdentifier";
 import { FinalizedRequest, makeDocument } from "../../types";
+import { UpdateReturning } from '../../db-adapters/AdapterInterface';
 import setTypePaths from "../set-type-paths";
 
 export default async function(request: FinalizedRequest, registry: ResourceTypeRegistry, makeDoc: makeDocument) {
@@ -74,7 +75,7 @@ export default async function(request: FinalizedRequest, registry: ResourceTypeR
   return new UpdateQuery({
     type,
     patch: changedResourceData,
-    returning: (resources: Data<Resource>) => ({
+    returning: ({ updated: resources }: UpdateReturning) => ({
       document: makeDoc({
         primary: request.aboutRelationship
           ? (resources.unwrap() as Resource).relationships[<string>request.relationship]

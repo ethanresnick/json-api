@@ -23,10 +23,11 @@ import * as Errors from '../../util/errors';
 import Data from "../../types/Generic/Data";
 import Resource, { ResourceWithTypePath } from "../../types/Resource";
 import ResourceIdentifier from "../../types/ResourceIdentifier";
+import Relationship from '../../types/Relationship';
 import FieldDocumentation from "../../types/Documentation/Field";
 import FieldTypeDocumentation from "../../types/Documentation/FieldType";
 import RelationshipTypeDocumentation from "../../types/Documentation/RelationshipType";
-import { Adapter, TypeInfo, TypeIdMapOf } from "../AdapterInterface";
+import { Adapter, TypeInfo, TypeIdMapOf, ReturnedResource } from "../AdapterInterface";
 import CreateQuery from "../../types/Query/CreateQuery";
 import FindQuery from "../../types/Query/FindQuery";
 import DeleteQuery from "../../types/Query/DeleteQuery";
@@ -122,11 +123,11 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
         ? model[mode](mongofiedFilters)
         : model[mode](mongofiedFilters);
 
-    // a promised query result that counts how many results we'd have if
-    // we weren't paginating. this just resolves to null when we aren't paginating.
+    // a promised query result that counts how many results we'd have if we
+    // weren't paginating. just resolves to undefined if we aren't paginating.
     const collectionSizePromise = isPaginating
       ? model.count(mongofiedFilters).exec()
-      : Promise.resolve(null);
+      : Promise.resolve(undefined);
 
     // do sorting
     if(Array.isArray(sorts)) {
@@ -253,13 +254,13 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
 
     return Promise.all([
       primaryDocumentsPromise.then((it) => {
-        return this.docsToResourceData(it, mode === 'find', fields);
+        return this.docsToResourceData(it, mode === 'find', fields) as Data<ReturnedResource>;
       }),
       includedResourcesPromise,
       collectionSizePromise
-    ])/*.then(([primary, included, collectionSize]) => {
-      return [primary, { included, meta: { collectionSize } }];
-    })*/.catch(util.errorHandler);
+    ]).then(([primary, included, collectionSize]) => {
+      return { primary, included, collectionSize };
+    }).catch(util.errorHandler);
   }
 
   /**
@@ -313,7 +314,10 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       const finalDocs = docArrays.reduce((a, b) => a.concat(b), []);
       // TODO: why isn't fields passed here, but is only passed in find...
       // is that appropriate? (Probably... check spec, and common sense.)
-      return this.docsToResourceData(finalDocs, makeCollection);
+      return {
+        created:
+          this.docsToResourceData(finalDocs, makeCollection) as Data<ReturnedResource>
+      };
     }).catch(util.errorHandler);
   }
 
@@ -419,15 +423,18 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
 
     // Don't run ANY of the queries unless all could be built successfully
     // (I.e., every changeset was valid).
-    return singleDocUpdateQueries.flatMapAsync(async ([docUpdateQuery]) => {
-      const doc = await (docUpdateQuery.exec().catch(util.errorHandler) as Promise<mongoose.Document>);
+    return {
+      updated: await singleDocUpdateQueries.flatMapAsync(async ([docUpdateQuery]) => {
+        const doc: mongoose.Document =
+          await (docUpdateQuery.exec().catch(util.errorHandler));
 
-      if(!doc) {
-        throw Errors.occFail();
-      }
+        if(!doc) {
+          throw Errors.occFail();
+        }
 
-      return this.docsToResourceData(doc, false);
-    });
+        return this.docsToResourceData(doc, false) as Data<ReturnedResource>;
+      })
+    };
   }
 
   async delete(query: DeleteQuery) {
@@ -492,7 +499,10 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     // Finally, we can delete all the docs,
     // calling .remove() to run the user's middleware.
     docsToDelete.forEach(it => { it.remove(); });
-    return docsToDelete.map((it: mongoose.Document) => this.docToResource(it));
+    return {
+      deleted:
+        docsToDelete.map(it => this.docToResource(it)) as Data<ReturnedResource>
+    };
   }
 
   /**
@@ -502,7 +512,20 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
    * run. But validation and the update query hooks will work.
    */
   async addToRelationship(query: AddToRelationshipQuery) {
-    const { type, id, relationshipName, linkage: newLinkage } = query;
+    return this.updateRelationship(query);
+  }
+
+  /**
+   * Like @addToRelationship, but removes the provided linkage.
+   */
+  async removeFromRelationship(query: RemoveFromRelationshipQuery) {
+    return this.updateRelationship(query);
+  }
+
+  private async updateRelationship(
+    query: AddToRelationshipQuery | RemoveFromRelationshipQuery
+  ) {
+    const { type, id, relationshipName, linkage } = query;
 
     // Below, we verify that the `type` key in linkage matches the `type` name
     // of the root model that the relationship is supposed to hold.
@@ -519,49 +542,55 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     // Likewise, we always read the supertype's schema when deciding which linkage
     // types are allowed. That's bad too.
     const model = this.getModel(type);
-    this.assertRelationshipLinkageTypeValid(model, relationshipName, newLinkage);
+    const linkageType = this.getRelationshipLinkageType(model, relationshipName);
 
-    const options = { runValidators: true, context: "query" };
+    if(!linkage.every(it => it.type === linkageType)) {
+      throw Errors.invalidLinkageType({
+        detail: `All linkage must have type: ${linkageType}.`
+      });
+    }
+
+    const updatedIds = linkage.map(it => it.id);
+
+    const options = {
+      runValidators: true,
+      context: "query",
+      // get the old doc back, as we can infer the new relationship state from
+      // that (by unioning the linkage), but can't go the other way (as there's
+      // no way to know from the final linkage if any items were already there)
+      new: false
+    };
+
     const update = {
-      $addToSet: {
-        [relationshipName]: { $each: newLinkage.map(it => it.id) }
-      },
+      ...(query instanceof RemoveFromRelationshipQuery
+        ? { $pullAll: { [relationshipName]: updatedIds } }
+        : { $addToSet: { [relationshipName]: { $each: updatedIds } } }),
       $inc: { [getVersionKey(model)]: 1 }
     };
 
     return model.findOneAndUpdate({ "_id": id }, update, options).exec()
-      .catch(util.errorHandler);
-  }
+      .then(unUpdatedDoc => {
+        const beforeData =
+          Data.fromJSON(unUpdatedDoc[relationshipName])
+            .map(oid => new ResourceIdentifier(linkageType, String(oid)));
 
-  async removeFromRelationship(query: RemoveFromRelationshipQuery) {
-    const { type, id, relationshipName, linkage: linkageToRemove } = query;
+        const finalIdsIterator = query instanceof AddToRelationshipQuery
+          ? new Set([...beforeData.values.map(it => it.id), ...updatedIds]).values()
+          : setDifference(beforeData.values.map(it => it.id), updatedIds).values();
 
-    // Below, we verify that the `type` key in linkage matches the `type` name
-    // of the root model that the relationship is supposed to hold.
-    //
-    // TODO: if the relationship is supposed to hold resources only of a
-    // specific subtype, validate that the linkage provided actually points to
-    // a document of that subtype (and actually points to an existing document
-    // at all).
-    //
-    // TODO: update this to work like update(), where we find the doc and do an
-    // update on it so that save middleware can run and so we know the subtype
-    // of the owning document. Right now, we always run the parent model's
-    // findOneAndUpdate middleware, even if type/id points to a subtype resource.
-    // Likewise, we always read the supertype's schema when deciding which linkage
-    // types are allowed. That's bad too.
-    const model = this.getModel(type);
-    this.assertRelationshipLinkageTypeValid(model, relationshipName, linkageToRemove);
+        const afterData = Data.of(
+          [...finalIdsIterator].map(thisId =>
+            new ResourceIdentifier(linkageType, thisId)
+          )
+        );
 
-    const update = {
-      $pullAll: {
-        [relationshipName]: linkageToRemove.map(it => it.id)
-      },
-      $inc: { [getVersionKey(model)]: 1 }
-    };
-    const options = { runValidators: true, context: "query" };
+        const owner = { type, id: String(id), path: relationshipName };
 
-    return model.findOneAndUpdate({"_id": id}, update, options).exec()
+        return {
+          before: Relationship.of({ data: beforeData, owner }),
+          after: Relationship.of({ data: afterData, owner })
+        }
+      })
       .catch(util.errorHandler);
   }
 
@@ -665,26 +694,21 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     return method.call(this, query);
   }
 
-  protected assertRelationshipLinkageTypeValid(
-    ownerModel: Model<any>,
-    relationshipName: string,
-    linkage: ResourceIdentifier[]
-  ) {
-    const rootTypeNameForRefModel = (() => {
-      try {
-        const refModelName = getReferencedModelName(ownerModel, relationshipName);
-        const refModelType = this.modelNamesToTypeNames[refModelName as string];
-        const refModel = this.getModel(refModelType as string);
-        return this.getTypePath(refModel).pop();
-      } catch(e) {
-        throw new Error(`Missing/invalid model name for relationship ${relationshipName}.`);
-      }
-    })();
-
-    if(!linkage.every(it => it.type === rootTypeNameForRefModel)) {
-      throw Errors.invalidLinkageType({
-        detail: `All linkage must have type: ${rootTypeNameForRefModel}.`
-      });
+  /**
+   * Given a model and a relationship path, returns the legal/expected value
+   * for the JSON:API `type` key of all linkage present in the relationship.
+   *
+   * @param {Model<any>} ownerModel The model on which the relationship exists
+   * @param {string} relName The name of the relationship
+   */
+  protected getRelationshipLinkageType(ownerModel: Model<any>, relName: string) {
+    try {
+      const refModelName = getReferencedModelName(ownerModel, relName);
+      const refModelType = this.modelNamesToTypeNames[refModelName as string];
+      const refModel = this.getModel(refModelType as string);
+      return this.getTypePath(refModel).pop() as string;
+    } catch(e) {
+      throw new Error(`Missing/invalid model name for relationship ${relName}.`);
     }
   }
 
@@ -724,7 +748,9 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       docToResource(models, modelNamesToTypeNames, it, fields)
     );
 
-    return isPlural ? Data.of<Resource>(resources) : Data.pure<Resource>(resources[0]);
+    return isPlural
+      ? Data.of(resources)
+      : Data.pure(resources[0]);
   }
 
   static getStandardizedSchema(
