@@ -1,5 +1,15 @@
 import { expect } from "chai";
-import AgentPromise from "../../app/agent";
+import agentPromise, { PromiseResult } from "../../app/agent";
+import appPromise from "../../app/src/index";
+import Data from '../../../src/types/Generic/Data';
+import Resource, { ResourceWithTypePath } from '../../../src/types/Resource';
+import Relationship from '../../../src/types/Relationship';
+import ResourceIdentifier from '../../../src/types/ResourceIdentifier';
+import FindQuery from '../../../src/types/Query/FindQuery';
+import CreateQuery from '../../../src/types/Query/CreateQuery';
+import DeleteQuery from '../../../src/types/Query/DeleteQuery';
+import AddToRelationshipQuery from '../../../src/types/Query/AddToRelationshipQuery';
+import RemoveFromRelationshipQuery from '../../../src/types/Query/RemoveFromRelationshipQuery';
 import { VALID_ORG_RESOURCE_NO_ID } from "../fixtures/creation";
 import { VALID_ORG_VIRTUAL_PATCH } from "../fixtures/updates";
 
@@ -8,9 +18,14 @@ import { VALID_ORG_VIRTUAL_PATCH } from "../fixtures/updates";
  * behind all these tests/why the library's behavior is what it is.
  */
 describe("MongooseAdapter", () => {
-  let Agent;
+  let adapter: PromiseResult<typeof appPromise>["adapter"];
+  let Agent: PromiseResult<typeof agentPromise>;
+
   before(() => {
-    return AgentPromise.then((A) => { Agent = A; })
+    return Promise.all([agentPromise, appPromise]).then(([agent, app]) => {
+      Agent = agent;
+      adapter = app.adapter;
+    });
   });
 
   describe("Fetching", () => {
@@ -242,6 +257,191 @@ describe("MongooseAdapter", () => {
       ]);
     });
   });
+
+  /* These are more truly "integration" tests
+   * (testing the MoongooseAdapter and its integration with mongoose),
+   * whereas the above are really end-to-end tests.
+   */
+  describe("Query return types", () => {
+    describe("Find", () => {
+      it("should return the proper type", () => {
+        const dummyReturning = (result) => ({});
+        const singularQuery = new FindQuery({
+          type: "people", isSingular: true, returning: dummyReturning
+        });
+        const pluralQuery = new FindQuery({
+          type: "people", isSingular: false, returning: dummyReturning
+        });
+        const paginatedQuery = new FindQuery({
+          type: "people", limit: 10, isSingular: false, returning: dummyReturning
+        });
+        const populatedQuery = new FindQuery({
+          type: "people", isSingular: false, populates: ["manages"], returning: dummyReturning
+        });
+
+        return Promise.all([
+          adapter.find(singularQuery).then(result => {
+            expect(result.primary.isSingular).to.equal(true);
+            expect(result.included).to.be.undefined;
+            expect(result.collectionSize).to.be.undefined;
+          }),
+          adapter.find(pluralQuery).then(result => {
+            expect(result.primary.isSingular).to.equal(false);
+            expect(result.included).to.be.undefined;
+            expect(result.collectionSize).to.be.undefined;
+          }),
+          adapter.find(paginatedQuery).then(result => {
+            const countReturned = result.primary.values.length;
+            const expectedMinCollSize = Math.min(countReturned, 10);
+
+            expect(result.primary.isSingular).to.equal(false);
+            expect(countReturned > 4 && countReturned <= 10).to.be.true;
+            expect(result.included).to.be.undefined;
+            expect(result.collectionSize! >= expectedMinCollSize).to.be.true;
+          }),
+          adapter.find(populatedQuery).then(result => {
+            expect(result.primary.isSingular).to.equal(false);
+            expect(result.primary.values.length > 1).to.be.true;
+            expect(result.included!.every(it=> it.type === 'organizations')).to.be.true;
+          })
+        ]);
+      });
+    });
+
+    describe("AddToRelationship", () => {
+      it("should return the proper type", async () => {
+        const dummyReturning = (result) => ({});
+        const originalLinkage = [new ResourceIdentifier("people", "53f54dd98d1e62ff12539db2")];
+
+        const newOrg = (await adapter.create(new CreateQuery({
+          type: "organizations",
+          records: Data.pure(dummyOrgResource(originalLinkage)),
+          returning: dummyReturning
+        }))).created.values[0];
+
+        const linkage = [
+          new ResourceIdentifier("people", "53f54dd98d1e62ff12539db2"),
+          new ResourceIdentifier("people", "53f54dd98d1e62ff12539db3"),
+        ];
+
+        const query = new AddToRelationshipQuery({
+          type: "organizations",
+          id: newOrg.id,
+          relationshipName: "liaisons",
+          linkage,
+          returning: dummyReturning
+        });
+
+        return adapter.addToRelationship(query).then(result => {
+          expect(result.before).to.be.an.instanceof(Relationship);
+          expect(result.after).to.be.an.instanceof(Relationship);
+          expect(result.before.owner).to.deep.equal({
+            type: "organizations", id: newOrg.id, path: "liaisons"
+          });
+          expect(result.before.owner).to.deep.equal(result.after.owner);
+          expect(result.before.values).to.deep.equal(originalLinkage);
+          expect(result.after.values).to.deep.equal(linkage);
+        });
+      });
+    });
+
+    describe("RemoveFromRelationship", () => {
+      it("should return the proper type", async () => {
+        const dummyReturning = (result) => ({});
+        const originalLinkage = [
+          new ResourceIdentifier("people", "53f54dd98d1e62ff12539db2")
+        ];
+
+        const newOrg = (await adapter.create(new CreateQuery({
+          type: "organizations",
+          records: Data.pure(dummyOrgResource(originalLinkage)),
+          returning: dummyReturning
+        }))).created.values[0];
+
+        const linkage = [
+          new ResourceIdentifier("people", "53f54dd98d1e62ff12539db2"),
+          new ResourceIdentifier("people", "53f54dd98d1e62ff12539db3"),
+        ];
+
+        const query = new RemoveFromRelationshipQuery({
+          type: "organizations",
+          id: newOrg.id,
+          relationshipName: "liaisons",
+          linkage,
+          returning: dummyReturning
+        });
+
+        return adapter.removeFromRelationship(query).then(result => {
+          expect(result.before).to.be.an.instanceof(Relationship);
+          expect(result.after).to.be.an.instanceof(Relationship);
+          expect(result.before.owner).to.deep.equal({
+            type: "organizations", id: newOrg.id, path: "liaisons"
+          });
+          expect(result.before.owner).to.deep.equal(result.after.owner);
+          expect(result.before.values).to.deep.equal(originalLinkage);
+          expect(result.after.values).to.deep.equal([]);
+        });
+      });
+    });
+
+    describe("Delete", () => {
+      it("should return the proper type", async () => {
+        const dummyReturning = (result) => ({});
+        const newOrgs = (await adapter.create(new CreateQuery({
+          type: "organizations",
+          records: Data.of([
+            dummyOrgResource(),
+            dummyOrgResource(),
+            dummyOrgResource()
+          ]),
+          returning: dummyReturning
+        }))).created.values;
+
+        const [firstNewId, ...restNewIds] = newOrgs.map(it => it.id);
+
+        const singularQuery = new DeleteQuery({
+          type: "organizations",
+          id: firstNewId,
+          returning: dummyReturning
+        });
+
+        const pluralQuery = new DeleteQuery({
+          type: "organizations",
+          ids: restNewIds,
+          returning: dummyReturning
+        });
+
+        return Promise.all([
+          adapter.delete(singularQuery).then(result => {
+            expect(result.deleted.isSingular).to.be.true;
+            expect(result.deleted.values[0]).to.deep.equal(newOrgs[0])
+          }),
+          adapter.delete(pluralQuery).then(result => {
+            expect(result.deleted.isSingular).to.be.false;
+            expect(result.deleted.values).to.deep.equal([newOrgs[1], newOrgs[2]]);
+          })
+        ]);
+      });
+    })
+  });
 });
 
+function dummyOrgResource(liaisonLinkage?) {
+  const newOrgResource = new Resource(
+    "organizations",
+    undefined,
+    { name: "whatevs" },
+    liaisonLinkage
+      ? {
+          liaisons: Relationship.of({
+            data: liaisonLinkage,
+            owner: { type: "organizations", id: undefined, path: "liaisons" }
+          })
+        }
+      : undefined
+  );
+  newOrgResource.typePath = ["organizations"];
+
+  return newOrgResource as ResourceWithTypePath;
+}
 

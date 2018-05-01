@@ -1,6 +1,6 @@
 import { Model, Document } from "mongoose";
 import Data from "../../../types/Generic/Data";
-import Resource from "../../../types/Resource";
+import Resource, { ResourceWithTypePath } from "../../../types/Resource";
 import ResourceIdentifier from "../../../types/ResourceIdentifier";
 import Relationship from "../../../types/Relationship";
 import { deleteNested } from "../../../util/misc";
@@ -136,5 +136,5 @@ export default function docToResource(
   // finally, create the resource.
   const res = new Resource(baseType, doc.id, attrs, relationships);
   res.typePath = getTypePath(model, modelNamesToTypeNames);
-  return res;
+  return res as ResourceWithTypePath;
 }

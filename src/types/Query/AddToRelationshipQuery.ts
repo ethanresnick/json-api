@@ -1,3 +1,5 @@
+import { Result } from "../index";
+import { RelationshipUpdateReturning } from '../../db-adapters/AdapterInterface';
 import Query, { QueryOptions } from "./Query";
 import { assertKeysTruthy } from "./utils";
 import ResourceIdentifier from "../ResourceIdentifier";
@@ -6,13 +8,14 @@ export type AddToRelationshipQueryOptions = QueryOptions & {
   id: string | number;
   relationshipName: string;
   linkage: ResourceIdentifier[];
+  returning: (result: RelationshipUpdateReturning) => Result | Promise<Result>;
 };
 
 export default class AddToRelationshipQuery extends Query {
   protected query: {
     type: QueryOptions["type"];
-    returning: QueryOptions["returning"];
     catch: QueryOptions["catch"];
+    returning: AddToRelationshipQueryOptions["returning"];
     id: AddToRelationshipQueryOptions["id"];
     relationshipName: AddToRelationshipQueryOptions["relationshipName"];
     linkage: AddToRelationshipQueryOptions["linkage"];

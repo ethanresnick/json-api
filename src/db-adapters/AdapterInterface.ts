@@ -1,10 +1,35 @@
 import { SupportedOperators } from "../types";
+import Data from '../types/Generic/Data';
+import Resource, { ResourceWithTypePath, ResourceWithId } from '../types/Resource';
+import Relationship from '../types/Relationship';
 import CreateQuery from "../types/Query/CreateQuery";
 import FindQuery from "../types/Query/FindQuery";
 import DeleteQuery from "../types/Query/DeleteQuery";
 import UpdateQuery from "../types/Query/UpdateQuery";
 import AddToRelationshipQuery from "../types/Query/AddToRelationshipQuery";
 import RemoveFromRelationshipQuery from "../types/Query/RemoveFromRelationshipQuery";
+
+export type ReturnedResource = ResourceWithTypePath & ResourceWithId;
+
+export type RelationshipUpdateReturning =
+  { before?: Relationship, after?: Relationship };
+
+export type FindReturning = {
+  primary: Data<Resource>,
+  // Below, using a required property with `| undefined` plays better with
+  // destructuring in TS than an optional property without undefined.
+  included: Resource[] | undefined,
+  collectionSize: number | undefined
+};
+
+export type CreationReturning =
+  { created: Data<ReturnedResource> };
+
+export type UpdateReturning =
+  { updated: Data<ReturnedResource> };
+
+export type DeletionReturning =
+  { deleted?: Data<ReturnedResource> };
 
 export type TypeInfo = { typePath: string[]; extra?: any };
 export type TypeIdMapOf<T> = {
@@ -13,12 +38,12 @@ export type TypeIdMapOf<T> = {
 
 export interface AdapterInstance<T extends new (...args: any[]) => any> {
   constructor: T;
-  find(query: FindQuery): Promise<any>;
-  create(query: CreateQuery): Promise<any>;
-  update(update: UpdateQuery): Promise<any>;
-  delete(query: DeleteQuery): Promise<any>;
-  addToRelationship(query: AddToRelationshipQuery): Promise<any>;
-  removeFromRelationship(query: RemoveFromRelationshipQuery): Promise<any>;
+  find(query: FindQuery): Promise<FindReturning>;
+  create(query: CreateQuery): Promise<CreationReturning>;
+  update(update: UpdateQuery): Promise<UpdateReturning>;
+  delete(query: DeleteQuery): Promise<DeletionReturning>;
+  addToRelationship(query: AddToRelationshipQuery): Promise<RelationshipUpdateReturning>;
+  removeFromRelationship(query: RemoveFromRelationshipQuery): Promise<RelationshipUpdateReturning>;
   getModel(typeName: string): any;
   getRelationshipNames(typeName: string): string[];
   doQuery(query: any): Promise<any>;
@@ -35,22 +60,3 @@ export interface AdapterClass {
 export interface Adapter<T extends AdapterClass> extends AdapterInstance<T> {
 
 }
-
-
-/*
-
-interface PointJson { x: number; y: number; }
-class Point /*static implements JsonSerializableStatic<PointJson, Point> {
-    static fromJson(obj: PointJson): Point {
-        return new Point(obj.x, obj.y)
-    }
-
-    constructor(readonly x: number, readonly y: number) {}
-
-    toJson(): PointJson {
-        return { x: this.x, y: this.y };
-    }
-}
-// Hack for 'static implements'
-const _: AdapterStatic<PointJson, Point> = Point;
-*/

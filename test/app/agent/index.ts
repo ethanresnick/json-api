@@ -49,3 +49,5 @@ export default appPromise.then(function({ app }: { app: Application}) {
     };
   });
 });
+
+export type PromiseResult<T> = T extends Promise<infer U> ? U : never;

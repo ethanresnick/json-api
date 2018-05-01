@@ -1,17 +1,19 @@
 import WithCriteriaQuery, { WithCriteriaQueryOptions } from "./WithCriteriaQuery";
-import { Sort, AndExpression } from "../index";
+import { FindReturning } from '../../db-adapters/AdapterInterface';
+import { Sort, AndExpression, Result } from "../index";
 
 export type FindQueryOptions = WithCriteriaQueryOptions & {
   populates?: string[];
   select?: { [typeName: string]: string[] };
   sort?: Sort[];
+  returning(result: FindReturning): Result | Promise<Result>;
 };
 
 export default class FindQuery extends WithCriteriaQuery {
   protected query: {
     type: FindQueryOptions["type"];
-    returning: FindQueryOptions["returning"];
     catch: FindQueryOptions["catch"];
+    returning: FindQueryOptions["returning"];
     select?: FindQueryOptions["select"];
     sort?: FindQueryOptions["sort"];
     populates: string[]; // never undefined in the object (it gets a default), but it can be in the option.

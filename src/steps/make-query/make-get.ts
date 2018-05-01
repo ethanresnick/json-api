@@ -1,4 +1,5 @@
 import * as Errors from "../../util/errors";
+import { FindReturning } from '../../db-adapters/AdapterInterface';
 import { FinalizedRequest, makeDocument } from "../../types";
 import Resource from "../../types/Resource";
 import ResourceSet from "../../types/ResourceSet";
@@ -34,12 +35,12 @@ export default function(request: FinalizedRequest, registry: ResourceTypeRegistr
       filters: filter,
       offset,
       limit,
-      returning: ([primary, included, collectionSizeOrNull]) => ({
+      returning: ({ primary, included, collectionSize }: FindReturning) => ({
         document: makeDoc({
           primary: ResourceSet.of({ data: primary }),
           included,
-          ...(collectionSizeOrNull != null
-            ? { meta: { total: collectionSizeOrNull } }
+          ...(collectionSize != undefined
+            ? { meta: { total: collectionSize } }
             : {})
         })
       })
@@ -67,7 +68,7 @@ export default function(request: FinalizedRequest, registry: ResourceTypeRegistr
     type,
     populates: [],
     id: request.id,
-    returning([primary]) {
+    returning({ primary }: FindReturning) {
       // Because the query filters by id, we know we only have one resource here.
       const resource = primary.unwrap() as Resource;
 

@@ -1,11 +1,16 @@
 import WithCriteriaQuery, { WithCriteriaQueryOptions } from "./WithCriteriaQuery";
-import { AndExpression } from "../index";
+import { DeletionReturning } from '../../db-adapters/AdapterInterface';
+import { AndExpression, Result } from "../index";
+
+export type DeleteQueryOptions = WithCriteriaQueryOptions & {
+  returning: (result: DeletionReturning) => Result | Promise<Result>;
+};
 
 export default class DeleteQuery extends WithCriteriaQuery {
   protected query: {
     type: WithCriteriaQueryOptions["type"];
-    returning: WithCriteriaQueryOptions["returning"];
     catch: WithCriteriaQueryOptions["catch"];
+    returning: DeleteQueryOptions["returning"];
     criteria: {
       where: AndExpression;
       isSingular: boolean;
