@@ -46,7 +46,7 @@ export interface AdapterInstance<T extends new (...args: any[]) => any> {
   removeFromRelationship(query: RemoveFromRelationshipQuery): Promise<RelationshipUpdateReturning>;
   getModel(typeName: string): any;
   getRelationshipNames(typeName: string): string[];
-  doQuery(query: any): Promise<any>;
+  doQuery(query: any): Promise<FindReturning | CreationReturning | UpdateReturning | DeletionReturning | RelationshipUpdateReturning>;
   getTypePaths(items: {type: string, id: string}[]): Promise<TypeIdMapOf<TypeInfo>>
 };
 
