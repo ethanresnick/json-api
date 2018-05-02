@@ -67,7 +67,8 @@ export type APIControllerOpts = {
 export type customParamParser<T> = (
   supportedOperators: FinalizedSupportedOperators,
   rawQuery: string | undefined,
-  parsedParams: object
+  parsedParams: object,
+  target: { method: string, uri: string }
 ) => T | undefined;
 
 export type QueryFactory = (opts: QueryBuildingContext) => Query | Promise<Query>;
@@ -169,7 +170,8 @@ export default class APIController {
         return parser(
           finalizedSupportedOperators[paramName],
           request.rawQueryString,
-          request.queryParams
+          request.queryParams,
+          { method: request.method, uri: request.uri }
         );
       } catch (e) {
         throw Errors.invalidQueryParamValue({
