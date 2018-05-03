@@ -15,10 +15,10 @@ export type RelationshipUpdateReturning =
   { before?: Relationship, after?: Relationship };
 
 export type FindReturning = {
-  primary: Data<Resource>,
+  primary: Data<ReturnedResource>,
   // Below, using a required property with `| undefined` plays better with
   // destructuring in TS than an optional property without undefined.
-  included: Resource[] | undefined,
+  included: ReturnedResource[] | undefined,
   collectionSize: number | undefined
 };
 
