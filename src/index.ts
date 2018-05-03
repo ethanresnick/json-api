@@ -49,6 +49,10 @@ export {
   SortDirection, Sort, ExpressionSort, FieldSort
 } from "./types";
 export {
+  FindReturning, CreationReturning, UpdateReturning, DeletionReturning,
+  RelationshipUpdateReturning
+} from "./db-adapters/AdapterInterface";
+export {
   Document, Error, Resource, ResourceIdentifier, ResourceSet, Relationship,
   API as APIController, Documentation as DocumentationController,
   CreateQuery, FindQuery, UpdateQuery, DeleteQuery, AddToRelationshipQuery, RemoveFromRelationshipQuery,
