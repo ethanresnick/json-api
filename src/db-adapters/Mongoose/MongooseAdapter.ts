@@ -21,7 +21,7 @@ import { getTypeName } from "../../util/naming-conventions";
 import * as util from "./lib";
 import * as Errors from '../../util/errors';
 import Data from "../../types/Generic/Data";
-import Resource, { ResourceWithTypePath } from "../../types/Resource";
+import { ResourceWithTypePath } from "../../types/Resource";
 import ResourceIdentifier from "../../types/ResourceIdentifier";
 import Relationship from '../../types/Relationship';
 import FieldDocumentation from "../../types/Documentation/Field";
@@ -116,7 +116,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       (typeof offset !== "undefined" || typeof limit !== "undefined");
 
     let primaryDocumentsPromise: Promise<Document | Document[]>,
-      includedResourcesPromise: Promise<Resource[] | undefined>;
+      includedResourcesPromise: Promise<ReturnedResource[] | undefined>;
 
     const queryBuilder =
       mode === "findOne" // ternary is a hack for TS compiler
@@ -216,19 +216,19 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
         queryBuilder.populate(pathParts[0]);
       });
 
-      let includedResources: Resource[] = [];
+      let includedResources: ReturnedResource[] = [];
       primaryDocumentsPromise = Promise.resolve(queryBuilder.exec()).then((docOrDocs) => {
         includedResources =
           objectValues(
             Data.fromJSON(docOrDocs) // fromJSON to handle docOrDocs === null.
-              .flatMap<Resource>((doc) => {
+              .flatMap<ReturnedResource>((doc) => {
                 return Data.of(populatedPaths).flatMap((path) => {
                   // Handle case that doc[path], which should hold id(s) of the
                   // referenced documents, is undefined b/c the relationship isn't set.
                   return typeof doc[path] === 'undefined'
-                    ? Data.empty as Data<Resource>
+                    ? Data.empty as Data<ReturnedResource>
                     : Data.fromJSON(doc[path]).map(docAtPath => {
-                        return this.docToResource(docAtPath, fields);
+                        return this.docToResource(docAtPath, fields) as ReturnedResource;
                       });
                 });
               })
@@ -237,7 +237,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
               .reduce((acc, resource) => {
                 acc[`${resource.type}/${resource.id}`] = resource;
                 return acc;
-              }, {} as { [id: string]: Resource })
+              }, {} as { [id: string]: ReturnedResource })
           );
 
         return docOrDocs;

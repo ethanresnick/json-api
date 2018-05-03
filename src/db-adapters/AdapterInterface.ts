@@ -1,6 +1,6 @@
 import { SupportedOperators } from "../types";
 import Data from '../types/Generic/Data';
-import Resource, { ResourceWithTypePath, ResourceWithId } from '../types/Resource';
+import { ResourceWithTypePath, ResourceWithId } from '../types/Resource';
 import Relationship from '../types/Relationship';
 import CreateQuery from "../types/Query/CreateQuery";
 import FindQuery from "../types/Query/FindQuery";
