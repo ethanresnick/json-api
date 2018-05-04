@@ -107,14 +107,42 @@ export function toMongoCriteria(constraint: FieldExpression) {
         };
   }
 
-  // Note: all the operators we support (as declared in the adapter) are either
-  // binary ones with a field reference on the left-hand side, or they're `and`
-  // or `or`, with a list of constraints as args. That these constraints hold
-  // has already been validated once the FieldExpressions reach the adapter.
-  // So, below, we know that args[0] must hold a field identifier.
+  // The check below won't match if a geoWithin contains the toGeoCircle,
+  // because we don't recurse down when we encounter a geoWithin.
+  if(constraint.operator === "toGeoCircle") {
+    throw new APIError({
+      status: 400,
+      title: "Can only have toGeoCircle inside of a geoWithin."
+    });
+  }
+
+  // Note: all the operators we support (as declared in the adapter) are either:
+  // 1) the ones handled above (`and` + `or`); or 2) binary ones with a field
+  // reference on the left-hand side. For the latter, this requirement has already
+  // been validated such that, below, we know that args[0] holds an identifier.
   const fieldName = (constraint.args[0] as Identifier).value;
   const mongoField = <string>(fieldName === 'id' ? '_id' : fieldName);
   const value = constraint.args[1];
+
+  if(constraint.operator === "geoWithin") {
+    // For geoWithin, find the toGeoCircle and convert it to a centerSphere exp.
+    // We should always have a toGeoCircle as args[1], but let's be super careful.
+    // This'll prevent us from forgetting to modify this function if we expand
+    // the supported values for geoWithin, among other potential bugs.
+    if(!(value && value.operator === 'toGeoCircle')) {
+      throw new Error("Expected toGeoCircle for second argument.");
+    }
+
+    const finalValue = {
+      $centerSphere: [value.args[0], value.args[1] / 6378100]
+    };
+
+    return {
+      [mongoField]: {
+        [mongoOperator]: finalValue
+      }
+    };
+  }
 
   if(constraint.operator === 'eq') {
     return { [mongoField]: value }

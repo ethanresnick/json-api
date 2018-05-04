@@ -110,6 +110,78 @@ describe("MongooseAdapter", () => {
           expect(resp.body.data[0].id).to.equal("54419d550a5069a2129ef254")
         });
     });
+
+    describe("geoWithin", () => {
+      it('should support filtering docs within a given circle', () => {
+        // 40,000 meters below = ~25 miles, whereas the distance between
+        // [10.1,10.1] and our organization at [10,10] is only about 10 miles.
+        return Promise.all([
+          Agent.request("GET", "/organizations")
+            .query("filter=(location,geoWithin,([10.1,10.1],toGeoCircle,40000))")
+            .then(resp => {
+              expect(resp.body.data.length).to.equal(1);
+              expect(resp.body.data[0].id).to.equal("59ac9c0ecc4c356fcda65202")
+            }),
+
+          // This should just be enough to capture [10,10] and [-73.9667, 40.78]
+          Agent.request("GET", "/organizations")
+            .query("filter=(location,geoWithin,([-32,25],toGeoCircle,4800000))")
+            .query("sort=(location,geoDistance,[0,0])")
+            .then(resp => {
+              expect(resp.body.data.length).to.equal(2);
+              expect(resp.body.data[0].id).to.equal("59ac9c0ecc4c356fcda65202");
+              expect(resp.body.data[1].id).to.equal("54419d550a5069a2129ef254");
+            }),
+
+          // Same as above, except we change the sort,
+          // to verify that they're interacting properly.
+          Agent.request("GET", "/organizations")
+            .query("filter=(location,geoWithin,([-32,25],toGeoCircle,4800000))")
+            .query("sort=(location,geoDistance,[-60,30])")
+            .then(resp => {
+              expect(resp.body.data.length).to.equal(2);
+              expect(resp.body.data[0].id).to.equal("54419d550a5069a2129ef254");
+              expect(resp.body.data[1].id).to.equal("59ac9c0ecc4c356fcda65202");
+            }),
+
+          // This should capture [-73.9667, 40.78], but not quite [10,10]
+          Agent.request("GET", "/organizations")
+            .query("filter=(location,geoWithin,([-32,25],toGeoCircle,4500000))")
+            .query("sort=(location,geoDistance,[0,0])")
+            .then(resp => {
+              expect(resp.body.data.length).to.equal(1);
+              expect(resp.body.data[0].id).to.equal("54419d550a5069a2129ef254")
+            }),
+        ]);
+      });
+
+      it("should not be allowed in sort [same with toGeoCircle]", () => {
+        const isInvalidSortError = it =>
+          it.source && it.source.parameter === "sort" &&
+          it.code === "https://jsonapi.js.org/errors/invalid-query-param-value";
+
+        return Promise.all([
+          Agent.request("GET", "/organizations?sort=([0,0],toGeoCircle,4)")
+            .ok(it => it.badRequest && it.body.errors.some(isInvalidSortError)),
+
+          Agent.request("GET", "/organizations?sort=(geoWithin,location,([0,0],toGeoCircle,4))")
+            .ok(it => it.badRequest && it.body.errors.some(isInvalidSortError))
+        ]);
+      });
+
+      it("should not allow a toGeoCircle outside a geoWithin", () => {
+        const isInvalidtoGeoCircleError = it =>
+          it.title.includes("only have toGeoCircle inside of a geoWithin");
+
+        return Promise.all([
+          Agent.request("GET", "/organizations?filter=(and,([0,0],toGeoCircle,4))")
+            .ok(it => it.badRequest && isInvalidtoGeoCircleError(it.body.errors[0])),
+
+          Agent.request("GET", "/organizations?filter=([0,0],toGeoCircle,4)")
+            .ok(it => it.badRequest && isInvalidtoGeoCircleError(it.body.errors[0]))
+        ]);
+      });
+    })
   });
 
   describe.skip("Deletion", () => { /* TODO */ });

@@ -8,7 +8,10 @@ import pluralize = require("pluralize");
 import { Model, Document } from "mongoose";
 
 import { AndExpression, SupportedOperators, ExpressionSort } from "../../types/";
-import { isId as isIdentifier } from '../../steps/pre-query/parse-query-params';
+import {
+  isId as isIdentifier,
+  isFieldExpression
+} from '../../steps/pre-query/parse-query-params';
 import { partition, setDifference, reduceToObject } from "../../util/misc";
 import { values as objectValues } from "../../util/objectValueEntries";
 import {
@@ -34,6 +37,17 @@ import DeleteQuery from "../../types/Query/DeleteQuery";
 import UpdateQuery from "../../types/Query/UpdateQuery";
 import AddToRelationshipQuery from "../../types/Query/AddToRelationshipQuery";
 import RemoveFromRelationshipQuery from "../../types/Query/RemoveFromRelationshipQuery";
+
+/**
+ * Whether a field expression argument represents a [number, number] tuple.
+ * @param {any} v The argument to validate
+ * @returns boolean
+ */
+const isPoint = R.allPass([
+  Array.isArray, // tslint:disable-line no-unbound-method
+  R.pipe(R.length, R.equals(2)), // tslint:disable-line no-unbound-method
+  R.all(it => Number(it) === it)
+]);
 
 export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> {
   // Workaround for https://github.com/Microsoft/TypeScript/issues/3841.
@@ -150,6 +164,10 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
             source: { parameter: "sort" }
           });
         }
+
+        // TODO: Add an optimization here where, if there's a geoWithin filter
+        // centered on the same point as the geoDistance sort, we remove the
+        // filter and instead set maxDistance on the near to its radius.
         queryBuilder.near(geoDistanceSort.expression.args[0].value, {
           center: {
             type: "Point", coordinates: geoDistanceSort.expression.args[1]
@@ -959,6 +977,61 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
         if(!isPoint(args[1])) {
           throw new SyntaxError(
             `"geoDistance" operator expects [lng,lat] as second argument.`
+          );
+        }
+
+        return args;
+      }
+    },
+    'geoWithin': {
+      isBinary: true,
+      legalIn: ["filter"],
+      finalizeArgs(operators, operator, args) {
+        if(!isIdentifier(args[0])) {
+          throw new SyntaxError(
+            `"geoWithin" operator expects field reference as first argument.`
+          );
+        }
+
+        // GeoWithin only supports checking for points within a toGeoCircle atm.
+        const isToGeoCircle = R.allPass([
+          isFieldExpression,
+          R.propEq("operator", "toGeoCircle")
+        ]);
+
+        if(!isToGeoCircle(args[1])) {
+          throw new SyntaxError(
+            `"geoDistance" operator expects a toGeoCircle as second argument.`
+          );
+        }
+
+        return args;
+      }
+    },
+
+    /**
+     * Returns a circle for use in spherical geo-spatial queries, centered at
+     * the provided latitude and with the provided radius. Is roughly equivalent
+     * to mongo's $centerSphere; however the second argument is a distance in
+     * meters, not radians. [The conversion from meters to radians happens when
+     * the operator is applied, in toMongoCriteria.]
+     *
+     * Note: this is only valid within a geoWithin field expression, but we
+     * can't validate that here. Instead, it's validated in toMongoCriteria.
+     */
+    'toGeoCircle': {
+      isBinary: true,
+      legalIn: ["filter"],
+      finalizeArgs(operators, operator, args) {
+        if(!isPoint(args[0])) {
+          throw new SyntaxError(
+            `"toGeoCircle" operator expects a center point as first argument.`
+          );
+        }
+
+        if(typeof args[1] !== 'number' || Number.isNaN(args[1])) {
+          throw new SyntaxError(
+            `"toGeoCircle" operator expects a radius in meters as second argument.`
           );
         }
 
