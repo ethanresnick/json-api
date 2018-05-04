@@ -64,6 +64,9 @@ describe("MongooseAdapter", () => {
       ]);
     });
 
+    // Not supported.
+    it.skip("should support reversing the sort order of `geoDistance`");
+
     // This test is to indicate that, unlike other sorts, adding a "sort" by
     // geoDistance can actually change the results returned -- and, in that sense,
     // it isn't really a pure sort at all. This may change in a major version bump.

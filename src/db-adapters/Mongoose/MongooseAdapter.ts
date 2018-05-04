@@ -144,6 +144,12 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
           });
         }
 
+        if(geoDistanceSort.direction !== "ASC") {
+          throw Errors.invalidQueryParamValue({
+            detail: `Cannot sort by descending geoDistance; only ascending.`,
+            source: { parameter: "sort" }
+          });
+        }
         queryBuilder.near(geoDistanceSort.expression.args[0].value, {
           center: {
             type: "Point", coordinates: geoDistanceSort.expression.args[1]
