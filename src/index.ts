@@ -45,8 +45,8 @@ import {
 
 // Export types for typescript
 export {
-  FinalizedRequest as Request, Result, HTTPResponse, AndExpression,
-  SortDirection, Sort, ExpressionSort, FieldSort
+  FinalizedRequest as Request, Result, HTTPResponse, AndExpression, Sort,
+  SortDirection, ExpressionSort, FieldSort, FieldExpression as FieldExpressionType
 } from "./types";
 export {
   FindReturning, CreationReturning, UpdateReturning, DeletionReturning,
