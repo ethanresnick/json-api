@@ -1,3 +1,13 @@
+# 3.0.0-rc.2
+This release:
+
+- Adds support for `geoWithin` filters to the mongoose adapter. E.g., you can do `GET /organizations?filter=(location,geoWithin,([0,0],toGeoCircle,4000))`, where `[0,0]` is a `[lng,lat]` coordinate and `4000` is a radius in meters.
+- Provides more precise return types for adapter methods.
+- Exports additional types that may be useful to TS users.
+- Provides slightly more information about the request to query param parsers.
+
+None of the changes should be breaking, except perhaps for Typescript users whose code doesn't match the more precise types.
+
 # 3.0.0-rc.1
 With this release, all major API changes for v3 are done. Between now and the final release of v3, the plan is to:
 - remove deprecated APIs;
