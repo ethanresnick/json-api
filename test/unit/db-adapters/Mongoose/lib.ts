@@ -49,7 +49,8 @@ describe("Mongoose Adapter private helper functions", () => {
         expect(error).to.deep.equal(
           Errors.missingField({
             detail: rawRequiredError.message,
-            rawError: rawRequiredError
+            rawError: rawRequiredError,
+            meta: { source: { field: "required" } }
           })
         );
       });
@@ -67,7 +68,8 @@ describe("Mongoose Adapter private helper functions", () => {
         expect(error).to.deep.equal(
           Errors.invalidFieldValue({
             detail: 'Cast to Number failed for value "String!" at path "number"',
-            rawError: rawCastError
+            rawError: rawCastError,
+            meta: { source: { field: "number" } }
           })
         );
       });
@@ -85,13 +87,14 @@ describe("Mongoose Adapter private helper functions", () => {
         expect(error).to.deep.equal(
           Errors.invalidFieldValue({
             detail: 'Invalid value for path "customSetter"',
-            rawError: rawCastError.reason
+            rawError: rawCastError.reason,
+            meta: { source: { field: "customSetter" } }
           })
         );
       });
     });
 
-    it("should use user-provided APIError if present", () => {
+    it("should use user-provided APIError if present, adding field source", () => {
       return testModelErrors({
         required: "present",
         customSetter: 4
@@ -99,7 +102,10 @@ describe("Mongoose Adapter private helper functions", () => {
         const error = errors[0];
         expect(error).to.be.an.instanceof(APIError);
         expect(error).to.deep.equal(
-          new APIError({ typeUri: "made-up-for-test" })
+          new APIError({
+            typeUri: "made-up-for-test",
+            meta: { source: { field: "customSetter" } }
+          })
         );
       });
     });

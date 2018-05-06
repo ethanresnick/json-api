@@ -10,8 +10,8 @@ import CreateQuery from '../../../src/types/Query/CreateQuery';
 import DeleteQuery from '../../../src/types/Query/DeleteQuery';
 import AddToRelationshipQuery from '../../../src/types/Query/AddToRelationshipQuery';
 import RemoveFromRelationshipQuery from '../../../src/types/Query/RemoveFromRelationshipQuery';
-import { VALID_ORG_RESOURCE_NO_ID } from "../fixtures/creation";
-import { VALID_ORG_VIRTUAL_PATCH } from "../fixtures/updates";
+import { VALID_ORG_RESOURCE_NO_ID, INVALID_ORG_RESOURCE_NO_ID } from "../fixtures/creation";
+import { VALID_ORG_VIRTUAL_PATCH, NEVER_APPLIED_SCHOOL_PATCH } from "../fixtures/updates";
 
 /*
  * See https://github.com/ethanresnick/json-api/issues/149 for details
@@ -262,6 +262,20 @@ describe("MongooseAdapter", () => {
         makeSetInternalFieldRequest("__v", { "type": "organizations", id: 3 }, true),
       ]);
     });
+
+    it("should reject invalid creations with type/field indicated in error.meta", () => {
+      return Agent.request("POST", "/organizations")
+        .send({ data: INVALID_ORG_RESOURCE_NO_ID })
+        .type("application/vnd.api+json")
+        .ok(it => it.badRequest)
+        .then(resp => {
+          expect(resp.body.errors[0].code)
+            .to.equal('https://jsonapi.js.org/errors/missing-required-field');
+
+          expect(resp.body.errors[0].meta)
+            .to.deep.equal({ source: { field: 'name', type: 'organizations' } });
+        });
+    });
   });
 
   describe("Updating", () => {
@@ -330,6 +344,34 @@ describe("MongooseAdapter", () => {
         makeSetInternalFieldRequest("__t", { "type": "organizations", id: "School" }, true),
         makeSetInternalFieldRequest("__v", { "type": "organizations", id: 3 }, true),
       ]);
+    });
+
+    it("should reject invalid patches with type/id/field indicated in error.meta", () => {
+      return Agent.request("PATCH", "/organizations/59af14d3bbd18cd55ea08ea3")
+        .send({
+          data: {
+            ...NEVER_APPLIED_SCHOOL_PATCH,
+            attributes: {
+              ...NEVER_APPLIED_SCHOOL_PATCH.attributes,
+              name: 4 // string required
+            }
+          }
+        })
+        .type("application/vnd.api+json")
+        .ok(it => it.badRequest)
+        .then(resp => {
+          expect(resp.body.errors[0].code)
+            .to.equal("https://jsonapi.js.org/errors/invalid-field-value");
+
+          expect(resp.body.errors[0].meta)
+            .to.deep.equal({
+              source: {
+                field: 'name',
+                type: 'organizations',
+                id: "59af14d3bbd18cd55ea08ea3"
+              }
+            });
+        });
     });
   });
 

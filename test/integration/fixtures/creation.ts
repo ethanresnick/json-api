@@ -52,6 +52,11 @@ export const VALID_SCHOOL_RESOURCE_NO_ID = {
   }
 };
 
+export const INVALID_ORG_RESOURCE_NO_ID = {
+  "type": "organizations",
+  "attributes": { /* missing required name */ }
+}
+
 export const VALID_SCHOOL_RESOURCE_NO_ID_EMPTY_PRINCIPAL_NO_LIAISONS = {
   "type": "organizations",
   "meta": {

@@ -13,13 +13,14 @@ const MongooseError = require("mongoose/lib/error");
  * Takes any error that resulted from the above operations throws an array of
  * errors that can be sent back to the caller as the Promise's rejection value.
  */
-export function errorHandler(err): never {
+export function errorHandler(err, context?: { type: string, id?: string }): never {
   const errors: (APIError | Error)[] = [];
 
   // Convert validation errors collection to something reasonable
   if(err.errors) {
     Object.keys(err.errors).forEach(errKey => {
       const thisError = err.errors[errKey];
+      const metaSource = { source: { field: thisError.path, ...context } };
 
       const errorFormatted = (() => {
         if(err.name === 'ValidationError') {
@@ -27,7 +28,8 @@ export function errorHandler(err): never {
           if(thisError.kind === 'required') {
             return Errors.missingField({
               detail: thisError.message,
-              rawError: thisError
+              rawError: thisError,
+              meta: { ...metaSource }
             });
           }
 
@@ -36,7 +38,9 @@ export function errorHandler(err): never {
           // See https://github.com/Automattic/mongoose/issues/3320 (but note
           // that reason can be on more than just CastError's)
           if(APIError.isDisplaySafe(thisError.reason)) {
-            return APIError.fromError(thisError.reason);
+            const apiError = APIError.fromError(thisError.reason);
+            apiError.meta = { ...apiError.meta, ...metaSource };
+            return apiError;
           }
 
           // If the validation error was caused by an error thrown by a user
@@ -46,13 +50,15 @@ export function errorHandler(err): never {
           else if(thisError.reason && !(thisError.reason instanceof MongooseError)) {
             return Errors.invalidFieldValue({
               detail: `Invalid value for path "${thisError.path}"`,
-              rawError: thisError.reason
+              rawError: thisError.reason,
+              meta: { ...metaSource }
             })
           }
 
           return Errors.invalidFieldValue({
             detail: thisError.message,
-            rawError: thisError
+            rawError: thisError,
+            meta: { ...metaSource }
           });
         }
 

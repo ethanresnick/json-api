@@ -330,7 +330,8 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
         docObjects.forEach(setIdWithGenerator);
       }
 
-      return model.create(docObjects) as Promise<mongoose.Document[]>;
+      return model.create(docObjects)
+        .catch(e => util.errorHandler(e, { type })) as Promise<mongoose.Document[]>;
     });
 
     return Promise.all(creationPromises).then((docArrays) => {
@@ -342,7 +343,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
         created:
           this.docsToResourceData(finalDocs, makeCollection) as Data<ReturnedResource>
       };
-    }).catch(util.errorHandler);
+    });
   }
 
   /**
@@ -412,7 +413,11 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
 
       // Test that the doc is valid, using special
       // mongo error handling function if it isn't.
-      try { await updatedDoc.validate(); } catch(e) { util.errorHandler(e) }
+      try {
+        await updatedDoc.validate();
+      } catch(e) {
+        util.errorHandler(e, { type: resourceUpdate.type, id: resourceUpdate.id });
+      }
 
       // Then, we can't .save() because that won't let us add a criteria
       // on the version key. So, we construct an update based on the modified
@@ -450,7 +455,12 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     return {
       updated: await singleDocUpdateQueries.flatMapAsync(async ([docUpdateQuery]) => {
         const doc: mongoose.Document =
-          await (docUpdateQuery.exec().catch(util.errorHandler));
+          await (docUpdateQuery.exec().catch(e => {
+            util.errorHandler(e, {
+              type: <string>this.modelNamesToTypeNames[(docUpdateQuery as any).model.modelName],
+              id: String(docUpdateQuery.getQuery()._id)
+            })
+          }));
 
         if(!doc) {
           throw Errors.occFail();
