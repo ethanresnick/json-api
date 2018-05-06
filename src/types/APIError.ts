@@ -9,6 +9,7 @@ export type APIErrorJSON = {
   detail?: string;
   links?: any;
   source?: { pointer?: string, parameter?: string };
+  meta?: object;
 };
 
 export type Opts = {
@@ -19,7 +20,8 @@ export type Opts = {
   links?: object;
   typeUri?: string;
   rawError?: Error;
-  source?: { pointer?: string, parameter?: string }
+  source?: { pointer?: string, parameter?: string };
+  meta?: object;
 };
 
 export const displaySafe = Symbol("isJSONAPIDisplayReady");
@@ -31,6 +33,7 @@ export default class APIError extends Error {
   public detail?: string;
   public links?: any; //deprecated.
   public source?: Opts['source'];
+  public meta?: object;
 
   // shape may change. To read for now, call toJSON() and examine `code`.
   protected typeUri?: string;
