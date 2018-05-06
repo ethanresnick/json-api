@@ -1,3 +1,6 @@
+# 3.0.01-rc.2.0.1
+- MongooseAdapter: adds more information about the source of errors to the errors' `meta` key.
+
 # 3.0.0-rc.2
 This release:
 
