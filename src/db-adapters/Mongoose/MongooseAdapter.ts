@@ -968,12 +968,6 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
           );
         }
 
-        const isPoint = R.allPass([
-          Array.isArray, // tslint:disable-line no-unbound-method
-          R.pipe(R.length, R.equals(2)), // tslint:disable-line no-unbound-method
-          R.all(it => Number(it) === it)
-        ]);
-
         if(!isPoint(args[1])) {
           throw new SyntaxError(
             `"geoDistance" operator expects [lng,lat] as second argument.`
@@ -993,7 +987,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
           );
         }
 
-        // GeoWithin only supports checking for points within a toGeoCircle atm.
+        // geoWithin only supports checking for points inside a circle atm.
         const isToGeoCircle = R.allPass([
           isFieldExpression,
           R.propEq("operator", "toGeoCircle")

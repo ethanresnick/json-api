@@ -64,7 +64,7 @@ describe("MongooseAdapter", () => {
       ]);
     });
 
-    // Not supported.
+    // Not supported atm.
     it.skip("should support reversing the sort order of `geoDistance`");
 
     // This test is to indicate that, unlike other sorts, adding a "sort" by
