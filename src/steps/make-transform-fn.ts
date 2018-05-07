@@ -14,12 +14,13 @@ export type Extras<U extends ServerReq = ServerReq, V extends ServerRes = Server
 
 export type Transformable = Resource | ResourceIdentifier;
 export type TransformMode = 'beforeSave' | 'beforeRender';
+export type TransformResult<T> = T | undefined | Promise<T | undefined>;
 export type TransformFn<T, U extends ServerReq = ServerReq, V extends ServerRes = ServerRes> = (
   resourceOrIdentifier: T,
   meta: TransformMeta,
   extras: Extras<U, V>,
-  superFn: TransformFn<T>
-) => T | undefined | Promise<T | undefined>;
+  superFn: (it: T, meta: TransformMeta) => TransformResult<T>
+) => TransformResult<T>;
 
 export type ResourceTransformFn = TransformFn<Resource>;
 export type FullTransformFn = TransformFn<Transformable>;
