@@ -11,7 +11,7 @@ import {
 import { AdapterInstance } from '../db-adapters/AdapterInterface';
 import Query from "../types/Query/Query";
 import ResourceTypeRegistry from "../ResourceTypeRegistry";
-import Document, { DocumentData } from "../types/Document";
+import Document, { DocumentData, DocTransformFn } from "../types/Document";
 import APIError from "../types/APIError";
 import Data from "../types/Generic/Data";
 import Resource from "../types/Resource";
@@ -38,7 +38,7 @@ import validateRequestDocument from "../steps/pre-query/validate-document";
 import validateRequestResourceTypes from "../steps/pre-query/validate-resource-types";
 import validateRequestResourceIds from "../steps/pre-query/validate-resource-ids";
 import validateRequestResourceData from "../steps/pre-query/validate-resource-data";
-import makeTransformFunction, { TransformMode, Extras } from "../steps/make-transform-fn";
+import makeTransformFunction, { TransformMode, Transformable } from "../steps/make-transform-fn";
 
 import makeGET from "../steps/make-query/make-get";
 import makePOST from "../steps/make-query/make-post";
@@ -77,11 +77,13 @@ export type ResultFactory = (
   customQueryFactory?: QueryFactory
 ) => Result | Promise<Result>;
 
-export type QueryBuildingContext = {
+export type QueryBuildingContext<T = Resource | ResourceIdentifier> = {
   request: FinalizedRequest;
   serverReq: ServerReq;
   serverRes: ServerRes;
-  transformDocument: (doc: Document, mode: TransformMode) => Promise<Document>;
+  beforeSave: DocTransformFn<T>;
+  beforeRender: DocTransformFn<T>;
+  transformDocument: (doc: Document, modeOrFn: TransformMode | DocTransformFn<T>) => Promise<Document>;
   setTypePaths: (
     it: (Resource | ResourceIdentifier)[],
     useInputData: boolean,
@@ -503,10 +505,25 @@ export default class APIController {
         serverRes
       };
 
+      const beforeSave = makeTransformFunction("beforeSave", transformExtras);
+      const beforeRender = makeTransformFunction("beforeRender", transformExtras);
+
       const resultBuildingOpts = {
         ...transformExtras,
         makeDocument: this.makeDoc, // tslint:disable-line no-unbound-method
-        transformDocument: R.partialRight(transformDoc, [transformExtras as Extras]),
+        beforeSave,
+        beforeRender,
+        transformDocument(doc: Document, modeOrFn: TransformMode | DocTransformFn<Transformable>) {
+          const fn = modeOrFn === 'beforeSave'
+            ? beforeSave
+            : (modeOrFn === 'beforeRender' ? beforeRender : modeOrFn);
+
+          const transformLinkage =
+            transformExtras.registry.typeNames()
+              .some(it => transformExtras.registry.transformLinkage(it));
+
+          return doc.transform(fn, !transformLinkage);
+        },
         makeQuery: this.makeQuery, // tslint:disable-line no-unbound-method
         // Note: can't use R.partialRight below if we want requiredThroughType
         // to be optional for callers.
@@ -682,11 +699,4 @@ function isBulkDelete(request: Request) {
 
 function parseAsLinkage(request: Request) {
   return request.aboutRelationship || isBulkDelete(request);
-}
-
-async function transformDoc(doc: Document, mode: TransformMode, extras: Extras) {
-  const transformLinkage =
-    extras.registry.typeNames().some(it => extras.registry.transformLinkage(it))
-
-  return doc.transform(makeTransformFunction(mode, extras), !transformLinkage);
 }
