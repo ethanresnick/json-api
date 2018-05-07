@@ -1,4 +1,4 @@
-# 3.0.01-rc.3.0.1
+# 3.0.01-rc.3.0.2
 ## Breaking Changes
 - The function signatures for `beforeSave` and `beforeRender` have been refactored considerably. Each function now receives four arguments `(it, meta, extras, superFn)`, where `it` refers to the object (either a `Resource` or `ResourceIdentifier`) to be transformed; `meta` refers to a [`TransformMeta` object](https://github.com/ethanresnick/json-api/blob/dae6b8c9cb08feaa785b56327f51aaf22aeee5ac/src/types/Document.ts#L37); `extras` is an object full of members like the raw serverRequest, the ResourceTypeRegistry, [etc](https://github.com/ethanresnick/json-api/blob/274ee135d9886afaaa304d58f51df64d56cf2547/src/steps/make-transform-fn.ts#L10); and `superFn` is a function you can call to invoke the parent type's transform. This is quite from the previous `(it, frameworkReq, frameworkRes, superFn, extras, meta)` signature. This change has been long-planned (though the depd module didn't provide a good way to provide a warning about it), and updating your code should be mechanical.
 
