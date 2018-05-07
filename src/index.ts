@@ -44,6 +44,7 @@ import {
 } from './steps/pre-query/parse-query-params';
 
 // Export types for typescript
+export { TransformFn } from "./steps/make-transform-fn";
 export {
   FinalizedRequest as Request, Result, HTTPResponse, AndExpression, Sort,
   SortDirection, ExpressionSort, FieldSort, FieldExpression as FieldExpressionType
