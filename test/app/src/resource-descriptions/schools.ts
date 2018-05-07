@@ -17,7 +17,7 @@ module.exports = {
   },
 
   // Async just to test promises are allowed.
-  async beforeSave(resource, req, res, superFn) {
+  async beforeSave(resource, meta, extras, superFn) {
     const transformed = await superFn(resource);
     transformed.attrs.modified = new Date("2015-10-27T05:16:57.257Z");
 
@@ -30,7 +30,7 @@ module.exports = {
     return transformed;
   },
 
-  beforeRender(resource, req, res, superFn) {
+  beforeRender(resource, meta, extras, superFn) {
     resource.attrs.schoolBeforeRender = true;
     return superFn(resource);
   }

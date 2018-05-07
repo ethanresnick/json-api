@@ -10,29 +10,30 @@ describe("makeTransformFn", () => {
     "law-schools": {
       parentType: "schools",
       // schools doesn't have a beforeRender, so super below should be a noop
-      async beforeRender(it, req, res, superFn, extras) {
+      async beforeRender(it, meta, extras, superFn) {
         it.lawSchools = true;
-        return superFn(it);
+        return superFn(it, meta);
       }
     },
     "kindergartens": {
       parentType: "schools",
       transformLinkage: true,
-      async beforeSave(it, req, res, superFn, extras, meta) {
+      async beforeSave(it, meta, extras, superFn) {
         it.kindergartens = true;
+        // intentionally don't pass along meta, so we can verify that it's
+        // missing in the parent transform if the child doesn't provide it.
         return superFn(it);
       }
     },
     "schools": {
       parentType: "organizations",
       transformLinkage: false, // shouldn't effect anything.
-      beforeSave(it, req, res, superFn, extras, meta) {
+      beforeSave(it, meta, extras, superFn) {
         it.schools = true;
-        it.schoolReq = req;
-        it.schoolRes = res;
+        it.schoolSuper = superFn;
         it.schoolExtras = extras;
         it.schoolMeta = meta;
-        return superFn(it);
+        return superFn(it, meta);
       },
       // Dont' define beforeRender here. Our law schools test relies on that.
       // Note: we have to explicitly make it undefined; else the beforeRender
@@ -42,11 +43,11 @@ describe("makeTransformFn", () => {
     "organizations": {
       transformLinkage: true,
       // this is a root type, so super below should be a noop
-      beforeSave(it, req, res, superFn, extras) {
+      beforeSave(it, meta, extras, superFn) {
         it.organizations = true;
-        return superFn(it);
+        return superFn(it, meta);
       },
-      async beforeRender(it, req, res, superFn, extras) {
+      async beforeRender(it, meta, extras, superFn) {
         it.organizations = true;
         return it;
       }
@@ -56,23 +57,23 @@ describe("makeTransformFn", () => {
     },
     "incomes": {
       transformLinkage: false,
-      async beforeRender(it, req, res, superFn, extras) {
+      async beforeRender(it, meta, extras, superFn) {
         it.incomes = true;
-        return superFn(it);
+        return superFn(it, meta);
       },
-      beforeSave(it, req, res, superFn, extras) {
+      beforeSave(it, meta, extras, superFn) {
         it.incomes = true;
-        return superFn(it);
+        return superFn(it, meta);
       }
     },
     "sponsorships": {
       parentType: "incomes",
       transformLinkage: true,
-      beforeRender(it, req, res, superFn, extras) {
+      beforeRender(it, meta, extras, superFn) {
         it.sponsorships = true;
-        return superFn(it);
+        return superFn(it, meta);
       },
-      async beforeSave(it, req, res, superFn, extras) {
+      async beforeSave(it, meta, extras, superFn) {
         it.sponsorships = true;
         return it; // NOTE lack of super call intentionally.
       }
@@ -100,19 +101,18 @@ describe("makeTransformFn", () => {
   };
 
   describe("super function", () => {
-    it("should be unary, with req, res, extras, meta already bound", () => {
+    it("should be binary, with extras, superFn already bound", () => {
       const resource = makeResource("kindergartens");
       const transformFn = sut("beforeSave", extras);
 
-      // If this below is true, the schools beforeSave was called with
-      // the right req parameter, even though it wasn't provided explicitly
-      // when kindergartens' beforeSave called superFn.
+      // If this below is true, the schools beforeSave was called with the
+      // right extras parameter and a superFn parameter, even though it wasn't
+      // provided explicitly when kindergartens' beforeSave called superFn.
       return transformFn(resource, meta).then(newResource => {
         expect((newResource as any).kindergartens).to.be.true;
-        expect((newResource as any).schoolReq).to.equal(extras.serverReq);
-        expect((newResource as any).schoolRes).to.equal(extras.serverRes);
         expect((newResource as any).schoolExtras).to.equal(extras);
-        expect((newResource as any).schoolMeta).to.equal(meta);
+        expect((newResource as any).schoolMeta).to.be.undefined;
+        expect((newResource as any).schoolSuper).to.be.a("function");
       });
     });
 

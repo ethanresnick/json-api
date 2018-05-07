@@ -1,18 +1,14 @@
-import depd = require("depd");
 import logger from "../util/logger";
 import ResourceTypeRegistry from "../ResourceTypeRegistry";
 import { FinalizedRequest, ServerReq, ServerRes } from "../types/";
 import Resource, { ResourceWithId } from "../types/Resource";
 import ResourceIdentifier from "../types/ResourceIdentifier";
 import { TransformMeta } from "../types/Document";
-const deprecate = depd("json-api");
 
 export type Extras<U extends ServerReq = ServerReq, V extends ServerRes = ServerRes> = {
   request: FinalizedRequest,
   serverReq: U,
   serverRes: V,
-  frameworkReq?: U,
-  frameworkRes?: V,
   registry: ResourceTypeRegistry
 };
 
@@ -20,11 +16,9 @@ export type Transformable = Resource | ResourceIdentifier;
 export type TransformMode = 'beforeSave' | 'beforeRender';
 export type TransformFn<T, U extends ServerReq = ServerReq, V extends ServerRes = ServerRes> = (
   resourceOrIdentifier: T,
-  serverReq: U,
-  serverRes: V,
-  superFn: TransformFn<T>,
+  meta: TransformMeta,
   extras: Extras<U, V>,
-  meta: TransformMeta
+  superFn: TransformFn<T>
 ) => T | undefined | Promise<T | undefined>;
 
 export type ResourceTransformFn = TransformFn<Resource>;
@@ -48,30 +42,10 @@ export type BeforeRenderFullTransformFn =
  *   its input using the registry's beforeSave functions or its beforeRender ones.
  * @param {Extras} extras A number of extra objects that are either needed to
  *   make the returned function (e.g. the resource type registry) or are passed
- *   by that function to the user's beforeSave/beforeRender for convenienec.
- * @param {[type]}                                  [description]
+ *   by that function to the user's beforeSave/beforeRender for convenience.                                  [description]
  */
 export default function makeTransformFn(mode: TransformMode, extras: Extras) {
   const { registry } = extras;
-
-  // Copy properties for backwards compatibility, with deprecation warning.
-  // TODO: when v3 is finalized, make the signature beforeSave(it, meta, extras, super)
-  // and have superFn() only prebind super & extras, so the user calls
-  // superFn(it, meta), or have it only prebind super, so the user calls
-  // `superFn(it, meta, extras)`. The latter is arguably the most intiutive and
-  // flexible, though it requires a bit more typing.
-  extras.frameworkReq = extras.serverReq;
-  extras.frameworkRes = extras.serverRes;
-  deprecate.property(
-    extras,
-    "frameworkReq",
-    "frameworkReq: use serverReq prop instead."
-  );
-  deprecate.property(
-    extras,
-    "frameworkRes",
-    "frameworkRes: use serverReq prop instead."
-  );
 
   // A function that can create the super function, which has to happen
   // recursively. The super function is a function that the first transformer
@@ -80,8 +54,8 @@ export default function makeTransformFn(mode: TransformMode, extras: Extras) {
   // Otherwise, it'll return the result of calling the parentType's transformer
   // with the provided arguments.
   // tslint:disable-next-line no-shadowed-variable
-  const makeSuperFunction = (remainingTypes: string[], extras: Extras, meta: TransformMeta) => {
-    return (it) => {
+  const makeSuperFunction = (remainingTypes: string[], extras: Extras) => {
+    return (it, meta: TransformMeta) => {
       const parentType = remainingTypes[0];
       const parentTransform = parentType && registry[mode](parentType);
 
@@ -89,14 +63,12 @@ export default function makeTransformFn(mode: TransformMode, extras: Extras) {
         return it;
       }
 
-      const nextSuper = makeSuperFunction(remainingTypes.slice(1), extras, meta);
+      const nextSuper = makeSuperFunction(remainingTypes.slice(1), extras);
       return (parentTransform as TransformFn<Transformable>)(
         it,
-        extras.serverReq,
-        extras.serverRes,
-        nextSuper,
+        meta,
         extras,
-        meta
+        nextSuper,
       );
     };
   };
@@ -135,11 +107,9 @@ export default function makeTransformFn(mode: TransformMode, extras: Extras) {
 
     return (transformFn as TransformFn<Transformable>)(
       it,
-      extras.serverReq,
-      extras.serverRes,
-      makeSuperFunction(applicableTypes.slice(1), extras, meta),
+      meta,
       extras,
-      meta
+      makeSuperFunction(applicableTypes.slice(1), extras),
     );
   };
 }
