@@ -508,7 +508,15 @@ export default class APIController {
         makeDocument: this.makeDoc, // tslint:disable-line no-unbound-method
         transformDocument: R.partialRight(transformDoc, [transformExtras as Extras]),
         makeQuery: this.makeQuery, // tslint:disable-line no-unbound-method
-        setTypePaths: R.partialRight(setTypePaths, [transformExtras.registry])
+        // Note: can't use R.partialRight below if we want requiredThroughType
+        // to be optional for callers.
+        setTypePaths(
+          it: (Resource | ResourceIdentifier)[],
+          useInputData: boolean,
+          requiredThroughType?: string
+        ) {
+          return setTypePaths(it, useInputData, requiredThroughType, transformExtras.registry);
+        }
       }
 
       // tslint:disable-next-line no-unbound-method
