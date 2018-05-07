@@ -1,3 +1,12 @@
+# 3.0.01-rc.3
+## Breaking Changes
+- The function signatures for `beforeSave` and `beforeRender` have been refactored considerably. Each function now receives four arguments `(it, meta, extras, superFn)`, where `it` refers to the object (either a `Resource` or `ResourceIdentifier`) to be transformed; `meta` refers to a [`TransformMeta` object](https://github.com/ethanresnick/json-api/blob/dae6b8c9cb08feaa785b56327f51aaf22aeee5ac/src/types/Document.ts#L37); `extras` is an object full of members like the raw serverRequest, the ResourceTypeRegistry, [etc](https://github.com/ethanresnick/json-api/blob/274ee135d9886afaaa304d58f51df64d56cf2547/src/steps/make-transform-fn.ts#L10); and `superFn` is a function you can call to invoke the parent type's transform. This is quite from the previous `(it, frameworkReq, frameworkRes, superFn, extras, meta)` signature. This change has been long-planned (though the depd module didn't provide a good way to provide a warning about it), and updating your code should be mechanical.
+
+- Likewise, the function signature for the `superFn` function is now `(it, meta)` rather than just `(it)`. That is, you must explicitly pass along the transform meta when calling the super function.
+
+## New Features
+- Query and result factories receive a partially applied version of the (resource-type-agnostic) `beforeSave` and `beforeRender` functions, which can be convenient.
+
 # 3.0.01-rc.2.0.1
 - MongooseAdapter: adds more information about the source of errors to the errors' `meta` key.
 
