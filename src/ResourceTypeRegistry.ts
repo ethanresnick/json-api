@@ -1,5 +1,4 @@
 import Immutable = require("immutable");
-import depd = require("depd");
 import mapObject = require("lodash/mapValues"); //tslint:disable-line no-submodule-imports
 import { pseudoTopSort } from "./util/misc";
 import Maybe from "./types/Generic/Maybe";
@@ -17,7 +16,6 @@ import ResourceIdentifier from "./types/ResourceIdentifier";
 import { UrlTemplates, UrlTemplatesByType } from "./types";
 import { IncomingMessage, ServerResponse } from "http";
 export { Resource, ResourceIdentifier, TransformFn, IncomingMessage, ServerResponse };
-const deprecate = depd("json-api");
 
 /**
  * Global defaults for all resource descriptions, to be merged into the
@@ -233,11 +231,6 @@ export default class ResourceTypeRegistry {
 
   transformLinkage(typeName: string) {
     return <boolean>this.doGet("transformLinkage", typeName);
-  }
-
-  parentType(typeName: string) {
-    deprecate("parentType: use parentTypeName instead.");
-    return this.doGet("parentType", typeName);
   }
 
   parentTypeName(typeName: string) {
