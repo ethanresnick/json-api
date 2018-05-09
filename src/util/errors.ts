@@ -1,7 +1,6 @@
+import { Omit } from '../types';
 import APIError, { Opts } from '../types/APIError';
-
-export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
-export type ErrorOpts = Omit<Opts, "title" | "status" | "typeUri" | "code">;
+export type ErrorOpts = Omit<Opts, "title" | "status" | "typeUri">;
 
 /*
  * "Generic" Errors

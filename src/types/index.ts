@@ -11,6 +11,9 @@ import { IncomingMessage, ServerResponse } from "http";
 // a given type T to appear singularly or in an array.
 export type DataOf<T> = null | T | T[];
 
+// Another global helper.
+export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
+
 // Types used in the code as function arguments for JSON:API structures.
 export type PrimaryData = DataOf<Resource> | DataOf<ResourceIdentifier>;
 export type ErrorOrErrorArray = Error | APIError | (APIError | Error)[];

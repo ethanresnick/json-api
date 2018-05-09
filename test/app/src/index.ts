@@ -223,7 +223,7 @@ function makeSignInQuery(opts: QueryBuildingContext) {
     filters: [FieldExpression("eq", [Identifier("name"), user])],
     returning({ primary: userData }) {
       if(pass !== 'password') {
-        throw new APIError(401);
+        throw new APIError({ status: 401 });
       }
 
       return {
