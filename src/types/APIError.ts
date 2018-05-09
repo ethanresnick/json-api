@@ -162,6 +162,9 @@ export default class APIError extends Error {
         title: err.title || fallbackTitle,
         detail: err.detail || err.details || (err.message || undefined),
         links: err.links,
+        typeUri: err.typeUri,
+        source: typeof err.source === "object" ? err.source : undefined,
+        meta: typeof err.meta === "object" ? err.meta : undefined,
         rawError: err
       });
     }
