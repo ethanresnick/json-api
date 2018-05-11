@@ -168,6 +168,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
         // TODO: Add an optimization here where, if there's a geoWithin filter
         // centered on the same point as the geoDistance sort, we remove the
         // filter and instead set maxDistance on the near to its radius.
+        // Also, get back locs and put them in meta.
         queryBuilder.near(geoDistanceSort.expression.args[0].value, {
           center: {
             type: "Point", coordinates: geoDistanceSort.expression.args[1]

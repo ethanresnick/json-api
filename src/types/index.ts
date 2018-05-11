@@ -61,27 +61,32 @@ export type ParsedQueryParams = ParsedStandardQueryParams & {
  * usable by consumers, or throws if the args are invalid.
  */
 export type FinalizeArgs = (
-  operatorsConfig: FinalizedSupportedOperators,
+  operatorsConfig: ParserOperatorsConfig,
   operator: string,
   args: any[]
 ) => any;
 
-// Map from operatorName to { isBinary, finalizeArgs, legalIn } object.
-export type OperatorDescriptor = {
+export type OperatorDesc = {
   legalIn?: ("sort" | "filter")[];
   isBinary?: boolean;
   finalizeArgs?: FinalizeArgs;
 };
 
-// The type each adapter must provide.
-export type SupportedOperators = StrictDictMap<OperatorDescriptor>;
+// An operator descriptor after we've applied any defaults
+// to set isBinary, finalizeArgs, and legalIn.
+export type FinalizedOperatorDesc = Required<OperatorDesc>;
 
-// The adapter-provided info about supported operators,
-// after we've filled in the defaults (to set isBinary + finalizeArgs)
-// and separated the operators by legalIn. This is what parsers see.
-export type FinalizedSupportedOperators = StrictDictMap<
-  Required<Pick<OperatorDescriptor, "isBinary" | "finalizeArgs">>
->;
+// The type each adapter must provide.
+// Map from operatorName to { isBinary, finalizeArgs, legalIn } object.
+export type SupportedOperators = StrictDictMap<OperatorDesc>;
+
+// The adapter-provided info about supported operators, post finalization.
+export type FinalizedSupportedOperators = StrictDictMap<FinalizedOperatorDesc>;
+
+// The information about supported operators that we give to each parser.
+// We've already filtered out the illegal operators, so we don't pass `legalIn`.
+export type ParserOperatorsConfig =
+  StrictDictMap<Omit<FinalizedOperatorDesc, "legalIn">>;
 
 export type AndExpression =
   FieldExpression & { operator: "and", args: FieldExpression[] };
