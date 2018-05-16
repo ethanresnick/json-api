@@ -12,5 +12,7 @@ module.exports = {
   beforeSave: function(resource) {
     resource.attrs.description = "Added a description in beforeSave";
     return resource;
-  }
+  },
+
+  pagination: { maxPageSize: 5 }
 };

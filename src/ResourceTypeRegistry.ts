@@ -23,7 +23,8 @@ export { Resource, ResourceIdentifier, TransformFn, IncomingMessage, ServerRespo
  * into the values provided in each resource type description.
  */
 const globalResourceDefaults = Immutable.fromJS({
-  transformLinkage: false
+  transformLinkage: false,
+  pagination: {}
 }) as Immutable.Map<string, any>;
 
 // We allow strings when a template is provided,
@@ -54,6 +55,7 @@ export type ResourceTypeDescription = {
   beforeSave?: ResourceTransformFn | FullTransformFn;
   beforeRender?: BeforeRenderResourceTransformFn | BeforeRenderFullTransformFn;
   transformLinkage?: boolean;
+  pagination?: { maxPageSize?: number; defaultPageSize?: number };
 };
 
 export type ResourceTypeDescriptions = {
@@ -63,7 +65,8 @@ export type ResourceTypeDescriptions = {
 export type OutputResourceTypeDescription =
   ResourceTypeDescription
     & { urlTemplates: UrlTemplates }
-    & Required<Pick<ResourceTypeDescription, "dbAdapter">>;
+    // pagination is always present b/c we default it to at least an empty object.
+    & Required<Pick<ResourceTypeDescription, "dbAdapter" | "pagination">>;
 
 /**
  * To fulfill a JSON API request, you often need to know about all the resources
@@ -238,6 +241,10 @@ export default class ResourceTypeRegistry {
 
   parentTypeName(typeName: string) {
     return this.doGet("parentType", typeName);
+  }
+
+  pagination(typeName: string) {
+    return this.doGet("pagination", typeName);
   }
 
   typeNames() {

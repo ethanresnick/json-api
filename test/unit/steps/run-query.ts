@@ -17,7 +17,12 @@ import {
 describe("runQuery", () => {
   const adapter = td.object(new MongooseAdapter({ }));
   const registry = new ResourceTypeRegistry({
-    schools: { }
+    schools: {
+      pagination: {
+        defaultPageSize: 2,
+        maxPageSize: 4
+      }
+    }
   }, {
     dbAdapter: adapter
   });
@@ -48,5 +53,43 @@ describe("runQuery", () => {
       const result = await runQuery(registry, query);
       expect(result).to.deep.equal(type);
     }
+  });
+
+  it('should enforce the page size limit (by default)', async () => {
+    const findQuery = new FindQuery({ type: 'schools', limit: 10 } as any);
+
+    try {
+      await runQuery(registry, findQuery);
+    } catch (err) {
+      expect(err.detail).to.equal('Must use a smaller limit per page.');
+      return;
+    }
+
+    throw new Error('expected error');
+  });
+
+  it('should not enforce page size limits if ignoreMaxLimit is set', async () => {
+    const findQuery =
+      new FindQuery({ type: 'schools', limit: 10 } as any).withoutMaxLimit();
+
+    await runQuery(registry, findQuery);
+
+    td.verify(adapter.find(findQuery));
+  });
+
+  it('should allow non-default limits that are under the max', async () => {
+    const findQuery = new FindQuery({ type: 'schools', limit: 3 } as any);
+
+    await runQuery(registry, findQuery);
+
+    td.verify(adapter.find(findQuery));
+  });
+
+  it('should apply max, not default, limit if no limit is provided', async () => {
+    const findQuery = new FindQuery({ type: 'schools' } as any);
+    td.when(adapter.find(findQuery)).thenDo(query => query.limit)
+
+    const limit = await runQuery(registry, findQuery);
+    expect(limit).to.equal(4); // max page size
   });
 });

@@ -18,9 +18,14 @@ export default function(request: FinalizedRequest, registry: ResourceTypeRegistr
       });
     }
 
+    const paginationSettings = registry.pagination(type);
+    const defaultPageSize =
+      paginationSettings && paginationSettings.defaultPageSize;
+
     const {
       include = registry.defaultIncludes(type),
-      page: { offset, limit } = { offset: undefined, limit: undefined },
+      // tslint:disable-next-line no-unnecessary-initializer
+      page: { offset = undefined, limit = defaultPageSize } = {},
       fields,
       sort,
       filter
