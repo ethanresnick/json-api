@@ -703,26 +703,6 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     return getReferencePaths(model);
   }
 
-  doQuery(
-    query: CreateQuery | FindQuery | UpdateQuery | DeleteQuery |
-      AddToRelationshipQuery | RemoveFromRelationshipQuery
-  ) {
-    const method = (
-      (query instanceof CreateQuery && this.create) ||
-      (query instanceof FindQuery && this.find) ||
-      (query instanceof DeleteQuery && this.delete) ||
-      (query instanceof UpdateQuery && this.update) ||
-      (query instanceof AddToRelationshipQuery && this.addToRelationship) ||
-      (query instanceof RemoveFromRelationshipQuery && this.removeFromRelationship)
-    );
-
-    if(!method) {
-      throw new Error("Unexpected query type.");
-    }
-
-    return method.call(this, query);
-  }
-
   /**
    * Given a model and a relationship path, returns the legal/expected value
    * for the JSON:API `type` key of all linkage present in the relationship.
