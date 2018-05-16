@@ -161,8 +161,9 @@ export default class APIController {
     // filter param operators, so we act conservatively to say there are no
     // valid operators. That may lead to some parse errors, but it's probably
     // better than erroring unconditionally (even if no filters are in use).
-    const finalizedSupportedOperators = this.registry.hasType(request.type)
-      ? this.getFinalizedSupportedOperators(this.registry.dbAdapter(request.type))
+    const typeDesc = this.registry.type(request.type);
+    const finalizedSupportedOperators = typeDesc
+      ? this.getFinalizedSupportedOperators(typeDesc.dbAdapter)
       : { filter: {}, sort: {} };
 
     // Handle query parsing errors in the same manner, whether they're thrown
@@ -424,17 +425,18 @@ export default class APIController {
 
       logger.info("Creating request query");
       const query = await queryFactory(opts);
+      const typeDesc = opts.registry.type(query.type);
 
       // If the type in the request hasn't been registered,
       // we can't look up it's adapter to run the query, so we 404.
-      if(!opts.registry.hasType(query.type)) {
+      if(!typeDesc) {
         throw Errors.unknownResourceType({
           detail: `${opts.request.type} is not a known type in this API.`
         });
       }
 
       logger.info("Executing request query");
-      const adapter = opts.registry.dbAdapter(query.type);
+      const adapter = typeDesc.dbAdapter;
       const result =
         await adapter.doQuery(query).then(query.returning, query.catch);
 

@@ -61,7 +61,9 @@ export type ResourceTypeDescriptions = {
 };
 
 export type OutputResourceTypeDescription =
-  ResourceTypeDescription & { urlTemplates: UrlTemplates };
+  ResourceTypeDescription
+    & { urlTemplates: UrlTemplates }
+    & Required<Pick<ResourceTypeDescription, "dbAdapter">>;
 
 /**
  * To fulfill a JSON API request, you often need to know about all the resources
@@ -155,6 +157,13 @@ export default class ResourceTypeRegistry {
         : instanceDefaults;
 
       this._types[typeName] = thisDescBase.mergeDeep(thisDescImmutable);
+
+      // tslint:disable-next-line no-non-null-assertion
+      if(!this._types[typeName]!.get("dbAdapter")) {
+        throw new Error(
+          "Every resource type must be registered with a db adapter!"
+        );
+      }
     });
   }
 
@@ -189,21 +198,15 @@ export default class ResourceTypeRegistry {
   }
 
   dbAdapter(typeName: string) {
-    const adapter = this.doGet("dbAdapter", typeName);
-    if(typeof adapter === 'undefined') {
-      throw new Error(
-        "Tried to get db adapter for a type registered without one. " +
-        "Every type must be registered with an adapter!"
-      );
-    }
-
-    return adapter;
+    return this.doGet("dbAdapter", typeName);
   }
 
   uniqueAdapters() {
     const adaptersToTypeNames = new Map<AdapterInstance<any>, string[]>();
     Object.keys(this._types).map(typeName => {
-      const adapter = this.dbAdapter(typeName);
+      // tslint:disable-next-line no-non-null-assertion
+      const adapter = this._types[typeName]!.get("dbAdapter");
+
       adaptersToTypeNames.set(
         adapter,
         (adaptersToTypeNames.get(adapter) || []).concat(typeName)

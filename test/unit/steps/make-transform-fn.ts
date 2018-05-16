@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { minimalDummyAdapter } from '../fixtures';
 import Resource from "../../../src/types/Resource";
 import ResourceIdentifier from "../../../src/types/ResourceIdentifier";
 import ResourceTypeRegistry from "../../../src/ResourceTypeRegistry";
@@ -78,6 +79,8 @@ describe("makeTransformFn", () => {
         return it; // NOTE lack of super call intentionally.
       }
     }
+  }, {
+    dbAdapter: minimalDummyAdapter
   });
   /* tslint:enable no-shadowed-variable */
 

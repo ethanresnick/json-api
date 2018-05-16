@@ -16,17 +16,19 @@ export default function(data: ResourceSet, registry: ResourceTypeRegistry) {
   // attributes, that's a case that we can identify here and throw for.
   // tslint:disable-next-line forin
   for(const type in resourcesByChildMostType) {
-    const adapter = registry.dbAdapter(type);
+    // `.type()` can't return undefined if the type is registered, and the
+    // type path has already been validated to ensure that (if it came from
+    // user input), and is assumed to satisfy that if it came from the adapter.
+    // tslint:disable-next-line no-non-null-assertion
+    const { dbAdapter } = registry.type(type)!;
     const resources = resourcesByChildMostType[type];
-    const relationshipNames = adapter.getRelationshipNames(type);
+    const relationshipNames = dbAdapter.getRelationshipNames(type);
 
-    /*eslint-disable no-loop-func */
     const invalid = resources.some((resource) => {
       return relationshipNames.some((relationshipName) => {
         return typeof resource.attrs[relationshipName] !== "undefined";
       });
     });
-    /*eslint-enable no-loop-func */
 
     if(invalid) {
       throw Errors.invalidAttributeName({
