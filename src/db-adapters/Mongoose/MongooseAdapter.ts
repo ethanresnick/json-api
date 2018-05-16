@@ -98,14 +98,9 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
   }
 
   /**
-   * Returns a Promise for an array of 3 items: the primary resources (either
-   * a single Resource or a Collection); the included resources, as an array;
+   * Returns a Promise for the primary resources, the included resources,
    * and the size of the full collection, if the primary resources represent
-   * a paginated view of some collection.
-   *
-   * Note: The correct behavior if idOrIds is an empty array is to return no
-   * documents, as happens below. If it's undefined, though, we're not filtering
-   * by id and should return all documents.
+   * a paginated view of the collection.
    */
   async find(query: FindQuery) {
     const {
