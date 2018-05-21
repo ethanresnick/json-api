@@ -23,7 +23,8 @@ export { Resource, ResourceIdentifier, TransformFn, IncomingMessage, ServerRespo
  * into the values provided in each resource type description.
  */
 const globalResourceDefaults = Immutable.fromJS({
-  transformLinkage: false
+  transformLinkage: false,
+  pagination: {}
 }) as Immutable.Map<string, any>;
 
 // We allow strings when a template is provided,
@@ -54,6 +55,7 @@ export type ResourceTypeDescription = {
   beforeSave?: ResourceTransformFn | FullTransformFn;
   beforeRender?: BeforeRenderResourceTransformFn | BeforeRenderFullTransformFn;
   transformLinkage?: boolean;
+  pagination?: { maxPageSize?: number; defaultPageSize?: number };
 };
 
 export type ResourceTypeDescriptions = {
@@ -61,7 +63,10 @@ export type ResourceTypeDescriptions = {
 };
 
 export type OutputResourceTypeDescription =
-  ResourceTypeDescription & { urlTemplates: UrlTemplates };
+  ResourceTypeDescription
+    & { urlTemplates: UrlTemplates }
+    // pagination is always present b/c we default it to at least an empty object.
+    & Required<Pick<ResourceTypeDescription, "dbAdapter" | "pagination">>;
 
 /**
  * To fulfill a JSON API request, you often need to know about all the resources
@@ -155,6 +160,13 @@ export default class ResourceTypeRegistry {
         : instanceDefaults;
 
       this._types[typeName] = thisDescBase.mergeDeep(thisDescImmutable);
+
+      // tslint:disable-next-line no-non-null-assertion
+      if(!this._types[typeName]!.get("dbAdapter")) {
+        throw new Error(
+          "Every resource type must be registered with a db adapter!"
+        );
+      }
     });
   }
 
@@ -189,21 +201,15 @@ export default class ResourceTypeRegistry {
   }
 
   dbAdapter(typeName: string) {
-    const adapter = this.doGet("dbAdapter", typeName);
-    if(typeof adapter === 'undefined') {
-      throw new Error(
-        "Tried to get db adapter for a type registered without one. " +
-        "Every type must be registered with an adapter!"
-      );
-    }
-
-    return adapter;
+    return this.doGet("dbAdapter", typeName);
   }
 
   uniqueAdapters() {
     const adaptersToTypeNames = new Map<AdapterInstance<any>, string[]>();
     Object.keys(this._types).map(typeName => {
-      const adapter = this.dbAdapter(typeName);
+      // tslint:disable-next-line no-non-null-assertion
+      const adapter = this._types[typeName]!.get("dbAdapter");
+
       adaptersToTypeNames.set(
         adapter,
         (adaptersToTypeNames.get(adapter) || []).concat(typeName)
@@ -235,6 +241,10 @@ export default class ResourceTypeRegistry {
 
   parentTypeName(typeName: string) {
     return this.doGet("parentType", typeName);
+  }
+
+  pagination(typeName: string) {
+    return this.doGet("pagination", typeName);
   }
 
   typeNames() {

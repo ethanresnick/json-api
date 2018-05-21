@@ -193,4 +193,11 @@ export default class WithCriteriaQuery extends Query {
   get isSingular() {
     return this.query.criteria.isSingular;
   }
+
+  withLimit(limit: number | undefined) {
+    const res = this.clone();
+    res.query.criteria.limit = limit;
+    return res;
+  }
+
 }

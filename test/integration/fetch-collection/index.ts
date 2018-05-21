@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import AgentPromise from "../../app/agent";
+import { VALID_SCHOOL_RESOURCE_NO_ID_EMPTY_PRINCIPAL_NO_LIAISONS } from '../fixtures/creation';
 
 describe("Fetching Collection", () => {
   let Agent;
@@ -152,7 +153,7 @@ describe("Fetching Collection", () => {
     });
   });
 
-  describe("Fetching with Offset and Limit (reverse name sorted for determinism)", () => {
+  describe("Fetching with Offset and/or Limit (reverse name sorted for determinism)", () => {
     let res;
     before(() => {
       return Agent.request("GET", "/people?sort=-name&page[offset]=1&page[limit]=3")
@@ -175,6 +176,43 @@ describe("Fetching Collection", () => {
         total: 5
       });
     });
+
+    it("Should error iff limit is above the max allowed", () => {
+      return Promise.all([
+        Agent.request("GET", "/organizations?page[limit]=6")
+          .then(() => {
+            throw new Error("shouldn't run");
+          }, e => {
+            expect(e.status).to.eq(400);
+            expect(e.response.body.errors[0].source.parameter).to.eq("page[limit]");
+          }),
+        Agent.request("GET", "/schools?page[limit]=6")
+          .then(() => {
+            throw new Error("shouldn't run");
+          }, e => {
+            expect(e.status).to.eq(400);
+            expect(e.response.body.errors[0].source.parameter).to.eq("page[limit]");
+          }),
+        Agent.request("GET", "/schools?page[limit]=5")
+      ]);
+    });
+
+    it("should apply the resource type's default page size", async () => {
+      // Create a bunch of schools, but then only expect to see one by default.
+      await Agent.request("POST", "/schools")
+        .type("application/vnd.api+json")
+        .send({
+          data: [
+            VALID_SCHOOL_RESOURCE_NO_ID_EMPTY_PRINCIPAL_NO_LIAISONS,
+            VALID_SCHOOL_RESOURCE_NO_ID_EMPTY_PRINCIPAL_NO_LIAISONS,
+            VALID_SCHOOL_RESOURCE_NO_ID_EMPTY_PRINCIPAL_NO_LIAISONS
+          ]
+        });
+
+      return Agent.request("GET", "/schools").then(resp => {
+        expect(resp.body.data).to.have.length(2);
+      })
+    })
   });
 
   describe("Filtering", () => {

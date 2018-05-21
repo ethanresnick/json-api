@@ -7,6 +7,7 @@ export type FindQueryOptions = WithCriteriaQueryOptions & {
   select?: { [typeName: string]: string[] };
   sort?: Sort[];
   returning(result: FindReturning): Result | Promise<Result>;
+  ignoreLimitMax?: boolean;
 };
 
 export default class FindQuery extends WithCriteriaQuery {
@@ -23,16 +24,24 @@ export default class FindQuery extends WithCriteriaQuery {
       limit?: FindQueryOptions["limit"];
       offset?: FindQueryOptions["offset"];
     };
+    ignoreLimitMax: boolean;
   };
 
-  constructor({ populates, select, sort, ...baseOpts }: FindQueryOptions) {
+  constructor({
+    populates,
+    select,
+    sort,
+    ignoreLimitMax,
+    ...baseOpts
+  }: FindQueryOptions) {
     super(baseOpts);
 
     this.query = {
       ...this.query,
       populates: populates || [],
       select,
-      sort
+      sort,
+      ignoreLimitMax: ignoreLimitMax || false
     };
   }
 
@@ -64,5 +73,22 @@ export default class FindQuery extends WithCriteriaQuery {
 
   get sort() {
     return this.query.sort;
+  }
+
+  get ignoreLimitMax() {
+    return this.query.ignoreLimitMax;
+  }
+
+  withMaxLimit() {
+    const res = this.clone();
+    res.query.ignoreLimitMax = false;
+    return res;
+  }
+
+
+  withoutMaxLimit() {
+    const res = this.clone();
+    res.query.ignoreLimitMax = true;
+    return res;
   }
 }

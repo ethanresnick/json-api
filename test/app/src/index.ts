@@ -124,6 +124,26 @@ export default database.then(function(dbModule) {
     })
   );
 
+  // This route creates a custom query that explicitly opts out
+  // of the standard `schools` max limit.
+  app.get('/:type(schools)/all',
+    Front.customAPIRequest({
+      queryTransform: (query: Query) => {
+        return (query as FindQuery).withLimit(undefined).withoutMaxLimit();
+      }
+    })
+  );
+
+  // This route creates a custom query, but forgets to say that exceeding
+  // the max limit is allowed, so it errors.
+  app.get('/:type(schools)/custom-illegal-max',
+    Front.customAPIRequest({
+      queryTransform: (query: Query) => {
+        return (query as FindQuery).withLimit(200);
+      }
+    })
+  );
+
   // Add a route that delegates to next route on 406.
   app.get('/:type(organizations)/no-id/406-delegation-test',
     FrontWith406Delegation.apiRequest,
