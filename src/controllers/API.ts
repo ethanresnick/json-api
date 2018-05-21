@@ -6,9 +6,11 @@ import {
    ParsedSortParam,
    makeDocument,
    ErrorOrErrorArray,
-   FinalizedSupportedOperators
+   SupportedOperators,
+   FinalizedSupportedOperators,
+   ParserOperatorsConfig
 } from "../types";
-import { AdapterInstance, QueryReturning } from '../db-adapters/AdapterInterface';
+import { QueryReturning } from '../db-adapters/AdapterInterface';
 import Query from "../types/Query/Query";
 import ResourceTypeRegistry from "../ResourceTypeRegistry";
 import Document, { DocumentData, DocTransformFn } from "../types/Document";
@@ -26,12 +28,9 @@ import * as requestValidators from "../steps/http/validate-request";
 import negotiateContentType from "../steps/http/content-negotiation/negotiate-content-type";
 import validateContentType from "../steps/http/content-negotiation/validate-content-type";
 
+import finalizeOperatorConfig from '../steps/pre-query/finalize-operator-definitions';
 import { getQueryParamValue } from '../util/query-parsing';
-import parseQueryParams, {
-  finalizeFilterFieldExprArgs,
-  parseFilter,
-  parseSort
-} from '../steps/pre-query/parse-query-params';
+import parseQueryParams, { parseFilter, parseSort } from '../steps/pre-query/parse-query-params';
 import parseRequestPrimary from "../steps/pre-query/parse-request-primary";
 import setTypePaths from "../steps/set-type-paths";
 import validateRequestDocument from "../steps/pre-query/validate-document";
@@ -66,7 +65,7 @@ export type APIControllerOpts = {
 };
 
 export type customParamParser<T> = (
-  supportedOperators: FinalizedSupportedOperators,
+  supportedOperators: ParserOperatorsConfig,
   rawQuery: string | undefined,
   parsedParams: object,
   target: { method: string, uri: string }
@@ -84,12 +83,12 @@ export type QueryBuildingContext<T = Resource | ResourceIdentifier> = {
   serverRes: ServerRes;
   beforeSave: DocTransformFn<T>;
   beforeRender: DocTransformFn<T>;
-  transformDocument: (doc: Document, modeOrFn: TransformMode | DocTransformFn<T>) => Promise<Document>;
-  setTypePaths: (
+  transformDocument(doc: Document, modeOrFn: TransformMode | DocTransformFn<T>): Promise<Document>;
+  setTypePaths(
     it: (Resource | ResourceIdentifier)[],
     useInputData: boolean,
     requiredThroughType?: string
-  ) => Promise<void>;
+  ): Promise<void>;
   registry: ResourceTypeRegistry;
   makeDocument: makeDocument;
   makeQuery: QueryFactory;
@@ -120,28 +119,18 @@ export type RequestOpts = {
   queryTransform?: QueryTransformNoReq | QueryTransformWithReq
   queryFactory?: QueryFactory;
   resultFactory?: ResultFactory;
-};
-
-export type FinalizedOperatorsByType = {
-  filter: FinalizedSupportedOperators,
-  sort: FinalizedSupportedOperators
+  supportedOperators?: SupportedOperators
 };
 
 export default class APIController {
   private registry: ResourceTypeRegistry;
   private filterParamParser: Exclude<APIControllerOpts["filterParser"], undefined>;
   private sortParamParser: Exclude<APIControllerOpts["sortParser"], undefined>;
-  private supportedOperatorsByAdapter: Map<AdapterInstance<any>, FinalizedOperatorsByType>;
 
   constructor(registry: ResourceTypeRegistry, opts: APIControllerOpts = {}) {
     this.registry = registry;
     this.filterParamParser = opts.filterParser || defaultFilterParamParser;
     this.sortParamParser = opts.sortParser || defaultSortParamParser;
-
-    // A cache for our computed operator configuration.
-    // We don't simply compute all the operator configs for all adapters
-    // here so that more types can be added to the registry later
-    this.supportedOperatorsByAdapter = new Map();
   }
 
   protected makeDoc = (data: DocumentData) => {
@@ -153,27 +142,20 @@ export default class APIController {
     });
   };
 
-  protected async finalizeRequest(request: Request): Promise<FinalizedRequest> {
-    // Parse any query params to finalize the request object.
-    // We might not actually use the parse result to construct our query,
-    // so we could (e.g.) put this in a lazily-evaluated getter, but we
-    // always have to make it appear like the final params are available
-    // in case someone tries to access them in beforeSave or a query factory.
-    // If we can't find the adapter for this request, we can't know the valid
-    // filter param operators, so we act conservatively to say there are no
-    // valid operators. That may lead to some parse errors, but it's probably
-    // better than erroring unconditionally (even if no filters are in use).
-    const typeDesc = this.registry.type(request.type);
-    const finalizedSupportedOperators = typeDesc
-      ? this.getFinalizedSupportedOperators(typeDesc.dbAdapter)
-      : { filter: {}, sort: {} };
-
+  protected async finalizeRequest(
+    request: Request,
+    supportedOperators: SupportedOperators
+  ): Promise<FinalizedRequest> {
     // Handle query parsing errors in the same manner, whether they're thrown
     // by our built-in parsers or the user's custom parser.
-    const guardedQueryParamParse = (parser, paramName) => {
+    const guardedQueryParamParse = (
+      parser: customParamParser<any>,
+      paramName: string,
+      thisParamFinalizedOps: ParserOperatorsConfig
+    ) => {
       try {
         return parser(
-          finalizedSupportedOperators[paramName],
+          thisParamFinalizedOps,
           request.rawQueryString,
           request.queryParams,
           { method: request.method, uri: request.uri }
@@ -186,12 +168,43 @@ export default class APIController {
       }
     }
 
+    // Finalize (i.e., fill in the defaults) for our operator descriptions
+    // before passing them to the parser.
+    const finalizedSupportedOperators =
+      Object.keys(supportedOperators).reduce((acc, operatorName) => {
+        const operatorConfig =
+          // tslint:disable-next-line no-non-null-assertion
+          finalizeOperatorConfig(operatorName, supportedOperators[operatorName]!);
+
+        operatorConfig.legalIn.forEach(key => {
+          acc[key][operatorName] = operatorConfig;
+        });
+
+        return acc;
+      }, {
+        filter: {} as FinalizedSupportedOperators,
+        sort: {} as FinalizedSupportedOperators
+      });
+
+    // Parse any query params to finalize the request object.
+    // We might not actually use the parse result to construct our query,
+    // so we could (e.g.) put this in a lazily-evaluated getter, but we
+    // always have to make it appear like the final params are available
+    // in case someone tries to access them in beforeSave or a query factory.
     const finalizedRequest: FinalizedRequest = {
       ...request,
       queryParams: {
         ...parseQueryParams(request.queryParams),
-        filter: guardedQueryParamParse(this.filterParamParser, "filter"),
-        sort: guardedQueryParamParse(this.sortParamParser, "sort")
+        filter: guardedQueryParamParse(
+          this.filterParamParser,
+          "filter",
+          finalizedSupportedOperators.filter
+        ),
+        sort: guardedQueryParamParse(
+          this.sortParamParser,
+          "sort",
+          finalizedSupportedOperators.sort
+        )
       },
       document: undefined
     };
@@ -228,50 +241,23 @@ export default class APIController {
   }
 
   /**
-   * This returns (by computing and caching) the configured, supported
-   * operators for filtering and sorting, given an adapter. Each adapter brings
-   * its own supported operators and operator processing functions, and we need
-   * to merge those with some defaults.
-   *
-   * @param {AdapterInstance<any>} adapter [description]
+   * This returns the default set of supported operators for this request,
+   * by looking them up from the adapter, iff we can find the adapter
+   * for this request.
    */
-  private getFinalizedSupportedOperators(adapter: AdapterInstance<any>) {
-    if(this.supportedOperatorsByAdapter.has(adapter)) {
-      // tslint:disable-next-line no-non-null-assertion
-      return this.supportedOperatorsByAdapter.get(adapter)!;
+  private getSupportedOperators(request: Request) {
+    // If we can't find the adapter for this request, because the type hasn't
+    // been registered, we can't know the valid filter/sort param operators,
+    // so we act conservatively to say there are none. That may lead to some
+    // parse errors, but it's probably better than erroring unconditionally
+    // (even if no filters are in use).
+    const typeDesc = this.registry.type(request.type);
+
+    if(!typeDesc) {
+      return { filter: {}, sort: {} };
     }
 
-    const supportedOperators = adapter.constructor.supportedOperators || {};
-    const ASSUMED_BINARY_OPERATORS =
-      ["eq", "neq", 'ne', "in", "nin", 'lt', 'gt', 'lte', 'gte'];
-
-    const res = Object.keys(supportedOperators).reduce((acc, operatorName) => {
-      const legalIn = supportedOperators[operatorName].legalIn || ["filter"];
-
-      // Set isBinary on every operator, if not provided, using our
-      // built-in list of operators that are inferred as binary by default.
-      const operatorConfig = { ...supportedOperators[operatorName] };
-      if(!('isBinary' in supportedOperators[operatorName])) {
-        operatorConfig.isBinary =
-          ASSUMED_BINARY_OPERATORS.includes(operatorName);
-      }
-
-      if(!supportedOperators[operatorName].finalizeArgs) {
-        operatorConfig.finalizeArgs = finalizeFilterFieldExprArgs;
-      }
-
-      legalIn.forEach(key => {
-        acc[key][operatorName] = operatorConfig;
-      });
-
-      return acc;
-    }, {
-      filter: {} as FinalizedSupportedOperators,
-      sort: {} as FinalizedSupportedOperators
-    });
-
-    this.supportedOperatorsByAdapter.set(adapter, res);
-    return res;
+    return (typeDesc.dbAdapter.constructor.supportedOperators || {}) as SupportedOperators;
   }
 
   /**
@@ -484,7 +470,10 @@ export default class APIController {
         await negotiateContentType(request.accepts, ["application/vnd.api+json"])
 
       logger.info("Parsing request body/query parameters");
-      const finalizedRequest = await this.finalizeRequest(request);
+      const finalizedRequest = await this.finalizeRequest(
+        request,
+        opts.supportedOperators || this.getSupportedOperators(request)
+      );
 
       // As the custom query factory, use the user-provided one if present,
       // or make a factory by applying the user-provided query transform to
@@ -618,7 +607,7 @@ export default class APIController {
 }
 
 export function defaultFilterParamParser(
-  filterOps: FinalizedSupportedOperators,
+  filterOps: ParserOperatorsConfig,
   rawQuery: string | undefined
 ) {
   return getQueryParamValue("filter", rawQuery)
@@ -627,7 +616,7 @@ export function defaultFilterParamParser(
 }
 
 export function defaultSortParamParser(
-  sortOps: FinalizedSupportedOperators,
+  sortOps: ParserOperatorsConfig,
   rawQuery: string | undefined
 ) {
   return getQueryParamValue("sort", rawQuery)

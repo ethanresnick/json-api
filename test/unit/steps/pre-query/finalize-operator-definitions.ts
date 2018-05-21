@@ -1,8 +1,6 @@
 import { expect } from 'chai';
-import {
-  finalizeFilterFieldExprArgs as sut,
-  FieldExpression, Identifier
-} from '../../../../src/steps/pre-query/parse-query-params';
+import { finalizeFilterFieldExprArgs as sut } from '../../../../src/steps/pre-query/finalize-operator-definitions';
+import { FieldExpression, Identifier } from '../../../../src/steps/pre-query/parse-query-params';
 
 const dummyConfig = {
   or: { isBinary: false, finalizeArgs: sut },

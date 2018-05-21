@@ -1,6 +1,4 @@
-import depd = require("depd");
 import { UrlTemplates } from './index';
-const deprecate = depd("json-api");
 
 export type APIErrorJSON = {
   status?: string;
@@ -14,24 +12,20 @@ export type APIErrorJSON = {
 
 export type Opts = {
   status?: string | number;
-  code?: string | number;
   title?: string;
   detail?: string;
-  links?: object;
   typeUri?: string;
-  rawError?: Error;
   source?: { pointer?: string, parameter?: string };
   meta?: object;
+  rawError?: Error;
 };
 
 export const displaySafe = Symbol("isJSONAPIDisplayReady");
 
 export default class APIError extends Error {
   public status?: string;
-  public code?: string;
   public title?: string;
   public detail?: string;
-  public links?: any; //deprecated.
   public source?: Opts['source'];
   public meta?: object;
 
@@ -44,27 +38,11 @@ export default class APIError extends Error {
   // for use in such processing, but we don't serialize it
   public rawError?: Error;
 
-  constructor(opts: Opts);
-  constructor(
-    status?: Opts["status"],
-    code?: Opts["code"],
-    title?: Opts["title"],
-    detail?: Opts["detail"],
-    links?: Opts["links"]
-  );
-  constructor(...args: any[]) {
-    const newFormat = typeof args[0] === 'object';
-
-    if(!newFormat) {
-      deprecate(
-        "APIError with multiple arguments; " +
-        "construct with a single object arg instead."
-      );
-    }
-
+  constructor(opts: Opts = {}) {
     // Extract title specially for super call.
-    const title = newFormat ? args[0].title : args[2];
-    super(title && String(title));
+    // Call it with a spread so that arguments in the callee is empty
+    // (rather than length 1 with [0] === undefined) when no title is present.
+    super(...(opts.title ? [String(opts.title)] : []));
 
     if(Error.captureStackTrace) {
       Error.captureStackTrace(this, this.constructor || APIError);
@@ -77,7 +55,7 @@ export default class APIError extends Error {
     const res = new Proxy(this, {
       set(obj, prop, value) {
         const coercePropToString =
-          ["status", "code", "title", "detail"].indexOf(<string>prop) > -1;
+          ["status", "typeUri", "title", "detail"].indexOf(<string>prop) > -1;
 
         (obj as any)[prop] = coercePropToString
           ? value == null ? undefined : String(value)
@@ -88,38 +66,16 @@ export default class APIError extends Error {
     });
 
     // Construct from object format
-    if(args.length === 1 && typeof args[0] === 'object') {
-      Object.assign(res, args[0]);
-    }
-
-    // Construct from list of arguments
-    else {
-      [res.status, res.code, res.title, res.detail, res.links] = args;
-    }
-
-    if(res.links) {
-      deprecate(
-        "APIError.links; pass an `about` link template to the " +
-        "resource type registry as error config instead. " +
-        "See https://github.com/ethanresnick/json-api/blob/9396a4df4739f5671315b0e4e1a32c07feec4d4e/test/app/src/index.ts#L29"
-      )
-    }
-
-    if(res.code) {
-      deprecate(
-        "APIError.code; use APIError.typeUri instead. " +
-        "See https://github.com/ethanresnick/json-api/issues/151#issuecomment-375126009"
-      );
-    }
+    Object.assign(res, opts);
 
     return res;
   }
 
   toJSON(urlTemplates?: UrlTemplates): APIErrorJSON {
-    const { rawError, typeUri, code, ...serializableProps } = this as any;
+    const { rawError, typeUri, ...serializableProps } = this as any;
     const res = {
       ...serializableProps,
-      ...(typeUri || code ? { code: typeUri || code } : {})
+      ...(typeUri ? { code: typeUri } : {})
     };
 
     if(urlTemplates && urlTemplates.about && !(res.links && res.links.about)) {
@@ -149,19 +105,13 @@ export default class APIError extends Error {
     // to read values off it and show them to the user. (Note: most of
     // the args below will probably be null/undefined, but that's fine.)
     else if(this.isDisplaySafe(err)) {
-      if(err.isJSONAPIDisplayReady) {
-        deprecate(
-          "isJSONAPIDisplayReady magic property: " +
-          "use the APIError.displaySafe symbol instead."
-        );
-      }
-
       return new ErrorConstructor({
         status: err.status || err.statusCode || 500,
-        code: err.code,
         title: err.title || fallbackTitle,
         detail: err.detail || err.details || (err.message || undefined),
-        links: err.links,
+        typeUri: err.typeUri,
+        source: typeof err.source === "object" ? err.source : undefined,
+        meta: typeof err.meta === "object" ? err.meta : undefined,
         rawError: err
       });
     }
@@ -177,6 +127,6 @@ export default class APIError extends Error {
   }
 
   static isDisplaySafe(it: any) {
-    return it && (it instanceof APIError || it[displaySafe] || it.isJSONAPIDisplayReady);
+    return it && (it instanceof APIError || it[displaySafe]);
   }
 }

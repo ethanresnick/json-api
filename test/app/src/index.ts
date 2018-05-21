@@ -100,6 +100,26 @@ export default database.then(function(dbModule) {
     })
   );
 
+  app.get("/request-specific-operators-test", Front.customAPIRequest({
+    supportedOperators: {
+      ...adapter.constructor.supportedOperators,
+      customOp: {
+        isBinary: true,
+        legalIn: ["sort"]
+      }
+    },
+    resultFactory(opts) {
+      const sorts = opts.request.queryParams.sort;
+      const customOpSorts = sorts && sorts.filter(it => {
+        return 'expression' in it && it.expression.operator === 'customOp'
+      });
+
+      return {
+        status: (customOpSorts && customOpSorts.length > 0) ? 200 : 500
+      };
+    }
+  }));
+
   app.get('/:type(people)/custom-filter-test/', FrontWithCustomFilterSupport.apiRequest);
 
   // Apply a query transform that puts all the names in meta
@@ -243,7 +263,7 @@ function makeSignInQuery(opts: QueryBuildingContext) {
     filters: [FieldExpression("eq", [Identifier("name"), user])],
     returning({ primary: userData }) {
       if(pass !== 'password') {
-        throw new APIError(401);
+        throw new APIError({ status: 401 });
       }
 
       return {

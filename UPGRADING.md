@@ -1,4 +1,15 @@
-# 3.0.01-rc.3.0.2
+# 3.0.0-rc.4
+## Breaking Changes
+- `Adapter#doQuery` has been removed. If you were calling this manually in a query/result factory, replace those calls with the new `opts.runQuery` function, which has the same signature (and doesn't require you to know which adapter to run the query with).
+- The deprecated `ResourceTypeRegistry#parentType` method has been removed. Use `ResourceTypeRegistry#parentTypeName` instead.
+- Constructing a `ResourceTypeRegistry` with any type descriptions that don't include a `dbAdapter` now throws at construction time. Before, this would throw at runtime when the adapter was looked up to handle an incoming request.
+- `APIError`: the deprecated constructor signature/options have been removed, as has the deprecated use of an `isJSONAPIDisplayReady` property to indicate a non-APIError error as display-safe.
+
+## New Features
+- It's now possible to specify a max page size, and default page size, for each resource type, to limit how many resources of a given type users can request at once. To do this, add a `pagination` key to your resource type descriptions, with shape: `{ maxPageSize?: number; defaultPageSize?: number }`.
+- It's now possible to override the set of supported operators on a request-by-request basis, rather than that set always being drawn from the adapter for the request's query.
+
+# 3.0.0-rc.3.0.2
 ## Breaking Changes
 - The function signatures for `beforeSave` and `beforeRender` have been refactored considerably. Each function now receives four arguments `(it, meta, extras, superFn)`, where `it` refers to the object (either a `Resource` or `ResourceIdentifier`) to be transformed; `meta` refers to a [`TransformMeta` object](https://github.com/ethanresnick/json-api/blob/dae6b8c9cb08feaa785b56327f51aaf22aeee5ac/src/types/Document.ts#L37); `extras` is an object full of members like the raw serverRequest, the ResourceTypeRegistry, [etc](https://github.com/ethanresnick/json-api/blob/274ee135d9886afaaa304d58f51df64d56cf2547/src/steps/make-transform-fn.ts#L10); and `superFn` is a function you can call to invoke the parent type's transform. This is quite from the previous `(it, frameworkReq, frameworkRes, superFn, extras, meta)` signature. This change has been long-planned (though the depd module didn't provide a good way to provide a warning about it), and updating your code should be mechanical.
 

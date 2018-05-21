@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import APIError from "../../../src/types/APIError";
+import APIError, { displaySafe } from "../../../src/types/APIError";
 
 describe("Error Objects", () => {
   describe("validation", () => {
@@ -11,15 +11,8 @@ describe("Error Objects", () => {
   });
 
   describe("type uri/code", () => {
-    it("should coerce code to string", () => {
-      const er = new APIError({ code: 1401 });
-      expect(er.code).to.equal("1401");
-      expect(er.toJSON().code).to.equal("1401");
-    });
-
-    it("should serialize typeUri in code (for now), overriding any manually set code", () => {
-      const er = new APIError({ typeUri: "http://example.com/", code: 300 });
-      expect(er.code).to.equal("300");
+    it("should serialize typeUri in code (for now), ignoring any manually set code", () => {
+      const er = new APIError({ typeUri: "http://example.com/", code: 300 } as any);
       expect(er.toJSON().code).to.equal("http://example.com/");
     });
   })
@@ -42,24 +35,35 @@ describe("Error Objects", () => {
       expect(APIError.fromError(error)).to.equal(error);
     });
 
-    it('should set rawError on genereted instances', () => {
+    it('should set rawError on generated instances', () => {
       const x = new Error("test");
       expect(APIError.fromError(x).rawError).to.equal(x);
-    })
+    });
+
+    it("should set status, title to generic vals on non-display-safe errors", () => {
+      const er = APIError.fromError({
+        "statusCode": 300,
+        "title": "My Error"
+      });
+
+      expect(er.status).to.eq("500");
+      expect(er.title).to.not.eq("My error");
+    });
 
     it("should use the error's statusCode val as status iff status not defined", () => {
-      let er = APIError.fromError({
+      const er = APIError.fromError({
         "statusCode": 300,
-        "isJSONAPIDisplayReady": true
+        [displaySafe]: true
       });
-      expect(er.status === "300").to.be.true;
 
-      er = APIError.fromError({
+      const er2 = APIError.fromError({
         "status": 200,
         "statusCode": 300,
-        "isJSONAPIDisplayReady": true
+        [displaySafe]: true
       });
-      expect(er.status === "200").to.be.true;
+
+      expect(er.status).to.equal("300");
+      expect(er2.status).to.equal("200");
     });
 
     it("should default to status 500", () => {
