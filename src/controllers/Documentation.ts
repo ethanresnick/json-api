@@ -87,13 +87,19 @@ export default class DocumentationController {
   // Clients can extend this if, say, the adapter can't infer
   // as much info about the models' structure as they would like.
   getTypeInfo(type) {
-    const adapter   = this.registry.dbAdapter(type);
+    const typeDesc = this.registry.type(type);
+
+    if(!typeDesc) {
+      throw new Error("Trying to get type info for unregistered type.")
+    }
+
+    const adapter   = typeDesc.dbAdapter;
     const model     = adapter.getModel(type);
     const modelName = this.toModelName(type);
 
     // Combine the docs in the Resource description with the standardized schema
     // from the adapter in order to build the final schema for the template.
-    const info = this.registry.info(type);
+    const info = typeDesc.info;
     const schema = adapter.constructor.getStandardizedSchema(model);
     const ucFirst = (v) => v.charAt(0).toUpperCase() + v.slice(1);
 

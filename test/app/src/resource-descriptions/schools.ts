@@ -33,5 +33,7 @@ module.exports = {
   beforeRender(resource, meta, extras, superFn) {
     resource.attrs.schoolBeforeRender = true;
     return superFn(resource);
-  }
+  },
+
+  pagination: { defaultPageSize: 2 }
 };

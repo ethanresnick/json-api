@@ -10,6 +10,7 @@ import {
    FinalizedSupportedOperators,
    ParserOperatorsConfig
 } from "../types";
+import { QueryReturning } from '../db-adapters/AdapterInterface';
 import Query from "../types/Query/Query";
 import ResourceTypeRegistry from "../ResourceTypeRegistry";
 import Document, { DocumentData, DocTransformFn } from "../types/Document";
@@ -37,6 +38,7 @@ import validateRequestResourceTypes from "../steps/pre-query/validate-resource-t
 import validateRequestResourceIds from "../steps/pre-query/validate-resource-ids";
 import validateRequestResourceData from "../steps/pre-query/validate-resource-data";
 import makeTransformFunction, { TransformMode, Transformable } from "../steps/make-transform-fn";
+import runQuery from '../steps/run-query';
 
 import makeGET from "../steps/make-query/make-get";
 import makePOST from "../steps/make-query/make-post";
@@ -90,6 +92,7 @@ export type QueryBuildingContext<T = Resource | ResourceIdentifier> = {
   registry: ResourceTypeRegistry;
   makeDocument: makeDocument;
   makeQuery: QueryFactory;
+  runQuery: (q: Query) => Promise<QueryReturning>
 };
 
 export type ResultBuildingContext = QueryBuildingContext;
@@ -238,20 +241,23 @@ export default class APIController {
   }
 
   /**
-   * This returns the supported operators for this request, by looking them
-   * up from the adapter, iff we can find the adapter for this request.
+   * This returns the default set of supported operators for this request,
+   * by looking them up from the adapter, iff we can find the adapter
+   * for this request.
    */
   private getSupportedOperators(request: Request) {
-    // If we can't find the adapter for this request, we can't know the valid
-    // filter param operators, so we act conservatively to say there are no
-    // valid operators. That may lead to some parse errors, but it's probably
-    // better than erroring unconditionally (even if no filters are in use).
-    if(!this.registry.hasType(request.type)) {
+    // If we can't find the adapter for this request, because the type hasn't
+    // been registered, we can't know the valid filter/sort param operators,
+    // so we act conservatively to say there are none. That may lead to some
+    // parse errors, but it's probably better than erroring unconditionally
+    // (even if no filters are in use).
+    const typeDesc = this.registry.type(request.type);
+
+    if(!typeDesc) {
       return { filter: {}, sort: {} };
     }
 
-    const adapter = this.registry.dbAdapter(request.type);
-    return (adapter.constructor.supportedOperators || {}) as SupportedOperators;
+    return (typeDesc.dbAdapter.constructor.supportedOperators || {}) as SupportedOperators;
   }
 
   /**
@@ -387,11 +393,20 @@ export default class APIController {
   }
 
   /**
+   * Runs a query, using the appropriate adapter and after validating it.
+   *
+   * Note: can't use partial application below because this.registry isn't set
+   * yet (at least in the TS polyfill) at the point when this initializer runs.
+   */
+  public runQuery: (q: Query) => Promise<QueryReturning> =
+    (query) => runQuery(this.registry, query)
+
+  /**
    * Makes the result the library will ultimately return.
    *
-   * Note: this function is static to make sure that everything we use to
-   * construct the query is provided through the same options object that we
-   * give to user-provided result factory functions.
+   * Note: this function should construct/run the query using only resources
+   * that we also expose, through the same options object, to user-provided
+   * result factory functions.
    *
    * @param {QueryBuildingContext} opts [description]
    */
@@ -408,18 +423,9 @@ export default class APIController {
       logger.info("Creating request query");
       const query = await queryFactory(opts);
 
-      // If the type in the request hasn't been registered,
-      // we can't look up it's adapter to run the query, so we 404.
-      if(!opts.registry.hasType(query.type)) {
-        throw Errors.unknownResourceType({
-          detail: `${opts.request.type} is not a known type in this API.`
-        });
-      }
-
       logger.info("Executing request query");
-      const adapter = opts.registry.dbAdapter(query.type);
       const result =
-        await adapter.doQuery(query).then(query.returning, query.catch);
+        await opts.runQuery(query).then(query.returning, query.catch);
 
       // add top level self link pre send.
       if(result.document && result.document.primary) {
@@ -511,6 +517,7 @@ export default class APIController {
           return doc.transform(fn, !transformLinkage);
         },
         makeQuery: this.makeQuery, // tslint:disable-line no-unbound-method
+        runQuery: this.runQuery,  // tslint:disable-line no-unbound-method
         // Note: can't use R.partialRight below if we want requiredThroughType
         // to be optional for callers.
         setTypePaths(

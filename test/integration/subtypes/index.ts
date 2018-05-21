@@ -233,6 +233,26 @@ describe("Subtypes", () => {
           expect(e.response.body.errors[0].code).to.equal("https://jsonapi.js.org/errors/invalid-resource-type")
         });
     });
+
+    it("should reject type lists with unknown types", () => {
+      return Agent.request("POST", "/organizations")
+        .type("application/vnd.api+json")
+        .send({
+          data: {
+            ...VALID_ORG_RESOURCE_NO_ID,
+            meta: {
+              ...(VALID_ORG_RESOURCE_NO_ID as any).meta,
+              types: ["organizations", "uknown-type"]
+            }
+          }
+        })
+        .then((resp) => {
+          throw new Error("Shouldn't run");
+        }, (e) => {
+          expect(e.status).to.equal(400);
+          expect(e.response.body.errors[0].code).to.equal("https://jsonapi.js.org/errors/invalid-types-list")
+        });
+    });
   });
 
   describe("Updating", () => {
