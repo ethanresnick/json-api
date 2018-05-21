@@ -86,6 +86,8 @@ To use this library, you describe the special behavior (if any) that resources o
 
 - <a name="transformLinkage">`transformLinkage` (optional): a boolean that, if true, will cause any resource identifier objects (i.e., the `{type, id}` pointer objects in each relationship) that have this type as their `type` to be passed to this type's `beforeRender`/`beforeSave` functions for transformation. Note that turning on `transformLinkage`, even for only one resource type, incurs a big performance cost. This may be optimized a bit in the future, but, fundamentally, transforming linkage is expensive because there can be many linkage items per relationship and each transform involves allocating a promise (as beforeRender and beforeSave can be async).
 
+- <a name="pagination">`pagination` (optional): an object with two optional keys, `maxPageSize` and `defaultPageSize`. The former limits how many resources a user can request at once (through `?page[limit]`), whereas the latter controls the default limit. Note: custom queries (see below) have their `limit` subject to the `maxPageSize` by default (though they can explicitly opt-out), but they don't automatically get the `defaultPageSize` applied.
+
 ## Query Factories
 When a request comes in, the json-api library extracts various parameters from it to build a query that will be used to fulfill the user's request.
 
