@@ -10,8 +10,6 @@ import {
    FinalizedSupportedOperators,
    ParserOperatorsConfig
 } from "../types";
-import { QueryReturning } from '../db-adapters/AdapterInterface';
-import Query from "../types/Query/Query";
 import ResourceTypeRegistry from "../ResourceTypeRegistry";
 import Document, { DocumentData, DocTransformFn } from "../types/Document";
 import APIError from "../types/APIError";
@@ -38,7 +36,7 @@ import validateRequestResourceTypes from "../steps/pre-query/validate-resource-t
 import validateRequestResourceIds from "../steps/pre-query/validate-resource-ids";
 import validateRequestResourceData from "../steps/pre-query/validate-resource-data";
 import makeTransformFunction, { TransformMode, Transformable } from "../steps/make-transform-fn";
-import runQuery from '../steps/run-query';
+import runQuery, { RunnableQuery, QueryReturning } from '../steps/run-query';
 
 import makeGET from "../steps/make-query/make-get";
 import makePOST from "../steps/make-query/make-post";
@@ -71,7 +69,8 @@ export type customParamParser<T> = (
   target: { method: string, uri: string }
 ) => T | undefined;
 
-export type QueryFactory = (opts: QueryBuildingContext) => Query | Promise<Query>;
+export type QueryFactory = (opts: QueryBuildingContext) => RunnableQuery | Promise<RunnableQuery>;
+
 export type ResultFactory = (
   opts: ResultBuildingContext,
   customQueryFactory?: QueryFactory
@@ -92,7 +91,7 @@ export type QueryBuildingContext<T = Resource | ResourceIdentifier> = {
   registry: ResourceTypeRegistry;
   makeDocument: makeDocument;
   makeQuery: QueryFactory;
-  runQuery: (q: Query) => Promise<QueryReturning>
+  runQuery<T extends RunnableQuery>(q: T): Promise<QueryReturning<T>>;
 };
 
 export type ResultBuildingContext = QueryBuildingContext;
@@ -107,12 +106,12 @@ export type ResultBuildingContext = QueryBuildingContext;
 // approach that the express typings seem to use, so I imagine it's safe enough.
 export type QueryTransformNoReq = {
   // tslint:disable-next-line callable-types
-  (first: Query): Query;
+  (first: RunnableQuery): RunnableQuery;
 };
 
 export type QueryTransformWithReq = {
   // tslint:disable-next-line callable-types
-  (first: ServerReq, second: Query): Query;
+  (first: ServerReq, second: RunnableQuery): RunnableQuery;
 };
 
 export type RequestOpts = {
@@ -398,8 +397,8 @@ export default class APIController {
    * Note: can't use partial application below because this.registry isn't set
    * yet (at least in the TS polyfill) at the point when this initializer runs.
    */
-  public runQuery: (q: Query) => Promise<QueryReturning> =
-    (query) => runQuery(this.registry, query)
+  public runQuery: <T extends RunnableQuery>(q: T) => Promise<QueryReturning<T>> =
+    <T extends RunnableQuery>(query: T) => runQuery(this.registry, query)
 
   /**
    * Makes the result the library will ultimately return.
