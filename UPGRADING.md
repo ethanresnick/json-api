@@ -1,3 +1,6 @@
+# 3.0.0-rc.4.0.1
+- More accurate types, especially: replacing `Query` with a `RunnableQuery` union type in various signatures. This may cause small breakage for Typescript users. 
+ 
 # 3.0.0-rc.4
 ## Breaking Changes
 - `Adapter#doQuery` has been removed. If you were calling this manually in a query/result factory, replace those calls with the new `opts.runQuery` function, which has the same signature (and doesn't require you to know which adapter to run the query with).
