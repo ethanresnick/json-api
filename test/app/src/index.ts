@@ -12,6 +12,7 @@ import {
   Identifier,
   FieldExpression
 } from '../../../src/steps/pre-query/parse-query-params';
+import { RunnableQuery } from "../../../src/steps/run-query";
 import { QueryBuildingContext } from "../../../src/controllers/API";
 import ExpressStrategy from "../../../src/http-strategies/Express";
 import MongooseAdapter from '../../../src/db-adapters/Mongoose/MongooseAdapter';
@@ -87,7 +88,7 @@ export default database.then(function(dbModule) {
   // Apply a query transform that returns a custom error
   app.get('/request-that-errors/:type(people)/:id(42)',
     Front.customAPIRequest({
-      queryTransform: (query: Query) =>
+      queryTransform: (query: RunnableQuery) =>
         query.resultsIn(undefined, (error) => ({
           document: new Document({
             errors: [
@@ -125,7 +126,7 @@ export default database.then(function(dbModule) {
   // Apply a query transform that puts all the names in meta
   app.get('/:type(people)/with-names',
     Front.customAPIRequest({
-      queryTransform: (query: Query) => {
+      queryTransform: (query: RunnableQuery) => {
         const origReturning = query.returning;
 
         return query.resultsIn(
