@@ -3,7 +3,7 @@ import Data from "./Generic/Data";
 import Resource from "./Resource";
 import ResourceIdentifier from "./ResourceIdentifier";
 import {
-  Reducer, PredicateFn, UrlTemplates, Mapper, AsyncMapper, Links
+  Reducer, PredicateFn, UrlTemplates, Mapper, AsyncMapper, Links, DataOf
 } from "./index";
 
 /**
@@ -14,7 +14,7 @@ import {
  * to choke on the type parameter.
  */
 export type MaybeDataWithLinksArgs<T> = {
-  data: T | T[] | null | undefined | Data<T>;
+  data: DataOf<T> | undefined | Data<T>; // tslint:disable-line
   links?: UrlTemplates;
 };
 

@@ -342,8 +342,14 @@ describe("ResourceTypeRegistry", function() {
               [...new Set(typeNames.filter(it => !pathTypesSet.has(it)))]
             );
 
-            expect(sut(path.path, validThroughType)).to.deep.equal(path.ordered || path.path);
-            expect(sut(path.path, invalidThroughType)).to.be.false;
+            expect(sut(path.path, validThroughType)).to.deep.equal(
+              path.ordered || path.path,
+              `Expected type path for ${path.path} with throughType ${validThroughType} to eq ${path.ordered || path.path}.`
+            );
+            expect(sut(path.path, invalidThroughType)).to.eq(
+              false,
+              `Expected type path for ${path.path} with throughType ${invalidThroughType} to be false.`
+            );
           });
         });
       });

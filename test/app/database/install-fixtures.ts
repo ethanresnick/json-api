@@ -1,5 +1,6 @@
 import fixtures from "./define-fixtures";
 
-fixtures.then(obj => {
+// tslint:disable-next-line no-floating-promises
+fixtures.then(async (obj) => {
   return obj.fixturesReset().then(() => process.exit(0));
 });

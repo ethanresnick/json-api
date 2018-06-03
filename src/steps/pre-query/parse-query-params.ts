@@ -20,10 +20,10 @@ export const isId =
   (it: any): it is IdentifierType => it && it.type === "Identifier";
 
 export const FieldExpression = <T extends string>(operator: T, args: any[]) =>
-  ({ type: <"FieldExpression">"FieldExpression", operator, args });
+  ({ type: <"FieldExpression">"FieldExpression", operator, args }); // tslint:disable-line no-useless-cast
 
 export const Identifier = (value: string) =>
-  ({ type: <"Identifier">"Identifier", value });
+  ({ type: <"Identifier">"Identifier", value }); // tslint:disable-line no-useless-cast
 
 // the shape of values in req.queryParams, pre + post parsing.
 export type StringListParam = string[];

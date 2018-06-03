@@ -39,7 +39,7 @@ describe("Mongoose Adapter", () => {
     describe("assertIdsValid", () => {
       it("should return void on empty input, a valid id, or valid ids", () => {
         const basicPredicate = FieldExpression(
-          <"and">"and",
+          <"and">"and", // tslint:disable-line no-useless-cast
           [FieldExpression("eq", [Identifier("a"), <any>"b"])]
         );
 
@@ -78,7 +78,7 @@ describe("Mongoose Adapter", () => {
         const fn = () => {
           MongooseAdapter.assertIdsValid(
             FieldExpression(
-              <"and">"and",
+              <"and">"and", // tslint:disable-line no-useless-cast
               [
                 FieldExpression("eq", [Identifier("a"), <any>"b"]),
                 FieldExpression("eq", [Identifier("id"), "1"])
@@ -93,7 +93,7 @@ describe("Mongoose Adapter", () => {
         const fn2 = () => {
           MongooseAdapter.assertIdsValid(
             FieldExpression(
-              <"and">"and",
+              <"and">"and", // tslint:disable-line no-useless-cast
               [{
                 type: "FieldExpression",
                 args: [Identifier("a"), "b"],

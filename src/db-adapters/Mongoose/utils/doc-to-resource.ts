@@ -37,7 +37,7 @@ export default function docToResource(
   const model = doc.constructor as Model<any>;
   const discriminatorKey = getDiscriminatorKey(model);
   const baseModelName = model.baseModelName || model.modelName;
-  const baseType = modelNamesToTypeNames[baseModelName as string];
+  const baseType = modelNamesToTypeNames[baseModelName];
 
   if(!baseType) {
     throw new Error("Unrecognized model.");
@@ -50,7 +50,7 @@ export default function docToResource(
   // depopulate fields _inside_ the passed in doc, but can actually turn the
   // doc itself into a string if the doc was originally gotten by population.
   // That's stupid, and it breaks our include handling.
-  let attrs = doc.toJSON({ virtuals: true, getters: true, versionKey: false }) as any;
+  let attrs = doc.toJSON({ virtuals: true, getters: true, versionKey: false });
   delete attrs.id; // from the id virtual.
   delete attrs._id;
 
@@ -96,8 +96,7 @@ export default function docToResource(
 
     const referencedModelBaseName =
       models[referencedModelName].baseModelName || referencedModelName;
-    const referencedType =
-      modelNamesToTypeNames[referencedModelBaseName as string] as string;
+    const referencedType = modelNamesToTypeNames[referencedModelBaseName] as string;
 
     // delete the attribute, since we're moving it to relationships
     deleteNested(path, attrs);
@@ -128,7 +127,7 @@ export default function docToResource(
 
     // go back from an array if neccessary and save.
     relationships[path] = Relationship.of({
-      data: linkage as Data<ResourceIdentifier>,
+      data: linkage,
       owner: { type: baseType, id: doc.id, path }
     });
   });

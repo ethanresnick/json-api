@@ -177,7 +177,7 @@ export default class ResourceTypeRegistry {
   type(typeName: string) {
     return Maybe(this._types[typeName])
       .map(it => <OutputResourceTypeDescription>it.toJS())
-      .getOrDefault(undefined);
+      .getOrDefault(undefined); // tslint:disable-line
   }
 
   hasType(typeName: string) {
@@ -191,7 +191,7 @@ export default class ResourceTypeRegistry {
       return Maybe(this._types[type])
         .map(it => it.get("urlTemplates"))
         .map(it => <UrlTemplates>it.toJS())
-        .getOrDefault(undefined);
+        .getOrDefault(undefined); // tslint:disable-line
     }
 
     return Object.keys(this._types).reduce<UrlTemplatesByType>((prev, typeName) => {
@@ -206,7 +206,7 @@ export default class ResourceTypeRegistry {
 
   uniqueAdapters() {
     const adaptersToTypeNames = new Map<AdapterInstance<any>, string[]>();
-    Object.keys(this._types).map(typeName => {
+    Object.keys(this._types).forEach(typeName => {
       // tslint:disable-next-line no-non-null-assertion
       const adapter = this._types[typeName]!.get("dbAdapter");
 
@@ -343,7 +343,7 @@ export default class ResourceTypeRegistry {
         ? it.toJS()
         : it
       )
-      .getOrDefault(undefined);
+      .getOrDefault(undefined); // tslint:disable-line
   }
 
   private processTypeDesc(it: Partial<ResourceTypeDescription>) {

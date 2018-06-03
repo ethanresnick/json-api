@@ -5,7 +5,7 @@ export async function checkBodyExistence(request: Request) {
   const hasBody = typeof request.body !== "undefined";
 
   const needsBody =
-    ["post", "patch"].indexOf(<string>request.method) !== -1 ||
+    ["post", "patch"].indexOf(request.method) !== -1 ||
     (request.method === "delete" && request.aboutRelationship) ||
     (request.method === "delete" && !request.id);
 
@@ -20,8 +20,15 @@ export async function checkBodyExistence(request: Request) {
   });
 }
 
+export const validMethods = [
+  "patch" as "patch",
+  "post" as "post",
+  "delete" as "delete",
+  "get" as "get"
+];
+
 export async function checkMethod({ method }: Request) {
-  if(["patch", "post", "delete", "get"].indexOf(method) === -1) {
+  if(validMethods.indexOf(method as any) === -1) {
     const detail =
       `The method "${method}" is not supported.` +
       (method === "put" ? " See http://jsonapi.org/faq/#wheres-put" : "");

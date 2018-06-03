@@ -18,20 +18,20 @@ describe("Utility methods", () => {
     const deletion = utils.deleteNested("contact.phone", obj);
 
     it("should delete a nested property when present", () => {
-      expect(obj.contact.phone).to.equal(undefined);
+      expect(obj.contact.phone).to.equal(undefined, "should've deleted phone in obj.contact");
     });
 
     it("should work on non-nested properties too", () => {
       utils.deleteNested("top-level", obj);
-      expect(obj["top-level"]).to.be.undefined;
+      expect(obj["top-level"]).to.eq(undefined, "should've deleted `top-level` in obj.");
     });
 
     it("should return true if deletion succeeds", () => {
-      expect(deletion).to.be.true;
+      expect(deletion).to.be.eq(true, "should return true for successful deletion");
     });
 
     it("should return false if deletion fails", () => {
-      expect(utils.deleteNested("contact.twitter", obj)).to.be.false;
+      expect(utils.deleteNested("contact.twitter", obj)).to.eq(false, "should return flse for successful deletion");
     });
   });
 
@@ -65,11 +65,14 @@ describe("Utility methods", () => {
     it("should sort the items correctly", function() {
       const nodes = ["c", "b", "f", "a", "d", "e"];
       const roots = ["a", "d", "f"];
+      //tslint:disable no-useless-cast
       const edges = {
         a: { b: <true>true },
         b: { c: <true>true },
         d: { e: <true>true }
       };
+      //tslint:enable no-useless-cast
+
       const sorted = utils.pseudoTopSort(nodes, edges, roots);
 
       // check that all the nodes were returned exactly once.

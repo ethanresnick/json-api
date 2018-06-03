@@ -46,7 +46,7 @@ export default class WithCriteriaQuery extends Query {
       criteria: {
         ...this.query.criteria,
         where: FieldExp(
-          <"and">"and",
+          <"and">"and", // tslint:disable-line no-useless-cast
           opts.filters || []
         ),
         isSingular: opts.isSingular || opts.id !== undefined,

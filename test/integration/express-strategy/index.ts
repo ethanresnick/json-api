@@ -7,20 +7,20 @@ import ExpressStrategy from "../../../src/http-strategies/Express";
 
 describe("Express Strategy", () => {
   let Agent;
-  before(() => {
+  before(async () => {
     return AgentPromise.then(A => { Agent = A; });
   });
 
   describe("configuration", () => {
-    const registry = new ResourceTypeRegistry({});
-    const api = new APIController(registry);
+    const makeAPIController = () =>
+      new APIController(new ResourceTypeRegistry({}));
 
     it("does not require a documentation controller", () => {
-      expect(() => new ExpressStrategy(api)).to.not.throw();
+      expect(() => new ExpressStrategy(makeAPIController())).to.not.throw();
     });
 
     it("throws if you attempt to get a docs request handler if no docs controller was provided", () => {
-      const express = new ExpressStrategy(api);
+      const express = new ExpressStrategy(makeAPIController());
       expect(() => express.docsRequest).to.throw(/^Cannot get docs request handler/);
     });
   });

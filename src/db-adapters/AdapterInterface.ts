@@ -50,7 +50,7 @@ export interface AdapterInstance<T extends new (...args: any[]) => any> {
   getModel(typeName: string): any;
   getRelationshipNames(typeName: string): string[];
   getTypePaths(items: {type: string, id: string}[]): Promise<TypeIdMapOf<TypeInfo>>
-};
+}
 
 export interface AdapterClass {
   new (...args: any[]): AdapterInstance<{ new (...args: any[]): any }>;

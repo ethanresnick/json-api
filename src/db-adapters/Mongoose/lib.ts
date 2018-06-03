@@ -127,7 +127,7 @@ export function toMongoCriteria(constraint: FieldExpression) {
   // reference on the left-hand side. For the latter, this requirement has already
   // been validated such that, below, we know that args[0] holds an identifier.
   const fieldName = (constraint.args[0] as Identifier).value;
-  const mongoField = <string>(fieldName === 'id' ? '_id' : fieldName);
+  const mongoField = fieldName === 'id' ? '_id' : fieldName;
   const value = constraint.args[1];
 
   if(constraint.operator === "geoWithin") {

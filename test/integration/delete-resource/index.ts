@@ -4,7 +4,7 @@ import { VALID_SCHOOL_RESOURCE_NO_ID } from "../fixtures/creation";
 
 describe("Deleting resources", () => {
   let Agent;
-  before(() => AgentPromise.then(A => { Agent = A; }));
+  before(async () => AgentPromise.then(A => { Agent = A; }));
 
   describe("Single resource deletion", () => {
     let creationId1, creationId2, creationId3;

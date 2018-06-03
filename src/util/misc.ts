@@ -136,9 +136,9 @@ export function pseudoTopSort(
   roots: string[]
 ) {
   // Do some defensive copying, in case the caller didn't.
+  // We don't need to copy nodes, because we never actually modify it.
   /* tslint:disable no-parameter-reassignment */
   roots = roots.slice();
-  nodes = nodes.slice();
   edges = { ...edges };
   Object.keys(edges).forEach(key => { edges[key] = { ...edges[key] }; });
   /* tslint:enable no-parameter-reassignment */

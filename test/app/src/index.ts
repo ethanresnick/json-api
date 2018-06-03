@@ -262,6 +262,7 @@ function makeSignInQuery(opts: QueryBuildingContext) {
     isSingular: true,
     filters: [FieldExpression("eq", [Identifier("name"), user])],
     returning({ primary: userData }) {
+      // tslint:disable-next-line possible-timing-attack
       if(pass !== 'password') {
         throw new APIError({ status: 401 });
       }

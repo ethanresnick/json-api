@@ -11,6 +11,11 @@
     "max-file-line-count": false,
     "typeof-compare": false,
     "no-object-literal-type-assertion": false,
-    "member-access": false
+    "member-access": false,
+
+    // these don't make sense in our context
+    "no-http-string": false,
+    "chai-vague-errors": false,
+    "mocha-no-side-effect-code": false
   }
 }

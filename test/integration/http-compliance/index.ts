@@ -3,7 +3,7 @@ import AgentPromise from "../../app/agent";
 
 describe("HTTP Compliance", () => {
   let Agent;
-  before(() => {
+  before(async () => {
     return AgentPromise.then(A => { Agent = A; });
   });
 

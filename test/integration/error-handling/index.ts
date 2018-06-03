@@ -4,7 +4,7 @@ import AgentPromise from "../../app/agent";
 describe("Error handling", () => {
   let Agent;
 
-  before(() => {
+  before(async () => {
     return AgentPromise.then(A => { Agent = A; });
   });
 

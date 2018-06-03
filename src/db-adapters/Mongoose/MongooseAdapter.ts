@@ -127,8 +127,9 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     let primaryDocumentsPromise: Promise<Document | Document[]>,
       includedResourcesPromise: Promise<ReturnedResource[] | undefined>;
 
+    // ternary below is a hack for the ts compiler
     const queryBuilder =
-      mode === "findOne" // ternary is a hack for TS compiler
+      mode === "findOne" // tslint:disable-line no-all-duplicated-branches
         ? model[mode](mongofiedFilters)
         : model[mode](mongofiedFilters);
 
@@ -502,6 +503,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     const baseModelName = QueryTypeModel.baseModelName || QueryTypeModel.modelName;
     const BaseModel = this.getModel(<string>this.modelNamesToTypeNames[baseModelName]);
 
+    // tslint:disable-next-line no-all-duplicated-branches
     const queryBuilder = mode === 'findOne' // ternary is a hack for TS compiler
       ? BaseModel[mode](mongofiedFilters)
       : BaseModel[mode](mongofiedFilters);
@@ -920,7 +922,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       // We're only validating the RHS of binary operators where the left
       // hand side is a reference to a field named id.
       return isIdentifier(filter.args[0]) && filter.args[0].value === 'id'
-        ? acc.concat(filter.args[1] as any as (string | string[]))
+        ? acc.concat(filter.args[1] as string | string[])
         : acc;
     }, [] as string[]);
 

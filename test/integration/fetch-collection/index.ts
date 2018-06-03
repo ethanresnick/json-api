@@ -4,13 +4,13 @@ import { VALID_SCHOOL_RESOURCE_NO_ID_EMPTY_PRINCIPAL_NO_LIAISONS } from '../fixt
 
 describe("Fetching Collection", () => {
   let Agent;
-  before(() => {
+  before(async () => {
     return AgentPromise.then(A => { Agent = A; });
   });
 
   describe("Fetching all organizations", () => {
     let res;
-    before(() => {
+    before(async () => {
       return Agent.request("GET", "/organizations")
         .accept("application/vnd.api+json")
         .then(response => {
@@ -92,8 +92,8 @@ describe("Fetching Collection", () => {
   });
 
   describe("Fetching Ascending Gendered Collection", () => {
-    let res;
-    before(() => {
+    let res; // tslint:disable-next-line no-identical-functions
+    before(async () => {
       return Agent.request("GET", "/people?sort=gender")
         .accept("application/vnd.api+json")
         .then(response => {
@@ -113,8 +113,8 @@ describe("Fetching Collection", () => {
   });
 
   describe("Fetching Descended Sorted Name Collection", () => {
-    let res;
-    before(() => {
+    let res; // tslint:disable-next-line no-identical-functions
+    before(async () => {
       return Agent.request("GET", "/people?sort=-name")
         .accept("application/vnd.api+json")
         .then(response => {
@@ -133,8 +133,8 @@ describe("Fetching Collection", () => {
   });
 
   describe("Fetching Multi-Sorted Collection", () => {
-    let res;
-    before(() => {
+    let res; // tslint:disable-next-line no-identical-functions
+    before(async () => {
       return Agent.request("GET", "/people?sort=-gender,name")
         .accept("application/vnd.api+json")
         .then(response => {
@@ -154,8 +154,8 @@ describe("Fetching Collection", () => {
   });
 
   describe("Fetching with Offset and/or Limit (reverse name sorted for determinism)", () => {
-    let res;
-    before(() => {
+    let res; // tslint:disable-next-line no-identical-functions
+    before(async () => {
       return Agent.request("GET", "/people?sort=-name&page[offset]=1&page[limit]=3")
         .accept("application/vnd.api+json")
         .then(response => {

@@ -16,7 +16,7 @@ import {
  */
 describe("Subtypes", () => {
   let Agent;
-  before(() => {
+  before(async () => {
     return AgentPromise.then((A) => { Agent = A; })
   });
 

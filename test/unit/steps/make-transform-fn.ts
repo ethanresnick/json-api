@@ -94,6 +94,7 @@ describe("makeTransformFn", () => {
   const makeResourceId = makeWithTypePath(ResourceIdentifier);
 
   // Dummy meta we'll pass to all calls of the transform fn.
+  // tslint:disable-next-line no-useless-cast
   const meta = { section: "included" as "included" };
 
   const extras = {

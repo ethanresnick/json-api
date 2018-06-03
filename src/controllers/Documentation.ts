@@ -100,15 +100,16 @@ export default class DocumentationController {
     // Combine the docs in the Resource description with the standardized schema
     // from the adapter in order to build the final schema for the template.
     const info = typeDesc.info;
+    const defaultIncludes = typeDesc.defaultIncludes;
     const schema = adapter.constructor.getStandardizedSchema(model);
+
+    // Keys that have a meaning in the default template.
+    const overrideableKeys = ["friendlyName", "kind", "description"];
     const ucFirst = (v) => v.charAt(0).toUpperCase() + v.slice(1);
 
     schema.forEach((field) => {
       // look up user defined field info on info.fields.
       const pathInfo = (info && info.fields && info.fields[field.name]) || {};
-
-      // Keys that have a meaning in the default template.
-      const overrideableKeys = ["friendlyName", "kind", "description"];
 
       for(const key in pathInfo) {
         // allow the user to override auto-generated friendlyName and the
@@ -116,7 +117,7 @@ export default class DocumentationController {
         // allow them to set the description, which is always user-provided.
         // And, finally, copy in any other info properties that don't
         // conflict with ones defined by this library.
-        if(overrideableKeys.indexOf(key) > -1 || !(key in field)) {
+        if(overrideableKeys.includes(key) || !(key in field)) {
           field[key] = pathInfo[key];
         }
 
@@ -130,6 +131,7 @@ export default class DocumentationController {
         }
       }
     });
+
     // Other info
     type TypeInfo = {
       name: {
@@ -155,8 +157,9 @@ export default class DocumentationController {
       childTypes: this.registry.childTypeNames(type)
     };
 
-    const defaultIncludes = this.registry.defaultIncludes(type);
-    if(defaultIncludes) result.defaultIncludes = defaultIncludes;
+    if(defaultIncludes) {
+      result.defaultIncludes = defaultIncludes;
+    }
 
     if(info && info.example) result.example = info.example;
     if(info && info.description) result.description = info.description;

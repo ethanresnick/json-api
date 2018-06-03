@@ -127,6 +127,7 @@ export default class APIController {
   private filterParamParser: Exclude<APIControllerOpts["filterParser"], undefined>;
   private sortParamParser: Exclude<APIControllerOpts["sortParser"], undefined>;
 
+  "constructor": typeof APIController;
   constructor(registry: ResourceTypeRegistry, opts: APIControllerOpts = {}) {
     this.registry = registry;
     this.filterParamParser = opts.filterParser || defaultFilterParamParser;
@@ -225,7 +226,7 @@ export default class APIController {
               : Relationship.of({
                   data: parsedPrimary as Data<ResourceIdentifier>,
                   owner: {
-                    type: <string>request.type,
+                    type: request.type,
                     id: <string>request.id,
                     path: <string>request.relationship
                   }
@@ -266,13 +267,14 @@ export default class APIController {
    *
    * @param {QueryBuildingContext} opts [description]
    */
+  // tslint:disable-next-line cognitive-complexity
   public async makeQuery(opts: QueryBuildingContext) {
     const { request } = opts;
     let requestAfterBeforeSave = request;
 
-    // check that a valid method is in use
-    // and that, if the body is supposed to be present, it is (or vice-versa).
-    // We await these in order to be deterministic about the error message.
+    // check that a valid method is in use and that, if the body is supposed
+    // to be present, it is (or vice-versa). We await these in order to be
+    // deterministic about the error message.
     // TODO: It might be slightly preferable to do the body existence check
     // in each of the makeQuery functions, when we're actually trying to use
     // the parsed body.
@@ -345,7 +347,7 @@ export default class APIController {
     }
 
     const baseQuery = await (async () => {
-      switch(<"get" | "post" | "patch" | "delete">request.method) {
+      switch(<typeof requestValidators.validMethods[0]>request.method) {
         case "get":
           return makeGET(requestAfterBeforeSave, opts.registry, opts.makeDocument)
         case "post":
@@ -466,7 +468,7 @@ export default class APIController {
       // Better to do this early so we exit fast if the client can't support anything.
       logger.info("Negotiating response content-type");
       contentType =
-        await negotiateContentType(request.accepts, ["application/vnd.api+json"])
+        await negotiateContentType(request.accepts, [this.constructor.JSON_API_MEDIA_TYPE])
 
       logger.info("Parsing request body/query parameters");
       const finalizedRequest = await this.finalizeRequest(
@@ -551,6 +553,8 @@ export default class APIController {
     return resultToHTTPResponse(jsonAPIResult, contentType);
   };
 
+  static JSON_API_MEDIA_TYPE: string = "application/vnd.api+json";
+
   /**
    * Builds a response from errors. Allows errors that occur outside of the
    * library to be handled and returned in JSON API-compiant fashion.
@@ -588,7 +592,7 @@ export default class APIController {
     let contentType: string;
 
     try {
-      contentType = await negotiateContentType(reqAccepts, ["application/vnd.api+json"]);
+      contentType = await negotiateContentType(reqAccepts, [APIController.JSON_API_MEDIA_TYPE]);
       return resultToHTTPResponse(result, contentType);
     }
 
@@ -598,7 +602,7 @@ export default class APIController {
         ? makeResultFromErrors((data: DocumentData) => new Document(data), e)
         : result;
 
-      return resultToHTTPResponse(finalResult, "application/vnd.api+json");
+      return resultToHTTPResponse(finalResult, APIController.JSON_API_MEDIA_TYPE);
     }
   }
 
@@ -620,7 +624,7 @@ export function defaultSortParamParser(
 ) {
   return getQueryParamValue("sort", rawQuery)
     .map(it => parseSort(it, sortOps))
-    .getOrDefault(undefined);
+    .getOrDefault(undefined); // tslint:disable-line
 }
 
 /**

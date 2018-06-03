@@ -47,37 +47,35 @@ fixtures.save("all", {
   ]
 });
 
-export default database.then(function() {
+export default database.then(() => {
   /**
    * Remove all fixtures data.
    * @returns Promise<void> Promise rejects if this fails.
    */
-  function fixturesRemoveAll() {
-    return new Promise<void>((resolve, reject) => {
-      fixtures.reset((err, res) => {
-        if(err) {
-          reject(err);
-        } else {
-          resolve(res);
-        }
-      })
-    });
+  async function fixturesRemoveAll() {
+    return promisify<void>(cb => fixtures.reset(cb));
   }
 
   return {
     fixturesRemoveAll,
-    fixturesReset() {
-      return fixturesRemoveAll().then(function() {
-        return new Promise<mongoose.Document[]>((resolve, reject) => {
-          fixtures("all", (err, res) => {
-            if(err) {
-              reject(err);
-            } else {
-              resolve(res);
-            }
-          })
-        });
-      });
+    async fixturesReset() {
+      return fixturesRemoveAll().then(async () =>
+        promisify<mongoose.Document[]>(cb => fixtures("all", cb))
+      );
     }
   };
 });
+
+type UnaryNodeStyleFunction<T> = (cb: (err: any, res: T) => void) => void;
+
+async function promisify<T>(fn: UnaryNodeStyleFunction<T>): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    fn((err, res) => {
+      if(err) {
+        reject(err);
+      } else {
+        resolve(res);
+      }
+    });
+  });
+}

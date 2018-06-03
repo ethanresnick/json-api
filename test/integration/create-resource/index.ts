@@ -10,15 +10,15 @@ import {
 
 describe("Creating Resources", () => {
   let Agent;
-  before(() => {
+  before(async () => {
     return AgentPromise.then((A) => { Agent = A; })
   });
 
   describe("Creating a Valid Resource (With an Extra Member)", () => {
     let createdResource, res;
     before(() => {
-      return Agent.request("POST", "/organizations")
-        .type("application/vnd.api+json")
+      // tslint:disable-next-line no-duplicate-string
+      return Agent.request("POST", "/organizations", { withContentType: true })
         .send({ "data": VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER, "extra": false })
         .then((response) => {
           res = response;
@@ -39,6 +39,7 @@ describe("Creating Resources", () => {
       });
     });
 
+    // tslint:disable-next-line no-duplicate-string
     describe("Document Structure", () => {
       // "A JSON object MUST be at the root of every
       // JSON API request and response containing data."
@@ -94,8 +95,7 @@ describe("Creating Resources", () => {
     before(() => {
       return Promise.all(
         clientIdObjects.map(data => {
-          return Agent.request("POST", "/organizations")
-            .type("application/vnd.api+json")
+          return Agent.request("POST", "/organizations", { withContentType: true })
             .send({ data })
             .then(
               (resp) => { throw new Error("Should not run"); },
@@ -121,8 +121,7 @@ describe("Creating Resources", () => {
   describe("Creating a Resource With a Missing Relationship Data Key", () => {
     let err;
     before(() => {
-      return Agent.request("POST", "/organizations")
-        .type("application/vnd.api+json")
+      return Agent.request("POST", "/organizations", { withContentType: true })
         .send({ data: INVALID_ORG_RESOURCE_NO_DATA_IN_RELATIONSHIP })
         .promise()
         .then(() => {

@@ -8,6 +8,9 @@
     // allow references to dev dependencies only from tests.
     "no-implicit-dependencies": [true, "dev"],
 
+    // this doesn't make sense in our context
+    "no-http-string": false,
+
     // (temporarily, at least) turn off a bunch of semi-naggy rules,
     // so we can actually get the build to pass with linting enabled
     // while focusing our attention on current linting errors that
@@ -19,6 +22,8 @@
     "no-console": false,
     "typeof-compare": false,
     "no-object-literal-type-assertion": false,
-    "no-inferred-empty-object-type": false
+    "no-inferred-empty-object-type": false,
+    "no-big-function": false,
+    "no-duplicate-string": false
   }
 }

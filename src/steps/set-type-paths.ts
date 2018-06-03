@@ -102,7 +102,7 @@ export default async function(
       );
     }
   }
-};
+}
 
 /**
  * Takes a resource or resource identifier object constructed from client input

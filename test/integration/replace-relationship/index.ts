@@ -13,7 +13,7 @@ import {
 
 describe("Replacing a relationship at a relationship endpoint", () => {
   let Agent;
-  before(() => {
+  before(async () => {
     return AgentPromise.then(A => {
       Agent = A;
     });

@@ -2,21 +2,21 @@ import chai = require("chai");
 import negotiate from "../../../../../src/steps/http/content-negotiation/negotiate-content-type";
 
 const { expect } = chai;
+const JSON_API_BASE_MEDIA_TYPE = "application/vnd.api+json";
+const HTML_MEDIA_TYPE = "text/html";
 
 describe("negotiateContentType", () => {
-  it("should use JSON API if clients correctly request it", (done) => {
-    const accept = "application/vnd.api+json";
-    negotiate(accept, ["application/vnd.api+json"])
+  it("should use JSON API if clients correctly request it", () => {
+    const accept = JSON_API_BASE_MEDIA_TYPE;
+    return negotiate(accept, [JSON_API_BASE_MEDIA_TYPE])
       .then(contentType => {
-        expect(contentType).to.equal("application/vnd.api+json");
-        done();
-      })
-      .catch(done);
+        expect(contentType).to.equal(JSON_API_BASE_MEDIA_TYPE);
+      });
   });
 
   it("should 406 if all json api parameter instances are parameterized, even if there's a valid alternative", (done) => {
     const accept = 'application/vnd.api+json; ext="ext2", application/json';
-    negotiate(accept, ["application/vnd.api+json"])
+    negotiate(accept, [JSON_API_BASE_MEDIA_TYPE])
       .then(done, err => {
         expect(err.status).to.equal("406");
         done();
@@ -24,59 +24,39 @@ describe("negotiateContentType", () => {
       .catch(done);
   });
 
-  it("should allow parameterized json api media ranges as long as not all are parameterized", (done) => {
+  it("should allow parameterized json api media ranges as long as not all are parameterized", () => {
     const accept =
       'application/vnd.api+json; ext="ext2",application/vnd.api+json';
 
-    negotiate(accept, ["application/vnd.api+json", "text/html"])
+    return negotiate(accept, [JSON_API_BASE_MEDIA_TYPE, HTML_MEDIA_TYPE])
       .then(contentType => {
-        if (contentType === "application/vnd.api+json") {
-          done();
-        } else {
-          done(new Error("Should have negotiated JSON API base type"));
-        }
-      })
-      .catch(done);
+        expect(contentType).to.equal(JSON_API_BASE_MEDIA_TYPE);
+      });
   });
 
-  it("should resolve with a non-json-api type when its the highest priority + supported by the endpoint", (done) => {
+  it("should resolve with a non-json-api type when its the highest priority + supported by the endpoint", () => {
     const accept = "text/html,application/vnd.api+json;q=0.5,application/json";
-    negotiate(accept, ["application/vnd.api+json", "text/html"])
+    return negotiate(accept, [JSON_API_BASE_MEDIA_TYPE, HTML_MEDIA_TYPE])
       .then(contentType => {
-        if (contentType === "text/html") {
-          done();
-        } else {
-          done(new Error("Expected HTML"));
-        }
-      })
-      .catch(done);
+        expect(contentType).to.equal(HTML_MEDIA_TYPE);
+      });
   });
 
-  it("should resolve with json-api type if that's the highest priority, even if the endpoint supports an alternative", (done) => {
+  it("should resolve with json-api type if that's the highest priority, even if the endpoint supports an alternative", () => {
     const accept = "application/vnd.api+json,application/json,text/*";
-    negotiate(accept, ["application/vnd.api+json", "text/html"])
+    return negotiate(accept, [JSON_API_BASE_MEDIA_TYPE, HTML_MEDIA_TYPE])
       .then(contentType => {
-        if (contentType === "application/vnd.api+json") {
-          done();
-        } else {
-          done(new Error("Expected Json API content type."));
-        }
-      })
-      .catch(done);
+        expect(contentType).to.equal(JSON_API_BASE_MEDIA_TYPE);
+      });
   });
 
-  it("should use json if client accepts only json", (done) => {
+  it("should use json if client accepts only json", () => {
     const accept =
       "text/html,application/xhtml+xml,application/json;q=0.9,**;q=0.8";
 
-    negotiate(accept, ["application/vnd.api+json"])
+    return negotiate(accept, [JSON_API_BASE_MEDIA_TYPE])
       .then(contentType => {
-        if (contentType === "application/json") {
-          done();
-        } else {
-          done(new Error("Expected JSON Content Type"));
-        }
-      })
-      .catch(done);
+        expect(contentType).to.eq("application/json");
+      });
   });
 });

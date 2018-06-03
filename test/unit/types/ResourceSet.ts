@@ -15,7 +15,7 @@ describe("ResourceSet type", () => {
     it.type = it.type + "here";
     return it;
   };
-  const asyncMapper = it => Promise.resolve(mapper(it));
+  const asyncMapper = async it => Promise.resolve(mapper(it));
 
   describe("map", () => {
     it("should return a ResourceSet instance", () => {
@@ -25,7 +25,7 @@ describe("ResourceSet type", () => {
 
   describe("mapAsync", () => {
     it("should produce a promise for the result of a normal map", () => {
-      return set2.mapAsync(asyncMapper).then(mapped => {
+      return set2.mapAsync(asyncMapper).then(async (mapped) => {
         expect(mapped).to.deep.equal(set2.map(mapper));
       });
     });

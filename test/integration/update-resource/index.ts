@@ -10,7 +10,7 @@ describe("Updating Resources", () => {
 
   describe("Updating a resource's attributes", () => {
     let res;
-    before(() => {
+    before(async () => {
       return Agent.request("PATCH", `/organizations/${VALID_ORG_VIRTUAL_PATCH.id}`)
         .type("application/vnd.api+json")
         .send({"data": VALID_ORG_VIRTUAL_PATCH })

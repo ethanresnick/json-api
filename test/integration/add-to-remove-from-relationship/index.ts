@@ -10,7 +10,7 @@ import {
 
 describe("Partially modifying a relationship at a relationship endpoint", () => {
   let Agent, relationshipEndpointUrl;
-  before(() => {
+  before(async () => {
     return AgentPromise.then(A => {
       Agent = A;
 
@@ -34,7 +34,7 @@ describe("Partially modifying a relationship at a relationship endpoint", () => 
       });
   };
 
-  const testRelationshipState = (expectedVal, url) => { //eslint-disable-line no-shadow
+  const testRelationshipState = (expectedVal, url) => {
     return Agent.request("GET", url)
       .accept("application/vnd.api+json")
       .then((res) => {
@@ -42,6 +42,7 @@ describe("Partially modifying a relationship at a relationship endpoint", () => 
       });
   };
 
+  // tslint:disable-next-line mocha-no-side-effect-code
   const duplicateLinkage = {
     ...VALID_ORG_RELATIONSHIP_PATCH,
     data: [
@@ -108,6 +109,7 @@ describe("Partially modifying a relationship at a relationship endpoint", () => 
     // hacking support for that onto the existing adapter interface, I'll implement
     // this when I clean up the general division of labor between the adapter
     // and the resource type descriptions.
+    // tslint:disable-next-line mocha-no-side-effect-code
     it.skip("should 405");
   });
 });

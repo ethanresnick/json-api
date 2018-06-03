@@ -21,7 +21,15 @@ describe("MongooseAdapter", () => {
   let adapter: PromiseResult<typeof appPromise>["adapter"];
   let Agent: PromiseResult<typeof agentPromise>;
 
-  before(() => {
+  const assertSettingInternalFieldsErrorResp = (e) => {
+    expect(e.status).to.equal(400);
+    expect([
+      "https://jsonapi.js.org/errors/illegal-field-name",
+      "https://jsonapi.js.org/errors/invalid-linkage-json"
+    ]).to.include(e.response.body.errors[0].code);
+  }
+
+  before(async () => {
     return Promise.all([agentPromise, appPromise]).then(([agent, app]) => {
       Agent = agent;
       adapter = app.adapter;
@@ -79,7 +87,7 @@ describe("MongooseAdapter", () => {
         });
     });
 
-    it("should support pagination with sorting by geoDistance", () => {
+    it("should support pagination with sorting by geoDistance", async () => {
       return Promise.all([
         Agent.request("GET", "/organizations?sort=(location,geoDistance,[-70,40])&page[limit]=1")
           .then(resp => {
@@ -98,7 +106,7 @@ describe("MongooseAdapter", () => {
       ]);
     });
 
-    it('should support mixing other filters with geoDistance sort', () => {
+    it('should support mixing other filters with geoDistance sort', async () => {
       return Agent.request("GET", "/organizations")
         .query("filter=(or,(name,`ELEMENTARY%20SCHOOL`),(name,`STATE%20GOVERNMENT`))")
         .query("sort=(location,geoDistance,[0,0])")
@@ -106,13 +114,13 @@ describe("MongooseAdapter", () => {
           // Should be one because the filter limits to two items, and then,
           // of those two items, ELEMENTARY SCHOOL is excluded for not having
           // a location field.
-          expect(resp.body.data.length).to.equal(1);
+          expect(resp.body.data.length).to.equal(1, "Expected one matching item");
           expect(resp.body.data[0].id).to.equal("54419d550a5069a2129ef254")
         });
     });
 
     describe("geoWithin", () => {
-      it('should support filtering docs within a given circle', () => {
+      it('should support filtering docs within a given circle', async () => {
         // 40,000 meters below = ~25 miles, whereas the distance between
         // [10.1,10.1] and our organization at [10,10] is only about 10 miles.
         return Promise.all([
@@ -244,13 +252,7 @@ describe("MongooseAdapter", () => {
           .send({ "data": { ...VALID_ORG_RESOURCE_NO_ID, ...spreadData } })
           .then((response) => {
             throw new Error("Should not run!");
-          }, (e) => {
-            expect(e.status).to.equal(400);
-            expect([
-              "https://jsonapi.js.org/errors/illegal-field-name",
-              "https://jsonapi.js.org/errors/invalid-linkage-json"
-            ]).to.include(e.response.body.errors[0].code);
-          });
+          }, assertSettingInternalFieldsErrorResp);
       }
 
       return Promise.all([
@@ -327,13 +329,7 @@ describe("MongooseAdapter", () => {
           })
           .then((response) => {
             throw new Error("Should not run!");
-          }, (e) => {
-            expect(e.status).to.equal(400);
-            expect([
-              "https://jsonapi.js.org/errors/illegal-field-name",
-              "https://jsonapi.js.org/errors/invalid-linkage-json"
-            ]).to.include(e.response.body.errors[0].code);
-          });
+          }, assertSettingInternalFieldsErrorResp);
       }
 
       return Promise.all([

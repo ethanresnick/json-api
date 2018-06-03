@@ -13,7 +13,7 @@ export function entries<T>(o: { [s: string]: T }): [string, T][] {
   return reduce(keys(o), (e: [string, any][], k: PropertyKey) => {
     return concat(e, typeof k === 'string' && isEnumerable(o, k) ? [[k, o[k]]] : [])
   }, []);
-};
+}
 
 /**
  * A polyfill for ES2017's Object.values
@@ -24,4 +24,4 @@ export function values<T>(o: { [key: string]: T }): T[] {
   return reduce(keys(o), (v: any[], k: PropertyKey) => {
     return concat(v, typeof k === 'string' && isEnumerable(o, k) ? [o[k]] : [])
   }, []);
-};
+}

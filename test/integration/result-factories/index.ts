@@ -5,7 +5,7 @@ import appPromise from "../../app/src/index";
 
 describe("Result factories", () => {
   let Agent;
-  before(() => {
+  before(async () => {
     return AgentPromise.then(A => {
       Agent = A;
     });

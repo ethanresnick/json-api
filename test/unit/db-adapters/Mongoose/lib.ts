@@ -130,7 +130,9 @@ describe("Mongoose Adapter private helper functions", () => {
   describe("toMongoCriteria", () => {
     describe("predicates", () => {
       it("should return empty objects for predicates with empty arguments", () => {
+        // tslint:disable-next-line no-useless-cast
         const or = { type: <"FieldExpression">"FieldExpression", args: [], operator: "or" };
+        // tslint:disable-next-line no-useless-cast
         const and = { type: <"FieldExpression">"FieldExpression", args: [], operator: "and" };
 
         expect(toMongoCriteria(or)).to.deep.equal({});

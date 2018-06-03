@@ -282,8 +282,12 @@ describe("Document class", () => {
       // tslint:disable-next-line no-shadowed-variable
       const hasMatchingCall = (calls: any[], args: any[]) => {
         return calls.findIndex((call) => {
-          try { expect(call.args).to.deep.equal(args); return true; }
-          catch(e) { return false; }
+          try {
+            expect(call.args).to.deep.equal(args);
+            return true;
+          } catch(e) {
+            return false;
+          }
         }) > -1;
       }
 

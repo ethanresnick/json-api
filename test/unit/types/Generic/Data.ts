@@ -87,11 +87,11 @@ describe("Data type", () => {
   describe("flatMapAsync", () => {
     it("should return a promise for the flatMap result", () => {
       return Promise.all([
-        (<any>b.flatMapAsync(twiceAsync)).then(mapped =>
-          expect((<any>mapped).value).to.deep.equal((<any>b.flatMap(twice)).value)),
+        (b.flatMapAsync(twiceAsync)).then(mapped =>
+          expect((mapped as any).value).to.deep.equal((b.flatMap(twice) as any).value)),
 
-        (<any>b.flatMapAsync(toEmptyAsync)).then(mapped =>
-          expect((<any>mapped).value).to.deep.equal((<any>b.flatMap(toEmpty)).value)),
+        (b.flatMapAsync(toEmptyAsync)).then(mapped =>
+          expect((mapped as any).value).to.deep.equal((b.flatMap(toEmpty) as any).value)),
       ]);
     });
   });

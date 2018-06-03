@@ -18,7 +18,7 @@ export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 export type PrimaryData = DataOf<Resource> | DataOf<ResourceIdentifier>;
 export type ErrorOrErrorArray = Error | APIError | (APIError | Error)[];
 export type DataWithLinksArgs<T> = {
-  data: T | T[] | null | Data<T>;
+  data: DataOf<T> | Data<T>;
   links?: UrlTemplates;
 };
 
@@ -93,6 +93,7 @@ export type AndExpression =
 
 export type Identifier = { type: "Identifier", value: string };
 
+// tslint:disable-next-line
 export type FieldExpression = ({
   operator: "or",
   args: FieldExpression[]
@@ -106,7 +107,7 @@ export type FieldExpression = ({
   operator: "in" | "nin";
   args: [Identifier, string[] | number[]]
 } | {
-  operator: 'lt' | 'gt' | 'lte' | 'gte';
+  operator: 'lt' | 'gt' | 'lte' | 'gte'; // tslint:disable-line
   args: [Identifier, string | number];
 } | {
   operator: string;
