@@ -282,59 +282,62 @@ export default class ResourceTypeRegistry {
   /**
    * Takes an list of types and checks if (were they appropriately reordered)
    * they would constitute a single path through the types tree. If the second
-   * argument is provided, that path must point to (a child of) parentType.
+   * argument is provided, that path must end at or pass through that type.
    * If these conditions hold, it returns the types path; else false.
+   * The list can't have extra elements.
    *
    * @param {string[]} typesList A list of type names.
    * @param {string?} throughType A type name that the path must be or go through.
    */
   asTypePath(typesList: string[], throughType?: string): false | string[] {
     const pathToThroughType = throughType ? this.typePathTo(throughType) : [];
-    const remainingTypes = typesList.slice();
+    const partialPath = [...pathToThroughType];
 
     if(!typesList.length) {
       return false;
     }
 
+    const typesNotOnPathToThroughType = typesList.slice();
     for(const type of pathToThroughType) {
-      const indexOfType = remainingTypes.indexOf(type);
+      const indexOfType = typesNotOnPathToThroughType.indexOf(type);
 
-      // If the typelist doesn't have an item in the path to the parent type,
-      // it can't be a path to that type or one of its children.
+      // If the typelist doesn't have an item in the path to the throughType,
+      // it can't be a path to that type or one of its children. Bail early.
       if(indexOfType === -1) {
         return false;
       }
 
-      remainingTypes.splice(indexOfType, 1);
+      typesNotOnPathToThroughType.splice(indexOfType, 1);
     }
 
-    // After we've checked that all the parent types are included in typesList,
-    // any remaining types must be child types of parentType.
-    const finalPath = [...pathToThroughType];
-    let currentTypeChildren = throughType
-      ? this.childTypeNames(throughType)
-      : this.rootTypeNames();
+    // This is a function we call recursively to do the main traversing step.
+    // It takes a partial type path, and some remaining types, and extends
+    // the type path recursively by breadth-first searching the type tree.
+    const completeTypePath = (remainingTypes, typePath) => {
+      if(!remainingTypes.length) {
+        return typePath;
+      }
 
-    while(remainingTypes.length && currentTypeChildren.length) {
-      let nextTypeFound = false;
+      const candidateChildren = typePath.length === 0
+        ? this.rootTypeNames()
+        : this.childTypeNames(typePath[0]);
 
-      for(const child of currentTypeChildren) {
-        const indexOfChild = remainingTypes.indexOf(child);
-        if(indexOfChild > -1) {
-          nextTypeFound = true;
-          remainingTypes.splice(indexOfChild, 1);
-          currentTypeChildren = this.childTypeNames(child);
-          finalPath.unshift(child);
-          break;
+      for(const child of candidateChildren) {
+        const indexOfType = remainingTypes.indexOf(child);
+        if(indexOfType > -1) {
+          return completeTypePath(
+            [...remainingTypes.slice(0, indexOfType), ...remainingTypes.slice(indexOfType + 1)],
+            [child, ...typePath]
+          );
         }
       }
 
-      if(!nextTypeFound) {
-        return false;
-      }
+      // Reached a dead end, in that we couldn't find any of our
+      // candidate types in remainingTypes.
+      return false;
     }
 
-    return remainingTypes.length ? false : finalPath;
+    return completeTypePath(typesNotOnPathToThroughType, partialPath);
   }
 
   private doGet<T extends keyof ResourceTypeDescription>(attrName: T, typeName: string): ResourceTypeDescription[T] | undefined {
