@@ -185,7 +185,7 @@ export default class ResourceTypeRegistry {
   }
 
   urlTemplates(): UrlTemplatesByType;
-  urlTemplates(type: string): UrlTemplates;
+  urlTemplates(type: string): UrlTemplates | undefined;
   urlTemplates(type?: string) {
     if(type) {
       return Maybe(this._types[type])
@@ -195,7 +195,8 @@ export default class ResourceTypeRegistry {
     }
 
     return Object.keys(this._types).reduce<UrlTemplatesByType>((prev, typeName) => {
-      prev[typeName] = this.urlTemplates(typeName);
+      //tslint:disable-next-line no-non-null-assertion
+      prev[typeName] = this.urlTemplates(typeName)!;
       return prev;
     }, {});
   }
