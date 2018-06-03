@@ -54,11 +54,11 @@ export default class MaybeDataWithLinks<T extends (Resource | ResourceIdentifier
     return this.delegateTransformToData("filter", arguments);
   }
 
-  mapAsync(fn: AsyncMapper<T, T>) {
+  async mapAsync(fn: AsyncMapper<T, T>) {
     return this.delegateTransformToDataAsync("mapAsync", arguments);
   }
 
-  flatMapAsync(fn: (it: T) => Data<T> | Promise<Data<T>>) {
+  async flatMapAsync(fn: (it: T) => Data<T> | Promise<Data<T>>) {
     return this.delegateTransformToDataAsync("flatMapAsync", arguments);
   }
 
@@ -131,11 +131,11 @@ export default class MaybeDataWithLinks<T extends (Resource | ResourceIdentifier
       : this;
   }
 
-  protected delegateTransformToDataAsync(methodName: DataAsyncMethods, args) {
+  protected async delegateTransformToDataAsync(methodName: DataAsyncMethods, args) {
     return this._data
       ? (this._data[methodName] as (...args: any[]) => Promise<Data<T>>)(...args)
           .then(newData => this.withNewData(newData))
-      : Promise.resolve(this)
+      : this;
   }
 
   protected withNewData(newData): this {

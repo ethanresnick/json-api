@@ -11,7 +11,7 @@ import RemoveFromRelationshipQuery from '../types/Query/RemoveFromRelationshipQu
 
 import { invalidQueryParamValue, unknownResourceType } from '../util/errors';
 
-export default function(
+export default async function(
   registry: ResourceTypeRegistry,
   query: Query
 ): Promise<QueryReturning> {

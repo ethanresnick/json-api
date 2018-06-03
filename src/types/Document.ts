@@ -185,8 +185,8 @@ export default class Document {
       ? flatMapper
       : async function (it: Resource, meta: TransformMeta): Promise<Data<Resource>> {
           const relationshipNames = Object.keys(it.relationships);
-          const flatMapperWithMeta = (it2: any) => flatMapper(it2, meta);
-          const newRelationshipPromises = relationshipNames.map(k =>
+          const flatMapperWithMeta = async (it2: any) => flatMapper(it2, meta);
+          const newRelationshipPromises = relationshipNames.map(async (k) =>
             it.relationships[k].flatMapAsync(flatMapperWithMeta)
           );
 
@@ -217,7 +217,7 @@ export default class Document {
       }
 
       // We have, and are transforming, linkage.
-      return res.primary.flatMapAsync((it2: any) => flatMapper(it2, primaryMeta));
+      return res.primary.flatMapAsync(async (it2: any) => flatMapper(it2, primaryMeta));
     })();
 
     if(res.included) {

@@ -15,22 +15,29 @@ import {
 } from "../../../src";
 
 describe("runQuery", () => {
-  const adapter = td.object(new MongooseAdapter({ }));
-  const registry = new ResourceTypeRegistry({
-    schools: {
-      pagination: {
-        defaultPageSize: 2,
-        maxPageSize: 4
+  let adapter, registry;
+  before(() => {
+    adapter = td.object(new MongooseAdapter({ }));
+    registry = new ResourceTypeRegistry({
+      schools: {
+        pagination: {
+          defaultPageSize: 2,
+          maxPageSize: 4
+        }
       }
-    }
-  }, {
-    dbAdapter: adapter
+    }, {
+      dbAdapter: adapter
+    });
   });
 
-  it("should reject queries of unknown type", () => {
+  it("should reject queries of unknown type", async () => {
     const findQuery = new FindQuery({ type: "unknown" } as any);
-    expect(() => runQuery(registry, findQuery)).to.throw(/Unknown resource type/);
-    td.verify(adapter.find(td.matchers.anything()), { times: 0 });
+    return runQuery(registry, findQuery).then(() => {
+      throw new Error("shouldn't run");
+    }, (e) => {
+      td.verify(adapter.find(td.matchers.anything()), { times: 0 });
+      expect(e.message).to.match(/Unknown resource type/);
+    });
   });
 
   it('should dispatch queries to the correct adapter method', async () => {

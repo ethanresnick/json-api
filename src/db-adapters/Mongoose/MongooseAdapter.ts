@@ -295,6 +295,9 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
         ((doc) => { doc._id = (this.idGenerator as Function)(doc); });
 
     const resourcesByParentType = partition('type', resourceData);
+
+    // Any errors thrown synchronously below will turn into rejections as `create` is async.
+    // tslint:disable-next-line promise-function-async
     const creationPromises = Object.keys(resourcesByParentType).map(type => {
       const model = this.getModel(type);
       const discriminatorKey = getDiscriminatorKey(model);
@@ -528,11 +531,18 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
 
     // Finally, we can delete all the docs,
     // calling .remove() to run the user's middleware.
-    docsToDelete.forEach(it => { it.remove(); });
-    return {
-      deleted:
-        docsToDelete.map(it => this.docToResource(it)) as Data<ReturnedResource>
-    };
+    const deletionPromises = docsToDelete.map(async (it) => it.remove()).values;
+
+    return Promise.all(deletionPromises)
+      .then((deletedDocs) => {
+        const docsData = docsToDelete.isSingular
+          ? Data.pure(deletedDocs[0])
+          : Data.of(deletedDocs);
+
+        return {
+          deleted: docsData.map(it => this.docToResource(it) as ReturnedResource)
+        };
+      });
   }
 
   /**

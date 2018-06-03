@@ -298,7 +298,6 @@ export default class APIController {
         // If we're dealing with an update, ensure all provided resources
         // to patch have `id` keys. This must be guaranteed before we use
         // setResourceTypesList and tell it to look up the type/id in the db.
-        // This is already ensured on bulk delete by basic linkage parsing rules.
         if(request.method === 'patch') {
           await validateRequestResourceIds(request.document.primary as ResourceSet);
         }
@@ -335,7 +334,7 @@ export default class APIController {
 
       // Apply beforeSave. Note: we arguably should be passing the
       // post-beforeSave primary data to the make query functions separately,
-      // rather than override the original primary and pass that. But the
+      // rather than override the original document and pass that. But the
       // make query functions are still looking for the transformed data at
       // request.document, so we do this for simplicity. TODO: Should we
       // create ResourceIdentifier's from URL params and transform those too?
@@ -399,7 +398,7 @@ export default class APIController {
    * yet (at least in the TS polyfill) at the point when this initializer runs.
    */
   public runQuery: (q: Query) => Promise<QueryReturning> =
-    (query) => runQuery(this.registry, query)
+    async (query) => runQuery(this.registry, query)
 
   /**
    * Makes the result the library will ultimately return.
@@ -505,7 +504,7 @@ export default class APIController {
         makeDocument: this.makeDoc, // tslint:disable-line no-unbound-method
         beforeSave,
         beforeRender,
-        transformDocument(doc: Document, modeOrFn: TransformMode | DocTransformFn<Transformable>) {
+        async transformDocument(doc: Document, modeOrFn: TransformMode | DocTransformFn<Transformable>) {
           const fn = modeOrFn === 'beforeSave'
             ? beforeSave
             : (modeOrFn === 'beforeRender' ? beforeRender : modeOrFn);
@@ -520,7 +519,7 @@ export default class APIController {
         runQuery: this.runQuery,  // tslint:disable-line no-unbound-method
         // Note: can't use R.partialRight below if we want requiredThroughType
         // to be optional for callers.
-        setTypePaths(
+        async setTypePaths(
           it: (Resource | ResourceIdentifier)[],
           useInputData: boolean,
           requiredThroughType?: string
