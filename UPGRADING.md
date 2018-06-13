@@ -1,3 +1,8 @@
+# 3.0.0-rc.4.0.2 (Unpublished)
+## Breaking Changes
+- Remove long-deprecated signature for `ExpressStrategy.sendResult`. If you're
+  a TS user and your code still compiles, this doesn't effect you.
+
 # 3.0.0-rc.4.0.1
 - More accurate types, especially: replacing `Query` with a `RunnableQuery` union type in various signatures. This may cause small breakage for Typescript users. 
  
