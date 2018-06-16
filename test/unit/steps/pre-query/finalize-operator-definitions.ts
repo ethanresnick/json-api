@@ -3,10 +3,11 @@ import { finalizeFilterFieldExprArgs as sut } from '../../../../src/steps/pre-qu
 import { FieldExpression, Identifier } from '../../../../src/steps/pre-query/parse-query-params';
 
 const dummyConfig = {
-  or: { isBinary: false, finalizeArgs: sut },
-  and: { isBinary: false, finalizeArgs: sut },
-  binary: { isBinary: true, finalizeArgs: sut },
-  nary: { isBinary: false, finalizeArgs: sut }
+  or: { arity: Infinity, finalizeArgs: sut },
+  and: { arity: Infinity, finalizeArgs: sut },
+  binary: { arity: 2, finalizeArgs: sut },
+  nary: { arity: Infinity, finalizeArgs: sut },
+  trinary: { arity: 3, finalizeArgs: sut }
 };
 
 describe("finalizeFilterFieldExprArgs", () => {
@@ -49,7 +50,16 @@ describe("finalizeFilterFieldExprArgs", () => {
       invalidArgs.forEach(invalidArgSet => {
         expect(() => sut(dummyConfig, "binary", invalidArgSet))
           .to.throw(/identifier not allowed in second argument/i);
-      })
-    })
+      });
+    });
+  });
+
+  describe("fixed arity operators", () => {
+    it("should validate their arity", () => {
+      const invalidArgs = [Identifier("test"), 3];
+      const validArgs = [3, Identifier("test"), 3];
+      expect(() => sut(dummyConfig, "trinary", invalidArgs)).to.throw(/exactly 3 arguments/);
+      expect(sut(dummyConfig, "trinary", validArgs)).to.deep.equal(validArgs);
+    });
   });
 });

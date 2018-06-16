@@ -105,7 +105,7 @@ export default database.then(function(dbModule) {
     supportedOperators: {
       ...adapter.constructor.supportedOperators,
       customOp: {
-        isBinary: true,
+        arity: 2,
         legalIn: ["sort"]
       }
     },
