@@ -1,7 +1,9 @@
-# 3.0.0-rc.4.0.2 (Unpublished)
+# 3.0.0-rc.5
 ## Breaking Changes
-- Remove long-deprecated signature for `ExpressStrategy.sendResult`. If you're
-  a TS user and your code still compiles, this doesn't effect you.
+- The format for specifying/configuring custom operators has changed slightly. Whereas operators previously defined themselves with an `isBinary` boolean field, they must now provide an `arity` field, which holds a finite number (0, 1, 2, etc.) or `Infinity`. If you were defining custom operators, or reading the user-defined operators in a custom parser, update your code accordingly. The update is very mechanical: wherever you were reading `operator.isBinary` before, you can replace it with `operator.arity === 2`.
+
+- Remove long-deprecated signature for `ExpressStrategy.sendResult`. If you're a TS user and your code still compiles, this doesn't effect you.
+
 
 # 3.0.0-rc.4.0.1
 - More accurate types, especially: replacing `Query` with a `RunnableQuery` union type in various signatures. This may cause small breakage for Typescript users. 
