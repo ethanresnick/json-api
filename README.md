@@ -102,7 +102,7 @@ This library supports filtering out of the box, using a syntax that's designed t
 
 For example, to include only items where the zip code is either 90210 or 10012, you'd write: 
 
-`?filter=(zip,in,[90210,10012])`. 
+`?filter=(zip,:in,[90210,10012])`. 
 
 By contrast, with the square-bracket syntax, you'd have to write something like: 
 
@@ -111,32 +111,32 @@ By contrast, with the square-bracket syntax, you'd have to write something like:
 Also, the square-bracket syntax can't represent empty arrays or distinguish between non-string literals (e.g. `true`) and strings, while this library's format can. See details below.
 
 ### Formatting filtering constraints
-In this library's default format, the value of the `filter` parameter is one or more "filter constraints" listed next to each other. These constraints narrow the results to only include those that match. The format of a filter constraint is: `(fieldName,operator,value)`. For example:
+In this library's default format, the value of the `filter` parameter is one or more "filter constraints" listed next to each other. These constraints narrow the results to only include those that match. The format of a filter constraint is: `(fieldName,:operator,value)`. For example:
 
-- ``(name,eq,`Bob`)``: only include items where the name equals "Bob"
-- `(salary,gte,150000)`: only include items where the salary is greater than or equal to 150,000.
+- ``(name,:eq,`Bob`)``: only include items where the name equals "Bob"
+- `(salary,:gte,150000)`: only include items where the salary is greater than or equal to 150,000.
 
 The value can be a number, `null`, `true`, or `false`, or a backtick-delimited string (like `` `Bob` ``). To define a list of values, surround the values in square brackets and separate them with commas (e.g. `[90210,10012]` is a list of values used with the `in` operator above).
 
 The valid operators (for the buit-in Mongoose adapter) are: `eq`, `neq`, `in`, `nin`, `lt`, `gt`, `lte`, and `gte`.
 
-If you have multiple constraints, you can choose whether to combine them with an `AND` or an `OR`. To do that, instead of providing three items in your field constraint (i.e., the field name, operator, and value), provide `and` or `or`, followed by the applicable constraints. E.g.:
+If you have multiple constraints, you can choose whether to combine them with an `AND` or an `OR`. To do that, instead of providing three items in your field constraint (i.e., the field name, operator, and value), provide `and` or `or` as the opertor, followed by the applicable constraints. E.g.:
 
-``GET /people?filter=(or,(name,eq,`Bob`),(zip,eq,90210))``
+``GET /people?filter=(:or,(name,:eq,`Bob`),(zip,:eq,90210))``
 
 Will find all the people who are named Bob or who live in the 90210 zip code.
 
 Filter constraints listed next to each other at the top-level are combined with an "AND". E.g., ``GET /people?filter=(name,`Bob`)(zip,90210)`` will give only the people named Bob who live in the 90210 zip code.
 
-In the `` (name,`Bob`) `` constraint above, the `eq` operator has been omitted. This is a shorthand. As long as the field name is not `and` or `or`, you can omit the operator, and the `eq` operator will be inferred. E.g. ``(name,`Bob`)`` expresses the same constraint as ``(name,eq,`Bob`)``. 
+The `` (name,`Bob`) `` constraint above is euivlent to ``(name,:eq,`Bob`)``. This is a shorthand. Whenever you don't provide an operator, `eq` will be inferred. 
 
 Putting it all together, you could do:
 
-``GET /people?filter=(or,(email,`test@example.com`),(name,`Test`))(dob,gte,1963)``
+``GET /people?filter=(:or,(email,`test@example.com`),(name,`Test`))(dob,:gte,1963)``
 
 This will find everyone born after 1963 who also has either the name "Test" or the email "test@example.com".
 
-Note: your API can use a totally different filter query parameter format if you so desire, by providing a custom parser (see the API Controller's constructor for details). Also, each adapter support for a custom set of operators.
+Note: your API can use a totally different filter query parameter format if you so desire, by providing a custom parser (see [example](https://github.com/ethanresnick/json-api/issues/172#issuecomment-397870535)). Also, each adapter can indicate support for a custom set of operators.
 
 ### On URL Encoding
 When sending filter constraints, make sure you don't URL encode characters that the syntax above uses as delimiters (namely, commas, parentheses, backticks, square brackets, and the exclamation point), unless you mean for these characters to be interpreted as part of your data (e.g., part of a field name or value) rather than as a separator.

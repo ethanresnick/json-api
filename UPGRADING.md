@@ -1,3 +1,7 @@
+# 3.0.0-rc.6
+# Breaking Changes
+- Operators in field expressions/filter constraints (in both the `?sort` and `?filter` parameters) must now be prefixed with a colon. More details here: https://github.com/ethanresnick/json-api/issues/172#issuecomment-397870535
+
 # 3.0.0-rc.5
 ## Breaking Changes
 - The format for specifying/configuring custom operators has changed slightly. Whereas operators previously defined themselves with an `isBinary` boolean field, they must now provide an `arity` field, which holds a finite number (0, 1, 2, etc.) or `Infinity`. If you were defining custom operators, or reading the user-defined operators in a custom parser, update your code accordingly. The update is very mechanical: wherever you were reading `operator.isBinary` before, you can replace it with `operator.arity === 2`.

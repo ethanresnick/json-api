@@ -40,7 +40,7 @@ describe("MongooseAdapter", () => {
 
     it("should support sorting by valid geoDistance, iff no other sorts are provided", () => {
       return Promise.all([
-        Agent.request("GET", "/organizations?sort=(location,geoDistance,[-70,40])")
+        Agent.request("GET", "/organizations?sort=(:geoDistance,location,[-70,40])")
           .then(resp => {
             const resources = resp.body.data;
             const stateGovIndex = resources.findIndex(it => it.id === "54419d550a5069a2129ef254");
@@ -48,7 +48,7 @@ describe("MongooseAdapter", () => {
 
             expect(stateGovIndex < echoOrgIndex).to.be.true;
           }),
-        Agent.request("GET", "/organizations?sort=(location,geoDistance,[0,0])")
+        Agent.request("GET", "/organizations?sort=(:geoDistance,location,[0,0])")
           .then(resp => {
             const resources = resp.body.data;
             const stateGovIndex = resources.findIndex(it => it.id === "54419d550a5069a2129ef254");
@@ -56,7 +56,7 @@ describe("MongooseAdapter", () => {
 
             expect(echoOrgIndex < stateGovIndex).to.be.true;
           }),
-        Agent.request("GET", "/organizations?sort=name,(location,geoDistance,[0,0])")
+        Agent.request("GET", "/organizations?sort=name,(:geoDistance,location,[0,0])")
           .catch(e => {
             expect(e.response.status).to.equal(400);
             expect(e.response.body.errors[0].detail).to.equal("Cannot combine geoDistance sorts with other sorts.")
@@ -71,7 +71,7 @@ describe("MongooseAdapter", () => {
     // geoDistance can actually change the results returned -- and, in that sense,
     // it isn't really a pure sort at all. This may change in a major version bump.
     it("should exclude documents with no geo field when \"sorting\" by distance", () => {
-      return Agent.request("GET", "/organizations?sort=(location,geoDistance,[-70,40])")
+      return Agent.request("GET", "/organizations?sort=(:geoDistance,location,[-70,40])")
         .then(resp => {
           expect(
             resp.body.data.filter(it => it.id === "59af14d3bbd18cd55ea08ea3")
@@ -81,14 +81,14 @@ describe("MongooseAdapter", () => {
 
     it("should support pagination with sorting by geoDistance", () => {
       return Promise.all([
-        Agent.request("GET", "/organizations?sort=(location,geoDistance,[-70,40])&page[limit]=1")
+        Agent.request("GET", "/organizations?sort=(location,:geoDistance,[-70,40])&page[limit]=1")
           .then(resp => {
             const resources = resp.body.data;
             expect(resources.length).to.equal(1);
             expect(resources[0].id).to.equal("54419d550a5069a2129ef254");
           }),
         Agent.request("GET", "/organizations")
-          .query("sort=(location,geoDistance,[-70,40])")
+          .query("sort=(location,:geoDistance,[-70,40])")
           .query("page[limit]=1&page[offset]=1")
           .then(resp => {
             const resources = resp.body.data;
@@ -100,8 +100,8 @@ describe("MongooseAdapter", () => {
 
     it('should support mixing other filters with geoDistance sort', () => {
       return Agent.request("GET", "/organizations")
-        .query("filter=(or,(name,`ELEMENTARY%20SCHOOL`),(name,`STATE%20GOVERNMENT`))")
-        .query("sort=(location,geoDistance,[0,0])")
+        .query("filter=(:or,(name,`ELEMENTARY%20SCHOOL`),(name,`STATE%20GOVERNMENT`))")
+        .query("sort=(location,:geoDistance,[0,0])")
         .then(resp => {
           // Should be one because the filter limits to two items, and then,
           // of those two items, ELEMENTARY SCHOOL is excluded for not having
@@ -117,7 +117,7 @@ describe("MongooseAdapter", () => {
         // [10.1,10.1] and our organization at [10,10] is only about 10 miles.
         return Promise.all([
           Agent.request("GET", "/organizations")
-            .query("filter=(location,geoWithin,([10.1,10.1],toGeoCircle,40000))")
+            .query("filter=(location,:geoWithin,([10.1,10.1],:toGeoCircle,40000))")
             .then(resp => {
               expect(resp.body.data.length).to.equal(1);
               expect(resp.body.data[0].id).to.equal("59ac9c0ecc4c356fcda65202")
@@ -125,8 +125,8 @@ describe("MongooseAdapter", () => {
 
           // This should just be enough to capture [10,10] and [-73.9667, 40.78]
           Agent.request("GET", "/organizations")
-            .query("filter=(location,geoWithin,([-32,25],toGeoCircle,4800000))")
-            .query("sort=(location,geoDistance,[0,0])")
+            .query("filter=(location,:geoWithin,([-32,25],:toGeoCircle,4800000))")
+            .query("sort=(location,:geoDistance,[0,0])")
             .then(resp => {
               expect(resp.body.data.length).to.equal(2);
               expect(resp.body.data[0].id).to.equal("59ac9c0ecc4c356fcda65202");
@@ -136,8 +136,8 @@ describe("MongooseAdapter", () => {
           // Same as above, except we change the sort,
           // to verify that they're interacting properly.
           Agent.request("GET", "/organizations")
-            .query("filter=(location,geoWithin,([-32,25],toGeoCircle,4800000))")
-            .query("sort=(location,geoDistance,[-60,30])")
+            .query("filter=(location,:geoWithin,([-32,25],:toGeoCircle,4800000))")
+            .query("sort=(location,:geoDistance,[-60,30])")
             .then(resp => {
               expect(resp.body.data.length).to.equal(2);
               expect(resp.body.data[0].id).to.equal("54419d550a5069a2129ef254");
@@ -146,8 +146,8 @@ describe("MongooseAdapter", () => {
 
           // This should capture [-73.9667, 40.78], but not quite [10,10]
           Agent.request("GET", "/organizations")
-            .query("filter=(location,geoWithin,([-32,25],toGeoCircle,4500000))")
-            .query("sort=(location,geoDistance,[0,0])")
+            .query("filter=(location,:geoWithin,([-32,25],:toGeoCircle,4500000))")
+            .query("sort=(location,:geoDistance,[0,0])")
             .then(resp => {
               expect(resp.body.data.length).to.equal(1);
               expect(resp.body.data[0].id).to.equal("54419d550a5069a2129ef254")
@@ -161,10 +161,10 @@ describe("MongooseAdapter", () => {
           it.code === "https://jsonapi.js.org/errors/invalid-query-param-value";
 
         return Promise.all([
-          Agent.request("GET", "/organizations?sort=([0,0],toGeoCircle,4)")
+          Agent.request("GET", "/organizations?sort=([0,0],:toGeoCircle,4)")
             .ok(it => it.badRequest && it.body.errors.some(isInvalidSortError)),
 
-          Agent.request("GET", "/organizations?sort=(geoWithin,location,([0,0],toGeoCircle,4))")
+          Agent.request("GET", "/organizations?sort=(:geoWithin,location,([0,0],:toGeoCircle,4))")
             .ok(it => it.badRequest && it.body.errors.some(isInvalidSortError))
         ]);
       });
@@ -174,10 +174,10 @@ describe("MongooseAdapter", () => {
           it.title.includes("only have toGeoCircle inside of a geoWithin");
 
         return Promise.all([
-          Agent.request("GET", "/organizations?filter=(and,([0,0],toGeoCircle,4))")
+          Agent.request("GET", "/organizations?filter=(:and,([0,0],:toGeoCircle,4))")
             .ok(it => it.badRequest && isInvalidtoGeoCircleError(it.body.errors[0])),
 
-          Agent.request("GET", "/organizations?filter=([0,0],toGeoCircle,4)")
+          Agent.request("GET", "/organizations?filter=([0,0],:toGeoCircle,4)")
             .ok(it => it.badRequest && isInvalidtoGeoCircleError(it.body.errors[0]))
         ]);
       });

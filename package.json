@@ -37,7 +37,7 @@
     "instrument": true
   },
   "dependencies": {
-    "@json-api/query-parser": "^2.0.1",
+    "@json-api/query-parser": "^3.1.0",
     "@types/debug": "0.0.29",
     "@types/depd": "^1.1.32",
     "@types/express": "^4.16.0",
