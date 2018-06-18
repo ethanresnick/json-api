@@ -2,7 +2,7 @@ import R = require("ramda");
 import {
   parseFilter as underlyingFilterParser,
   parseSort as underlyingSortParser
-} from '@json-api/query-parser';
+} from '@json-api/querystring';
 import * as Errors from '../../util/errors';
 import { isValidMemberName } from "../../util/json-api";
 import {
