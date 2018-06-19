@@ -24,6 +24,10 @@
     "no-object-literal-type-assertion": false,
     "no-inferred-empty-object-type": false,
     "no-big-function": false,
-    "no-duplicate-string": false
+    "no-duplicate-string": false,
+
+    // these should really be re-enabled
+    "chai-vague-errors": false,
+    "promise-function-async": false
   }
 }
