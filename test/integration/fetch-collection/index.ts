@@ -218,7 +218,7 @@ describe("Fetching Collection", () => {
   describe("Filtering", () => {
     it("should support simple equality filters", () => {
       return Agent.request("GET", "/people")
-        .query("filter=(name,eq,`Doug Wilson`)")
+        .query("filter=(name,:eq,`Doug Wilson`)")
         .accept("application/vnd.api+json")
         .then((res) => {
           expect(res.body.data).to.have.length(1);
@@ -250,14 +250,14 @@ describe("Fetching Collection", () => {
 
     it("should give a nice error on invalid filter syntax/values", () => {
       const invalidFilterStringsToErrorRegexs = {
-        "filter=(id,n,`54419d550a5069a2129ef254`)": /valid operator symbol/i,
-        "filter=(id,neq,`54419d550a5069a2129ef254`,x)": /exactly three items/i,
+        "filter=(id,:n,`54419d550a5069a2129ef254`)": /"n" .+ recognized operator/i,
+        "filter=(id,:neq,`54419d550a5069a2129ef254`,x)": /Expected field expression/i,
         "filter=(4,4)": /field reference/i,
         "filter=true": /Expected field expression/i,
-        "filter=(and,(true))": /valid operator symbol/i,
-        "filter=(and,((true:false)))": /Expected field expression but \"\(\" found/,
+        "filter=(:and,true)": /expects its arguments to be field expressions/i,
+        "filter=(:and,((true:false)))": /Expected field expression but \"\(\" found/,
         "filter=(()": /Expected field expression but \"\(\" found/,
-        "filter=(and,(eq))": /must be infixed/ // should be deep validating exps.
+        "filter=(:and,(:eq,test))": /exactly 2 arguments/ // should be deep validating exps.
       };
 
       return Promise.all(

@@ -1,5 +1,4 @@
 import varyLib = require("vary");
-import depd = require("depd");
 import url = require("url");
 import R = require("ramda");
 import logger from "../util/logger";
@@ -15,7 +14,6 @@ import {
   Request, Response, NextFunction,
   RequestHandler, ErrorRequestHandler
 } from "express";
-const deprecate = depd("json-api");
 
 /**
  * This controller receives requests directly from express and sends responses
@@ -180,11 +178,6 @@ export default class ExpressStrategy extends Base {
    * @param {Object} res Express's response object
    */
   sendError: ErrorRequestHandler = async (errors: ErrorOrErrorArray, req, res, next) => {
-    if(!next) {
-      deprecate("sendError with 3 arguments: must now provide next function.");
-      next = (err: any) => {}; // tslint:disable-line no-empty no-parameter-reassignment
-    }
-
     try {
       const responseObj = await API.responseFromError(errors, req.headers.accept);
       this.sendResponse(responseObj, res, next)

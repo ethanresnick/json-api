@@ -2,7 +2,7 @@ import R = require("ramda");
 import {
   parseFilter as underlyingFilterParser,
   parseSort as underlyingSortParser
-} from '@json-api/query-parser';
+} from '@json-api/querystring';
 import * as Errors from '../../util/errors';
 import { isValidMemberName } from "../../util/json-api";
 import {
@@ -118,7 +118,7 @@ export function parseSort(
 export function parseFilter(
   rawFilterString: string,
   filterOperators: ParserOperatorsConfig
-) {
+): FieldExprType[] {
   // Our default parser falls back to eq operator
   // for two item field expressions, so it must be supported
   // (but only if we have a filter query string).
@@ -126,5 +126,5 @@ export function parseFilter(
     throw new Error("Must support eq operator on filters");
   }
 
-  return underlyingFilterParser(filterOperators, rawFilterString)
+  return underlyingFilterParser(filterOperators, rawFilterString);
 }

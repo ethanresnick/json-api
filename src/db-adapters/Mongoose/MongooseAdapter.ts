@@ -955,7 +955,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     // Operators that other adapters really might not support, for which
     // the library doesn't have built-in arg validation logic.
     'geoDistance': {
-      isBinary: true,
+      arity: 2,
       // geoDistance produces a number not a bool,
       // so it's used for sorting and not filtering
       legalIn: ["sort"],
@@ -976,7 +976,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       }
     },
     'geoWithin': {
-      isBinary: true,
+      arity: 2,
       legalIn: ["filter"],
       finalizeArgs(operators, operator, args) {
         if(!isIdentifier(args[0])) {
@@ -1012,7 +1012,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
      * can't validate that here. Instead, it's validated in toMongoCriteria.
      */
     'toGeoCircle': {
-      isBinary: true,
+      arity: 2,
       legalIn: ["filter"],
       finalizeArgs(operators, operator, args) {
         if(!isPoint(args[0])) {

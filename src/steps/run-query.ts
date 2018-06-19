@@ -1,20 +1,34 @@
 import ResourceTypeRegistry from '../ResourceTypeRegistry';
-import { QueryReturning } from '../db-adapters/AdapterInterface';
+import {
+  FindReturning, CreationReturning, UpdateReturning, DeletionReturning,
+  RelationshipUpdateReturning
+} from '../db-adapters/AdapterInterface';
 
 import Query from '../types/Query/Query';
-import CreateQuery from '../types/Query/CreateQuery';
 import FindQuery from '../types/Query/FindQuery';
-import DeleteQuery from '../types/Query/DeleteQuery';
+import CreateQuery from '../types/Query/CreateQuery';
 import UpdateQuery from '../types/Query/UpdateQuery';
+import DeleteQuery from '../types/Query/DeleteQuery';
 import AddToRelationshipQuery from '../types/Query/AddToRelationshipQuery';
 import RemoveFromRelationshipQuery from '../types/Query/RemoveFromRelationshipQuery';
 
 import { invalidQueryParamValue, unknownResourceType } from '../util/errors';
 
-export default async function(
-  registry: ResourceTypeRegistry,
-  query: Query
-): Promise<QueryReturning> {
+export type RunnableQuery =
+  | FindQuery | CreateQuery | UpdateQuery | DeleteQuery
+  | AddToRelationshipQuery | RemoveFromRelationshipQuery;
+
+// Build this crazy map of query types to their return types, rather than just
+// using function overload signatures below, so we can reuse it in the API controller.
+export type QueryReturning<T extends RunnableQuery> =
+  T extends FindQuery ? FindReturning :
+    (T extends CreateQuery ? CreationReturning :
+      (T extends UpdateQuery ? UpdateReturning :
+        (T extends DeleteQuery ? DeletionReturning :
+          (T extends AddToRelationshipQuery ? RelationshipUpdateReturning :
+            (T extends RemoveFromRelationshipQuery ? RelationshipUpdateReturning : never)))));
+
+export default async function <T extends RunnableQuery>(registry: ResourceTypeRegistry, query: T): Promise<QueryReturning<T>> {
   const typeDesc = registry.type(query.type);
 
   // If the type in the query hasn't been registered,

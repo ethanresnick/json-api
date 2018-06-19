@@ -21,21 +21,27 @@ describe("Request finalization", () => {
     return Promise.all([
       // This is valid, so expect 200
       Agent.request("GET", "/request-specific-operators-test")
-        .query("sort=(field,customOp,true)"),
+        .query("sort=(field,:customOp,true)"),
 
       // This is valid (we're just combining custom ops with normal ops)
       Agent.request("GET", "/request-specific-operators-test")
-        .query("sort=(field,customOp,true)&filter=(salary,gte,42)"),
+        .query("sort=(field,:customOp,true)&filter=(salary,:gte,42)"),
 
       // This is invalid, because we said customOp is binary
       Agent.request("GET", "/request-specific-operators-test")
-        .query("sort=(customOp,field,true)")
-        .ok(it => it.status === 400),
+        .query("sort=(:customOp,field)")
+        .ok(it => {
+          return it.status === 400 &&
+            it.body.errors[0].detail.match(/\"customOp\".+ 2 arguments; got 1/);
+        }),
 
       // This is invalid, because we said customOp is only usable in sorts
       Agent.request("GET", "/request-specific-operators-test")
-        .query("filter=(customOp,field,true)")
-        .ok(it => it.status === 400)
+        .query("filter=(:customOp,field,true)")
+        .ok(it => {
+          return it.status === 400 &&
+            it.body.errors[0].detail.match(/\"customOp\" .+ recognized operator/);
+        })
     ]).catch(logAndRethrow);
   });
 });

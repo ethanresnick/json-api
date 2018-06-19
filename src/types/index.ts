@@ -68,16 +68,16 @@ export type FinalizeArgs = (
 
 export type OperatorDesc = {
   legalIn?: ("sort" | "filter")[];
-  isBinary?: boolean;
+  arity?: number;
   finalizeArgs?: FinalizeArgs;
 };
 
 // An operator descriptor after we've applied any defaults
-// to set isBinary, finalizeArgs, and legalIn.
+// to set arity, finalizeArgs, and legalIn.
 export type FinalizedOperatorDesc = Required<OperatorDesc>;
 
 // The type each adapter must provide.
-// Map from operatorName to { isBinary, finalizeArgs, legalIn } object.
+// Map from operatorName to { arity, finalizeArgs, legalIn } object.
 export type SupportedOperators = StrictDictMap<OperatorDesc>;
 
 // The adapter-provided info about supported operators, post finalization.

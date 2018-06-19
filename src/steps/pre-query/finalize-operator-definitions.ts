@@ -10,14 +10,14 @@ export function finalizeOperatorConfig(
   operatorName: string,
   operatorConfig: OperatorDesc
 ): FinalizedOperatorDesc {
-  // Set defaults for legalIn, isBinary, and finalizeArgs on every operator.
+  // Set defaults for legalIn, arity, and finalizeArgs on every operator.
   const {
     legalIn = ["filter"] as "filter"[],
-    isBinary = assumedBinaryOps.includes(operatorName),
+    arity = assumedBinaryOps.includes(operatorName) ? 2 : Infinity,
     finalizeArgs = finalizeFilterFieldExprArgs
   } = operatorConfig;
 
-  return { ...operatorConfig, legalIn, isBinary, finalizeArgs };
+  return { ...operatorConfig, legalIn, arity, finalizeArgs };
 }
 
 export default R.partial(finalizeOperatorConfig, [ASSUMED_BINARY_OPERATORS]);
@@ -54,7 +54,7 @@ export function finalizeFilterFieldExprArgs(
   // Note: this function gets run only on known operators (it's part of their
   // config, as `finalizeArgs`), so we can have the non-null assertion below.
   // tslint:disable-next-line no-non-null-assertion
-  else if(conf[operator]!.isBinary) {
+  else if(conf[operator]!.arity === 2) {
     if(!isId(args[0])) {
       throw new SyntaxError(
         `"${operator}" operator expects field reference as first argument.`
@@ -68,6 +68,14 @@ export function finalizeFilterFieldExprArgs(
         `Identifier not allowed in second argument to "${operator}" operator.`
       );
     }
+  }
+
+  // tslint:disable-next-line no-non-null-assertion
+  else if(conf[operator]!.arity !== Infinity && args.length !== conf[operator]!.arity) {
+    throw new SyntaxError(
+      // tslint:disable-next-line no-non-null-assertion
+      `"${operator}" operator expects exactly ${conf[operator]!.arity} arguments; got ${args.length}.`
+    );
   }
 
   return args;

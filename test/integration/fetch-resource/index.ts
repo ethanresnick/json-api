@@ -70,7 +70,7 @@ describe("Fetching Resources", () => {
           }),
 
         Agent.request("GET", "/organizations/54419d550a5069a2129ef254")
-          .query("filter=(id,in,[`59af14d3bbd18cd55ea08ea3`,`54419d550a5069a2129ef254`])")
+          .query("filter=(id,:in,[`59af14d3bbd18cd55ea08ea3`,`54419d550a5069a2129ef254`])")
           .accept("application/vnd.api+json")
           .then((res) => {
             expect(res.body.data.id).to.equal("54419d550a5069a2129ef254");

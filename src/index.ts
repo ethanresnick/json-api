@@ -45,6 +45,7 @@ import {
 
 // Export types for typescript
 export { TransformFn } from "./steps/make-transform-fn";
+export { RunnableQuery, QueryReturning } from "./steps/run-query";
 export {
   FinalizedRequest as Request, Result, HTTPResponse, AndExpression, Sort,
   SortDirection, ExpressionSort, FieldSort, FieldExpression as FieldExpressionType
