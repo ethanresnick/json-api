@@ -8,8 +8,9 @@
     // allow references to dev dependencies only from tests.
     "no-implicit-dependencies": [true, "dev"],
 
-    // this doesn't make sense in our context
+    // this doesn't make sense/is overkill in our context
     "no-http-string": false,
+    "insecure-random": false,
 
     // (temporarily, at least) turn off a bunch of semi-naggy rules,
     // so we can actually get the build to pass with linting enabled
