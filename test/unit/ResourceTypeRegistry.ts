@@ -240,14 +240,17 @@ describe("ResourceTypeRegistry", function() {
   });
 
   describe("type tree functions", () => {
-    const registry = new ResourceTypeRegistry({
-      "kindergartens": { "parentType": "schools" },
-      "schools": { "parentType": "organizations" },
-      "organizations": {},
-      "people": {},
-      "law-schools": { parentType: "schools" }
-    }, {
-      dbAdapter: minimalDummyAdapter
+    let registry: ResourceTypeRegistry;
+    before(() => {
+      registry = new ResourceTypeRegistry({
+        "kindergartens": { "parentType": "schools" },
+        "schools": { "parentType": "organizations" },
+        "organizations": {},
+        "people": {},
+        "law-schools": { parentType: "schools" }
+      }, {
+        dbAdapter: minimalDummyAdapter
+      });
     });
 
     describe("parentTypeName", () => {
@@ -278,33 +281,41 @@ describe("ResourceTypeRegistry", function() {
     });
 
     describe("asTypePath", () => {
-      const sut = registry.asTypePath.bind(registry);
-      const validPaths = [
-        { path: ["people"] },
-        { path: ["organizations", "schools"], ordered: ["schools", "organizations"]  },
+      type TestPath = { path: string[] };
+      let sut: ResourceTypeRegistry["asTypePath"]
+        , validPaths: Array<TestPath & { ordered?: string[]}>
+        , invalidPaths: TestPath[];
 
-        // order doesn't matter
-        { path: ["schools", "organizations"] },
+      before(() => {
+        sut = registry.asTypePath.bind(registry);
 
-        { path: ["kindergartens", "organizations", "schools"],
-          ordered: ["kindergartens", "schools", "organizations"] },
+        validPaths = [
+          { path: ["people"] },
+          { path: ["organizations", "schools"], ordered: ["schools", "organizations"]  },
 
-        { path: ["law-schools", "schools", "organizations"] }
-      ];
+          // order doesn't matter
+          { path: ["schools", "organizations"] },
 
-      const invalidPaths = [
-        // paths must start at a root node (i.e., needs organizations too).
-        { path: ["schools"] },
+          { path: ["kindergartens", "organizations", "schools"],
+            ordered: ["kindergartens", "schools", "organizations"] },
 
-        // path can't contain two siblings from the same level in the tree
-        { path: ["organizations", "schools", "kindergartens", "law-schools"] },
+          { path: ["law-schools", "schools", "organizations"] }
+        ];
 
-        // orgs + people are siblings; people is extra if we go orgs -> schools
-        { path: ["organizations", "schools", "people"] },
+        invalidPaths = [
+          // paths must start at a root node (i.e., needs organizations too).
+          { path: ["schools"] },
 
-        // john-does is an unknown type.
-        { path: ["people", "john-does"] }
-      ];
+          // path can't contain two siblings from the same level in the tree
+          { path: ["organizations", "schools", "kindergartens", "law-schools"] },
+
+          // orgs + people are siblings; people is extra if we go orgs -> schools
+          { path: ["organizations", "schools", "people"] },
+
+          // john-does is an unknown type.
+          { path: ["people", "john-does"] }
+        ];
+      });
 
       it("should not accept an empty path as valid", () => {
         expect(sut([])).to.be.false;

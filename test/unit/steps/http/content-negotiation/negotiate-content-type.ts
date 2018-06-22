@@ -42,6 +42,7 @@ describe("negotiateContentType", () => {
       });
   });
 
+  // tslint:disable-next-line no-identical-functions
   it("should resolve with json-api type if that's the highest priority, even if the endpoint supports an alternative", () => {
     const accept = "application/vnd.api+json,application/json,text/*";
     return negotiate(accept, [JSON_API_BASE_MEDIA_TYPE, HTML_MEDIA_TYPE])
@@ -50,6 +51,7 @@ describe("negotiateContentType", () => {
       });
   });
 
+  // tslint:disable-next-line no-identical-functions
   it("should use json if client accepts only json", () => {
     const accept =
       "text/html,application/xhtml+xml,application/json;q=0.9,**;q=0.8";

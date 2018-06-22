@@ -11,15 +11,19 @@ describe("validateContentType", () => {
     expect(validate(validMock) instanceof Promise).to.be.true;
   });
 
-  it("should fail resquests with invalid content types with a 415", (done) => {
-    validate(invalidMock, []).then(
-      () => { done(new Error("This shouldn't run!")); },
-      (err) => { if(err.status === "415") { done(); } }
-    );
+  it("should fail resquests with invalid content types with a 415", () => {
+    return validate(invalidMock, []).then(() => {
+      throw new Error("This shouldn't run!");
+    }, (err) => {
+      if(err.status === "415") {
+        return;
+      }
+      throw err;
+    });
   });
 
-  it("should allow requests with no extensions", (done) => {
-    validate(validMock, ["ext1", "ext2"]).then(done);
+  it("should allow requests with no extensions", () => {
+    return validate(validMock, ["ext1", "ext2"]);
   });
 
   /*

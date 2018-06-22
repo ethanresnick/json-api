@@ -6,103 +6,110 @@ import ResourceTypeRegistry from "../../../src/ResourceTypeRegistry";
 import sut from "../../../src/steps/make-transform-fn";
 
 describe("makeTransformFn", () => {
-  /* tslint:disable no-shadowed-variable */
-  const registry = new ResourceTypeRegistry({
-    "law-schools": {
-      parentType: "schools",
-      // schools doesn't have a beforeRender, so super below should be a noop
-      async beforeRender(it, meta, extras, superFn) {
-        it.lawSchools = true;
-        return superFn(it, meta);
-      }
-    },
-    "kindergartens": {
-      parentType: "schools",
-      transformLinkage: true,
-      async beforeSave(it, meta, extras, superFn) {
-        it.kindergartens = true;
-        // intentionally don't pass along meta, so we can verify that it's
-        // missing in the parent transform if the child doesn't provide it.
-        return superFn(it);
-      }
-    },
-    "schools": {
-      parentType: "organizations",
-      transformLinkage: false, // shouldn't effect anything.
-      beforeSave(it, meta, extras, superFn) {
-        it.schools = true;
-        it.schoolSuper = superFn;
-        it.schoolExtras = extras;
-        it.schoolMeta = meta;
-        return superFn(it, meta);
+  let registry: ResourceTypeRegistry
+    , makeResource: (smallestTypeName: string) => Resource
+    , makeResourceId: (smallestTypeName: string) => ResourceIdentifier
+    , extras: { registry: ResourceTypeRegistry, serverReq: any, serverRes: any, request: any }
+    , meta: { section: "included" };
+
+  before(() => {
+    /* tslint:disable no-shadowed-variable */
+    registry = new ResourceTypeRegistry({
+      "law-schools": {
+        parentType: "schools",
+        // schools doesn't have a beforeRender, so super below should be a noop
+        async beforeRender(it, meta, extras, superFn) {
+          it.lawSchools = true;
+          return superFn(it, meta);
+        }
       },
-      // Dont' define beforeRender here. Our law schools test relies on that.
-      // Note: we have to explicitly make it undefined; else the beforeRender
-      // from organizations gets inherited by the standard registry logic.
-      beforeRender: undefined
-    },
-    "organizations": {
-      transformLinkage: true,
-      // this is a root type, so super below should be a noop
-      beforeSave(it, meta, extras, superFn) {
-        it.organizations = true;
-        return superFn(it, meta);
+      "kindergartens": {
+        parentType: "schools",
+        transformLinkage: true,
+        async beforeSave(it, meta, extras, superFn) {
+          it.kindergartens = true;
+          // intentionally don't pass along meta, so we can verify that it's
+          // missing in the parent transform if the child doesn't provide it.
+          return superFn(it);
+        }
       },
-      async beforeRender(it, meta, extras, superFn) {
-        it.organizations = true;
-        return it;
-      }
-    },
-    "people": {
-      transformLinkage: false
-    },
-    "incomes": {
-      transformLinkage: false,
-      async beforeRender(it, meta, extras, superFn) {
-        it.incomes = true;
-        return superFn(it, meta);
+      "schools": {
+        parentType: "organizations",
+        transformLinkage: false, // shouldn't effect anything.
+        beforeSave(it, meta, extras, superFn) {
+          it.schools = true;
+          it.schoolSuper = superFn;
+          it.schoolExtras = extras;
+          it.schoolMeta = meta;
+          return superFn(it, meta);
+        },
+        // Dont' define beforeRender here. Our law schools test relies on that.
+        // Note: we have to explicitly make it undefined; else the beforeRender
+        // from organizations gets inherited by the standard registry logic.
+        beforeRender: undefined
       },
-      beforeSave(it, meta, extras, superFn) {
-        it.incomes = true;
-        return superFn(it, meta);
-      }
-    },
-    "sponsorships": {
-      parentType: "incomes",
-      transformLinkage: true,
-      beforeRender(it, meta, extras, superFn) {
-        it.sponsorships = true;
-        return superFn(it, meta);
+      "organizations": {
+        transformLinkage: true,
+        // this is a root type, so super below should be a noop
+        beforeSave(it, meta, extras, superFn) {
+          it.organizations = true;
+          return superFn(it, meta);
+        },
+        async beforeRender(it, meta, extras, superFn) {
+          it.organizations = true;
+          return it;
+        }
       },
-      async beforeSave(it, meta, extras, superFn) {
-        it.sponsorships = true;
-        return it; // NOTE lack of super call intentionally.
+      "people": {
+        transformLinkage: false
+      },
+      "incomes": {
+        transformLinkage: false,
+        async beforeRender(it, meta, extras, superFn) {
+          it.incomes = true;
+          return superFn(it, meta);
+        },
+        beforeSave(it, meta, extras, superFn) {
+          it.incomes = true;
+          return superFn(it, meta);
+        }
+      },
+      "sponsorships": {
+        parentType: "incomes",
+        transformLinkage: true,
+        beforeRender(it, meta, extras, superFn) {
+          it.sponsorships = true;
+          return superFn(it, meta);
+        },
+        async beforeSave(it, meta, extras, superFn) {
+          it.sponsorships = true;
+          return it; // NOTE lack of super call intentionally.
+        }
       }
-    }
-  }, {
-    dbAdapter: minimalDummyAdapter
+    }, {
+      dbAdapter: minimalDummyAdapter
+    });
+    /* tslint:enable no-shadowed-variable */
+
+    const makeWithTypePath = (klass) => (childTypeName) => {
+      const res = new klass(registry.rootTypeNameOf(childTypeName), "2");
+      res.typePath = registry.typePathTo(childTypeName);
+      return res;
+    };
+
+    makeResource = makeWithTypePath(Resource);
+    makeResourceId = makeWithTypePath(ResourceIdentifier);
+
+    // Dummy meta we'll pass to all calls of the transform fn.
+    meta = { section: "included" };
+
+    extras = {
+      registry,
+      serverReq: { serverReq: true } as any,
+      serverRes: { serverRes: true } as any,
+      request: { libRequest: true } as any
+    };
   });
-  /* tslint:enable no-shadowed-variable */
-
-  const makeWithTypePath = (klass) => (childTypeName) => {
-    const res = new klass(registry.rootTypeNameOf(childTypeName), "2");
-    res.typePath = registry.typePathTo(childTypeName);
-    return res;
-  };
-
-  const makeResource = makeWithTypePath(Resource);
-  const makeResourceId = makeWithTypePath(ResourceIdentifier);
-
-  // Dummy meta we'll pass to all calls of the transform fn.
-  // tslint:disable-next-line no-useless-cast
-  const meta = { section: "included" as "included" };
-
-  const extras = {
-    registry,
-    serverReq: { serverReq: true } as any,
-    serverRes: { serverRes: true } as any,
-    request: { libRequest: true } as any
-  };
 
   describe("super function", () => {
     it("should be binary, with extras, superFn already bound", () => {

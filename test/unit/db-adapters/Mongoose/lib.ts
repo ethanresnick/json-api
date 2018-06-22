@@ -7,23 +7,27 @@ import * as Errors from '../../../../src/util/errors';
 
 describe("Mongoose Adapter private helper functions", () => {
   describe("errorHandler", () => {
-    const validationSchema = new mongoose.Schema({
-      "required": { required: true, type: String },
-      "number": { type: Number },
-      "customSetter": {
-        type: Boolean,
-        set(v) {
-          if(v === 4) {
-            throw new APIError({ typeUri: "made-up-for-test" })
-          } else if (v === 5) {
-            throw new Error("Generic error");
-          } else {
-            return v !== 0;
+    let validationSchema: mongoose.Schema, TestModel: mongoose.Model<any>;
+    before(() => {
+      validationSchema = new mongoose.Schema({
+        "required": { required: true, type: String },
+        "number": { type: Number },
+        "customSetter": {
+          type: Boolean,
+          set(v) {
+            if(v === 4) {
+              throw new APIError({ typeUri: "made-up-for-test" })
+            } else if (v === 5) {
+              throw new Error("Generic error");
+            } else {
+              return v !== 0;
+            }
           }
         }
-      }
-    })
-    const TestModel = mongoose.model("ValidationTest", validationSchema);
+      });
+
+      TestModel = mongoose.model("ValidationTest", validationSchema);
+    });
 
     const testModelErrors = (
       doc: any,

@@ -18,11 +18,14 @@ describe("Request Validation functions", () => {
       }, () => { done(); });
     });
 
-    it("should return a rejected promise if a PATCH request is missing a body", (done) => {
+    it("should return a rejected promise if a PATCH request is missing a body", () => {
       const contextMock = { body: undefined, method: "patch" };
-      requestValidators.checkBodyExistence(<any>contextMock).then(() => {
-        done(new Error("This fulfillment handler shoudn't run"));
-      }, () => {done(); });
+      return requestValidators.checkBodyExistence(<any>contextMock)
+        .then(() => {
+          throw new Error("This fulfillment handler shoudn't run");
+        }, (e) => {
+          return;
+        });
     });
 
     it("should return a rejected promise if a linkage DELETE request is missing a body", (done) => {
