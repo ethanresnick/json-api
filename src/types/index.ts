@@ -1,4 +1,4 @@
-import Resource, { ResourceJSON } from "./Resource";
+import Resource, { ResourceJSON, ResourceWithId } from "./Resource";
 import APIError from './APIError';
 import ResourceIdentifier, { ResourceIdentifierJSON } from "./ResourceIdentifier";
 import Document, { DocumentData } from "./Document";
@@ -54,6 +54,13 @@ export type ParsedQueryParams = ParsedStandardQueryParams & {
   sort?: ParsedSortParam,
   filter?: ParsedFilterParam
 };
+
+// Things that can get run through beforeSave/Render or Document.transform's cb.
+// In beforeRender fns, we know that any resources will have an id assigned.
+// They'll also likely have a typePath set, but that's a bit less safe to
+// assume (e.g., it might not be true with some custom queries).
+export type Transformable = Resource | ResourceIdentifier;
+export type BeforeRenderTransformable = ResourceWithId | ResourceIdentifier;
 
 /**
  * A function that receives the parse result for a set of args for a

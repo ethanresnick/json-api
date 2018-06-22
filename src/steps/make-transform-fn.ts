@@ -1,6 +1,9 @@
 import logger from "../util/logger";
 import ResourceTypeRegistry from "../ResourceTypeRegistry";
-import { FinalizedRequest, ServerReq, ServerRes } from "../types/";
+import {
+  FinalizedRequest, ServerReq, ServerRes,
+  Transformable, BeforeRenderTransformable
+} from "../types/";
 import Resource, { ResourceWithId } from "../types/Resource";
 import ResourceIdentifier from "../types/ResourceIdentifier";
 import { TransformMeta } from "../types/Document";
@@ -12,7 +15,6 @@ export type Extras<U extends ServerReq = ServerReq, V extends ServerRes = Server
   registry: ResourceTypeRegistry
 };
 
-export type Transformable = Resource | ResourceIdentifier;
 export type TransformMode = 'beforeSave' | 'beforeRender';
 export type TransformResult<T> = T | undefined | Promise<T | undefined>;
 export type TransformFn<T, U extends ServerReq = ServerReq, V extends ServerRes = ServerRes> = (
@@ -25,12 +27,8 @@ export type TransformFn<T, U extends ServerReq = ServerReq, V extends ServerRes 
 export type ResourceTransformFn = TransformFn<Resource>;
 export type FullTransformFn = TransformFn<Transformable>;
 
-// In beforeRender fns, we know that any resources will have an id assigned.
-// They'll also likely have a typePath set, but that's a bit less safe to
-// assume (e.g., it might not be true with some custom queries).
 export type BeforeRenderResourceTransformFn = TransformFn<ResourceWithId>;
-export type BeforeRenderFullTransformFn =
-  TransformFn<ResourceWithId | ResourceIdentifier>;
+export type BeforeRenderFullTransformFn = TransformFn<BeforeRenderTransformable>;
 
 /**
  * Makes a transform function for use with Document.prototype.transform.

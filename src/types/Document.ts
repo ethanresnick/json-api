@@ -4,7 +4,8 @@ import {
   PrimaryDataJSON,
   UrlTemplatesByType,
   UrlTemplates,
-  Links
+  Links,
+  Transformable
 } from "./index";
 import Data from "./Generic/Data";
 import Resource, { ResourceJSON } from "./Resource";
@@ -38,9 +39,11 @@ export type TransformMeta = {
   section: "primary" | "included";
 };
 
-export type DocTransformFn<T> = (resourceOrIdentifier: T, meta: TransformMeta) => Promise<T | undefined>;
+export type DocTransformFn<T extends Transformable = Transformable> =
+  (resourceOrIdentifier: T, meta: TransformMeta) => Promise<T | undefined>;
+
 export type DocResourceTransformFn = DocTransformFn<Resource>;
-export type DocFullTransformFn = DocTransformFn<Resource | ResourceIdentifier>;
+export type DocFullTransformFn = DocTransformFn<Transformable>;
 
 export type DocumentData = {
   meta?: object;

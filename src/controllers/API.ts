@@ -8,12 +8,13 @@ import {
    ErrorOrErrorArray,
    SupportedOperators,
    FinalizedSupportedOperators,
-   ParserOperatorsConfig
+   ParserOperatorsConfig,
+   Transformable, BeforeRenderTransformable
 } from "../types";
 import { QueryReturning } from '../db-adapters/AdapterInterface';
 import Query from "../types/Query/Query";
 import ResourceTypeRegistry from "../ResourceTypeRegistry";
-import Document, { DocumentData, DocTransformFn } from "../types/Document";
+import Document, { DocumentData, DocTransformFn, TransformMeta } from "../types/Document";
 import APIError from "../types/APIError";
 import Data from "../types/Generic/Data";
 import Resource from "../types/Resource";
@@ -71,19 +72,23 @@ export type customParamParser<T> = (
   target: { method: string, uri: string }
 ) => T | undefined;
 
-export type QueryFactory = (opts: QueryBuildingContext) => Query | Promise<Query>;
+export type QueryFactory =
+  (opts: QueryBuildingContext) => Query | Promise<Query>;
+
 export type ResultFactory = (
   opts: ResultBuildingContext,
   customQueryFactory?: QueryFactory
 ) => Result | Promise<Result>;
 
-export type QueryBuildingContext<T = Resource | ResourceIdentifier> = {
+export type QueryBuildingContext = {
   request: FinalizedRequest;
   serverReq: ServerReq;
   serverRes: ServerRes;
-  beforeSave: DocTransformFn<T>;
-  beforeRender: DocTransformFn<T>;
-  transformDocument(doc: Document, modeOrFn: TransformMode | DocTransformFn<T>): Promise<Document>;
+  // The types below are an inlining of the DocTransform<T> type.
+  // Needed per https://github.com/Microsoft/TypeScript/issues/24401
+  beforeSave<T extends Transformable = Transformable>(it: T, meta: TransformMeta): Promise<T | undefined>;
+  beforeRender<T extends Transformable = BeforeRenderTransformable>(it: T, meta: TransformMeta): Promise<T | undefined>
+  transformDocument<T extends Transformable = Transformable>(doc: Document, modeOrFn: TransformMode | DocTransformFn<T>): Promise<Document>;
   setTypePaths(
     it: (Resource | ResourceIdentifier)[],
     useInputData: boolean,
@@ -533,7 +538,7 @@ export default class APIController {
       const resultFactory = opts.resultFactory || this.makeResult;
 
       jsonAPIResult = await resultFactory(
-        resultBuildingOpts,
+        resultBuildingOpts as ResultBuildingContext<Transformable>,
         customQueryFactory
       );
     }
