@@ -614,7 +614,7 @@ export function defaultFilterParamParser(
 ) {
   return getQueryParamValue("filter", rawQuery)
     .map(it => parseFilter(it, filterOps))
-    .getOrDefault(undefined);
+    .getOrDefault(undefined); // tslint:disable-line no-undefined-argument
 }
 
 export function defaultSortParamParser(
@@ -623,7 +623,7 @@ export function defaultSortParamParser(
 ) {
   return getQueryParamValue("sort", rawQuery)
     .map(it => parseSort(it, sortOps))
-    .getOrDefault(undefined); // tslint:disable-line
+    .getOrDefault(undefined); // tslint:disable-line no-undefined-argument
 }
 
 /**
