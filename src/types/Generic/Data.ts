@@ -197,7 +197,8 @@ export default class Data<T> {
    * (it => Data.empty) the resulting monad still has isSingular as false.
    * If it were a true zero, binding to toMzero would give you isSingular true.
    * That doesn't happen though because the monoidal part of the metadata
-   * is appended to in flatMap not reset.
+   * is appended to in flatMap not reset. 
+   * See https://en.wikipedia.org/wiki/Monad_(functional_programming)#Additive_monads
    * @type {[type]}
    */
   static empty: Data<any> = new Data<any>({ data: [], isSingular: true });
