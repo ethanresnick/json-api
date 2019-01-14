@@ -153,6 +153,27 @@ describe("Fetching Collection", () => {
     });
   });
 
+  describe("Fetching Multi-Sorted Collection (encoded commas)", () => {
+    let res;
+    before(() => {
+      return Agent.request("GET", "/people?sort=-gender%2Cname")
+        .accept("application/vnd.api+json")
+        .then(response => {
+          res = response;
+        });
+    });
+
+    it("Should have Doug before John; both before Jane", () => {
+      const johnJaneDougList = res.body.data.map((it) => it.attributes.name).filter((it) => {
+        return ["John", "Jane", "Doug"].indexOf(it.substring(0, 4)) > -1;
+      });
+
+      expect(johnJaneDougList).to.deep.equal([
+        "Doug Wilson", "John Smith", "Jane Doe"
+      ]);
+    });
+  });
+
   describe("Fetching with Offset and/or Limit (reverse name sorted for determinism)", () => {
     let res;
     before(() => {

@@ -112,7 +112,7 @@ export function parseSort(
   rawSortString: string,
   sortOperators: ParserOperatorsConfig
 ): Sort[] {
-  return underlyingSortParser(sortOperators, rawSortString);
+  return underlyingSortParser(sortOperators, decodeURIComponent(rawSortString));
 }
 
 export function parseFilter(
