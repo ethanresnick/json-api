@@ -21,13 +21,13 @@ When you submit an issue, help provide the following to help me address it:
 
 ## Contributing code
 
-1. **Forking and Submitting PRs.** After you [fork the repository](https://help.github.com/articles/fork-a-repo/), please make your changes in a [new branch](https://help.github.com/articles/creating-a-pull-request/) and then submit a pull request. This is standard procedure and can all be done through the github website.
+1. **Forking and Submitting PRs.** After you [fork the repository](https://help.github.com/articles/fork-a-repo/), please make your changes in a [new branch](https://help.github.com/articles/creating-a-pull-request/) and then submit a pull request. This is standard procedure and can all be done through the GitHub website.
 
-2. **Compiling.** This library is written in ES6 (the newest version of Javascript), so it needs to be "compiled" to an earlier version of Javascript to run on Node. This can be done with the `make compile-dev-src` and `make compile-dev-test` commands, which watch the `/src` and `/test` folders respectively and recompile changed files to `/build`. There's also `make compile`, which recompiles the whole repository.
+2. **Compiling.** This library is written in TypeScript, so it needs to be "compiled" to JavaScript to run on Node. This can be done with the `npm run build` command. Note that this isn't needed if you just want to run the tests.
 
-3. **Running tests.** Just run `make test`. The tests are always runs using the files in `/build`, so make sure you've compiled your code. If you're running the tests repeatedly as you develop, the `make compile-dev-src` and `make compile-dev-test` commands mentioned above can really help.
+3. **Running tests.** Just run `npm test`. The [`ts-node`](https://github.com/TypeStrong/ts-node) tool will handle compilation from TypeScript to JavaScript on the fly.
 
-4. **Code style.** Once you’ve written your code, make sure that it complies with this repository’s style guidelines by running `make lint` from the project’s root directory and fixing any errors that show up.
+4. **Code style.** Once you’ve written your code, make sure that it complies with this repository’s style guidelines by running `npm run lint` from the project’s root directory and fixing any errors that show up.
 
 5. **Before you submit.** Before submitting your PR, make sure that all the tests still pass and that you've added tests (in the `/test` directory) to cover your new code. To keep this library reliable, I generally don't accept pull requests with missing or broken tests.
 
