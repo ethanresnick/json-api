@@ -96,7 +96,7 @@ function parseScopedParam(paramName: string, scopedParam: ScopedParam) {
   return scopedParam;
 }
 
-export function parseCommaSeparatedParamString(paramName: string, encodedString: any) {
+export function parseCommaSeparatedParamString(paramName: string, encodedString: string) {
   if(typeof encodedString !== 'string')
     throw Errors.invalidQueryParamValue({
       detail: "Expected a comma-separated list of strings.",

@@ -28,7 +28,7 @@ import validateContentType from "../steps/http/content-negotiation/validate-cont
 
 import finalizeOperatorConfig from '../steps/pre-query/finalize-operator-definitions';
 import { getQueryParamValue } from '../util/query-parsing';
-import parseQueryParams, { parseFilter, parseSort, parseCommaSeparatedParamString} from '../steps/pre-query/parse-query-params';
+import parseQueryParams, { parseFilter, parseSort, parseCommaSeparatedParamString } from '../steps/pre-query/parse-query-params';
 import parseRequestPrimary from "../steps/pre-query/parse-request-primary";
 import setTypePaths from "../steps/set-type-paths";
 import validateRequestDocument from "../steps/pre-query/validate-document";
