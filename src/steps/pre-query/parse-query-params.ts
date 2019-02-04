@@ -35,7 +35,6 @@ export type RawParams = {
 };
 
 export type ParsedStandardQueryParams = {
-  include?: StringListParam;
   page?: ScopedParam;
   fields?: ScopedStringListParam;
   [paramName: string]: any;
@@ -43,7 +42,6 @@ export type ParsedStandardQueryParams = {
 
 export default function(params: RawParams): ParsedStandardQueryParams {
   const paramsToParserFns = {
-    include: R.partial(parseCommaSeparatedParamString, ["include"]),
     page: R.pipe(
       R.partial(parseScopedParam, ["page"]),
       R.mapObjIndexed((it: string, scopeName: string) => {
@@ -98,14 +96,22 @@ function parseScopedParam(paramName: string, scopedParam: ScopedParam) {
   return scopedParam;
 }
 
-function parseCommaSeparatedParamString(paramName: string, encodedString: string) {
+export function parseCommaSeparatedParamString(paramName: string, encodedString: any) {
   if(typeof encodedString !== 'string')
     throw Errors.invalidQueryParamValue({
       detail: "Expected a comma-separated list of strings.",
       source: { parameter: paramName }
     });
 
-  return encodedString.split(",").map(decodeURIComponent);
+  return encodedString.split(",").map(memberName => {
+    const decodedMemberName = decodeURIComponent(memberName);
+    if(!isValidMemberName(decodedMemberName))
+      throw Errors.invalidQueryParamValue({
+        detail: `Invalid member name for ${paramName} query parameter.`,
+        source: { parameter: decodedMemberName }
+      });
+    return decodedMemberName;
+  });
 }
 
 export function parseSort(

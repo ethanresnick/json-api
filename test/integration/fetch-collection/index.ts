@@ -292,6 +292,35 @@ describe("Fetching Collection", () => {
         });
     });
   });
+
+  describe("Fetching with multiple includes", () => {
+    it("should return organisation and schools related that people relate to", () => {
+      return Agent.request("GET", "/people")
+        .query("include=manages,homeSchool")
+        .accept("application/vnd.api+json")
+        .then(res => {
+          const stateGovernment =
+            res.body.included.filter(it => it.attributes.name === 'STATE GOVERNMENT');
+          const elementarySchool =
+            res.body.included.filter(it => it.attributes.name === 'ELEMENTARY SCHOOL');
+
+          expect(stateGovernment).to.have.length(1);
+          expect(elementarySchool).to.have.length(1);
+        });
+    });
+
+    it("should error if relationship names are encoded comma seperated", () => {
+      return Agent.request("GET", "/people")
+        .query("include=manages%2ChomeSchool")
+        .accept("application/vnd.api+json")
+        .then(() => {
+        }, (err) => {
+          expect(err.response.status).to.equal(400);
+          expect(err.response.body.errors[0].source.parameter).to.eq("manages,homeSchool");
+        });
+    });
+  });
+
 });
 
     // "[S]erver implementations MUST ignore
