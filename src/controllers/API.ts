@@ -28,7 +28,7 @@ import validateContentType from "../steps/http/content-negotiation/validate-cont
 
 import finalizeOperatorConfig from '../steps/pre-query/finalize-operator-definitions';
 import { getQueryParamValue } from '../util/query-parsing';
-import parseQueryParams, { parseFilter, parseSort, parseCommaSeparatedParamString } from '../steps/pre-query/parse-query-params';
+import parseQueryParams, { parseFilter, parseSort } from '../steps/pre-query/parse-query-params';
 import parseRequestPrimary from "../steps/pre-query/parse-request-primary";
 import setTypePaths from "../steps/set-type-paths";
 import validateRequestDocument from "../steps/pre-query/validate-document";
@@ -193,11 +193,7 @@ export default class APIController {
     const finalizedRequest: FinalizedRequest = {
       ...request,
       queryParams: {
-        ...parseQueryParams(request.queryParams),
-        include: getQueryParamValue('include',request.rawQueryString)
-          .map(it => parseCommaSeparatedParamString('include', it))
-          .getOrDefault()
-        ,
+        ...parseQueryParams(request.queryParams, request.rawQueryString),
         filter: guardedQueryParamParse(
           this.filterParamParser,
           "filter",

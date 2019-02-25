@@ -7,8 +7,10 @@ export { Just, Nothing };
  * This is used because the raw parse result from `qs` automatically urldecodes
  * characters prematurely for some of our parsing purposes.
  *
- * query paramter is parsed according to application/x-www-form-urlencoded:
- * https://url.spec.whatwg.org/#urlencoded-parsing
+ * Query parameter names are extracted according to application/x-www-form-urlencoded
+ * (https://url.spec.whatwg.org/#urlencoded-parsing), while query parameter values are left exactly
+ * as they occur in the URL, per JSON:API's allowance:
+ * https://jsonapi.org/format/1.1/#appendix-query-details-parsing
  */
 export const getQueryParamValue =
   R.curry((paramName: string, queryString: string | undefined) => {
@@ -24,8 +26,8 @@ function parseSingleQueryParamString(paramString: string) {
   const firstEqualPos = paramString.indexOf("=");
   const [parsedKey, rawValue] = firstEqualPos === -1
     ? [decodeURIComponent(paramString.replace("+"," ")), ""]
-    : [decodeURIComponent(paramString.slice(0, paramString.indexOf("=")).replace("+"," ")),
-      paramString.substr(paramString.indexOf("=")+1)];
+    : [decodeURIComponent(paramString.slice(0, firstEqualPos).replace("+"," ")),
+      paramString.substr(firstEqualPos+1)];
   return [parsedKey, rawValue]
 }
 

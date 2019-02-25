@@ -11,7 +11,7 @@ import {
   ParserOperatorsConfig,
   FieldExpression as FieldExprType
 } from "../../types/index";
-
+import { getQueryParamValue } from '../../util/query-parsing';
 // Helpers for working with filter/sort param parse results.
 export const isFieldExpression =
   (it: any): it is FieldExprType => it && it.type === "FieldExpression";
@@ -40,7 +40,7 @@ export type ParsedStandardQueryParams = {
   [paramName: string]: any;
 };
 
-export default function(params: RawParams): ParsedStandardQueryParams {
+export default function(params: RawParams, rawQueryString: string | undefined): ParsedStandardQueryParams {
   const paramsToParserFns = {
     page: R.pipe(
       R.partial(parseScopedParam, ["page"]),
@@ -59,11 +59,15 @@ export default function(params: RawParams): ParsedStandardQueryParams {
     fields: parseFieldsParam
   };
 
-  return R.mapObjIndexed((v: any, paramName: string) => {
+  const standardQueryParams = R.mapObjIndexed((v: any, paramName: string) => {
     return !R.has(paramName, paramsToParserFns)
       ? v
       : paramsToParserFns[paramName](v);
   }, params);
+  standardQueryParams.include = getQueryParamValue('include', rawQueryString)
+    .map(it => parseCommaSeparatedParamString('include', it))
+    .getOrDefault()
+  return standardQueryParams;
 }
 
 const isScopedParam = R.is(Object);
@@ -96,7 +100,7 @@ function parseScopedParam(paramName: string, scopedParam: ScopedParam) {
   return scopedParam;
 }
 
-export function parseCommaSeparatedParamString(paramName: string, encodedString: string) {
+function parseCommaSeparatedParamString(paramName: string, encodedString: string) {
   if(typeof encodedString !== 'string')
     throw Errors.invalidQueryParamValue({
       detail: "Expected a comma-separated list of strings.",
