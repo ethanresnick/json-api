@@ -314,6 +314,7 @@ describe("Fetching Collection", () => {
         .query("include=manages%2ChomeSchool")
         .accept("application/vnd.api+json")
         .then(() => {
+          throw new Error("should not get here");
         }, (err) => {
           expect(err.response.status).to.equal(400);
           expect(err.response.body.errors[0].source.parameter).to.eq("manages,homeSchool");
