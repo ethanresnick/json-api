@@ -11,7 +11,7 @@ import {
   ParserOperatorsConfig,
   FieldExpression as FieldExprType
 } from "../../types/index";
-
+import { getQueryParamValue } from '../../util/query-parsing';
 // Helpers for working with filter/sort param parse results.
 export const isFieldExpression =
   (it: any): it is FieldExprType => it && it.type === "FieldExpression";
@@ -35,15 +35,13 @@ export type RawParams = {
 };
 
 export type ParsedStandardQueryParams = {
-  include?: StringListParam;
   page?: ScopedParam;
   fields?: ScopedStringListParam;
   [paramName: string]: any;
 };
 
-export default function(params: RawParams): ParsedStandardQueryParams {
+export default function(params: RawParams, rawQueryString: string | undefined): ParsedStandardQueryParams {
   const paramsToParserFns = {
-    include: R.partial(parseCommaSeparatedParamString, ["include"]),
     page: R.pipe(
       R.partial(parseScopedParam, ["page"]),
       R.mapObjIndexed((it: string, scopeName: string) => {
@@ -61,11 +59,15 @@ export default function(params: RawParams): ParsedStandardQueryParams {
     fields: parseFieldsParam
   };
 
-  return R.mapObjIndexed((v: any, paramName: string) => {
+  const standardQueryParams = R.mapObjIndexed((v: any, paramName: string) => {
     return !R.has(paramName, paramsToParserFns)
       ? v
       : paramsToParserFns[paramName](v);
   }, params);
+  standardQueryParams.include = getQueryParamValue('include', rawQueryString)
+    .map(it => parseCommaSeparatedParamString('include', it))
+    .getOrDefault()
+  return standardQueryParams;
 }
 
 const isScopedParam = R.is(Object);
@@ -105,7 +107,15 @@ function parseCommaSeparatedParamString(paramName: string, encodedString: string
       source: { parameter: paramName }
     });
 
-  return encodedString.split(",").map(decodeURIComponent);
+  return encodedString.split(",").map(memberName => {
+    const decodedMemberName = decodeURIComponent(memberName);
+    if(!isValidMemberName(decodedMemberName))
+      throw Errors.invalidQueryParamValue({
+        detail: `Invalid member name for ${paramName} query parameter.`,
+        source: { parameter: decodedMemberName }
+      });
+    return decodedMemberName;
+  });
 }
 
 export function parseSort(

@@ -193,7 +193,7 @@ export default class APIController {
     const finalizedRequest: FinalizedRequest = {
       ...request,
       queryParams: {
-        ...parseQueryParams(request.queryParams),
+        ...parseQueryParams(request.queryParams, request.rawQueryString),
         filter: guardedQueryParamParse(
           this.filterParamParser,
           "filter",

@@ -20,7 +20,7 @@ fixtures.save("all", {
   // as the query transform and sorting tests depend on those.
   Person: [
     { name: "John Smith", email: "jsmith@gmail.com", gender: "male", _id: smithId },
-    { name: "Jane Doe", gender: "female", _id: doeId, manages: elementaryId, homeSchool: elementaryId },
+    { name: "Jane Doe", gender: "female", _id: doeId, manages: govtId, homeSchool: elementaryId },
     { name: "Doug Wilson", gender: "male" },
     { name: "Jordi Jones", _id: genderPersonId, gender: "other" },
     { name: "An Inivisible Sorcerer", gender: "other", _id: invisibleResourceId },
