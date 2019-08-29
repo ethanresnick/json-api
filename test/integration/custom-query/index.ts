@@ -17,6 +17,14 @@ describe("Customizing the Query", () => {
       });
   });
 
+  it("should rceive an empty response from an async query transform without error", () => {
+    return Agent.request("GET", "/request-with-async-transform/people/42")
+      .accept("application/vnd.api+json")
+      .then((res) => {
+        expect(res).to.be.ok
+      });
+  });
+
   it("should run the resultingIn transform to create a custom error", () => {
     return Agent.request("GET", "/request-that-errors/people/42")
       .accept("application/vnd.api+json")

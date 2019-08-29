@@ -106,12 +106,12 @@ export type ResultBuildingContext = QueryBuildingContext;
 // approach that the express typings seem to use, so I imagine it's safe enough.
 export type QueryTransformNoReq = {
   // tslint:disable-next-line callable-types
-  (first: RunnableQuery): RunnableQuery;
+  (first: RunnableQuery): RunnableQuery | Promise<RunnableQuery>;
 };
 
 export type QueryTransformWithReq = {
   // tslint:disable-next-line callable-types
-  (first: ServerReq, second: RunnableQuery): RunnableQuery;
+  (first: ServerReq, second: RunnableQuery): RunnableQuery | Promise<RunnableQuery>;
 };
 
 export type RequestOpts = {
