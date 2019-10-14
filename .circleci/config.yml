@@ -1,11 +1,11 @@
 version: 2
 jobs:
-  lint-cover-test-node8:
+  lint-cover-test-node10:
     environment:
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
     docker:
-      - image: circleci/node:carbon-stretch
+      - image: circleci/node:dubnium-stretch
       - image: circleci/mongo:3.6.3
     steps:
       # Load source code into container
@@ -32,7 +32,7 @@ jobs:
       - save_cache:
           key: v1-dep-{{ .Branch }}-{{ epoch }}
           paths:
-          - ./node_modules
+            - ./node_modules
 
       # Run our test commands!
       # Generating coverage runs the tests too.
@@ -46,9 +46,9 @@ jobs:
       - run: mv coverage $CIRCLE_ARTIFACTS
       - run: bash <(curl -s https://codecov.io/bash)
 
-  test-node6:
+  test-node8:
     docker:
-      - image: circleci/node:boron-stretch
+      - image: circleci/node:carbon-stretch
       - image: circleci/mongo:3.6.3
     steps:
       - checkout
@@ -62,13 +62,12 @@ jobs:
       - save_cache:
           key: v1-dep-{{ .Branch }}-{{ epoch }}
           paths:
-          - ./node_modules
+            - ./node_modules
       - run: npm run test
 
 workflows:
-   version: 2
-   test:
-     jobs:
-       - lint-cover-test-node8
-       - test-node6
-
+  version: 2
+  test:
+    jobs:
+      - lint-cover-test-node10
+      - test-node8
