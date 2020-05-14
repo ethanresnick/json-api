@@ -45,7 +45,8 @@ Check out the [full, working v3 example repo](https://github.com/ethanresnick/js
   // to handle requests for API resources and for the auto-generated docs.
   var Front = new API.httpStrategies.Express(
     new API.controllers.API(registry), 
-    new API.controllers.Documentation(registry, {name: 'Example API'})
+    new API.controllers.Documentation(registry, {name: 'Example API'}),
+    opts
   );
 
   // Render the docs at /
