@@ -11,6 +11,9 @@ This library implements all the required portions of the 1.0 spec, which is more
 ```$ npm install json-api```
 
 # Example API
+
+## Express
+
 Check out the [full, working v3 example repo](https://github.com/ethanresnick/json-api-example/tree/v3-wip) for all the details on building an API with this library. Or, take a look at the basic example below:
 
 ```javascript
@@ -66,7 +69,68 @@ Check out the [full, working v3 example repo](https://github.com/ethanresnick/js
 
 
   app.listen(3000);
-  ```
+```
+
+## Fastify
+
+```javascript
+  var fastify = require('fastify')({
+    logger: true
+  });
+
+  var models = {
+    "Person": require('./models/person'),
+    "Place": require('./models/place')
+  };
+
+  var adapter = new API.dbAdapters.Mongoose(models);
+  var registry = new API.ResourceTypeRegistry({
+    "people": {
+      beforeRender: function(resource, req, res) {
+        if(!userIsAdmin(req)) resource.removeAttr("password");
+        return resource;
+      }
+    },
+    "places": {}
+  }, {
+    "dbAdapter": adapter,
+    "urlTemplates": { 
+      "self": "/{type}/{id}"
+    }
+  });
+
+  // Tell the lib the host name our API is served from; needed for security.
+  const opts = { host: 'example.com' };
+
+  // Set up a front controller, passing it controllers that'll be used
+  // to handle requests for API resources and for the auto-generated docs.
+  var Front = new API.httpStrategies.Express(
+    new API.controllers.API(registry), 
+    new API.controllers.Documentation(registry, {name: 'Example API'}),
+    opts
+  );
+
+  // Render the docs at /
+  fastify.get("/", Front.docsRequest);
+
+  // Add routes for basic list, read, create, update, delete operations
+  fastify.get("/:type(people|places)", Front.apiRequest);
+  fastify.get("/:type(people|places)/:id", Front.apiRequest);
+  fastify.post("/:type(people|places)", Front.apiRequest);
+  fastify.patch("/:type(people|places)/:id", Front.apiRequest);
+  fastify.delete("/:type(people|places)/:id", Front.apiRequest);
+
+  // Add routes for adding to, removing from, or updating resource relationships
+  fastify.post("/:type(people|places)/:id/relationships/:relationship", Front.apiRequest);
+  fastify.patch("/:type(people|places)/:id/relationships/:relationship", Front.apiRequest);
+  fastify.delete("/:type(people|places)/:id/relationships/:relationship", Front.apiRequest);
+
+  // Run the server
+  fastify.listen(3000), (err, address) => {
+    if (err) throw err;
+    fastify.log.info(`Server listening on ${address}`);
+  });
+```
 
 # Core Concepts
 ## Resource Type Descriptions <a name="resource-type-descriptions"></a>

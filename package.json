@@ -78,7 +78,8 @@
     "chai": "^4.1.2",
     "chai-subset": "^1.6.0",
     "cpr": "^2.2.0",
-    "express": "^4.16.3",
+    "express": "^4.16.4",
+    "fastify": "^2.2.0",
     "istanbul": "^0.4.5",
     "mocha": "^2.5.3",
     "mongoose": "^4.13.14",
@@ -96,7 +97,8 @@
   },
   "peerDependencies": {
     "mongoose": "^4.7.0",
-    "express": "^4.0.0"
+    "express": "^4.0.0",
+    "fastify": "^2.2.0"
   },
   "scripts": {
     "clean": "rimraf build",
@@ -122,6 +124,7 @@
   },
   "keywords": [
     "express",
+    "fastify",
     "mongoose",
     "json-api",
     "jsonapi",

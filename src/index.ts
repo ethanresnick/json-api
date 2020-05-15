@@ -9,6 +9,7 @@
  */
 import MongooseAdapter from "./db-adapters/Mongoose/MongooseAdapter";
 import ExpressStrategy from "./http-strategies/Express";
+import FastifyStrategy from "./http-strategies/Fastify";
 import KoaStrategy from "./http-strategies/Koa";
 
 // These imports are part of the compiled output and aren't lazy loaded.
@@ -72,6 +73,9 @@ export const dbAdapters = {
 export const httpStrategies = {
   get Express() {
     return <typeof ExpressStrategy>require("./http-strategies/Express").default;
+  },
+  get Fastify() {
+    return <typeof FastifyStrategy>require("./http-strategies/Fastify").default;
   },
   get Koa() {
     return <typeof KoaStrategy>require("./http-strategies/Koa").default;

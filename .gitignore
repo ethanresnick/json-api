@@ -3,4 +3,5 @@ node_modules
 coverage
 .DS_Store
 .nyc_output
+.vscode
 build
