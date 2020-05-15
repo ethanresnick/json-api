@@ -63,7 +63,8 @@
     "raw-body": "^2.3.3",
     "supports-color": "^4.5.0",
     "url-template": "^2.0.4",
-    "vary": "^1.1.2"
+    "vary": "^1.1.2",
+    "snyk": "^1.317.0"
   },
   "devDependencies": {
     "@ethanresnick/tslint-config": "^5.9.1",
@@ -109,13 +110,14 @@
     "test:debug": "npm run test -- --inspect-brk",
     "build:lintfree": "npm run clean && cpr templates build/templates && echo Using TypeScript && tsc --version && tsc --pretty",
     "build": "npm run lint && npm run build:lintfree",
-    "prepare": "npm run build",
+    "prepare": "npm run snyk-protect && npm run build",
     "prepublishOnly": "npm run test",
     "cover": "NODE_ENV=test npm run test:install-fixtures && nyc npm run test:fixtures-installed",
     "cover:view": "npm run cover && open coverage/index.html",
     "watch": "npm run build -- --watch",
     "watch:lintfree": "npm run build:lintfree -- --watch",
-    "watch:test": "npm run test -- --watch"
+    "watch:test": "npm run test -- --watch",
+    "snyk-protect": "snyk protect"
   },
   "bugs": {
     "url": "https://github.com/ethanresnick/json-api/issues"
@@ -132,5 +134,6 @@
   ],
   "engines": {
     "node": ">=6.x.x"
-  }
+  },
+  "snyk": true
 }
