@@ -50,7 +50,7 @@ export default class ExpressStrategy extends Base {
     // req.host is broken in express 4; doesn't include the port
     const genericReqPromise =
       // tslint:disable-next-line deprecation
-      super.buildRequestObject(req, req.protocol, req.host, req.params, req.query);
+      super.buildRequestObject(req, req.protocol, req.hostname, req.params, req.query);
 
     // If express rewrote req.url on us, update the result to use req.originalUrl.
     if(req.url !== req.originalUrl) {
