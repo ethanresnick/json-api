@@ -85,6 +85,17 @@ export default database.then(function(dbModule) {
     })
   );
 
+  app.get('/request-with-async-transform/:type(people)/:id(42)',
+    Front.customAPIRequest({
+      queryTransform: (query: RunnableQuery) =>
+        Promise.resolve(
+          query.resultsIn(undefined, () => ({
+            document: new Document({})
+          }))
+        )
+    })
+  );
+
   // Apply a query transform that returns a custom error
   app.get('/request-that-errors/:type(people)/:id(42)',
     Front.customAPIRequest({
