@@ -54,7 +54,7 @@
     "depd": "^1.1.2",
     "flat": "^1.2.1",
     "immutable": "^3.8.2",
-    "lodash": "^4.17.5",
+    "lodash": "^4.17.16",
     "negotiator": "github:ethanresnick/negotiator#full-parse-access",
     "pluralize": "0.0.11",
     "pug": "^2.0.3",
