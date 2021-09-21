@@ -95,7 +95,7 @@
     "typescript": "^2.8.4"
   },
   "peerDependencies": {
-    "mongoose": "^4.7.0",
+    "mongoose": "^4.7.0 || ^6",
     "express": "^4.0.0"
   },
   "scripts": {
