@@ -57,7 +57,7 @@
     "lodash": "^4.17.17",
     "negotiator": "github:ethanresnick/negotiator#full-parse-access",
     "pluralize": "0.0.11",
-    "pug": "^2.0.3",
+    "pug": "^3.0.0",
     "qs": "^6.5.2",
     "ramda": "^0.25.0",
     "raw-body": "^2.3.3",
