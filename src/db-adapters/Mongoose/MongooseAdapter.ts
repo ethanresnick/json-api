@@ -1017,6 +1017,19 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
 
         return args;
       }
-    }
+    },
+
+    'search': {
+      isBinary: false,
+      legalIn: ["filter", "sort"],
+      finalizeArgs (operators, operator, args) {
+        if (args.length !== 1 || typeof args[0] !== "string") {
+          throw new SyntaxError(
+            `"search" expects exactly one argument: a query string`
+          );
+        }
+        return args;
+      }
+    },
   };
 }

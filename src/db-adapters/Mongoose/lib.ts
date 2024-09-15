@@ -122,6 +122,14 @@ export function toMongoCriteria(constraint: FieldExpression) {
     });
   }
 
+  if (constraint.operator === "search") {
+    return {
+      $text: {
+        $search: constraint.args[0],
+      }
+    }
+  }
+
   // Note: all the operators we support (as declared in the adapter) are either:
   // 1) the ones handled above (`and` + `or`); or 2) binary ones with a field
   // reference on the left-hand side. For the latter, this requirement has already
