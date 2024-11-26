@@ -59,7 +59,7 @@
     "pluralize": "0.0.11",
     "pug": "^2.0.3",
     "qs": "^6.5.2",
-    "ramda": "^0.25.0",
+    "ramda": "^0.27.2",
     "raw-body": "^2.3.3",
     "supports-color": "^4.5.0",
     "url-template": "^2.0.4",
